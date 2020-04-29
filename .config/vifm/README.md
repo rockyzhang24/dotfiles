@@ -4,11 +4,12 @@
 
 ## Icon setting
 
-This icon setting is inspired by [ranger_devicons](https://github.com/alexanderjeurissen/ranger_devicons). It is very comprehensive,
-containing icons for different filetype, special directories (like ~/Downloads, ~/Dropbox, etc), special files (like .vimrc), and relatively
-complete file extensions. It has a great format so that you could add your own icons easily.
+This icon setting is very comprehensive, containing icons for different filetype, special directories (like ~/Downloads, ~/Dropbox, etc),
+special files (like .vimrc), and relatively complete file extensions. It has a great format so that you could add your own icons easily.
 
-### Prerequisite
+This setting is inspired by [ranger_devicons](https://github.com/alexanderjeurissen/ranger_devicons).
+
+### Prerequisites
 
 A font patched using [Nerd Fonts](https://github.com/ryanoasis/nerd-fonts) is required. And set it as the default font for your terminal.
 

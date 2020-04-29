@@ -226,5 +226,5 @@ nnoremap <f8> :delete<cr>
 "
 " let $VIFM_SERVER_NAME = v:servername
 
-" Icons (may cause sluggish)
+" Icons
 source $HOME/.config/vifm/icons

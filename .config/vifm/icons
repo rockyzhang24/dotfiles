@@ -1,4 +1,8 @@
-" Icons
+" ***************************
+" Icons for vifm file manager
+" ***************************
+
+" NOTE: I combined multiple `set classify` commands for avoiding sluggish startup.
 
 " Filetypes
 set classify=' :dir:/, :exe:, :reg:, :link:,? :?:, ::../::'
@@ -26,8 +30,6 @@ set classify+=' ::.Xauthority,,.Xdefaults,,.Xresources,,.bash_aliases,,.bashp
              \  ::.vim,,.vimrc,,.viminfo,,init.vim::,
              \  ::Dockerfile,,docker-compose.yml::,
              \  ::dropbox::,
-             \ X1 ::exact-match-case-sensitive-1.txt::,
-             \ X2 ::exact-match-case-sensitive-2::,
              \  ::favicon.ico::,
              \  ::a.out,,configure::,
              \  ::config.mk,,config.m4,,config.ac::,

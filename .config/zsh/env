@@ -1,0 +1,39 @@
+#!/bin/bash
+
+export ZDOTDIR="$HOME/.config/zsh"
+#: ${ZIM_HOME=${ZDOTDIR:-${HOME}}/.zim}
+export ZIM_HOME="${ZDOTDIR:-${HOME}}/.zim"
+
+# PATH
+export PATH=/Users/yanzhang/Development/apache-maven-3.6.1/bin:$PATH
+export PATH=/Users/yanzhang/.emacs.d/bin:$PATH  # Doom Emacs
+export PATH=/Users/yanzhang/Library/Python/2.7/bin:$PATH  # pip, pip2, pip2.7
+export PATH=/Users/yanzhang/Library/Python/3.7/bin:$PATH
+export PATH="/opt/local/bin:/opt/local/sbin:$PATH"  # MacPorts
+export PATH=$HOME/.cargo/bin:$PATH  # Rust package manager
+export PATH=$HOME/.config/bin:$PATH # my own scripts
+
+# Use Neovim as "preferred editor"
+export EDITOR="nvim"
+
+# Customize spelling correction prompt.
+export SPROMPT='zsh: correct %F{red}%R%f to %F{green}%r%f [nyae]? '
+
+# Remove / from WORDCHARS
+export WORDCHARS=${WORDCHARS//[\/]}
+
+# Let ranger use custom config (~/.config/ranger/)
+#export RANGER_LOAD_DEFAULT=FALSE
+
+# Specify the path to golang libraries
+export GOPATH=/Users/yanzhang/Development/go
+
+# For virtual environment (virtualenv) in python3
+export VIRTUALENVWRAPPER_PYTHON=/usr/local/bin/python3
+
+# fzf
+export FZF_DEFAULT_COMMAND='rg --hidden --files -g "!\.git/"'
+export FZF_DEFAULT_OPTS='--preview "[[ $(file --mime {}) =~ binary ]] && echo {} is a binary file || bat --color=always --style=numbers,changes {} 2> /dev/null"'
+
+# lf icons
+source $HOME/.config/lf/icons

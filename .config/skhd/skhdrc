@@ -1,0 +1,133 @@
+# NOTE:
+# 1). ALT for changing focus
+#     For monitor: Suppose we have 3 monitors: u -> left monitor, i -> center monitor, o -> right monitor
+# 2). ALT + SHIFT for window movement and operation
+# 3). ALT + CTRL for space movement and operation
+# 4). FN for changing window size
+
+# Restart yabai and spacebar service
+hyper - r : launchctl kickstart -k "gui/${UID}/homebrew.mxcl.yabai"; \
+            launchctl kickstart -k "gui/${UID}/homebrew.mxcl.spacebar"
+
+# Open terminal
+# cmd - return : /Applications/alacritty.app/Contents/MacOS/alacritty
+cmd - return : /Applications/kitty.app/Contents/MacOS/kitty --single-instance -d ~
+# cmd - return : ~/.config/yabai/scripts/open-kitty.sh
+# cmd - return : ~/.config/yabai/scripts/open-iterm.sh
+
+# Focus window
+alt - k : yabai -m window --focus north
+alt - j : yabai -m window --focus south
+alt - h : yabai -m window --focus west
+alt - l : yabai -m window --focus east
+
+# Move window
+alt + shift - k : yabai -m window --swap north
+alt + shift - j : yabai -m window --swap south
+alt + shift - h : yabai -m window --swap west
+alt + shift - l : yabai -m window --swap east
+
+# Send window to workspace
+alt + shift - 1 : yabai -m window --space 1
+alt + shift - 2 : yabai -m window --space 2
+alt + shift - 3 : yabai -m window --space 3
+alt + shift - 4 : yabai -m window --space 4
+alt + shift - 5 : yabai -m window --space 5
+alt + shift - 6 : yabai -m window --space 6
+alt + shift - 7 : yabai -m window --space 7
+alt + shift - 8 : yabai -m window --space 8
+alt + shift - 9 : yabai -m window --space 9
+alt + shift - 0 : yabai -m window --space 10
+
+# Send window to monitor
+alt + shift - i : yabai -m window --display 1
+alt + shift - u : yabai -m window --display 2
+alt + shift - o : yabai -m window --display 3
+
+# Move floating window
+alt + shift - up : yabai -m window --move rel:0:-20
+alt + shift - down : yabai -m window --move rel:0:20
+alt + shift - left : yabai -m window --move rel:-20:0
+alt + shift - right : yabai -m window --move rel:20:0
+
+# Warp (re-insert)
+alt + shift - w : yabai -m window --warp north
+alt + shift - s : yabai -m window --warp south
+alt + shift - a : yabai -m window --warp west
+alt + shift - d : yabai -m window --warp east
+
+# Set insertion position in the focused window for the window to be opened
+alt + shift - 0x18 : yabai -m window --insert north   # =
+alt + shift - 0x27 : yabai -m window --insert south   # '
+alt + shift - 0x21 : yabai -m window --insert west    # [
+alt + shift - 0x1E : yabai -m window --insert east    # ]
+
+# Change size of window
+fn - u : yabai -m window --resize top:0:20      # top-
+fn - i : yabai -m window --resize top:0:-20     # top+
+fn - n : yabai -m window --resize bottom:0:-20   # bottom-
+fn - m : yabai -m window --resize bottom:0:20  # bottom+
+fn - j : yabai -m window --resize left:20:0     # left-
+fn - k : yabai -m window --resize left:-20:0    # left+
+fn - l : yabai -m window --resize right:-20:0    # right-
+fn - 0x29 : yabai -m window --resize right:20:0   # right+ (; key)
+
+# Balance size of windows
+fn - 0 : yabai -m space --balance
+
+# Toggle window between tiling and floating
+alt - t : ~/.config/yabai/scripts/floating-tiling-toggle.sh
+
+# Toggle window fullscreen zoom
+alt - m : yabai -m window --toggle zoom-fullscreen
+
+# Toggle window split type (horizontally or vertically in terms of its parent)
+alt - s : yabai -m window --toggle split
+
+# Focus workspace
+alt - 0x21 : yabai -m space --focus prev   # [
+alt - 0x1E : yabai -m space --focus next   # ]
+alt - 1 : yabai -m space --focus 1
+alt - 2 : yabai -m space --focus 2
+alt - 3 : yabai -m space --focus 3
+alt - 4 : yabai -m space --focus 4
+alt - 5 : yabai -m space --focus 5
+alt - 6 : yabai -m space --focus 6
+alt - 7 : yabai -m space --focus 7
+alt - 8 : yabai -m space --focus 8
+alt - 9 : yabai -m space --focus 9
+alt - 0 : yabai -m space --focus 10
+
+# Create workspace
+alt + ctrl - n : yabai -m space --create
+
+# Destroy workspace
+alt + ctrl - w : yabai -m space --destroy
+
+# Move workspace to monitor
+alt + ctrl - i : yabai -m space --display 1
+alt + ctrl - u : yabai -m space --display 2
+alt + ctrl - o : yabai -m space --display 3
+
+# Swap workspace
+alt + ctrl - 0x21 : yabai -m space --move prev  # [
+alt + ctrl - 0x1E : yabai -m space --move next  # ]
+alt + ctrl - 1 : yabai -m space --move 1
+alt + ctrl - 2 : yabai -m space --move 2
+alt + ctrl - 3 : yabai -m space --move 3
+alt + ctrl - 4 : yabai -m space --move 4
+alt + ctrl - 5 : yabai -m space --move 5
+alt + ctrl - 6 : yabai -m space --move 6
+alt + ctrl - 7 : yabai -m space --move 7
+alt + ctrl - 8 : yabai -m space --move 8
+alt + ctrl - 9 : yabai -m space --move 9
+alt + ctrl - 0 : yabai -m space --move 10
+
+# Modify workspace layout
+alt + ctrl - f : yabai -m space --layout float
+alt + ctrl - b : yabai -m space --layout bsp
+
+# Focus monitor (Display)
+alt - i : yabai -m display --focus 1
+alt - u : yabai -m display --focus 2
+alt - o : yabai -m display --focus 3

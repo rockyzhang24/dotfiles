@@ -1,0 +1,230 @@
+" vim: filetype=vifm :
+
+" TODO: config statusline, timefmt, marks
+
+set vicmd=$EDITOR
+set syscalls
+set trash
+set history=100
+set nofollowlinks
+set sortnumbers
+set undolevels=100
+set vimhelp
+set norunexec
+set timefmt=%m/%d\ %H:%M
+set wildmenu
+set wildstyle=popup
+set suggestoptions=normal,visual,view,otherpane,keys,marks,registers
+set ignorecase
+set smartcase
+set nohlsearch
+set incsearch
+set scrolloff=4
+set slowfs=curlftpfs
+set vifminfo=dhistory,savedirs,chistory,state,tui,shistory,phistory,fhistory,dirstack,registers,bookmarks,bmarks
+set statusline="  Hint: %z%= %A %10u:%-7g %15s %20d  "
+colorscheme gruvbox
+
+mark c ~/.config
+mark b ~/Dropbox
+mark h ~
+mark d ~/Downloads
+
+" :com[mand][!] command_name action
+" The following macros can be used in a command
+" %a is replaced with the user arguments.
+" %c the current file under the cursor.
+" %C the current file under the cursor in the other directory.
+" %f the current selected file, or files.
+" %F the current selected file, or files in the other directory.
+" %b same as %f %F.
+" %d the current directory name.
+" %D the other window directory name.
+" %m run the command in a menu window
+
+command! df df -h %m 2> /dev/null
+command! diff vim -d %f %F
+command! zip zip -r %f.zip %f
+command! run !! ./%f
+command! make !!make %a
+command! mkcd :mkdir %a | cd %a
+command! reload :write | restart
+
+" Pdf
+filetype *.pdf open -a PDF\ Expert.app,
+fileviewer *.pdf pdftotext -nopgbrk %c -
+
+" PostScript
+filetype *.ps,*.eps open -a Preview.app
+
+" Djvu
+filetype *.djvu open -a MacDjView.app
+
+" Audio
+filetype *.wav,*.mp3,*.flac,*.m4a,*.wma,*.ape,*.ac3,*.og[agx],*.spx,*.opus open -a IINA.app,
+fileviewer *.mp3 mp3info
+fileviewer *.flac soxi
+
+" Video
+filetype *.avi,*.mp4,*.wmv,*.dat,*.3gp,*.ogv,*.mkv,*.mpg,*.mpeg,*.vob,*.fl[icv],*.m2v,*.mov,*.webm,*.ts,*.mts,*.m4v,*.r[am],*.qt,*.divx,*.as[fx] open -a IINA.app,
+fileviewer *.avi,*.mp4,*.wmv,*.dat,*.3gp,*.ogv,*.mkv,*.mpg,*.mpeg,*.vob,*.fl[icv],*.m2v,*.mov,*.webm,*.ts,*.mts,*.m4v,*.r[am],*.qt,*.divx,*.as[fx] ffprobe -pretty %c 2>&1
+
+" Web
+filetype *.html,*.htm open -a Google\ Chrome.app,
+fileviewer *.html,*.htm w3m -dump -T text/html
+
+" Object
+filetype *.o nm %f | less
+
+" Man page
+filetype *.[1-8] man ./%c
+fileviewer *.[1-8] man ./%c | col -b
+
+" Image
+filetype *.bmp,*.jpg,*.jpeg,*.png,*.gif,*.xpm open -a Preview.app,
+fileviewer *.bmp,*.jpg,*.jpeg,*.png,*.gif,*.xpm identify %f
+
+" MD5
+filetype *.md5 md5sum -c %f %S
+
+" SHA1
+filetype *.sha1 sha1sum -c %f %S
+
+" SHA256
+filetype *.sha256 sha256sum -c %f %S
+
+" SHA512
+filetype *.sha512 sha512sum -c %f %S
+
+" Torrent
+filetype *.torrent open -a Transmission.app
+
+" Extract zip files
+filetype *.zip unzip %f
+fileviewer *.zip,*.jar,*.war,*.ear zip -sf %c
+
+" Extract tar archives
+filetype *.tar,*.tar.bz2,*.tbz2,*.tgz,*.tar.gz tar -xf %f
+fileviewer *.tar,*.tar.bz2,*.tbz2,*.tgz,*.tar.gz tar -tf %f
+
+" Extract .bz2 archives
+filetype *.bz2 bzip2 -d %f
+
+" Extract .gz files
+filetype *.gz gunzip %f
+
+" Mount .dmg archives
+filetype *.dmg open
+
+" Mount disk .img
+filetype *.img open
+
+" Open .pkg binaries
+filetype *.pkg open
+
+" Office files
+filetype *.odt,*.doc,*.docx open -a Microsoft\ Word.app
+filetype *.ods,*.xls,*.xlsx open -a Microsoft\ Excel.app
+filetype *.odp,*.pptx,*.ppt open -a Microsoft\ PowerPoint.app
+fileviewer *.doc antiword -
+fileviewer *.docx docx2txt.pl %f -
+
+"CSV
+filetype *.csv open -a Numbers.app
+
+" Code (with highlighting)
+fileviewer *.[ch],*.[ch]pp,*.html,*.css,*.less,*.js,*.java,*.go,*.py,*.coffee,*.dart,*.lua,*.md,*.rb,*.ts,*.php,*.cs,*.vim,*.conf,*.swift,*.json,*.xml highlight -O xterm256 -s dante %c
+fileviewer Makefile,Makefile.* highlight -O xterm256 -s dante --syntax make %c
+
+
+" ------------------------------------------------------------------------------
+
+" Examples of configuring both panels
+
+" Customize view columns a bit (enable ellipsis for truncated file names)
+"
+" set viewcolumns=-{name}..,6{}.
+
+" Filter-out build and temporary files
+"
+" filter! /^.*\.(lo|o|d|class|py[co])$|.*~$/
+
+" ------------------------------------------------------------------------------
+
+" Sample mappings
+
+" Start shell in current directory
+nnoremap s :shell<cr>
+
+" Display sorting dialog
+nnoremap S :sort<cr>
+
+" Toggle visibility of preview window
+nnoremap w :view<cr>
+vnoremap w :view<cr>gv
+
+" Open file in new MacVim tab
+nnoremap o :!mvim --remote-tab-silent %f<cr>
+" Open file in new MacVim window
+nnoremap O :!mvim %f<cr>
+
+" Open file in the background using its default program
+nnoremap gb :!open -g %f<cr>
+
+" Yank current directory path into the clipboard
+nnoremap yd :!printf %d | pbcopy<cr>
+
+" Yank current file path into the clipboard
+nnoremap yf :!printf %c:p | pbcopy<cr>
+
+" View preview in Quick Look
+nnoremap <space> :!qlmanage -p %f > /dev/null 2>&1<cr>
+
+" Mappings for faster renaming
+nnoremap I cw<c-a>
+nnoremap cc cw<c-u>
+nnoremap A cw
+
+" Open editor to edit vifmrc and apply settings after returning to vifm
+nnoremap ,c :write | edit $MYVIFMRC | restart<cr>
+" Open MacVim to edit vifmrc
+nnoremap ,C :!mvim --remote-tab-silent $MYVIFMRC &<cr>
+
+" Toggle wrap setting on ,w key
+nnoremap ,w :set wrap!<cr>
+
+" Example of standard two-panel file managers mappings
+nnoremap <f3> :!less %f<cr>
+nnoremap <f4> :edit<cr>
+nnoremap <f5> :copy<cr>
+nnoremap <f6> :move<cr>
+nnoremap <f7> :mkdir<space>
+nnoremap <f8> :delete<cr>
+
+" ------------------------------------------------------------------------------
+
+" Various customization examples
+
+" Use ag (the silver searcher) instead of grep
+"
+" set grepprg='ag --line-numbers %i %a %s'
+
+" Add additional place to look for executables
+"
+" let $PATH = $HOME.'/bin/fuse:'.$PATH
+
+" Block particular shortcut
+"
+" nnoremap <left> <nop>
+
+" Export IPC name of current instance as environment variable and use it to
+" communicate with the instance later.
+"
+" It can be used in some shell script that gets run from inside vifm, for
+" example, like this:
+"     vifm --server-name "$VIFM_SERVER_NAME" --remote +"cd '$PWD'"
+"
+" let $VIFM_SERVER_NAME = v:servername
+
+" Icons (may cause sluggish)
+source $HOME/.config/vifm/icons

@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# set codesigning certificate name here (default: yabai-cert)
+export YABAI_CERT=
+
+# stop yabai
+printf "\n************** Stop yabai ... ****************\n"
+brew services stop koekeishiya/formulae/yabai
+
+# reinstall yabai
+printf "\n************** Reinstall yabai ... ****************\n"
+brew reinstall koekeishiya/formulae/yabai
+codesign -fs "${YABAI_CERT:-yabai-cert}" "$(brew --prefix yabai)/bin/yabai"
+
+# reinstall the scripting addition
+printf "\n************** Reinstall scripting addition ... ****************\n"
+sudo yabai --uninstall-sa
+sudo yabai --install-sa
+
+# start yabai
+printf "\n************** Start yabai ... ****************\n"
+brew services start koekeishiya/formulae/yabai
+
+# load the scripting addition
+printf "\n************** Loading scripting addition ... ****************\n"
+killall Dock

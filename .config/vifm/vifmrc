@@ -1,17 +1,22 @@
-" vim: filetype=vifm :
+" vim: filetype=vifm:foldmethod=marker:foldlevel=0
+"                      _  __
+"  _   _ ____   __   _(_)/ _|_ __ ___  _ __ ___
+" | | | |_  /___\ \ / / | |_| '_ ` _ \| '__/ __|
+" | |_| |/ /_____\ V /| |  _| | | | | | | | (__
+"  \__, /___|     \_/ |_|_| |_| |_| |_|_|  \___|
+"  |___/
 
-" TODO: config statusline, timefmt, marks
+" General settings -------------------- {{{
 
 set vicmd=$EDITOR
 set syscalls
 set trash
-set history=100
+set history=1000
 set nofollowlinks
 set sortnumbers
-set undolevels=100
+set undolevels=1000
 set vimhelp
 set norunexec
-set timefmt=%m/%d\ %H:%M
 set wildmenu
 set wildstyle=popup
 set suggestoptions=normal,visual,view,otherpane,keys,marks,registers
@@ -20,35 +25,133 @@ set smartcase
 set nohlsearch
 set incsearch
 set scrolloff=4
+set tabstop=2
 set slowfs=curlftpfs
 set vifminfo=dhistory,savedirs,chistory,state,tui,shistory,phistory,fhistory,dirstack,registers,bookmarks,bmarks
-set statusline="  Hint: %z%= %A %10u:%-7g %15s %20d  "
+set viewcolumns=*{name}..,6{}.
+set timefmt=%m/%d/%Y\ %H:%M
+set statusline="%= %{&sort} %10s %12A %10u:%g %18d"
+set rulerformat="%l/%S%[ +%x%]"
+set grepprg='rg --line-number %i %a %s'
 colorscheme gruvbox
 
-mark c ~/.config
-mark b ~/Dropbox
-mark h ~
-mark d ~/Downloads
+" Icons
+source $HOME/.config/vifm/icons
 
-" :com[mand][!] command_name action
-" The following macros can be used in a command
-" %a is replaced with the user arguments.
-" %c the current file under the cursor.
-" %C the current file under the cursor in the other directory.
-" %f the current selected file, or files.
-" %F the current selected file, or files in the other directory.
-" %b same as %f %F.
-" %d the current directory name.
-" %D the other window directory name.
-" %m run the command in a menu window
+" }}}
 
-command! df df -h %m 2> /dev/null
-command! diff vim -d %f %F
-command! zip zip -r %f.zip %f
+" Marks -------------------- {{{
+
+mark b ~/Dropbox/
+mark c ~/.config/
+mark d ~/Documents/
+mark D ~/Downloads/
+mark h ~/
+
+" }}}
+
+" Commands definition -------------------- {{{
+
 command! run !! ./%f
-command! make !!make %a
 command! mkcd :mkdir %a | cd %a
-command! reload :write | restart
+
+" Toggle detailed/brief information about files
+command! togglefilesinfo
+            \ : if &viewcolumns == '*{name}..,6{}.'
+            \ |   set viewcolumns=*{name}.,10{size}.,12{perms},10{uname},-7{gname},18{mtime}
+            \ |   echo 'Files information: detailed'
+            \ | else
+            \ |   set viewcolumns=*{name}..,6{}.
+            \ |   echo 'Files information: brief'
+            \ | endif
+
+" Diff for selections in the current pane if it contains more than one file, otherwise
+" diff the file in the left (upper) pane with the file in the right (lower) pane
+command! diff : if expand('%%c') == expand('%%f')
+            \ |   if paneisat('right') && paneisat('bottom')
+            \ |     execute '!$EDITOR -d %%C %%c'
+            \ |   else
+            \ |     execute '!$EDITOR -d %%c %%C'
+            \ |   endif
+            \ | else
+            \ |   execute '!$EDITOR -d %%f'
+            \ | endif
+
+" Reset sort
+command! resetsort
+            \ : if &sort != '+name'
+            \ |   set sort=+name
+            \ |   echo 'Reset sort to +name'
+            \ | endif
+
+" FZF integration
+command! FZFfind :set noquickview | :execute 'goto' fnameescape(term('fd -H | fzf --height 10 2>/dev/tty'))
+
+" }}}
+
+" Mappings -------------------- {{{
+
+" NOTE: <space> performs like the leader key
+
+" Restart vifm
+nnoremap R :restart<cr>
+
+" Open sort selection menu
+nnoremap S :sort<cr>
+
+" Exit vifm and cd to the dir
+nnoremap s :shell<cr>
+
+" Edit vifmrc
+nnoremap <space>ev :write | edit $MYVIFMRC | restart<cr>
+
+" Preview in another pane
+nnoremap w :view<cr>
+vnoremap w :view<cr>gv
+
+" Fast renaming
+nnoremap I cw<c-a>
+nnoremap cc cw<c-u>
+nnoremap A cw
+
+" Copy the path of the dir of the current pane
+nnoremap yd :!printf %d | pbcopy<cr>
+
+" Copy the path of the dir/file under the cursor
+nnoremap yc :!printf %c:p | pbcopy<cr>
+
+" macOS builtin preview
+nnoremap <space><space> :!qlmanage -p %f > /dev/null 2>&1<cr>
+
+" Move focus between panes
+noremap <C-k> <C-w>k
+noremap <C-j> <C-w>j
+noremap <C-h> <C-w>h
+noremap <C-l> <C-w>l
+
+" Adjust pane size (left for decreasing, right for increasing)
+nnoremap <left> <C-w><
+nnoremap <right> <C-w>>
+
+" Moving cursor in another pane
+nnoremap <silent> J <tab>j<tab>
+nnoremap <silent> K <tab>k<tab>
+
+" Toggle wrap in the preview
+nnoremap <silent> <space>tw :set wrap!<cr>
+
+" Toggle detailed/brief information about files
+nnoremap <silent> <space>ti :togglefilesinfo<cr>
+
+" Reset sort to +name
+nnoremap <silent> <space>s :resetsort<cr>
+
+" fzf
+nnoremap <C-p> :FZFfind<cr>
+
+" }}}
+
+" Opener and viewer -------------------- {{{
 
 " Pdf
 filetype *.pdf open -a PDF\ Expert.app,
@@ -132,99 +235,8 @@ fileviewer *.docx docx2txt.pl %f -
 "CSV
 filetype *.csv open -a Numbers.app
 
-" Code (with highlighting)
-fileviewer *.[ch],*.[ch]pp,*.html,*.css,*.less,*.js,*.java,*.go,*.py,*.coffee,*.dart,*.lua,*.md,*.rb,*.ts,*.php,*.cs,*.vim,*.conf,*.swift,*.json,*.xml highlight -O xterm256 -s dante %c
+" Source code (with highlighting)
+fileviewer *.[ch],*.[ch]pp,*.html,*.css,*.less,*.js,*.java,*.go,*.py,*.coffee,*.dart,*.lua,*.md,*.rb,*.ts,*.php,*.cs,*.vim,*.conf,*.swift,*.json,*.xml highlight -O xterm256 -s dante %c --force
 fileviewer Makefile,Makefile.* highlight -O xterm256 -s dante --syntax make %c
 
-
-" ------------------------------------------------------------------------------
-
-" Examples of configuring both panels
-
-" Customize view columns a bit (enable ellipsis for truncated file names)
-"
-" set viewcolumns=-{name}..,6{}.
-
-" Filter-out build and temporary files
-"
-" filter! /^.*\.(lo|o|d|class|py[co])$|.*~$/
-
-" ------------------------------------------------------------------------------
-
-" Sample mappings
-
-" Start shell in current directory
-nnoremap s :shell<cr>
-
-" Display sorting dialog
-nnoremap S :sort<cr>
-
-" Toggle visibility of preview window
-nnoremap w :view<cr>
-vnoremap w :view<cr>gv
-
-" Open file in new MacVim tab
-nnoremap o :!mvim --remote-tab-silent %f<cr>
-" Open file in new MacVim window
-nnoremap O :!mvim %f<cr>
-
-" Open file in the background using its default program
-nnoremap gb :!open -g %f<cr>
-
-" Yank current directory path into the clipboard
-nnoremap yd :!printf %d | pbcopy<cr>
-
-" Yank current file path into the clipboard
-nnoremap yf :!printf %c:p | pbcopy<cr>
-
-" View preview in Quick Look
-nnoremap <space> :!qlmanage -p %f > /dev/null 2>&1<cr>
-
-" Mappings for faster renaming
-nnoremap I cw<c-a>
-nnoremap cc cw<c-u>
-nnoremap A cw
-
-" Open editor to edit vifmrc and apply settings after returning to vifm
-nnoremap ,c :write | edit $MYVIFMRC | restart<cr>
-" Open MacVim to edit vifmrc
-nnoremap ,C :!mvim --remote-tab-silent $MYVIFMRC &<cr>
-
-" Toggle wrap setting on ,w key
-nnoremap ,w :set wrap!<cr>
-
-" Example of standard two-panel file managers mappings
-nnoremap <f3> :!less %f<cr>
-nnoremap <f4> :edit<cr>
-nnoremap <f5> :copy<cr>
-nnoremap <f6> :move<cr>
-nnoremap <f7> :mkdir<space>
-nnoremap <f8> :delete<cr>
-
-" ------------------------------------------------------------------------------
-
-" Various customization examples
-
-" Use ag (the silver searcher) instead of grep
-"
-" set grepprg='ag --line-numbers %i %a %s'
-
-" Add additional place to look for executables
-"
-" let $PATH = $HOME.'/bin/fuse:'.$PATH
-
-" Block particular shortcut
-"
-" nnoremap <left> <nop>
-
-" Export IPC name of current instance as environment variable and use it to
-" communicate with the instance later.
-"
-" It can be used in some shell script that gets run from inside vifm, for
-" example, like this:
-"     vifm --server-name "$VIFM_SERVER_NAME" --remote +"cd '$PWD'"
-"
-" let $VIFM_SERVER_NAME = v:servername
-
-" Icons
-source $HOME/.config/vifm/icons
+" }}}

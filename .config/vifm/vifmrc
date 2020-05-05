@@ -11,6 +11,7 @@
 set vicmd=$EDITOR
 set syscalls
 set trash
+set trashdir='~/.Trash'
 set history=1000
 set nofollowlinks
 set sortnumbers
@@ -30,7 +31,7 @@ set slowfs=curlftpfs
 set vifminfo=dhistory,savedirs,chistory,state,tui,shistory,phistory,fhistory,dirstack,registers,bookmarks,bmarks
 set viewcolumns=*{name}..,6{}.
 set timefmt=%m/%d/%Y\ %H:%M
-set statusline="%= %{&sort} %10s %12A %10u:%g %18d"
+set statusline="%10A %10u:%g %8s[%8E] %18d   %{&sort} %= %a free"
 set rulerformat="%l/%S%[ +%x%]"
 set grepprg='rg --line-number %i %a %s'
 colorscheme gruvbox

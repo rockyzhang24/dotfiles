@@ -45,7 +45,7 @@ set classify+=' ::.Xauthority,,.Xdefaults,,.Xresources,,.bash_aliases,,.bashp
              \  ::README.rst,,README.md,,README.markdown,,README,,README.txt::'
 
 " Extentions
-set classify+=' ::*.7z,,*.apk,,.*.bz2,,*.cpio,,*.deb,,*.gz,,*.gzip,,*.gem,,*.lha,,*.lzh,,*.lzma,,*.rar,,*.rpm,,*.tar,,*.tgz,,*.xbps,,*.xz,,*.zip::,
+set classify+=' ::*.7z,,*.apk,,*.bz2,,*.cpio,,*.deb,,*.gz,,*.gzip,,*.gem,,*.lha,,*.lzh,,*.lzma,,*.rar,,*.rpm,,*.tar,,*.tgz,,*.xbps,,*.xz,,*.zip::,
              \  ::*.a,,*.cmake,,*.jl,,*.o,,*.so::,
              \  ::*.ai::,
              \  ::*.asm,,*.css,,*.less,,*.s,,*.sh,,*.zsh::,
@@ -100,3 +100,4 @@ set classify+=' ::*.7z,,*.apk,,.*.bz2,,*.cpio,,*.deb,,*.gz,,*.gzip,,*.gem,,*.
              \  ::*.twig::,
              \  ::*.vim,,*.vimrc::,
              \  ::*.xul::'
+

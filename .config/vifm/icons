@@ -100,4 +100,3 @@ set classify+=' ::*.7z,,*.apk,,*.bz2,,*.cpio,,*.deb,,*.gz,,*.gzip,,*.gem,,*.l
              \  ::*.twig::,
              \  ::*.vim,,*.vimrc::,
              \  ::*.xul::'
-

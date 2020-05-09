@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 alias cp="cp -iv"
 alias mv="mv -iv"
@@ -25,9 +25,11 @@ command -v nvim >/dev/null && alias vim="nvim" vimdiff="nvim -d"
 # Dotfiles management
 alias cfg="git --git-dir=$HOME/dotfiles/ --work-tree=$HOME"
 
-# Quick config
-alias cfv="$EDITOR ~/.config/nvim/init.vim"
-alias cfz="$EDITOR ~/.config/zsh/.zshrc"
+# Quick navigation & config
 alias cfa="$EDITOR ~/.config/zsh/aliases"
 alias cfe="$EDITOR ~/.config/zsh/env"
+alias cfv="$EDITOR ~/.config/nvim/init.vim"
+alias cfz="$EDITOR ~/.config/zsh/.zshrc"
+alias cb="cd ~/.config/bin"
 alias cf="cd ~/.config"
+alias cg="cd ~/gitrepos"

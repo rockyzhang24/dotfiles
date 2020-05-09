@@ -10,8 +10,8 @@ hyper - r : launchctl kickstart -k "gui/${UID}/homebrew.mxcl.yabai"; \
             launchctl kickstart -k "gui/${UID}/homebrew.mxcl.spacebar"
 
 # Open terminal
-# cmd - return : /Applications/alacritty.app/Contents/MacOS/alacritty
-cmd - return : /Applications/kitty.app/Contents/MacOS/kitty --single-instance -d ~
+cmd - return : /Applications/alacritty.app/Contents/MacOS/alacritty
+# cmd - return : /Applications/kitty.app/Contents/MacOS/kitty --single-instance -d ~
 # cmd - return : ~/.config/yabai/scripts/open-kitty.sh
 # cmd - return : ~/.config/yabai/scripts/open-iterm.sh
 

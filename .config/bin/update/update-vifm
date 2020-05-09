@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+cd ~/gitrepos/vifm
+if git pull | grep -v "Already up to date"; then
+  ./configure --without-gtk
+  make
+  make install
+  echo "\nVifm Update Finished!!\n"
+else
+  echo "Already up to date"
+fi

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # (I). Initialize the temp folder
 # (II). Calculate the coordinates of the top left corner, the width and the height of

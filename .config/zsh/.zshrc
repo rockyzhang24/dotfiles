@@ -49,7 +49,7 @@ source ~/.config/z/z.sh
 # ========
 
 # fzf key bindings and completion
-source ~/.fzf.zsh
+[ -f "${XDG_CONFIG_HOME:-$HOME/.config}"/fzf/fzf.zsh ] && source "${XDG_CONFIG_HOME:-$HOME/.config}"/fzf/fzf.zsh
 
 # Use lf to switch directories and bind it to ctrl-o
 # source ~/.config/lf/lfcd

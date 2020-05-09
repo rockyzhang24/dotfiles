@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Open kitty window in the current display instead of the display where the
 # first kitty window was created.

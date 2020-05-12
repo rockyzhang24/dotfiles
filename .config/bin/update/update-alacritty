@@ -4,7 +4,7 @@ cd ~/gitrepos/alacritty
 if git pull | grep -v "Already up to date"; then
   make app
   cp -r target/release/osx/Alacritty.app /Applications/
-  echo "\nAlacritty Update Finished!!\n"
+  echo -e "\nAlacritty Update Finished!!\n"
 else
   echo "Already up to date"
 fi

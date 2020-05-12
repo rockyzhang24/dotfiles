@@ -13,7 +13,7 @@ export PATH=/Users/yanzhang/Library/Python/2.7/bin:$PATH  # pip, pip2, pip2.7
 export PATH=/Users/yanzhang/Library/Python/3.7/bin:$PATH
 export PATH="/opt/local/bin:/opt/local/sbin:$PATH"  # MacPorts
 export PATH=$HOME/.cargo/bin:$PATH  # Rust package manager
-export PATH=$(gfind $HOME/.config/bin -type d -printf "%p:")$PATH # my own scripts
+export PATH=$(/usr/local/bin/gfind $HOME/.config/bin -type d -printf "%p:")$PATH # my own scripts
 
 # Use Neovim as "preferred editor"
 export EDITOR="nvim"

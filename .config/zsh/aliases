@@ -20,7 +20,7 @@ alias iftop="sudo /usr/local/sbin/iftop"
 alias f="vifm"
 
 # Use neovim for vim if present
-command -v nvim >/dev/null && alias vim="nvim" vimdiff="nvim -d"
+command -v nvim >/dev/null && alias vim="nvim" vi="nvim" v="nvim" vimdiff="nvim -d"
 
 # Dotfiles management
 alias cfg="git --git-dir=$HOME/dotfiles/ --work-tree=$HOME"

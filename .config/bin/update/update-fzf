@@ -3,7 +3,7 @@
 cd ~/gitrepos/fzf
 if git pull | grep -v "Already up to date"; then
   ./install --xdg
-  echo "\nFZF Update Finished!!\n"
+  echo -e "\nFZF Update Finished!!\n"
 else
   echo "Already up to date"
 fi

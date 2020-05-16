@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+# FZF builtin key bindings and completion
+[ -f "${XDG_CONFIG_HOME:-$HOME/.config}"/fzf/fzf.zsh ] && source "${XDG_CONFIG_HOME:-$HOME/.config}"/fzf/fzf.zsh
+
+# Defaults
+export FZF_DEFAULT_COMMAND="rg --hidden --files -g '!.git/'"
+export FZF_DEFAULT_OPTS="--preview 'bat --color=always --style=numbers,changes,header {} 2> /dev/null | head -100' \
+                         --preview-window :wrap \
+                         --bind 'ctrl-v:execute(\$EDITOR {}),ctrl-y:execute-silent(echo {} | pbcopy),ctrl-o:execute(open {}),change:top' \
+                         --multi \
+                         --reverse"
+
+alias ff="fzf"
+
+# FZF for a specific dir (ffd DIR [OTHER-FZF-ARGS])
+fzfdir() {
+  rg --hidden --files -g '!.git/' $1 2> /dev/null | ( shift && fzf $@ )
+}
+alias ffd="fzfdir"
+
+

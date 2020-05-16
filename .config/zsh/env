@@ -33,9 +33,5 @@ export GOPATH=/Users/yanzhang/Development/go
 # For virtual environment (virtualenv) in python3
 export VIRTUALENVWRAPPER_PYTHON=/usr/local/bin/python3
 
-# fzf
-export FZF_DEFAULT_COMMAND='rg --hidden --files -g "!\.git/"'
-export FZF_DEFAULT_OPTS='--preview "[[ $(file --mime {}) =~ binary ]] && echo {} is a binary file || bat --color=always --style=numbers,changes {} 2> /dev/null"'
-
 # lf icons
 # source $HOME/.config/lf/icons

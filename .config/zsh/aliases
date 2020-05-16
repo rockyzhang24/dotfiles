@@ -10,7 +10,6 @@ alias zc="z -c"
 alias yd="youtube-dl --add-metadata -i"
 alias yda="yd -x -f bestaudio/best"
 alias rm="trash"
-# alias cat="bat"
 alias ccat="highlight --out-format=ansi"
 alias du="ncdu --color dark -rr -x --exclude .git --exclude node_modules"
 alias ls="gls -hFN --color=auto --group-directories-first" # use GNU ls

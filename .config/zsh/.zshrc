@@ -40,16 +40,15 @@ ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets)
 # Other zsh settings
 # ========
 
-source ~/.config/zsh/aliases
 source ~/.config/zsh/vi
-source ~/.config/z/z.sh
+source ~/.config/zsh/aliases
 
 # ========
 # Other programe settings
 # ========
 
-# fzf key bindings and completion
-[ -f "${XDG_CONFIG_HOME:-$HOME/.config}"/fzf/fzf.zsh ] && source "${XDG_CONFIG_HOME:-$HOME/.config}"/fzf/fzf.zsh
+source ~/.config/zsh/fzf
+source ~/.config/z/z.sh
 
 # Use lf to switch directories and bind it to ctrl-o
 # source ~/.config/lf/lfcd
@@ -80,5 +79,5 @@ _comp_options+=(globdots)
 # Completion for kitty
 kitty + complete setup zsh | source /dev/stdin
 
-# Completion for others
+# Completion for other programs
 fpath=($HOME/.config/zsh/completions $fpath)

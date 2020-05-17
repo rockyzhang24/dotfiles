@@ -8,5 +8,6 @@ zmodule utility
 zmodule zsh-users/zsh-completions
 zmodule completion
 zmodule zsh-users/zsh-autosuggestions
-zmodule zsh-users/zsh-syntax-highlighting
+# zmodule zsh-users/zsh-syntax-highlighting
+zmodule zdharma/fast-syntax-highlighting
 zmodule zsh-users/zsh-history-substring-search

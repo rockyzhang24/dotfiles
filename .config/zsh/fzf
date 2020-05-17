@@ -1,22 +1,46 @@
 #!/usr/bin/env bash
 
+alias ff="fzf"
+
 # FZF builtin key bindings and completion
 [ -f "${XDG_CONFIG_HOME:-$HOME/.config}"/fzf/fzf.zsh ] && source "${XDG_CONFIG_HOME:-$HOME/.config}"/fzf/fzf.zsh
 
-# Defaults
-export FZF_DEFAULT_COMMAND="rg --hidden --files -g '!.git/'"
-export FZF_DEFAULT_OPTS="--preview 'bat --color=always --style=numbers,changes,header {} 2> /dev/null | head -100' \
+# Use fd instead of default find
+export FZF_DEFAULT_COMMAND="fd --type f --hidden --follow --exclude .git"
+
+# Default options when run ZFZ
+export FZF_DEFAULT_OPTS="--preview '( \
+                                        bat --color=always --style=numbers,changes,header {} 2> /dev/null \
+                                        || ( [[ \$(file -b {}) == directory ]] && tree -C {} || echo -e This whole line is:\"\n\n\" {} ) \
+                                    ) | head -100' \
                          --preview-window :wrap \
-                         --bind 'ctrl-v:execute(\$EDITOR {}),ctrl-y:execute-silent(echo {} | pbcopy),ctrl-o:execute(open {}),change:top' \
+                         --bind 'ctrl-v:execute(\$EDITOR {+}),ctrl-y:execute-silent(echo {+} | pbcopy),ctrl-o:execute(open {+}),change:top' \
                          --multi \
                          --reverse"
 
-alias ff="fzf"
+# Use fd for FZF completion
+# 1). listing files and dirs ($1 is the base path to start search) such as "vim ~/.config/**<TAB>"
+_fzf_compgen_path() {
+  fd --hidden --follow --exclude ".git" . "$1"
+}
+# 2). listing dirs such as "cd **<TAB>"
+_fzf_compgen_dir() {
+  fd --type d --hidden --follow --exclude ".git" . "$1"
+}
 
 # FZF for a specific dir (ffd DIR [OTHER-FZF-ARGS])
 fzfdir() {
-  rg --hidden --files -g '!.git/' $1 2> /dev/null | ( shift && fzf $@ )
+  fd --type f --hidden --follow --exclude .git '.*' $1 2> /dev/null | ( shift && fzf $@ )
 }
 alias ffd="fzfdir"
 
+# Use fd for CTRL-t (paste the selected file or dir onto the command line)
+export FZF_CTRL_T_COMMAND="fd --hidden --follow --exclude .git"
 
+# Display the full command on the preview window (CTRL-r for command history search)
+export FZF_CTRL_R_OPTS="--preview 'echo {}' --preview-window down:3:wrap"
+
+# CTRL-j for cd into the selected dir
+bindkey '^j' fzf-cd-widget
+export FZF_ALT_C_COMMAND="fd --type d --hidden --follow --exclude .git"
+export FZF_ALT_C_OPTS="--preview 'tree -C {} | head -100'"

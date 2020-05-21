@@ -58,3 +58,10 @@ echo -ne '\e[5 q'
 
 # Use beam shape cursor for each new prompt.
 preexec() { echo -ne '\e[5 q' ;}
+
+# Copy pwd to system clipboard by ctrl-y
+function copypwd {
+  echo $(pwd) | pbcopy
+}
+zle -N copypwd
+bindkey '^y' copypwd

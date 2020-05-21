@@ -6,6 +6,10 @@
 
 source ~/.config/yabai/scripts/initialization.sh
 
+# Enable border on active window
+killall limelight &> /dev/null
+~/gitrepos/limelight/bin/limelight &> /dev/null &
+
 # ====
 # Rules
 # ====
@@ -19,6 +23,9 @@ yabai -m rule --add app=".* Preferences|Archive Utility|EuDic|Activity Monitor|K
 # Initialize the temp folder when adding or removing displays
 yabai -m signal --add event=display_added action="~/.config/yabai/scripts/initialization.sh"
 yabai -m signal --add event=display_removed action="~/.config/yabai/scripts/initialization.sh"
+
+# tell limelight to refresh when the focused application changes
+yabai -m signal --add event=application_activated action="pkill -SIGUSR1 limelight &> /dev/null"
 
 # ====
 # global settings

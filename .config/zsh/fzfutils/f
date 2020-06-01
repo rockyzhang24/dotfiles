@@ -1,0 +1,11 @@
+# vim: filetype=zsh
+
+# MNEMONIC: [F]uzzy search
+# SYNOPSIS: f [DIR] [FZF ARGS]
+# DESCRIPTION: Make FZF support execution under a certain directory
+
+if [[ $# == 0 ]] || [[ $1 =~ ^--\|^- ]]; then
+  fzf $@
+else
+  fd --hidden --follow --exclude .git '.*' $1 2> /dev/null | ( shift && fzf $@ )
+fi

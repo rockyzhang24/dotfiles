@@ -1,0 +1,10 @@
+# vim: filetype=zsh
+
+# MNEMONIC: [B]ookmark [D]irectories
+# SYNOPSIS: bd
+# DESCRIPTION: Fuzzy search for the bookmark directories and cd into the selected directory
+
+local dest_dir=$(cat $HOME/.config/bookmark_dirs | sed 's/#.*//g' | sed '/^\s*$/d' | fzf --no-multi)
+if [[ $dest_dir != '' ]]; then
+  cd "$dest_dir"
+fi

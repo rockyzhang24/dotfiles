@@ -1,0 +1,18 @@
+# vim: filetype=zsh
+
+# MNEMONIC: [F]uzzy search [O]pen
+# SYNOPSIS: fo [DIR] [QUERY]
+# DESCRIPTION: Fuzzy finder for opening a file under DIR based on QUERY (CTRL-o for default application,
+# CTRL-v or ENTER for $EDITOR)
+
+IFS=$'\n'
+if [[ -d $1 ]]; then
+  out=("$(fd --hidden --follow --exclude .git '.*' $1 | fzf --query="$2" --exit-0 --expect=ctrl-o,ctrl-v)")
+else
+  out=("$(fzf --query="$1" --exit-0 --expect=ctrl-o,ctrl-v)")
+fi
+key=$(head -1 <<< "$out")
+file=$(head -2 <<< "$out" | tail -1)
+if [ -n "$file" ]; then
+  [ "$key" = ctrl-o ] && open "$file" || ${EDITOR:-vim} "$file"
+fi

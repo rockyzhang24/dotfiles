@@ -1,0 +1,21 @@
+# vim: filetype=zsh
+
+# MNEMONIC: [F]uzzy search [G]it [I]gnore
+# SYNOPSIS: fgi [PARAM]
+#   [PARAM] is a comma separated list of ignore profiles. (ref: https://docs.gitignore.io/use/command-line)
+#   If [PARAM] is ommited choose interactively.
+# DESCRIPTION: Create useful gitignore files
+
+function __gi() {
+  curl -sLw "\n" https://www.gitignore.io/api/"$@"
+}
+
+if  [ "$#" -eq 0 ]; then
+  IFS+=","
+  for item in $(__gi list); do
+    echo $item
+  done | fzf --multi --ansi | paste -s -d "," - |
+  { read result && __gi "$result"; }
+else
+  __gi "$@"
+fi

@@ -1,0 +1,15 @@
+# vim: filetype=zsh
+
+# MNEMONIC: [F]uzzy search [R]ip[G]rep
+# SYNOPSIS: same with rg
+# DESCRIPTION: Fuzzy search for the results of rg and open the corresponding file using $EDITOR
+
+local file
+local line
+
+read -r file line <<<"$(rg --line-number --color=always --smart-case $@ | fzf --ansi -0 -1 | awk -F: '{print $1, $2}')"
+
+if [[ -n $file ]]
+then
+  $EDITOR $file +$line
+fi

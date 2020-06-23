@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# unpin yabai
+printf "\n************** Unpin yabai ... ****************\n"
+brew unpin koekeishiya/formulae/yabai
+
 # set codesigning certificate name here (default: yabai-cert)
 export YABAI_CERT=
 
@@ -24,3 +28,9 @@ brew services start koekeishiya/formulae/yabai
 # load the scripting addition
 printf "\n************** Loading scripting addition ... ****************\n"
 killall Dock
+
+# pin yabai
+printf "\n************** Pin yabai ... ****************\n"
+brew pin koekeishiya/formulae/yabai
+
+printf "\n************** !yabai update finished! ****************\n"

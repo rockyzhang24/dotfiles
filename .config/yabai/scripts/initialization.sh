@@ -23,7 +23,7 @@
 # width by 1.5 will get the height. Same for the situation where the height is less.
 
 # (2). Calculate the coordinates of the top left corner
-# We can calate the coordinates (say x, y) of the top left corner of the window becoming
+# We can calculate the coordinates (say x, y) of the top left corner of the window becoming
 # floating based on the coordinates (say x0, y0) of the top left corner of the display. Let
 # w0 and h0 are the width and height of the display, and w and h are the width and height of
 # the window we have been calculated out above.

@@ -3,13 +3,12 @@
 bindkey -v
 export KEYTIMEOUT=1
 
+# Use Emacs-style keys in vi insert mode
 bindkey '^f' forward-char
 bindkey '^b' backward-char
 bindkey '^a' beginning-of-line
 bindkey '^e' end-of-line
-
 bindkey '^k' kill-line  # kill from the cursor to the end of the line
-
 bindkey 'ƒ' forward-word  # Option-f
 bindkey '∫' backward-word # Option-b
 

@@ -10,9 +10,10 @@ source ~/.config/yabai/scripts/initialization.sh
 # Rules
 # ====
 
-yabai -m rule --add app=".* Preferences|System Information|Archive Utility|EuDic|Activity Monitor|Karabiner|App Store|Fantastical Helper" manage=off
+yabai -m rule --add app=".* Preferences|Finder|System Information|Archive Utility|EuDic|Activity Monitor|Karabiner|App Store" manage=off
 yabai -m rule --add title="Preferences" manage=off
-yabai -m rule --add app="Fantastical Helper" border=off # Fantastical menu bar drop-down menu
+yabai -m rule --add app="Fantastical Helper" border=off manage=off # Fantastical menu bar drop-down menu
+yabai -m rule --add app="kitty" border=on
 
 # ====
 # Signals
@@ -42,7 +43,7 @@ yabai -m config active_window_opacity        1.0
 yabai -m config normal_window_opacity        0.90
 
 # Window border
-yabai -m config window_border on
+yabai -m config window_border off
 yabai -m config window_border_width 3
 yabai -m config active_window_border_color 0xff407294
 yabai -m config normal_window_border_color 0xff555555

@@ -17,8 +17,8 @@ exit $?
 
 require 'json'
 
-# For Brave Browser
-FILE = '/Users/yanzhang/Library/Application Support/BraveSoftware/Brave-Browser/Default/Bookmarks'
+# For Chrome Browser
+FILE = '/Users/yanzhang/Library/Application Support/Google/Chrome/Default/Bookmarks'
 
 CJK  = /\p{Han}|\p{Katakana}|\p{Hiragana}|\p{Hangul}/
 

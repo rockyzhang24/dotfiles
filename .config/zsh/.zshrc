@@ -40,14 +40,14 @@ ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets)
 # Other zsh settings
 # ========
 
-source ~/.config/zsh/vi
+source ~/.config/zsh/keybindings
 source ~/.config/zsh/aliases
 
 # ========
 # Other programe settings
 # ========
 
-source ~/.config/zsh/fzf
+source ~/.config/fzf/fzf
 source ~/.config/z/z.sh
 
 # Use lf to switch directories and bind it to ctrl-o

@@ -8,6 +8,6 @@ spacebar -m config space_icon_strip  1:\  2:\  3:\  4 5 6 7 8 9 10
 spacebar -m config power_icon_strip   
 spacebar -m config space_icon        
 spacebar -m config clock_icon        
-spacebar -m config clock_format      "%m/%d/%y %R"
+# spacebar -m config clock_format      "%m/%d/%y %R"
 
 echo "spacebar configuration loaded.."

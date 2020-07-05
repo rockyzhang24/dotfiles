@@ -22,7 +22,7 @@ export FZF_DEFAULT_OPTS="--preview '( \
                                         || ( [[ \$(file -b {}) == directory ]] && tree -C {} || echo -e This whole line is:\"\n\n\" {} ) \
                                     ) | head -200' \
                          --preview-window :wrap \
-                         --bind 'ctrl-v:execute(\$EDITOR {+} < /dev/tty > /dev/tty 2>&1),ctrl-y:execute-silent(echo -n {+} | pbcopy),ctrl-t:execute(nohup /Applications/Alacritty.app/Contents/MacOS/alacritty -e \$EDITOR {+} &),ctrl-o:execute(open {+}),ctrl-d:half-page-down,ctrl-u:half-page-up,ctrl-a:select-all,change:top' \
+                         --bind 'ctrl-v:execute(\$EDITOR {+} < /dev/tty > /dev/tty 2>&1),ctrl-y:execute-silent(echo -n {+} | pbcopy),ctrl-t:execute(nohup /Applications/kitty.app/Contents/MacOS/kitty --single-instance \$EDITOR {+} &),ctrl-o:execute(open {+}),ctrl-d:half-page-down,ctrl-u:half-page-up,ctrl-a:select-all,change:top' \
                          --multi \
                          --reverse \
                          --no-mouse \

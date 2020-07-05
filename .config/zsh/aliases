@@ -3,21 +3,22 @@
 alias cp="cp -iv"
 alias mv="mv -iv"
 alias md="mkdir -pv"
+alias rm="rm -iv"
 alias c="clear"
 alias ka="killall"
-alias j="z"
-alias jl="z -l"
-alias jc="z -c"
+alias z="z"
+alias zl="z -l"
+alias zc="z -c"
 alias yd="youtube-dl --add-metadata -i"
 alias yda="yd -x -f bestaudio/best"
-alias rm="trash"
-alias ccat="highlight --out-format=ansi"
-alias du="ncdu --color dark -rr -x --exclude .git --exclude node_modules"
 alias ls="gls -hFN --color=auto --group-directories-first" # use GNU ls
 alias grep="grep --color=auto"
 alias diff="diff --color=auto"
 alias iftop="sudo /usr/local/sbin/iftop"
-alias f="vifm"
+
+# Improved
+alias idu="ncdu --color dark -rr -x --exclude .git --exclude node_modules"
+alias icat="highlight --out-format=ansi"
 
 # Use neovim for vim if present
 command -v nvim >/dev/null && alias vim="nvim" vi="nvim" v="nvim" vimdiff="nvim -d"
@@ -26,10 +27,10 @@ command -v nvim >/dev/null && alias vim="nvim" vi="nvim" v="nvim" vimdiff="nvim 
 alias cfg="git --git-dir=$HOME/dotfiles/ --work-tree=$HOME"
 
 # Quick navigation & config
-alias cfa="$EDITOR ~/.config/zsh/aliases"
-alias cfe="$EDITOR ~/.config/zsh/env"
+alias cc="cd ~/.config"
+alias cb="cd ~/.config/bin"
+alias cg="cd ~/gitrepos"
 alias cfv="$EDITOR ~/.config/nvim/init.vim"
 alias cfz="$EDITOR ~/.config/zsh/.zshrc"
-alias cb="cd ~/.config/bin"
-alias cf="cd ~/.config"
-alias cg="cd ~/gitrepos"
+alias cfa="$EDITOR ~/.config/zsh/aliases"
+alias cfe="$EDITOR ~/.config/zsh/env"

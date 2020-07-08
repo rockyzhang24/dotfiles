@@ -1,0 +1,29 @@
+# Bookmark files for bf command
+
+# ====== configs ======
+
+# vim
+/Users/yanzhang/.config/nvim/init.vim
+
+# zsh
+/Users/yanzhang/.config/zsh/.zshrc
+/Users/yanzhang/.config/zsh/aliases
+/Users/yanzhang/.config/zsh/env
+/Users/yanzhang/.config/zsh/keybindings
+
+# wm
+/Users/yanzhang/.config/yabai/yabairc
+/Users/yanzhang/.config/skhd/skhdrc
+
+# lf
+/Users/yanzhang/.config/lf/lfrc
+
+# fzf
+/Users/yanzhang/.config/fzf/fzf
+
+# terminal
+/Users/yanzhang/.config/kitty/kitty.conf
+
+# bookmarks
+/Users/yanzhang/.config/fzf/bookmark_files
+/Users/yanzhang/.config/fzf/bookmark_dirs

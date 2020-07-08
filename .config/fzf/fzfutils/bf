@@ -4,7 +4,7 @@
 # SYNOPSIS: bf
 # DESCRIPTION: Fuzzy search for the bookmark files and open the selected file via vim
 
-local selection=$(cat $HOME/.config/bookmark_files | sed 's/#.*//g' | sed '/^\s*$/d' | fzf)
+local selection=$(cat $HOME/.config/fzf/bookmark_files | sed 's/#.*//g' | sed '/^\s*$/d' | fzf)
 if [[ $selection != '' ]]; then
   $EDITOR "$selection"
 fi

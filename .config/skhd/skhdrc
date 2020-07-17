@@ -1,4 +1,5 @@
 # Sample config reference: https://github.com/koekeishiya/skhd/blob/master/examples/skhdrc
+# Keywords (modifiers and literals): https://github.com/koekeishiya/skhd/issues/1
 
 # NOTE:
 # 1). ALT for changing focus (window, space, monitor)
@@ -37,6 +38,9 @@ alt - k : yabai -m window --focus north
 alt - j : yabai -m window --focus south
 alt - h : yabai -m window --focus west
 alt - l : yabai -m window --focus east
+alt - p : yabai -m window --focus recent
+alt - 0x2B : yabai -m window --focus stack.prev   # < for previous
+alt - 0x2F : yabai -m window --focus stack.next   # > for next
 
 # Focus workspace
 alt - 0x21 : yabai -m space --focus prev   # [
@@ -62,7 +66,7 @@ alt - o : yabai -m display --focus 3
 # Window operations
 # =================
 
-# Move window
+# Move (swap) window
 alt + shift - k : yabai -m window --swap north
 alt + shift - j : yabai -m window --swap south
 alt + shift - h : yabai -m window --swap west
@@ -101,6 +105,7 @@ alt + shift - 0x18 : yabai -m window --insert north   # =
 alt + shift - 0x27 : yabai -m window --insert south   # '
 alt + shift - 0x21 : yabai -m window --insert west    # [
 alt + shift - 0x1E : yabai -m window --insert east    # ]
+alt + shift - 0x2A : yabai -m window --insert stack   # \
 
 # ================
 # Space operations
@@ -131,8 +136,13 @@ alt + ctrl - 8 : yabai -m space --move 8
 alt + ctrl - 9 : yabai -m space --move 9
 alt + ctrl - 0 : yabai -m space --move 10
 
-# Toggle workspace layout between float and bsp
-alt + ctrl - l : ~/.config/yabai/scripts/toggle-space-layout-float-bsp.sh
+# Toggle workspace layout
+alt + ctrl - b : yabai -m space --layout bsp && \
+                 osascript -e "display notification \"Change the workspace layout to bsp\" with title \"yabai\""
+alt + ctrl - f : yabai -m space --layout float && \
+                 osascript -e "display notification \"Change the workspace layout to float\" with title \"yabai\""
+alt + ctrl - s : yabai -m space --layout stack && \
+                 osascript -e "display notification \"Change the workspace layout to stack\" with title \"yabai\""
 
 # ========================
 # Toggle window properties

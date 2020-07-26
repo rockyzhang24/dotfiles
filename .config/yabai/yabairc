@@ -13,7 +13,7 @@ source ~/.config/yabai/scripts/initialization.sh
 yabai -m rule --add app=".* Preferences|Finder|System Information|Archive Utility|EuDic|Activity Monitor|Karabiner|App Store|Bartender|1Password .*" manage=off
 yabai -m rule --add title="Preferences" manage=off
 yabai -m rule --add app="Fantastical Helper" border=off manage=off # Fantastical menu bar drop-down menu
-yabai -m rule --add app="kitty" border=on
+yabai -m rule --add app="kitty|Alacritty|iTerm2" border=on
 yabai -m rule --add app="Installer" manage=off
 
 # ====
@@ -57,7 +57,8 @@ yabai -m config mouse_action1                move
 yabai -m config mouse_action2                resize
 
 # Paddings
-yabai -m config external_bar all:31:0   # top padding for status bar (it won't be affected by --toggle padding)
+yabai -m config external_bar all:26:0   # top padding for status bar (it won't be affected by --toggle padding)
+yabai -m config top_padding                  5
 yabai -m config bottom_padding               5
 yabai -m config left_padding                 5
 yabai -m config right_padding                5

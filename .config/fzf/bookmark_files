@@ -13,6 +13,7 @@
 
 # wm
 /Users/yanzhang/.config/yabai/yabairc
+/Users/yanzhang/.config/spacebar/spacebarrc
 /Users/yanzhang/.config/skhd/skhdrc
 
 # lf
@@ -22,6 +23,7 @@
 /Users/yanzhang/.config/fzf/fzf
 
 # terminal
+/users/yanzhang/.config/alacritty/alacritty.yml
 /Users/yanzhang/.config/kitty/kitty.conf
 
 # bookmarks

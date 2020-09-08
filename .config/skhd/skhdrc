@@ -57,9 +57,8 @@ alt - 9 : yabai -m space --focus 9
 alt - 0 : yabai -m space --focus 10
 
 # Focus display (monitor)
-# i for the center monitor, u for the left monitor and o for the right monitor
-alt - i : yabai -m display --focus 1
-alt - u : yabai -m display --focus 2
+alt - u : yabai -m display --focus 1
+alt - i : yabai -m display --focus 2
 alt - o : yabai -m display --focus 3
 
 # =================
@@ -85,8 +84,8 @@ alt + shift - 9 : yabai -m window --space 9
 alt + shift - 0 : yabai -m window --space 10
 
 # Send window to monitor
-alt + shift - i : yabai -m window --display 1
-alt + shift - u : yabai -m window --display 2
+alt + shift - u : yabai -m window --display 1
+alt + shift - i : yabai -m window --display 2
 alt + shift - o : yabai -m window --display 3
 
 # Warp (re-insert)

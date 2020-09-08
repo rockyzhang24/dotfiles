@@ -46,7 +46,7 @@ yabai -m config normal_window_opacity        0.90
 # Window border
 yabai -m config window_border off
 yabai -m config window_border_width 3
-yabai -m config active_window_border_color 0xff407294
+yabai -m config active_window_border_color 0xff42A5F5
 yabai -m config normal_window_border_color 0xff555555
 
 # Mouse

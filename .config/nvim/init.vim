@@ -14,6 +14,7 @@ syntax on
 set number
 set relativenumber
 set cursorline
+set hidden  " allow buffer switch without saving
 set wrap
 set autoindent
 set scrolloff=4
@@ -24,42 +25,35 @@ set wildmode=list:longest,full
 set textwidth=0
 set colorcolumn=80
 set list
-set listchars=trail:▫
+set listchars=tab:›\ ,trail:▫,extends:#,nbsp:.
 set foldenable
 set foldmethod=indent
 set foldlevel=99
 set completeopt=menuone,preview,noinsert
-set notimeout
 set ttimeoutlen=0
 set shortmess+=c
 set inccommand=split
 set updatetime=100
-
-" Searching
+set laststatus=2
+set showtabline=2
+set matchpairs+=<:>
+set splitbelow
+set splitright
+set expandtab
+set tabstop=2
+set shiftwidth=2
+set softtabstop=2
+set shiftround
+set mouse=a
 set hlsearch
 set incsearch
 set ignorecase
 set smartcase
+set title
+let &showbreak = '↪ '
 
 " Avoid highlighting the last search when sourcing vimrc
 exec "nohlsearch"
-
-" Show status bar
-set laststatus=2
-
-" Convert tabs to spaces
-set expandtab
-
-" Indent using 2 spaces
-set tabstop=2
-set shiftwidth=2
-set softtabstop=2
-
-set splitbelow
-set splitright
-
-" Enable mouse
-set mouse=a
 
 " presistent undo (use set undodir=... to change the undodir, default is ~/.local/share/nvim/undo)
 if has('persistent_undo')
@@ -69,7 +63,19 @@ endif
 " Terminal
 let g:neoterm_autoscroll = '1'
 
-" }}}
+" }}} General
+
+" ========== Dress up ========== {{{
+
+set termguicolors
+
+colorscheme gruvbox
+set background=dark
+
+" Remove background color to make vim transparent in Alacritty
+hi Normal guibg=NONE ctermbg=NONE
+
+" }}} Dress up
 
 " ========== Autocommands ========== {{{
 
@@ -88,6 +94,9 @@ augroup general
   " Automatically start insert mode when enter terminal
   autocmd TermOpen term://* startinsert
 
+  " Auto change working directory to the current dir
+  autocmd BufEnter * silent! lcd %:p:h
+
 augroup END
 
 augroup filetypes
@@ -96,28 +105,56 @@ augroup filetypes
   " Disables auto-wrap using textwidth and automatic commenting on newline
   autocmd FileType * setlocal formatoptions-=t formatoptions-=c formatoptions-=r formatoptions-=o
 
+  " vim
   autocmd FileType vim setlocal foldmethod=marker foldlevel=0 textwidth=0
+
+  " markdown
   autocmd FileType markdown packadd markdown-preview.nvim |
                           \ source ~/.config/nvim/md-snippets.vim
 augroup END
 
-" }}}
+" }}} Autocommands
 
 " ========== Mappings ========== {{{
 
 let mapleader=" "
 let maplocalleader="\\"
 
+" ---- General ----
+
+" Jump to the next '<++>' and edit it
+nnoremap <silent> <Leader><Leader> <Esc>/<++><CR>:nohlsearch<CR>c4l
+
+" Indent
+vnoremap < <gv
+vnoremap > >gv
+
+" Movement
+xnoremap J :m '>+1<CR>gv=gv
+xnoremap K :m '<-2<CR>gv=gv
+
+" ---- Prev & Next ----
+
+" Buffer
+nnoremap [b :bprevious<CR>
+nnoremap ]b :bnext<CR>
+
+" Quickfix
+nnoremap [q :cprevious<CR>
+nnoremap ]q :cnext<CR>
+
+" ---- Copy ----
+
+nnoremap Y y$
+vnoremap Y "+y
+
 " ---- Window ----
 
-" Close all but current window (maximize)
-noremap <Leader>wm <C-w>o
-
 " Focus movement around windows
-noremap <C-k> <C-w>k
-noremap <C-j> <C-w>j
-noremap <C-h> <C-w>h
-noremap <C-l> <C-w>l
+nnoremap <C-k> <C-w>k
+nnoremap <C-j> <C-w>j
+nnoremap <C-h> <C-w>h
+nnoremap <C-l> <C-w>l
 
 " Resize splits with arrow keys (up/right -> enlarge, down/left -> shrink)
 noremap <Up> :res +5<CR>
@@ -127,46 +164,49 @@ noremap <Right> :vertical resize +5<CR>
 
 " ---- Searching ----
 
-" No highlight search
-nnoremap <silent> <Leader><Enter> :<C-u>noh<CR><C-l>
+" Clean search highlighting
+nnoremap <silent> <Leader>/ :<C-u>nohlsearch<CR>
 
 " Use very magic mode when searching
 nnoremap / /\v
 nnoremap ? ?\v
 
-" ---- Operator-pending Mappings ----
+" n for searching forward and N for searching backward regardless of / or ?
+nnoremap <expr> n 'Nn'[v:searchforward].'zz'
+nnoremap <expr> N 'nN'[v:searchforward].'zz'
+
+" Grep by motion
+nnoremap <leader>G :set operatorfunc=<SID>GrepOperator<cr>g@
+vnoremap <leader>G :<c-u>call <SID>GrepOperator(visualmode())<cr>
+
+" ---- Operator-pending ----
 
 " Inside next/last parentheses
 onoremap in( :<C-u>normal! f(vi(<CR>
 onoremap il( :<C-u>normal! F)vi(<CR>
 
-" ---- Movement ----
-
-" Fast movement
-noremap J 5j
-noremap K 5k
-
 " ---- Command Line ----
 
 " Cursor movement in command line
 cnoremap <C-p> <Up>
-cnoremap <C-N> <Down>
-cnoremap <C-B> <Left>
-cnoremap <C-F> <Right>
-cnoremap <C-A> <Home>
-cnoremap <C-E> <End>
-" (Meta-b for one WORD left)
+cnoremap <C-n> <Down>
+cnoremap <C-b> <Left>
+cnoremap <C-f> <Right>
+cnoremap <C-a> <Home>
+cnoremap <C-e> <End>
 cnoremap ∫ <S-Left>
-" (Meta-f for one WORD right)
 cnoremap ƒ <S-Right>
 
 " Ctrl-o to open command-line window
-cnoremap <C-O> <C-F>
+cnoremap <C-o> <C-f>
+
+" Save the file that requireds root permission
+cnoremap w!! w !sudo tee % >/dev/null
 
 " ---- Terminal ----
 
-tnoremap <C-N> <C-\><C-N>
-tnoremap <C-O> <C-\><C-N><C-O>
+tnoremap <C-n> <C-\><C-n>
+tnoremap <C-o> <C-\><C-n><C-o>
 
 " ---- Toggling ----
 
@@ -175,23 +215,36 @@ nnoremap <Leader>ts :setlocal spell! spelllang=en_us<CR>
 
 " ---- Vimrc ----
 
-" edit & source vimrc
-nnoremap <Leader>ev :vsplit $MYVIMRC<CR>
-nnoremap <Leader>sv :source $MYVIMRC<CR>
+" Edit & source vimrc
+nnoremap <Leader>ve :vsplit $MYVIMRC<CR>
+nnoremap <Leader>vs :source $MYVIMRC<CR>
 
-" ---- Others ----
+" }}} Mapppings
 
-" Copy to system clipboard
-noremap Y "+y
+" ========== Functions ========== {{{
 
-" Jump to the next '<++>' and edit it
-nnoremap <silent> <Leader><Leader> <Esc>/<++><CR>:nohlsearch<CR>c4l
+" Implement a Grep Operator which can be used with any of Vim's built-in or custom motions to
+" select the text you want to search for.
+" Reference: https://learnvimscriptthehardway.stevelosh.com/chapters/32.html
+function! s:GrepOperator(type)
+  let saved_unnamed_register = @@
 
-" Indent
-vnoremap < <gv
-vnoremap > >gv
+  if a:type ==# 'v'
+    normal! `<v`>y
+  elseif a:type ==# 'char'
+    normal! `[v`]y
+  else
+    return
+  endif
 
-" }}}
+  silent execute "grep! -R " . shellescape(@@) . " ."
+  copen
+
+  let @@ = saved_unnamed_register
+endfunction
+
+
+" }}} Functions
 
 " ========== Plugins ========== {{{
 
@@ -208,6 +261,7 @@ function! PackInit() abort
   call minpac#add('tomtom/tcomment_vim')
   call minpac#add('RRethy/vim-illuminate')
   call minpac#add('RRethy/vim-hexokinase', { 'do': 'make hexokinase' })
+  call minpac#add('airblade/vim-rooter')
 
   " Git
   call minpac#add('tpope/vim-fugitive')
@@ -235,19 +289,7 @@ runtime macros/matchit.vim
 " Basic vim plugin in FZF
 set rtp+=~/gitrepos/fzf
 
-" }}}
-
-" ========== Dress up ========== {{{
-
-set termguicolors
-
-colorscheme gruvbox
-set background=dark
-
-" Remove background color to make vim transparent in Alacritty
-hi Normal guibg=NONE ctermbg=NONE
-
-" }}}
+" }}} Plugins
 
 " ========== Plugin settings ========== {{{
 
@@ -278,12 +320,11 @@ let g:fzf_action = {
 let g:fzf_history_dir = '~/.local/share/fzf-vim-history'
 
 " Disable the statusline for fzf window
-if has('nvim') && !exists('g:fzf_layout')
-  augroup fzf
-    autocmd  FileType fzf set laststatus=0 noshowmode noruler
-          \| autocmd BufLeave <buffer> set laststatus=2 showmode ruler
-  augroup END
-endif
+augroup fzf
+  autocmd!
+  autocmd  FileType fzf set laststatus=0 noshowmode noruler
+        \| autocmd BufLeave <buffer> set laststatus=2 showmode ruler
+augroup END
 
 " GGrep, a wrapper of git grep
 command! -bang -nargs=* GGrep
@@ -318,7 +359,12 @@ augroup END
 " ---- vim-hexokinase ----
 
 let g:Hexokinase_ftEnabled = ['css', 'html', 'javascript']
+let g:Hexokinase_highlighters = ['backgroundfull']
 nnoremap <Leader>tc :HexokinaseToggle<CR>
+
+" ---- vim-rooter ----
+
+let g:rooter_pattern = ['.git']
 
 " ---- gitgutter ----
 
@@ -368,4 +414,4 @@ augroup starity
   autocmd User Startified setlocal cursorline
 augroup END
 
-" }}}
+" }}} Plugin settings

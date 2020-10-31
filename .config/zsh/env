@@ -1,9 +1,5 @@
 #!/usr/bin/env bash
 
-export ZDOTDIR="$HOME/.config/zsh"
-#: ${ZIM_HOME=${ZDOTDIR:-${HOME}}/.zim}
-export ZIM_HOME="${ZDOTDIR:-${HOME}}/.zim"
-
 export XDG_CONFIG_HOME=$HOME/.config
 export XDG_DATA_HOME=$HOME/.local/share
 
@@ -14,7 +10,6 @@ export GOPATH=$HOME/go
 export PATH=/Users/yanzhang/Development/apache-maven-3.6.1/bin:$PATH
 export PATH=/Users/yanzhang/.emacs.d/bin:$PATH  # Doom Emacs
 export PATH=/Users/yanzhang/Library/Python/2.7/bin:$PATH  # pip, pip2, pip2.7
-export PATH=/Users/yanzhang/Library/Python/3.7/bin:$PATH
 export PATH="/opt/local/bin:/opt/local/sbin:$PATH"  # MacPorts
 export PATH=$HOME/.cargo/bin:$PATH  # Rust package manager
 export PATH=$(/usr/local/bin/gfind $HOME/.config/bin -type d -printf "%p:")$PATH # my own scripts
@@ -36,9 +31,11 @@ export LESS="-C -~ -R -P ?f%f  .[%lt-%lb]?L/%L. ?pB%pB\% .(press h for help or q
 # For virtual environment (virtualenv) in python3
 export VIRTUALENVWRAPPER_PYTHON=/usr/local/bin/python3
 
+# z.lua
+export _ZL_ROOT_MARKERS=".git,.svn,.hg,.root,package.json"
+
 # lf icons
 # source $HOME/.config/lf/icons
 
 # Let ranger use custom config (~/.config/ranger/)
 #export RANGER_LOAD_DEFAULT=FALSE
-

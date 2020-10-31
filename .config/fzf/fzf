@@ -54,5 +54,14 @@ bindkey '^j' fzf-cd-widget
 export FZF_ALT_C_COMMAND="fd --type d $FD_DEFAULT_OPTS"
 export FZF_ALT_C_OPTS="--preview 'tree -C {} | head -200'"
 
+# Utility commands (defined under ../fzfutils/)
+#   - f [DIR] [FZF ARGS]:  fzf with an optional directory argument
+#   - fo [DIR] [QUERY]:    fzf to open a file via vim (ctrl-v), or via difault application (ctrl-o)
+#   - fcd [DIR]:           fzf to cd into a directory under DIR
+#   - frg [RG ARGS]:       fzf for rg results and open it via vim
+#   - fk:                  fzf to kill a process
+#   - fgi:                 fzf to create gitignore files
+#   - bf:                  fzf to open a bookmark file via vim
+#   - bd:                  fzf to cd into a bookmark directory
 fpath+=${0:h}/fzfutils
-autoload -U ${0:h}/fzfutils/*(.:t)
+autoload -Uz ${0:h}/fzfutils/*(.:t)

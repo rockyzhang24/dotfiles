@@ -6,15 +6,15 @@ alias md="mkdir -pv"
 alias rm="rm -iv"
 alias c="clear"
 alias ka="killall"
-alias z="z"
-alias zl="z -l"
-alias zc="z -c"
 alias yd="youtube-dl --add-metadata -i"
 alias yda="yd -x -f bestaudio/best"
 alias ls="gls -hFN --color=auto --group-directories-first" # use GNU ls
 alias grep="grep --color=auto"
 alias diff="diff --color=auto"
 alias iftop="sudo /usr/local/sbin/iftop"
+alias zl="z -l"
+alias zc="z -c"
+alias zb="z -b"
 
 # Improved
 alias idu="ncdu --color dark -rr -x --exclude .git --exclude node_modules"

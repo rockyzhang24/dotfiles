@@ -1,0 +1,17 @@
+#!/usr/bin/env zsh
+
+# Use menu selection for completion
+zstyle ':completion:*' menu select
+zmodload zsh/complist
+
+autoload -Uz compinit
+compinit
+
+# Include hidden files in autocomplete
+_comp_options+=(globdots)
+
+# Completion for kitty
+kitty + complete setup zsh | source /dev/stdin
+
+# Completion for other programs
+fpath=($HOME/.config/zsh/completions $fpath)

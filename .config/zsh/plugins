@@ -1,0 +1,16 @@
+#!/usr/bin/env zsh
+
+# Using zimfw as the plugin manager
+
+if [[ ${ZIM_HOME}/init.zsh -ot ${ZDOTDIR:-${HOME}}/.zimrc ]]; then
+  source ${ZIM_HOME}/zimfw.zsh init -q
+fi
+source ${ZIM_HOME}/init.zsh
+
+# The prefix for the alias from zim builtin git module
+#zstyle ':zim:git' aliases-prefix 'g'
+
+# Append `../` to your input for each `.` you type after an initial `..`
+zstyle ':zim:input' double-dot-expand yes
+
+ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets)

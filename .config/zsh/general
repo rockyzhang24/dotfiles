@@ -1,0 +1,7 @@
+#!/usr/bin/env zsh
+
+# Remove duplicated commands in history
+setopt HIST_IGNORE_ALL_DUPS
+
+# Prompt for spelling correction of commands.
+setopt CORRECT

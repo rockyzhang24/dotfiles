@@ -26,7 +26,7 @@ export WORDCHARS=${WORDCHARS//[\/]}
 
 # Make less support highlighting, and tailor its prompt (i.e., the bottom line)
 export LESSOPEN="| $(which highlight) -O truecolor -s base16/onedark --force -l %s"
-export LESS="-X -F -R -P ?f%f  .[%lt-%lb]?L/%L. ?pB%pB\% .(press h for help or q for quit)"
+export LESS="-C -~ -R -P ?f%f  .[%lt-%lb]?L/%L. ?pB%pB\% .(press h for help or q for quit)"
 
 # For virtual environment (virtualenv) in python3
 export VIRTUALENVWRAPPER_PYTHON=/usr/local/bin/python3

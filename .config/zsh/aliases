@@ -12,9 +12,13 @@ alias ls="gls -hFN --color=auto --group-directories-first" # use GNU ls
 alias grep="grep --color=auto"
 alias diff="diff --color=auto"
 alias iftop="sudo /usr/local/sbin/iftop"
+
+# z.lua
 alias zl="z -l"
 alias zc="z -c"
 alias zb="z -b"
+alias zi="z -i"
+alias zf="z -I"
 
 # Improved
 alias idu="ncdu --color dark -rr -x --exclude .git --exclude node_modules"

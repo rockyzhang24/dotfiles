@@ -4,4 +4,4 @@
 # SYNOPSIS: fcd [DIR]
 # DESCRIPTION: Fuzzy finder for a directory under DIR and cd into the selected directory
 
-dir=$(fd --type d --hidden --follow --exclude .git '.*' ${1:-.} 2> /dev/null | fzf) && cd $dir
+local dir=$(fd --type d --hidden --follow --exclude .git '.*' ${1:-.} 2> /dev/null | fzf) && cd $dir

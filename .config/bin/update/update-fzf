@@ -1,9 +1,29 @@
 #!/usr/bin/env bash
 
 cd ~/gitrepos/fzf
-if git pull | grep -v "Already up to date"; then
+
+# Fetch
+echo -e "\nFetching...\n"
+git fetch
+
+if [[ -n $(git --no-pager log HEAD..origin/master) ]]; then
+
+  # Show all commits ahead
+  git --no-pager log HEAD..origin/master
+
+  echo -e "\n"
+  read -p "Press ENTER to continue to merge and build..."
+
+  # Merge
+  echo -e "\nMerging...\n"
+  git merge
+
+  # Build
+  echo -e "\nBuilding...\n"
   ./install --xdg
-  echo -e "\nFZF Update Finished!!\n"
+
+  echo -e "\nFZF update finished.\n"
+
 else
-  echo "Already up to date"
+  echo "FZF is already update to date."
 fi

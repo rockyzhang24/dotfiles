@@ -20,6 +20,7 @@ if [[ -n $(git --no-pager log HEAD..origin/master) ]]; then
 
   # Build
   echo -e "\nBuilding...\n"
+  ./scripts/fix-timestamps
   ./configure --without-gtk
   make
   make install

@@ -128,6 +128,7 @@ nnoremap <space><space> :!qlmanage -p %f > /dev/null 2>&1<cr>
 noremap <C-k> <C-w>k
 noremap <C-j> <C-w>j
 noremap <C-h> <C-w>h
+noremap <BS> <C-w>h
 noremap <C-l> <C-w>l
 
 " Adjust pane size (left for decreasing, right for increasing)

@@ -21,7 +21,7 @@ if [[ -n $(git --no-pager log HEAD..origin/master) ]]; then
   # Build
   echo -e "\nBuilding...\n"
   make app
-  cp -r target/release/osx/Alacritty.app /Applications/
+  cp -R target/release/osx/Alacritty.app /Applications/
 
   echo -e "\nAlacritty update finished.\n"
 

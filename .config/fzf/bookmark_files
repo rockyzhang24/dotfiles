@@ -9,7 +9,9 @@
 /Users/yanzhang/.config/zsh/.zshrc
 /Users/yanzhang/.config/zsh/aliases
 /Users/yanzhang/.config/zsh/env
-/Users/yanzhang/.config/zsh/keybindings
+
+# zim (zsh plugin manager)
+/Users/yanzhang/.config/zsh/.zimrc
 
 # wm
 /Users/yanzhang/.config/yabai/yabairc
@@ -20,7 +22,7 @@
 /Users/yanzhang/.config/lf/lfrc
 
 # fzf
-/Users/yanzhang/.config/fzf/fzf
+/Users/yanzhang/.config/fzf/fzf-config
 
 # terminal
 /users/yanzhang/.config/alacritty/alacritty.yml

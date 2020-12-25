@@ -7,9 +7,9 @@
 
 IFS=$'\n'
 if [[ -d $1 ]]; then
-  out=("$(fd --hidden --follow --exclude .git '.*' $1 | fzf --query="$2" --exit-0 --expect=ctrl-o,ctrl-v)")
+  out=("$(fd --hidden --follow --type f --exclude .git '.*' $1 | fzf --query="$2" --exit-0 --expect=ctrl-o,ctrl-v)")
 else
-  out=("$(fzf --query="$1" --exit-0 --expect=ctrl-o,ctrl-v)")
+  out=("$(fd --hidden --follow --type f --exclude .git '.*' | fzf --query="$1" --exit-0 --expect=ctrl-o,ctrl-v)")
 fi
 key=$(head -1 <<< "$out")
 file=$(head -2 <<< "$out" | tail -1)

@@ -2,12 +2,21 @@
 
 # MNEMONIC: [F]uzzy search [R]ip[G]rep
 # SYNOPSIS: same with rg
-# DESCRIPTION: Fuzzy search for the results of rg and open the corresponding file using $EDITOR
+# DESCRIPTION: Fuzzy search for the results of rg and open the corresponding file using $EDITOR with position the cursor on the matching line
 
 local file
 local line
 
-read -r file line <<<"$(rg --line-number --color=always --smart-case $@ | fzf --ansi -0 -1 | awk -F: '{print $1, $2}')"
+# Feed rg results into fzf and use awk to extract the file name and the target line number.
+# Preview the file with the target line highlighted in the center of the preview window.
+read -r file line <<<$(rg --line-number --color=always --smart-case $@ \
+                      | fzf --ansi \
+                            --exit-0 \
+                            --select-1 \
+                            --delimiter : \
+                            --preview 'bat --color=always --style=numbers,changes,header --theme=Nord --highlight-line {2} {1}' \
+                            --preview-window +{2}-/2 \
+                      | awk -F: '{print $1, $2}')
 
 if [[ -n $file ]]
 then

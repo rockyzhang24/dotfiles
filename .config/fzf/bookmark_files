@@ -10,12 +10,11 @@
 /Users/yanzhang/.config/zsh/aliases
 /Users/yanzhang/.config/zsh/env
 
-# zim (zsh plugin manager)
+# zimfw (zsh plugin manager)
 /Users/yanzhang/.config/zsh/.zimrc
 
 # wm
 /Users/yanzhang/.config/yabai/yabairc
-/Users/yanzhang/.config/spacebar/spacebarrc
 /Users/yanzhang/.config/skhd/skhdrc
 
 # lf
@@ -23,10 +22,6 @@
 
 # fzf
 /Users/yanzhang/.config/fzf/fzf-config
-
-# terminal
-/users/yanzhang/.config/alacritty/alacritty.yml
-/Users/yanzhang/.config/kitty/kitty.conf
 
 # bookmarks
 /Users/yanzhang/.config/fzf/bookmark_files

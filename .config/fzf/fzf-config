@@ -8,28 +8,13 @@ export FD_DEFAULT_OPTS="--hidden --follow --exclude .git"
 # Use fd instead of default find
 export FZF_DEFAULT_COMMAND="fd $FD_DEFAULT_OPTS"
 
-# Default options when run ZFZ
-# Key bindings:
-#   ctrl-v: open via EDITOR
-#   ctrl-t: open via EDITOR in a separate terminal window
-#   ctrl-o: open via the default application
-#   ctrl-y: copy to system clipboard
-#   ctrl-d: move cursor half page down
-#   ctrl-u: move cursor half page up
-#   ctrl-a: select all
-export FZF_DEFAULT_OPTS="--preview '( \
-                                        [[ \$(file -b {}) == directory ]] && tree -C {} \
-                                          || ( MIME=\$(file --dereference --mime {}) && [[ \$MIME =~ binary ]] && echo \$MIME ) \
-                                          || ( bat --color=always --theme=Nord --style=numbers,changes,header {} || highlight --style=nord -l {} || cat {} ) \
-                                          || echo -e No preview for this selection:\"\n\n\" {}
-                                    ) 2> /dev/null | head -200' \
-                         --preview-window :wrap \
-                         --bind 'ctrl-v:execute(\$EDITOR {+} < /dev/tty > /dev/tty 2>&1),ctrl-y:execute-silent(echo -n {+} | pbcopy),ctrl-t:execute(nohup /Applications/Alacritty.app/Contents/MacOS/alacritty --command \$EDITOR {+} &),ctrl-o:execute(open {+}),ctrl-d:half-page-down,ctrl-u:half-page-up,ctrl-a:select-all,change:top' \
-                         --multi \
+# Default options when running fzf
+export FZF_DEFAULT_OPTS="--multi \
                          --reverse \
                          --no-mouse \
                          --height 40%\
                          --history /tmp/fzfhistory \
+                         --bind 'ctrl-d:half-page-down,ctrl-u:half-page-up,change:top'
                          --color fg:#e5e9f0,bg:-1,hl:#81a1c1,fg+:#e5e9f0,bg+:#3b4252,hl+:#81a1c1 \
                          --color info:#eacb8a,prompt:#bf6069,spinner:#b48dac,pointer:#b48dac,marker:#a3be8b,header:#a3be8b"
 
@@ -65,3 +50,6 @@ export FZF_ALT_C_OPTS="--preview 'tree -C {} | head -200'"
 #   - bd:                  fzf to cd into a bookmark directory
 fpath+=${0:h}/fzfutils
 autoload -Uz ${0:h}/fzfutils/*(.:t)
+
+# Other utils
+#   1. npf (npm with fzf, run npf --help to get usage information)

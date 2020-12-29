@@ -1,0 +1,42 @@
+[user]
+	name = Yan Zhang
+	email = yanzhang0219@gmail.com
+
+[alias]
+	cm = commit
+	st = status
+	br = branch
+
+[core]
+	excludesfile = /Users/yanzhang/.gitignore_global
+  pager = delta
+
+[delta]
+  features = line-numbers decorations
+  syntax-theme = dracula
+  plus-style = syntax "#003800"
+  minus-style = syntax "#3f0001"
+
+[delta "decorations"]
+  commit-decoration-style = bold yellow box ul
+  file-style = bold yellow ul
+  file-decoration-style = none
+  hunk-header-decoration-style = cyan box ul
+
+[delta "line-numbers"]
+  line-numbers-left-style = cyan
+  line-numbers-right-style = cyan
+  line-numbers-minus-style = 124
+  line-numbers-plus-style = 28
+
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
+
+[commit]
+	template = /Users/yanzhang/.stCommitMsg
+
+[credential]
+	helper = osxkeychain

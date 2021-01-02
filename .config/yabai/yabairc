@@ -1,20 +1,38 @@
 #!/usr/bin/env sh
 
+# necessary to load scripting-addition during startup on macOS Big Sur
+# *yabai --load-sa* is configured to run through sudo without a password
+sudo yabai --load-sa
+yabai -m signal --add event=dock_did_restart action="sudo yabai --load-sa"
+
 # ====
 # Initialization
 # ====
 
 source ~/.config/yabai/scripts/initialization.sh
 
+refresh_swiftbar_yabai_plugin="open -g 'swiftbar://refreshplugin?name=yabai'"
+
 # ====
 # Rules
 # ====
 
-yabai -m rule --add app=".* Preferences|Finder|System Information|Archive Utility|EuDic|Activity Monitor|Karabiner|App Store|Bartender|1Password .*" manage=off
+# Unmanaged applications
+yabai -m rule --add app=".* Preferences" manage=off
+yabai -m rule --add app="System Information" manage=off
+yabai -m rule --add app="EuDic" manage=off
+yabai -m rule --add app="Activity Monitor" manage=off
+yabai -m rule --add app="App Store" manage=off
+yabai -m rule --add app="1Password .*" manage=off
+yabai -m rule --add app="Bartender" manage=off
+yabai -m rule --add app="iStat Menu" manage=off
+yabai -m rule --add app="Karabiner" manage=off
 yabai -m rule --add title="Preferences" manage=off
-yabai -m rule --add app="Fantastical Helper" border=off manage=off # Fantastical menu bar drop-down menu
-yabai -m rule --add app="kitty|Alacritty|iTerm2" border=on
 yabai -m rule --add app="Installer" manage=off
+yabai -m rule --add app="Fantastical Helper" manage=off # Fantastical menu bar drop-down menu
+
+# Border on
+yabai -m rule --add app="kitty|Alacritty" border=on
 
 # ====
 # Signals
@@ -23,6 +41,14 @@ yabai -m rule --add app="Installer" manage=off
 # Initialize the temp folder when adding or removing displays
 yabai -m signal --add event=display_added action="~/.config/yabai/scripts/initialization.sh"
 yabai -m signal --add event=display_removed action="~/.config/yabai/scripts/initialization.sh"
+
+# Refresh yabai SwiftBar plugin
+yabai -m signal --add event=space_changed action="${refresh_swiftbar_yabai_plugin}"
+yabai -m signal --add event=display_added action="${refresh_swiftbar_yabai_plugin}"
+yabai -m signal --add event=display_removed action="${refresh_swiftbar_yabai_plugin}"
+yabai -m signal --add event=display_changed action="${refresh_swiftbar_yabai_plugin}"
+yabai -m signal --add event=display_moved action="${refresh_swiftbar_yabai_plugin}"
+yabai -m signal --add event=display_moved action="${refresh_swiftbar_yabai_plugin}"
 
 # ====
 # Configs
@@ -45,9 +71,9 @@ yabai -m config normal_window_opacity        0.90
 
 # Window border
 yabai -m config window_border off
-yabai -m config window_border_width 3
-yabai -m config active_window_border_color 0xff42A5F5
-yabai -m config normal_window_border_color 0xff555555
+yabai -m config window_border_width 5
+yabai -m config active_window_border_color 0xffffbb7d
+yabai -m config normal_window_border_color 0xff353c54
 
 # Mouse
 yabai -m config mouse_follows_focus          off
@@ -57,11 +83,13 @@ yabai -m config mouse_action1                move
 yabai -m config mouse_action2                resize
 
 # Paddings
-yabai -m config external_bar all:26:0   # top padding for status bar (it won't be affected by --toggle padding)
 yabai -m config top_padding                  5
 yabai -m config bottom_padding               5
 yabai -m config left_padding                 5
 yabai -m config right_padding                5
 yabai -m config window_gap                   5
+
+# Refresh yabai SwfitBar plugin after reboot
+open -g 'swiftbar://refreshplugin?name=yabai'
 
 echo "yabai configuration loaded.."

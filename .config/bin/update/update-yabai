@@ -25,10 +25,6 @@ sudo yabai --install-sa
 printf "\n************** Start yabai ... ****************\n"
 brew services start koekeishiya/formulae/yabai
 
-# load the scripting addition
-printf "\n************** Loading scripting addition ... ****************\n"
-killall Dock
-
 # pin yabai
 printf "\n************** Pin yabai ... ****************\n"
 brew pin koekeishiya/formulae/yabai

@@ -1,7 +1,9 @@
+# vim:foldmethod=marker:foldlevel=0
+
 # Sample config reference: https://github.com/koekeishiya/skhd/blob/master/examples/skhdrc
 # Keywords (modifiers and literals): https://github.com/koekeishiya/skhd/issues/1
 
-# NOTE:
+# MNEMONIC:
 # 1). ALT for changing focus (window, space, monitor)
 # 2). ALT + SHIFT for window operation
 # 3). ALT + CTRL for space operation
@@ -11,40 +13,51 @@
 
 # Mode declaration
 # 1) default: all keybindings are available
-# 2) passthrough: all keybindings are unavailable. (If the keybindings are conflict with other application,
-# we could switch to off mode)
-:: default : yabai -m config active_window_border_color 0xff407294
-:: passthrough : yabai -m config active_window_border_color 0xff8d5524
+# 2) passthrough: all keybindings are unavailable. (If some keybindings conflict with some application, we can turn off skhd)
+:: default : yabai -m config active_window_border_color 0xffffbb7d;\
+             osascript -e "display notification \"skhd enabled!\" with title \"skhd\""
+
+:: passthrough : yabai -m config active_window_border_color 0xff8d5524;\
+                 osascript -e "display notification \"skhd disabled!\" with title \"skhd\""
 
 # Mode switching
 hyper - x ; passthrough
 passthrough < hyper - x ; default
 
-# Restart yabai and spacebar service
-hyper - r : launchctl kickstart -k "gui/${UID}/homebrew.mxcl.yabai"; \
-            launchctl kickstart -k "gui/${UID}/homebrew.mxcl.spacebar"
+# Restart yabai
+hyper - r : launchctl kickstart -k "gui/${UID}/homebrew.mxcl.yabai"
 
-# Open terminal
-cmd - return : /Applications/alacritty.app/Contents/MacOS/alacritty
-# cmd - return : /Applications/kitty.app/Contents/MacOS/kitty --single-instance -d ~ &> /dev/null
-# cmd - return : ~/.config/yabai/scripts/open-iterm.sh
+# Open a new terminal window
+# cmd - return : /Applications/alacritty.app/Contents/MacOS/alacritty
+# cmd - return : kitty --single-instance -d ~ &> /dev/null
+cmd - return : ~/.config/yabai/scripts/open-iterm.sh
 
-# ==============
-# Changing focus
-# ==============
+# ========== Changing focus (ALT) ========== {{{
 
 # Focus window
+#   - k, j: focus the window above or below
+#   - h, j: focus the window left or right (support moving the focus across the display)
+#   - p:    focus the recently-focused window
+#   - <, >: cycle through the windows in the stack backward or forward
+#   - /:    focus the recently-focused window in the stack
 alt - k : yabai -m window --focus north
 alt - j : yabai -m window --focus south
-alt - h : yabai -m window --focus west
-alt - l : yabai -m window --focus east
+alt - h : yabai -m window --focus west || \
+          yabai -m window --focus $(yabai -m query --windows --display west | jq 'map(select(.visible == 1)) | sort_by(.frame.x, .frame.y) | last | .id') || \
+          yabai -m display --focus west
+alt - l : yabai -m window --focus east || \
+          yabai -m window --focus $(yabai -m query --windows --display east | jq 'map(select(.visible == 1)) | sort_by(.frame.x, .frame.y) | first | .id') || \
+          yabai -m display --focus east
 alt - p : yabai -m window --focus recent
-alt - 0x2B : yabai -m window --focus stack.prev   # < for previous
-alt - 0x2F : yabai -m window --focus stack.next   # > for next
+alt - 0x2B : yabai -m window --focus stack.prev || yabai -m window --focus stack.last
+alt - 0x2F : yabai -m window --focus stack.next || yabai -m window --focus stack.first
+alt - 0x2C : yabai -m window --focus stack.recent
 
 # Focus workspace
-alt - 0x21 : yabai -m space --focus prev   # [
-alt - 0x1E : yabai -m space --focus next   # ]
+#   - 1-0:  focus the workspace #1-#10
+#   - [, ]: cycle through the workspaces (support moving the focus across the display)
+#     e.g., 4 | 1 2 | 3 (three displays and currently at 2, using [ to move the focus 2 -> 1 -> 4 -> 3 -> 2, ..., ] is the same but on the opposite direction
+#   - \:    focus the recently-focused workspace
 alt - 1 : yabai -m space --focus 1
 alt - 2 : yabai -m space --focus 2
 alt - 3 : yabai -m space --focus 3
@@ -55,99 +68,162 @@ alt - 7 : yabai -m space --focus 7
 alt - 8 : yabai -m space --focus 8
 alt - 9 : yabai -m space --focus 9
 alt - 0 : yabai -m space --focus 10
+alt - 0x21 : yabai -m space --focus $(cur_space=$(yabai -m query --spaces --space | jq -r '.index') && \
+                                      yabai -m query --displays | jq -r "sort_by(.frame.x) | [.[] | .spaces] | flatten | if index($cur_space) == 0 then last else .[index($cur_space) - 1] end")
+alt - 0x1E : yabai -m space --focus $(cur_space=$(yabai -m query --spaces --space | jq -r '.index') && \
+                                      yabai -m query --displays | jq -r "sort_by(.frame.x) | [.[] | .spaces] | flatten | if index($cur_space) + 1 == length then first else .[index($cur_space) + 1] end")
+alt - 0x2A : yabai -m space --focus recent
 
-# Focus display (monitor)
-alt - u : yabai -m display --focus 1
-alt - i : yabai -m display --focus 2
-alt - o : yabai -m display --focus 3
+# Focus display
+#   - u, i, o: focus the left display, the middle display, or the right display
+#   - z, x:    cycle through the displays
+#   - c:       focus the recently-focused display
+alt - u : yabai -m display --focus $(yabai -m query --displays | jq 'sort_by(.frame.x) | .[0].index')
+alt - i : yabai -m display --focus $(yabai -m query --displays | jq 'sort_by(.frame.x) | .[1].index')
+alt - o : yabai -m display --focus $(yabai -m query --displays | jq 'sort_by(.frame.x) | .[2].index')
+alt - z : yabai -m display --focus west || yabai -m display --focus $(yabai -m query --displays | jq 'sort_by(.frame.x) | last.index')
+alt - x : yabai -m display --focus east || yabai -m display --focus $(yabai -m query --displays | jq 'sort_by(.frame.x) | first.index')
+alt - c : yabai -m display --focus recent
 
-# =================
-# Window operations
-# =================
+# }}} Changing focus
+
+# ========== Window operations (ALT + SHIFT) ========== {{{
 
 # Move (swap) window
+#   - k, j, h, l: swap the current window with the window above, below, left, or right
+#   - p:          swap the current window with the recently-focused window
 alt + shift - k : yabai -m window --swap north
 alt + shift - j : yabai -m window --swap south
 alt + shift - h : yabai -m window --swap west
 alt + shift - l : yabai -m window --swap east
+alt + shift - p : yabai -m window --swap recent
 
-# Send window to workspace
-alt + shift - 1 : yabai -m window --space 1
-alt + shift - 2 : yabai -m window --space 2
-alt + shift - 3 : yabai -m window --space 3
-alt + shift - 4 : yabai -m window --space 4
-alt + shift - 5 : yabai -m window --space 5
-alt + shift - 6 : yabai -m window --space 6
-alt + shift - 7 : yabai -m window --space 7
-alt + shift - 8 : yabai -m window --space 8
-alt + shift - 9 : yabai -m window --space 9
-alt + shift - 0 : yabai -m window --space 10
+# Send window to workspace and follow focus
+#   - 1-0:  send the current window to the workspace #1-#10, and focus that window
+#   - [, ]: send the current window to the workspace on its left or right (support sending across the display and cycling through), and focus that window
+#     e.g., 4 | 1 2 | 3 (three display and currently at 3), [ will move the current window to workspace #2 and focus this window on workspace #2, and ] will move the current window to workspace #4 and focus this window on workspace #4
+#   - \:    send the current window to the recently-focused workspace, and focus that window
+alt + shift - 1 : yabai -m window --space 1 && yabai -m space --focus 1
+alt + shift - 2 : yabai -m window --space 2 && yabai -m space --focus 2
+alt + shift - 3 : yabai -m window --space 3 && yabai -m space --focus 3
+alt + shift - 4 : yabai -m window --space 4 && yabai -m space --focus 4
+alt + shift - 5 : yabai -m window --space 5 && yabai -m space --focus 5
+alt + shift - 6 : yabai -m window --space 6 && yabai -m space --focus 6
+alt + shift - 7 : yabai -m window --space 7 && yabai -m space --focus 7
+alt + shift - 8 : yabai -m window --space 8 && yabai -m space --focus 8
+alt + shift - 9 : yabai -m window --space 9 && yabai -m space --focus 9
+alt + shift - 0 : yabai -m window --space 10 && yabai -m space --focus 10
+alt + shift - 0x21 : workspace_left=$(cur_space=$(yabai -m query --spaces --space | jq -r '.index') && \
+                                      yabai -m query --displays | jq -r "sort_by(.frame.x) | [.[] | .spaces] | flatten | if index($cur_space) == 0 then .[length - 1] else .[index($cur_space) - 1] end") && \
+                     yabai -m window --space ${workspace_left} && \
+                     yabai -m space --focus ${workspace_left}
+alt + shift - 0x1E : workspace_right=$(cur_space=$(yabai -m query --spaces --space | jq -r '.index') && \
+                                      yabai -m query --displays | jq -r "sort_by(.frame.x) | [.[] | .spaces] | flatten | if index($cur_space) + 1 == length then .[0] else .[index($cur_space) + 1] end") && \
+                     yabai -m window --space ${workspace_right} && \
+                     yabai -m space --focus ${workspace_right}
+alt + shift - 0x2A : yabai -m window --space recent && yabai -m space --focus recent
 
-# Send window to monitor
-alt + shift - u : yabai -m window --display 1
-alt + shift - i : yabai -m window --display 2
-alt + shift - o : yabai -m window --display 3
+# Send window to display (monitor) and follow focus
+#   - u, i, o: send the current window to the left, middle, or right display, and focus that window
+#   - z, x: send the current window to the display on the left, on the right (support cycling through), and focus that window
+#   - c:    send the current window to the recently-focused display, and focus that window
+alt + shift - u : display_left=$(yabai -m query --displays | jq 'sort_by(.frame.x) | .[0].index') && \
+                  yabai -m window --display ${display_left} && \
+                  yabai -m display --focus ${display_left}
+alt + shift - i : display_middle=$(yabai -m query --displays | jq 'sort_by(.frame.x) | .[1].index') && \
+                  yabai -m window --display ${display_middle} && \
+                  yabai -m display --focus ${display_middle}
+alt + shift - o : display_right=$(yabai -m query --displays | jq 'sort_by(.frame.x) | .[2].index') && \
+                  yabai -m window --display ${display_right} && \
+                  yabai -m display --focus ${display_right}
+alt + shift - z : yabai -m window --display west && yabai -m display --focus west || \
+                  last=$(yabai -m query --displays | jq 'sort_by(.frame.x) | last.index') && yabai -m window --display ${last} && yabai -m display --focus ${last}
+alt + shift - x : yabai -m window --display east && yabai -m display --focus east || \
+                  first=$(yabai -m query --displays | jq 'sort_by(.frame.x) | first.index') && yabai -m window --display ${first} && yabai -m display --focus ${first}
+alt + shift - c : yabai -m window --display recent && yabai -m display --focus recent
 
 # Warp (re-insert)
+#   - w, s, a, d: re-insert the current window, splitting the window above, below, left, or right
 alt + shift - w : yabai -m window --warp north
 alt + shift - s : yabai -m window --warp south
 alt + shift - a : yabai -m window --warp west
 alt + shift - d : yabai -m window --warp east
 
-# Set insertion position in the focused window for the window to be opened
-#         (Up)
-#          =
-# (Left) [   ] (Right)
-#          '
-#        (Down)
-alt + shift - 0x18 : yabai -m window --insert north   # =
-alt + shift - 0x27 : yabai -m window --insert south   # '
-alt + shift - 0x21 : yabai -m window --insert west    # [
-alt + shift - 0x1E : yabai -m window --insert east    # ]
-alt + shift - 0x2A : yabai -m window --insert stack   # \
+# Set/unset the insertion position for a new window to be opened in terms of the current window
+#   - up, down, left, right: set/unset the insertion position to the up, down, left, right
+#   - /:                     set/unset the insertion to be stack mode
+alt + shift - up : yabai -m window --insert north
+alt + shift - down : yabai -m window --insert south
+alt + shift - left : yabai -m window --insert west
+alt + shift - right : yabai -m window --insert east
+alt + shift - 0x2C : yabai -m window --insert stack
 
-# ================
-# Space operations
-# ================
+# Create a workspace, move window there and follow focus
+#   - n: create a new workspace at the end (within the current display), move the current window to that workspace, and focus the window
+alt + shift - n : yabai -m space --create && \
+                  index=$(yabai -m query --spaces --display | jq 'map(select(."native-fullscreen" == 0))[-1].index') && \
+                  yabai -m window --space ${index} && \
+                  yabai -m space --focus ${index}
 
-# Create workspace
-alt + ctrl - n : yabai -m space --create
+# }}} Window operations
 
-# Destroy workspace
+# ========== Space operations (ALT + CTRL) ========== {{{
+
+# Create a workspace and follow focus
+#   -n: create a new workspace at the end (within the current display), and focus the workspace
+alt + ctrl - n : yabai -m space --create && \
+                 index=$(yabai -m query --spaces --display | jq 'map(select(."native-fullscreen" == 0))[-1].index') && \
+                 yabai -m space --focus ${index}
+
+# Destroy the current workspace, send the windows on this workspace to workspace #1, and focus workspace #1
 alt + ctrl - w : yabai -m space --destroy
 
-# Move workspace to monitor
-alt + ctrl - i : yabai -m space --display 1
-alt + ctrl - u : yabai -m space --display 2
-alt + ctrl - o : yabai -m space --display 3
+# Move workspace to display (monitor) and follow focus
+#   - u, i, o: move the current workspace to the left, middle, or right display, and focus that workspace
+#   - z, x:    move the current workspace to the display on the left, on the right (support cycling through), and focus that workspace
+#   - c:       move the current workspace to the recently-focused display, and focus that workspace
+alt + ctrl - u : yabai -m space --display $(yabai -m query --displays | jq 'sort_by(.frame.x) | .[0].index')
+alt + ctrl - i : yabai -m space --display $(yabai -m query --displays | jq 'sort_by(.frame.x) | .[1].index')
+alt + ctrl - o : yabai -m space --display $(yabai -m query --displays | jq 'sort_by(.frame.x) | .[2].index')
+alt + ctrl - z : yabai -m space --display west || \
+                 last=$(yabai -m query --displays | jq 'sort_by(.frame.x) | last.index') && yabai -m space --display ${last}
+alt + ctrl - x : yabai -m space --display east || \
+                 first=$(yabai -m query --displays | jq 'sort_by(.frame.x) | first.index') && yabai -m space --display ${first}
+alt + ctrl - c : yabai -m space --display recent
 
-# Swap workspace
-alt + ctrl - 0x21 : yabai -m space --move prev  # [
-alt + ctrl - 0x1E : yabai -m space --move next  # ]
-alt + ctrl - 1 : yabai -m space --move 1
-alt + ctrl - 2 : yabai -m space --move 2
-alt + ctrl - 3 : yabai -m space --move 3
-alt + ctrl - 4 : yabai -m space --move 4
-alt + ctrl - 5 : yabai -m space --move 5
-alt + ctrl - 6 : yabai -m space --move 6
-alt + ctrl - 7 : yabai -m space --move 7
-alt + ctrl - 8 : yabai -m space --move 8
-alt + ctrl - 9 : yabai -m space --move 9
-alt + ctrl - 0 : yabai -m space --move 10
+# Move workspace to the given position (must be on the same display, all the other workspaces after the position will move backward)
+#   - [, ]: move the current workspace to the previous, or next position
+#   - 1-0:  move the current workspace to the position 1-10
+alt + ctrl - 0x21 : yabai -m space --move prev && open -g 'swiftbar://refreshplugin?name=yabai'
+alt + ctrl - 0x1E : yabai -m space --move next && open -g 'swiftbar://refreshplugin?name=yabai'
+alt + ctrl - 1 : yabai -m space --move 1 && open -g 'swiftbar://refreshplugin?name=yabai'
+alt + ctrl - 2 : yabai -m space --move 2 && open -g 'swiftbar://refreshplugin?name=yabai'
+alt + ctrl - 3 : yabai -m space --move 3 && open -g 'swiftbar://refreshplugin?name=yabai'
+alt + ctrl - 4 : yabai -m space --move 4 && open -g 'swiftbar://refreshplugin?name=yabai'
+alt + ctrl - 5 : yabai -m space --move 5 && open -g 'swiftbar://refreshplugin?name=yabai'
+alt + ctrl - 6 : yabai -m space --move 6 && open -g 'swiftbar://refreshplugin?name=yabai'
+alt + ctrl - 7 : yabai -m space --move 7 && open -g 'swiftbar://refreshplugin?name=yabai'
+alt + ctrl - 8 : yabai -m space --move 8 && open -g 'swiftbar://refreshplugin?name=yabai'
+alt + ctrl - 9 : yabai -m space --move 9 && open -g 'swiftbar://refreshplugin?name=yabai'
+alt + ctrl - 0 : yabai -m space --move 10 && open -g 'swiftbar://refreshplugin?name=yabai'
 
-# Toggle workspace layout
+# Change workspace layout
+#   - b, f, s: chagne the layout of the current workspace to bsp, float, or stack
 alt + ctrl - b : yabai -m space --layout bsp && \
+                 open -g 'swiftbar://refreshplugin?name=yabai' && \
                  osascript -e "display notification \"Change the workspace layout to bsp\" with title \"yabai\""
 alt + ctrl - f : yabai -m space --layout float && \
+                 open -g 'swiftbar://refreshplugin?name=yabai' && \
                  osascript -e "display notification \"Change the workspace layout to float\" with title \"yabai\""
 alt + ctrl - s : yabai -m space --layout stack && \
+                 open -g 'swiftbar://refreshplugin?name=yabai' && \
                  osascript -e "display notification \"Change the workspace layout to stack\" with title \"yabai\""
 
-# ========================
-# Toggle window properties
-# ========================
+# }}} Space operations
 
-# Toggle window between tiling and floating
+# ========== Toggle window properties (MEH - ALT + CTRL + SHIFT)  ========== {{{
+
+# Toggle window between tiling and floating, and restore its previous position when become floating
 meh - t : ~/.config/yabai/scripts/toggle-window-floating-tiling.sh
 
 # Toggle window fullscreen zoom
@@ -159,16 +235,17 @@ meh - s : yabai -m window --toggle split
 # Toggle window topmost (i.e., pin the window)
 meh - p : yabai -m window --toggle topmost
 
-# Toggle sticky (show on all spaces)
+# Toggle sticky (i.e., showing on all spaces)
 meh - a : yabai -m window --toggle sticky
 
 # Toggle window border
 meh - b : yabai -m window --toggle border
 
-# ==================
-# Change window size
-# ==================
+# }}} Toggle window properties
 
+# ========== Adjust window size (FN) ========== {{{
+
+# Adjust the window (floating or tiling window) size by adjusting its upper, lower, left, right edge of the window in 20 pixels
 #               7(+)
 #      -----------------------
 #      |        u(-)         |
@@ -187,24 +264,26 @@ fn - h : yabai -m window --resize left:-20:0        # left+
 fn - k : yabai -m window --resize right:-20:0       # right-
 fn - l : yabai -m window --resize right:20:0        # right+
 
-# Balance size of windows
+# Balance size
+#   - 0: balance the sizes of the tiling windows in the curren workspace
 fn - 0 : yabai -m space --balance
 
-# =========================
-# Floating window operation
-# =========================
+# }}} Adjust window size
+
+# ========== Floating window operations (FN + SHIFT) ========== {{{
 
 # Movement
+#   - k, j, h, l: move the current floating window to the up, down, left, or right by 20 pixels
 fn + shift - k : yabai -m window --move rel:0:-20
 fn + shift - j : yabai -m window --move rel:0:20
 fn + shift - h : yabai -m window --move rel:-20:0
 fn + shift - l : yabai -m window --move rel:20:0
 
 # Split screen
-fn + shift - a : yabai -m window --grid 1:2:0:0:1:1   # left-half
-fn + shift - d : yabai -m window --grid 1:2:1:0:1:1   # right-half
 fn + shift - w : yabai -m window --grid 2:1:0:0:1:1   # upper-half
 fn + shift - s : yabai -m window --grid 2:1:0:1:1:1   # lower-half
+fn + shift - a : yabai -m window --grid 1:2:0:0:1:1   # left-half
+fn + shift - d : yabai -m window --grid 1:2:1:0:1:1   # right-half
 
 # Fullscreen
 fn + shift - m : yabai -m window --grid 1:1:0:0:1:1
@@ -212,3 +291,5 @@ fn + shift - m : yabai -m window --grid 1:1:0:0:1:1
 # Restore: centered and properly resized based on the display position (horizontally or vertically positioned)
 fn + shift - 0 : read w h <<< $(echo $(yabai -m query --displays --display | jq .frame | jq '.w, .h')) && \
                  ( [ $w -gt $h ] && yabai -m window --grid 7:5:1:1:3:5 || yabai -m window --grid 5:10:1:1:8:2 )
+
+# }}} Floating window operations

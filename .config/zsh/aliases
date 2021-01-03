@@ -30,7 +30,12 @@ command -v nvim >/dev/null && alias vim="nvim" vi="nvim" v="nvim" vimdiff="nvim 
 # Dotfiles management
 alias cfg="git --git-dir=$HOME/dotfiles/ --work-tree=$HOME"
 
+# Convert video to GIF (with 2K resolution) using ffmpeg
+# Usage: vtg input_name output_name, then output_name.gif will be generated
+alias vtg='function video_to_gif(){ ffmpeg -i $1 -pix_fmt rgb8 -r 10 -vf scale=2560:-1 $2.gif && gifsicle -O3 $2.gif -o $2.gif && osascript -e "display notification \"$2.gif successfully converted and saved\" with title \"VIDEO2GIF SUCCESS!\""};video_to_gif'
+
 # Quick navigation & config
+alias cdl="cd ~/Downloads"
 alias cc="cd ~/.config"
 alias cb="cd ~/.config/bin"
 alias cg="cd ~/gitrepos"

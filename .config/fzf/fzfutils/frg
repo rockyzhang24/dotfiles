@@ -14,7 +14,7 @@ read -r file line <<<$(rg --line-number --color=always --smart-case $@ \
                             --exit-0 \
                             --select-1 \
                             --delimiter : \
-                            --preview 'bat --color=always --style=numbers,changes,header --theme=Nord --highlight-line {2} {1}' \
+                            --preview 'bat --color=always --style=numbers,changes,header --theme=Dracula --highlight-line {2} {1}' \
                             --preview-window +{2}-/2 \
                       | awk -F: '{print $1, $2}')
 

@@ -7,7 +7,7 @@
 # DESCRIPTION: Create useful gitignore files
 
 function __gi() {
-  curl -sLw "\n" https://www.gitignore.io/api/"$@"
+  curl -sLw "\n" https://www.toptal.com/developers/gitignore/api/"$@"
 }
 
 if  [ "$#" -eq 0 ]; then

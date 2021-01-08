@@ -20,7 +20,6 @@ source ~/perl5/perlbrew/etc/bashrc
 
 # lf
 source $HOME/.config/lf/icons
-# source ~/.config/lf/lfcd  # ctrl-o for lfcd
 
 # The next line updates PATH for the Google Cloud SDK.
 if [ -f '/Users/yanzhang/google-cloud-sdk/path.zsh.inc' ]; then . '/Users/yanzhang/google-cloud-sdk/path.zsh.inc'; fi

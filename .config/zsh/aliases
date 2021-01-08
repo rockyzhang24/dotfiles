@@ -8,9 +8,9 @@ alias c="clear"
 alias ka="killall"
 alias yd="youtube-dl --add-metadata -i"
 alias yda="yd -x -f bestaudio/best"
-alias ls="gls -hFN --color=auto --group-directories-first" # use GNU ls
+alias ls="gls -hFN --color=auto --group-directories-first" # use GNU ls (brew install coreutils)
 alias grep="grep --color=auto"
-alias diff="diff --color=auto"
+alias diff="diff --color=auto" # GNU diffutils required (brew install diffutils)
 alias iftop="sudo /usr/local/sbin/iftop"
 
 # z.lua

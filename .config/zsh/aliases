@@ -12,6 +12,7 @@ alias ls="gls -hFN --color=auto --group-directories-first" # use GNU ls (brew in
 alias grep="grep --color=auto"
 alias diff="diff --color=auto" # GNU diffutils required (brew install diffutils)
 alias iftop="sudo /usr/local/sbin/iftop"
+alias t="trash -Fv"
 
 # z.lua
 alias zl="z -l"

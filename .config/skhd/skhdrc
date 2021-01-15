@@ -103,44 +103,75 @@ alt + shift - p : yabai -m window --swap recent
 #   - [, ]: send the current window to the workspace on its left or right (support sending across the display and cycling through), and focus that window
 #     e.g., 4 | 1 2 | 3 (three display and currently at 3), [ will move the current window to workspace #2 and focus this window on workspace #2, and ] will move the current window to workspace #4 and focus this window on workspace #4
 #   - \:    send the current window to the recently-focused workspace, and focus that window
-alt + shift - 1 : yabai -m window --space 1 && yabai -m space --focus 1
-alt + shift - 2 : yabai -m window --space 2 && yabai -m space --focus 2
-alt + shift - 3 : yabai -m window --space 3 && yabai -m space --focus 3
-alt + shift - 4 : yabai -m window --space 4 && yabai -m space --focus 4
-alt + shift - 5 : yabai -m window --space 5 && yabai -m space --focus 5
-alt + shift - 6 : yabai -m window --space 6 && yabai -m space --focus 6
-alt + shift - 7 : yabai -m window --space 7 && yabai -m space --focus 7
-alt + shift - 8 : yabai -m window --space 8 && yabai -m space --focus 8
-alt + shift - 9 : yabai -m window --space 9 && yabai -m space --focus 9
-alt + shift - 0 : yabai -m window --space 10 && yabai -m space --focus 10
-alt + shift - 0x21 : workspace_left=$(cur_space=$(yabai -m query --spaces --space | jq -r '.index') && \
+alt + shift - 1 : cur_window=$(yabai -m query --windows --window | jq '.id') && \
+                  yabai -m window --space 1 && \
+                  yabai -m window --focus ${cur_window}
+alt + shift - 2 : cur_window=$(yabai -m query --windows --window | jq '.id') && \
+                  yabai -m window --space 2 && \
+                  yabai -m window --focus ${cur_window}
+alt + shift - 3 : cur_window=$(yabai -m query --windows --window | jq '.id') && \
+                  yabai -m window --space 3 && \
+                  yabai -m window --focus ${cur_window}
+alt + shift - 4 : cur_window=$(yabai -m query --windows --window | jq '.id') && \
+                  yabai -m window --space 4 && \
+                  yabai -m window --focus ${cur_window}
+alt + shift - 5 : cur_window=$(yabai -m query --windows --window | jq '.id') && \
+                  yabai -m window --space 5 && \
+                  yabai -m window --focus ${cur_window}
+alt + shift - 6 : cur_window=$(yabai -m query --windows --window | jq '.id') && \
+                  yabai -m window --space 6 && \
+                  yabai -m window --focus ${cur_window}
+alt + shift - 7 : cur_window=$(yabai -m query --windows --window | jq '.id') && \
+                  yabai -m window --space 7 && \
+                  yabai -m window --focus ${cur_window}
+alt + shift - 8 : cur_window=$(yabai -m query --windows --window | jq '.id') && \
+                  yabai -m window --space 8 && \
+                  yabai -m window --focus ${cur_window}
+alt + shift - 9 : cur_window=$(yabai -m query --windows --window | jq '.id') && \
+                  yabai -m window --space 9 && \
+                  yabai -m window --focus ${cur_window}
+alt + shift - 0 : cur_window=$(yabai -m query --windows --window | jq '.id') && \
+                  yabai -m window --space 10 && \
+                  yabai -m window --focus ${cur_window}
+alt + shift - 0x21 : cur_window=$(yabai -m query --windows --window | jq '.id') && \
+                     workspace_left=$(cur_space=$(yabai -m query --spaces --space | jq -r '.index') && \
                                       yabai -m query --displays | jq -r "sort_by(.frame.x) | [.[] | .spaces] | flatten | if index($cur_space) == 0 then .[length - 1] else .[index($cur_space) - 1] end") && \
                      yabai -m window --space ${workspace_left} && \
-                     yabai -m space --focus ${workspace_left}
-alt + shift - 0x1E : workspace_right=$(cur_space=$(yabai -m query --spaces --space | jq -r '.index') && \
+                     yabai -m window --focus ${cur_window}
+alt + shift - 0x1E : cur_window=$(yabai -m query --windows --window | jq '.id') && \
+                     workspace_right=$(cur_space=$(yabai -m query --spaces --space | jq -r '.index') && \
                                       yabai -m query --displays | jq -r "sort_by(.frame.x) | [.[] | .spaces] | flatten | if index($cur_space) + 1 == length then .[0] else .[index($cur_space) + 1] end") && \
                      yabai -m window --space ${workspace_right} && \
-                     yabai -m space --focus ${workspace_right}
-alt + shift - 0x2A : yabai -m window --space recent && yabai -m space --focus recent
+                     yabai -m window --focus ${cur_window}
+alt + shift - 0x2A : cur_window=$(yabai -m query --windows --window | jq '.id') && \
+                     yabai -m window --space recent && \
+                     yabai -m window --focus ${cur_window}
 
 # Send window to display (monitor) and follow focus
 #   - u, i, o: send the current window to the left, middle, or right display, and focus that window
 #   - z, x: send the current window to the display on the left, on the right (support cycling through), and focus that window
 #   - c:    send the current window to the recently-focused display, and focus that window
-alt + shift - u : display_left=$(yabai -m query --displays | jq 'sort_by(.frame.x) | .[0].index') && \
+alt + shift - u : cur_window=$(yabai -m query --windows --window | jq '.id') && \
+                  display_left=$(yabai -m query --displays | jq 'sort_by(.frame.x) | .[0].index') && \
                   yabai -m window --display ${display_left} && \
-                  yabai -m display --focus ${display_left}
-alt + shift - i : display_middle=$(yabai -m query --displays | jq 'sort_by(.frame.x) | .[1].index') && \
+                  yabai -m window --focus ${cur_window}
+alt + shift - i : cur_window=$(yabai -m query --windows --window | jq '.id') && \
+                  display_middle=$(yabai -m query --displays | jq 'sort_by(.frame.x) | .[1].index') && \
                   yabai -m window --display ${display_middle} && \
-                  yabai -m display --focus ${display_middle}
-alt + shift - o : display_right=$(yabai -m query --displays | jq 'sort_by(.frame.x) | .[2].index') && \
+                  yabai -m window --focus ${cur_window}
+alt + shift - o : cur_window=$(yabai -m query --windows --window | jq '.id') && \
+                  display_right=$(yabai -m query --displays | jq 'sort_by(.frame.x) | .[2].index') && \
                   yabai -m window --display ${display_right} && \
-                  yabai -m display --focus ${display_right}
-alt + shift - z : yabai -m window --display west && yabai -m display --focus west || \
-                  last=$(yabai -m query --displays | jq 'sort_by(.frame.x) | last.index') && yabai -m window --display ${last} && yabai -m display --focus ${last}
-alt + shift - x : yabai -m window --display east && yabai -m display --focus east || \
-                  first=$(yabai -m query --displays | jq 'sort_by(.frame.x) | first.index') && yabai -m window --display ${first} && yabai -m display --focus ${first}
-alt + shift - c : yabai -m window --display recent && yabai -m display --focus recent
+                  yabai -m window --focus ${cur_window}
+alt + shift - z : cur_window=$(yabai -m query --windows --window | jq '.id') && \
+                  ( yabai -m window --display west && yabai -m window --focus ${cur_window} || \
+                    last=$(yabai -m query --displays | jq 'sort_by(.frame.x) | last.index') && yabai -m window --display ${last} && yabai -m window --focus ${cur_window} )
+alt + shift - x : cur_window=$(yabai -m query --windows --window | jq '.id') && \
+                  ( yabai -m window --display east && yabai -m window --focus ${cur_window} || \
+                    first=$(yabai -m query --displays | jq 'sort_by(.frame.x) | first.index') && yabai -m window --display ${first} && yabai -m window --focus ${cur_window} )
+alt + shift - c : cur_window=$(yabai -m query --windows --window | jq '.id') && \
+                  yabai -m window --display recent && \
+                  yabai -m window --focus ${cur_window}
 
 # Warp (re-insert)
 #   - w, s, a, d: re-insert the current window, splitting the window above, below, left, or right
@@ -162,8 +193,9 @@ alt + shift - 0x2C : yabai -m window --insert stack
 #   - n: create a new workspace at the end (within the current display), move the current window to that workspace, and focus the window
 alt + shift - n : yabai -m space --create && \
                   index=$(yabai -m query --spaces --display | jq 'map(select(."native-fullscreen" == 0))[-1].index') && \
+                  cur_window=$(yabai -m query --windows --window | jq '.id') && \
                   yabai -m window --space ${index} && \
-                  yabai -m space --focus ${index}
+                  yabai -m window --focus ${cur_window}
 
 # }}} Window operations
 

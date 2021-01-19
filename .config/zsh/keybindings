@@ -23,26 +23,10 @@ function copypwd {
 zle -N copypwd
 bindkey '^y' copypwd
 
-# Yank in visual mode will copy to system clipboard
+# Y in visual mode will copy to system clipboard (same in vim)
 function vi-yank-systemclipboard {
   zle vi-yank
   echo "$CUTBUFFER" | pbcopy -i
 }
 zle -N vi-yank-systemclipboard
-bindkey -M vicmd 'y' vi-yank-systemclipboard
-
-# Change working dir in shell to the last dir in lf on exit (ctrl-o)
-# lfcd () {
-#     tmp="$(mktemp)"
-#     lf -last-dir-path="$tmp" "$@"
-#     if [ -f "$tmp" ]; then
-#         dir="$(cat "$tmp")"
-#         rm -f "$tmp" >/dev/null
-#         if [ -d "$dir" ]; then
-#             if [ "$dir" != "$(pwd)" ]; then
-#                 cd "$dir"
-#             fi
-#         fi
-#     fi
-# }
-# bindkey -s '^o' 'lfcd\n'
+bindkey -M vicmd 'Y' vi-yank-systemclipboard

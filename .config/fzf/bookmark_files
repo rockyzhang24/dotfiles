@@ -9,6 +9,7 @@
 /Users/yanzhang/.config/zsh/.zshrc
 /Users/yanzhang/.config/zsh/aliases
 /Users/yanzhang/.config/zsh/env
+/Users/yanzhang/.config/zsh/keybindings
 
 # zimfw (zsh plugin manager)
 /Users/yanzhang/.config/zsh/.zimrc
@@ -17,8 +18,8 @@
 /Users/yanzhang/.config/yabai/yabairc
 /Users/yanzhang/.config/skhd/skhdrc
 
-# lf
-/Users/yanzhang/.config/lf/lfrc
+# ranger
+/Users/yanzhang/.config/ranger/rc.conf
 
 # fzf
 /Users/yanzhang/.config/fzf/fzf-config

@@ -3,11 +3,11 @@
 These are my config files on macOS.
 
 Settings for:
-* nvim (text editor)
+* Neovim (text editor)
 * zsh (shell)
 * yabai & skhd & spacebar (window manager)
-* vifm (file manager)
-* alacritty/kitty (terminal)
+* ranger/vifm/lf (file manager, currently using ranger)
+* iTerm2/alacritty/kitty (terminal, currently using iTerm2)
 * karabiner (keyboard customization)
 
 # How I am managing the dotfiles

@@ -35,5 +35,5 @@ export VIRTUALENVWRAPPER_PYTHON=/usr/local/bin/python3
 # z.lua
 export _ZL_ROOT_MARKERS=".git,.svn,.hg,.root,package.json"
 
-# Let ranger use custom config (~/.config/ranger/)
-#export RANGER_LOAD_DEFAULT=FALSE
+# Ranger: avoid loading config twice (only loading the custom config under ~/.config/ranger/, not loading the default/global config)
+export RANGER_LOAD_DEFAULT_RC=FALSE

@@ -5,9 +5,9 @@
 /Users/yanzhang/.config
 /Users/yanzhang/.config/bin
 /Users/yanzhang/.config/zsh
+/Users/yanzhang/.config/nvim
+/Users/yanzhang/.config/nvim/pack/minpac
+/Users/yanzhang/.config/fzf
 /Users/yanzhang/.config/fzf/fzfutils
 /Users/yanzhang/.config/yabai/scripts
-
-# ====== Develops ======
-
-/Users/yanzhang/gitrepos
+/Users/yanzhang/.config/ranger

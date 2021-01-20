@@ -40,18 +40,28 @@ cmd - return : ~/.config/yabai/scripts/open-iterm.sh
 #   - p:    focus the recently-focused window
 #   - <, >: cycle through the windows in the stack backward or forward
 #   - /:    focus the recently-focused window in the stack
+#   - m:    focus the fullscreen window in the current workspace or cycle through all the fullscreen windows
 alt - k : yabai -m window --focus north
 alt - j : yabai -m window --focus south
 alt - h : yabai -m window --focus west || \
-          yabai -m window --focus $(yabai -m query --windows --display west | jq 'map(select(.visible == 1)) | sort_by(.frame.x, .frame.y) | last | .id') || \
+          yabai -m window --focus $(yabai -m query --windows --display west | \
+                                    jq 'map(select(.visible == 1)) | sort_by(.frame.x, .frame.y) | last | .id') || \
           yabai -m display --focus west
 alt - l : yabai -m window --focus east || \
-          yabai -m window --focus $(yabai -m query --windows --display east | jq 'map(select(.visible == 1)) | sort_by(.frame.x, .frame.y) | first | .id') || \
+          yabai -m window --focus $(yabai -m query --windows --display east | \
+                                    jq 'map(select(.visible == 1)) | sort_by(.frame.x, .frame.y) | first | .id') || \
           yabai -m display --focus east
 alt - p : yabai -m window --focus recent
 alt - 0x2B : yabai -m window --focus stack.prev || yabai -m window --focus stack.last
 alt - 0x2F : yabai -m window --focus stack.next || yabai -m window --focus stack.first
 alt - 0x2C : yabai -m window --focus stack.recent
+alt - m : [[ $(yabai -m query --windows --window | jq '."zoom-fullscreen"') == 0 ]] && \
+          ( id=$(yabai -m query --windows --space | jq 'map(select(."zoom-fullscreen" == 1))[0] | .id') && \
+            yabai -m window --focus ${id} ) || \
+          ( yabai -m query --windows --space | \
+            jq 'map(select(."zoom-fullscreen" == 1)) | sort_by(.id) | nth(index(map(select(.focused == 1))) - 1).id' | \
+            xargs -I{} yabai -m window --focus {} )
+
 
 # Focus workspace
 #   - 1-0:  focus the workspace #1-#10

@@ -271,6 +271,11 @@ meh - t : ~/.config/yabai/scripts/toggle-window-floating-tiling.sh
 # Toggle window fullscreen zoom
 meh - m : yabai -m window --toggle zoom-fullscreen
 
+# Restore all zoom-fullscreen windows
+meh - 0 : yabai -m query --windows --space | \
+          jq '.[] | select(."zoom-fullscreen" == 1) | .id' | \
+          xargs -I{} yabai -m window {} --toggle zoom-fullscreen
+
 # Toggle window split type (horizontally or vertically in terms of its parent)
 meh - s : yabai -m window --toggle split
 

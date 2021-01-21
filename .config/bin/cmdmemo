@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+
+# Memo for the commands in common use
+
+fzf --ansi --height 100% --preview 'echo {}' --preview-window down:3:wrap << EOF
+asciinema: record and share (to asciinema.org) terminal sessions. E.g., asciinema rec demo.cast (record terminal session)
+atool: compress/extract. E.g., atool -a image.7z *.jpg (compress all jpg files); atool -x image.7z (extract)
+aria2c: ultra-fast download utility
+axel: Likeweight CLI download, silimar to Aria2
+bat: a cat clone with syntax highlighting and git integration
+bandwhich: CLI showing current network utilization by process, connection and remote. Should be run under sudo.
+ccat: cat but with syntax highlighting
+cloc: statistics utility to count lines of code. E.g., cloc test.java
+colordiff: colorize diff output. E.g., colordiff file1 file2
+cppman: C++ manual pages. E.g., cppman vector::begin
+diff-so-fancy: good-lookin' diffs. E.g., diff -u file1 file2 | diff-so-fancy. Often confitured as git pager.
+delta: syntax highlighting pager for git and diff output. E.g., delta file1 file2; diff -u file1 file2 | delta. Often configured as git pager.
+exa: modern ls replacement. E.g., exa -l
+fzf: fuzzy file finder
+fd: fast alternative to find. E.g., fd "^foo" ~/Downloads
+fpp: path picker, accepts piped input and presents files for selection. E.g., git status | fpp
+ffmpeg: play, record, convert, and stream audio and video
+figlet: print strings as ASCII art. E.g., figlet -f larry3d Hello
+glances: system monitoring tool (alternative of top/htop
+gibo: easy access to gitignore boilerplates. E.g., gibo dump Swift Xcode >> .gitignore
+highlight: convert sourcecode to HTML, LaTex, escape sequences (ansi, truecolor), etc with syntax highlighting. E.g., highlight -o hello.html -i hello.py (output a html file showing the python sourcecode)
+httpie (http and https commands): command-line HTTP client for testing, debugging, and interacting with APIs and HTTP servers. E.g., http PUT pie.dev/put X-API-Token:123 name=John
+imgcat: display image in terminal
+ifstat: report network interface bandwidth
+jq: powerful command-line JSON processor
+lazygit: terminal UI for git commands
+lazynpm: teminal UI for npm
+lazydocker: terminal UI for docker
+m: interact with utilities and apps of macOS in terminal
+mackup: keep Mac's application settings in sync
+mycli: CLI for MySQL with auto-completion and syntax highlighting
+ncdu: disk usage for directries
+neofetch: display customizable system info
+nyancat: nyancat in terminal
+onefetch: display the git repo info (run it in a git repo)
+prettypring: colorize and simplify ping's output. E.g., prettyping google.com
+rg: ultra-fast grep. E.g., rg "^export " ~/.config
+rga: rg but search in PDFs, E-Bookss, Office docs, zip, etc.
+shellcheck: gives warnings and suggestions for shell scripts. E.g., shellcheck myscript.sh
+speedtest-cli: CLI for internet speed test
+tldr: simplified man page
+trash: trash files
+youtube-dl: download youtube videos
+you-get: media contents (video, audios, images) download from Web (better support for Chinese websites). E.g., you-get https://www.bilibili.com/video/BV1Gy4y1q7Co
+EOF

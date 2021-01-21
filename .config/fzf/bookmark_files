@@ -27,3 +27,6 @@
 # bookmarks
 /Users/yanzhang/.config/fzf/bookmark_files
 /Users/yanzhang/.config/fzf/bookmark_dirs
+
+# misc
+/Users/yanzhang/.config/bin/cmdmemo

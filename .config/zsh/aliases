@@ -1,18 +1,43 @@
 #!/usr/bin/env bash
 
+# GNU version
+alias ls="gls -hFN --color=auto --group-directories-first" # use GNU ls (brew install coreutils)
+alias diff="diff --color=auto" # GNU diffutils required (brew install diffutils)
+alias df="gdf -h"
+alias du="gdu -h"
+alias grep="ggrep --color=auto"
+alias chmod="gchmod -v"
+alias find="gfind"
+
+# General
 alias cp="cp -iv"
 alias mv="mv -iv"
 alias md="mkdir -pv"
 alias rm="rm -iv"
 alias c="clear"
 alias ka="killall"
+
+# ls
+alias la="ls -A"
+alias ll="ls -l"
+alias l="ll -A"
+alias lr="ll -R"  # recursive
+alias lk="ll -Sr" # sort by size, largest last
+alias lm="ll -tr" # sort by modification time, i.e., mtime, newest last
+alias lc="lm -c"  # sort by change (status) time, i.e., ctime, newest last
+alias lx="ll -X"  # sort by extension
+
+# Misc
+alias t="trash -Fv"
+alias sc="shellcheck"
+alias iina="open -a 'IINA'"
+
+# Download
+alias wget="wget --continue --progress=bar --timestamping"
+alias curl="curl --continue-at - --location --progress-bar --remote-name --remote-time"
+alias aria="aria2c --max-connection-per-server=5 --continue"
 alias ydv="youtube-dl --add-metadata --restrict-filenames -i"
 alias yda="ydv -x -f bestaudio/best"
-alias ls="gls -hFN --color=auto --group-directories-first" # use GNU ls (brew install coreutils)
-alias grep="grep --color=auto"
-alias diff="diff --color=auto" # GNU diffutils required (brew install diffutils)
-alias iftop="sudo /usr/local/sbin/iftop"
-alias t="trash -Fv"
 
 # z.lua
 alias zl="z -l"
@@ -23,7 +48,7 @@ alias zf="z -I"
 
 # Improved
 alias idu="ncdu --color dark -rr -x --exclude .git --exclude node_modules"
-alias icat="highlight --out-format=ansi"
+alias icat="highlight --out-format=truecolor"
 
 # Use neovim for vim if present
 command -v nvim >/dev/null && alias vim="nvim" vi="nvim" v="nvim" vimdiff="nvim -d"

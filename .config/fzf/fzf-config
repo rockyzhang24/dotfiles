@@ -3,10 +3,8 @@
 # FZF builtin key bindings and completion
 [ -f "${XDG_CONFIG_HOME:-$HOME/.config}"/fzf/fzf.zsh ] && source "${XDG_CONFIG_HOME:-$HOME/.config}"/fzf/fzf.zsh
 
-export FD_DEFAULT_OPTS="--hidden --follow --exclude .git"
-
 # Use fd instead of default find
-export FZF_DEFAULT_COMMAND="fd $FD_DEFAULT_OPTS"
+export FZF_DEFAULT_COMMAND="fd --type f --hidden --follow --exclude .git --exclude .DS_Store"
 
 # Default options when running fzf
 # Default bindings:
@@ -35,14 +33,14 @@ _fzf_compgen_dir() {
 }
 
 # Use fd for CTRL-t (paste the selected file or dir onto the command line)
-export FZF_CTRL_T_COMMAND="fd $FD_DEFAULT_OPTS"
+export FZF_CTRL_T_COMMAND="fd --hidden --follow --exclude .git --exclude .DS_Store"
 
 # Display the full command on the preview window (CTRL-r for command history search)
 export FZF_CTRL_R_OPTS="--preview 'echo {}' --preview-window down:3:wrap --bind 'ctrl-y:execute-silent(echo -n {2..} | pbcopy)' --header 'Press CTRL-Y to copy command into clipboard'"
 
 # CTRL-z for cd into the selected dir
 bindkey '^z' fzf-cd-widget
-export FZF_ALT_C_COMMAND="fd --type d $FD_DEFAULT_OPTS"
+export FZF_ALT_C_COMMAND="fd --type d --hidden --follow --exclude .git"
 export FZF_ALT_C_OPTS="--preview 'tree -C {} | head -200'"
 
 # Utility commands (defined under ../fzfutils/)

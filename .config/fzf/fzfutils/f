@@ -7,5 +7,5 @@
 if [[ $# == 0 ]] || [[ $1 =~ ^--\|^- ]]; then
   fzf $@
 else
-  fd --hidden --follow --exclude .git '.*' $1 2> /dev/null | ( shift && fzf $@ )
+  fd --type f --hidden --follow --exclude .git --exclude .DS_Store '.*' $1 2> /dev/null | ( shift && fzf $@ )
 fi

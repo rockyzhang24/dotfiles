@@ -6,6 +6,8 @@
 	<false/>
 	<key>AllowClipboardAccess</key>
 	<true/>
+	<key>BadgeTopMargin</key>
+	<integer>10</integer>
 	<key>CheckTestRelease</key>
 	<false/>
 	<key>Custom Color Presets</key>
@@ -1131,6 +1133,8 @@
 	<false/>
 	<key>EnableDivisionView</key>
 	<true/>
+	<key>EnableProxyIcon</key>
+	<false/>
 	<key>FlashTabBarInFullscreen</key>
 	<false/>
 	<key>GlobalKeyMap</key>
@@ -1175,6 +1179,8 @@
 			<key>ASCII Anti Aliased</key>
 			<true/>
 			<key>ASCII Ligatures</key>
+			<false/>
+			<key>Allow modifyOtherKeys</key>
 			<false/>
 			<key>Ambiguous Double Width</key>
 			<false/>
@@ -1566,6 +1572,15 @@
 					<key>Text</key>
 					<string></string>
 				</dict>
+				<key>0xf700-0x240000-0x7e</key>
+				<dict>
+					<key>Action</key>
+					<integer>10</integer>
+					<key>Label</key>
+					<string></string>
+					<key>Text</key>
+					<string>[1;5A</string>
+				</dict>
 				<key>0xf700-0x260000-0x7e</key>
 				<dict>
 					<key>Action</key>
@@ -1574,6 +1589,15 @@
 					<string></string>
 					<key>Text</key>
 					<string></string>
+				</dict>
+				<key>0xf701-0x240000-0x7d</key>
+				<dict>
+					<key>Action</key>
+					<integer>10</integer>
+					<key>Label</key>
+					<string></string>
+					<key>Text</key>
+					<string>[1;5B</string>
 				</dict>
 				<key>0xf701-0x260000-0x7d</key>
 				<dict>
@@ -1627,7 +1651,7 @@
 			<key>Non-ASCII Anti Aliased</key>
 			<true/>
 			<key>Normal Font</key>
-			<string>HackNerdFontCompleteM-Regular 13</string>
+			<string>FiraCodeNerdFontComplete-Retina 13</string>
 			<key>Only The Default BG Color Uses Transparency</key>
 			<false/>
 			<key>Option Key Sends</key>
@@ -1726,6 +1750,8 @@
 	<false/>
 	<key>OpenNoWindowsAtStartup</key>
 	<false/>
+	<key>PMPrintingExpandedStateForPrint2</key>
+	<false/>
 	<key>PerPaneBackgroundImage</key>
 	<true/>
 	<key>PointerActions</key>
@@ -1765,6 +1791,8 @@
 	<false/>
 	<key>PreventEscapeSequenceFromClearingHistory</key>
 	<true/>
+	<key>Print In Black And White</key>
+	<true/>
 	<key>SeparateStatusBarsPerPane</key>
 	<false/>
 	<key>SeparateWindowTitlePerTab</key>
@@ -1792,9 +1820,11 @@
 	<key>TabStyleWithAutomaticOption</key>
 	<integer>6</integer>
 	<key>TabViewType</key>
-	<integer>0</integer>
+	<integer>1</integer>
 	<key>TabsHaveCloseButton</key>
 	<false/>
+	<key>TerminalVMargin</key>
+	<integer>2</integer>
 	<key>ToolbeltTools</key>
 	<array>
 		<string>Actions</string>

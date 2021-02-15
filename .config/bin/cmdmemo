@@ -7,6 +7,7 @@ asciinema: record and share (to asciinema.org) terminal sessions. E.g., asciinem
 atool: compress/extract. E.g., atool -a image.7z *.jpg (compress all jpg files); atool -x image.7z (extract)
 aria2c: ultra-fast download utility
 axel: Likeweight CLI download, silimar to Aria2
+archive/unarchive: zimfw module. E.g., archive hello.tar.gz path/to/archive; unarchive hello.7z
 bat: a cat clone with syntax highlighting and git integration
 bandwhich: CLI showing current network utilization by process, connection and remote. Should be run under sudo.
 ccat: cat but with syntax highlighting

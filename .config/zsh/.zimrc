@@ -4,6 +4,7 @@ zmodule environment # https://github.com/zimfw/environment
 zmodule git # https://github.com/zimfw/git
 zmodule input # https://github.com/zimfw/input
 zmodule termtitle # https://github.com/zimfw/termtitle
+zmodule archive # https://github.com/zimfw/archive
 # zmodule utility # https://github.com/zimfw/utility
 # zmodule git-info  # https://github.com/zimfw/git-info
 # zmodule steeef  # https://github.com/zimfw/steeef

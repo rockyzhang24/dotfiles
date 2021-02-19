@@ -4,7 +4,7 @@
 # Keywords (modifiers and literals): https://github.com/koekeishiya/skhd/issues/1
 
 # MNEMONIC:
-# 1). ALT for changing focus (window, space, monitor)
+# 1). Left ALT for changing focus (window, space, monitor)
 # 2). ALT + SHIFT for window operation
 # 3). ALT + CTRL for space operation
 # 4). MEH (ALT + CTRL + SHIFT) for toggling window properties
@@ -32,30 +32,30 @@ hyper - r : launchctl kickstart -k "gui/${UID}/homebrew.mxcl.yabai"
 # cmd - return : kitty --single-instance -d ~ &> /dev/null
 cmd - return : ~/.config/yabai/scripts/open-iterm.sh
 
-# ========== Changing focus (ALT) ========== {{{
+# ========== Changing focus (Left ALT) ========== {{{
 
 # Focus window
 #   - k, j: focus the window above or below
 #   - h, j: focus the window left or right (support moving the focus across the display)
-#   - p:    focus the recently-focused window
+#   - r:    focus the recently-focused window
 #   - <, >: cycle through the windows in the stack backward or forward
 #   - /:    focus the recently-focused window in the stack
 #   - m:    focus the fullscreen window in the current workspace or cycle through all the fullscreen windows
-alt - k : yabai -m window --focus north
-alt - j : yabai -m window --focus south
-alt - h : yabai -m window --focus west || \
+lalt - k : yabai -m window --focus north
+lalt - j : yabai -m window --focus south
+lalt - h : yabai -m window --focus west || \
           yabai -m window --focus $(yabai -m query --windows --display west | \
                                     jq 'map(select(.visible == 1)) | sort_by(.frame.x, .frame.y) | last | .id') || \
           yabai -m display --focus west
-alt - l : yabai -m window --focus east || \
+lalt - l : yabai -m window --focus east || \
           yabai -m window --focus $(yabai -m query --windows --display east | \
                                     jq 'map(select(.visible == 1)) | sort_by(.frame.x, .frame.y) | first | .id') || \
           yabai -m display --focus east
-alt - p : yabai -m window --focus recent
-alt - 0x2B : yabai -m window --focus stack.prev || yabai -m window --focus stack.last
-alt - 0x2F : yabai -m window --focus stack.next || yabai -m window --focus stack.first
-alt - 0x2C : yabai -m window --focus stack.recent
-alt - m : [[ $(yabai -m query --windows --window | jq '."zoom-fullscreen"') == 0 ]] && \
+lalt - r : yabai -m window --focus recent
+lalt - 0x2B : yabai -m window --focus stack.prev || yabai -m window --focus stack.last
+lalt - 0x2F : yabai -m window --focus stack.next || yabai -m window --focus stack.first
+lalt - 0x2C : yabai -m window --focus stack.recent
+lalt - m : [[ $(yabai -m query --windows --window | jq '."zoom-fullscreen"') == 0 ]] && \
           ( id=$(yabai -m query --windows --space | jq 'map(select(."zoom-fullscreen" == 1))[0] | .id') && \
             yabai -m window --focus ${id} ) || \
           ( yabai -m query --windows --space | \
@@ -68,32 +68,32 @@ alt - m : [[ $(yabai -m query --windows --window | jq '."zoom-fullscreen"') == 0
 #   - [, ]: cycle through the workspaces (support moving the focus across the display)
 #     e.g., 4 | 1 2 | 3 (three displays and currently at 2, using [ to move the focus 2 -> 1 -> 4 -> 3 -> 2, ..., ] is the same but on the opposite direction
 #   - \:    focus the recently-focused workspace
-alt - 1 : yabai -m space --focus 1
-alt - 2 : yabai -m space --focus 2
-alt - 3 : yabai -m space --focus 3
-alt - 4 : yabai -m space --focus 4
-alt - 5 : yabai -m space --focus 5
-alt - 6 : yabai -m space --focus 6
-alt - 7 : yabai -m space --focus 7
-alt - 8 : yabai -m space --focus 8
-alt - 9 : yabai -m space --focus 9
-alt - 0 : yabai -m space --focus 10
-alt - 0x21 : yabai -m space --focus $(cur_space=$(yabai -m query --spaces --space | jq -r '.index') && \
+lalt - 1 : yabai -m space --focus 1
+lalt - 2 : yabai -m space --focus 2
+lalt - 3 : yabai -m space --focus 3
+lalt - 4 : yabai -m space --focus 4
+lalt - 5 : yabai -m space --focus 5
+lalt - 6 : yabai -m space --focus 6
+lalt - 7 : yabai -m space --focus 7
+lalt - 8 : yabai -m space --focus 8
+lalt - 9 : yabai -m space --focus 9
+lalt - 0 : yabai -m space --focus 10
+lalt - 0x21 : yabai -m space --focus $(cur_space=$(yabai -m query --spaces --space | jq -r '.index') && \
                                       yabai -m query --displays | jq -r "sort_by(.frame.x) | [.[] | .spaces] | flatten | if index($cur_space) == 0 then last else .[index($cur_space) - 1] end")
-alt - 0x1E : yabai -m space --focus $(cur_space=$(yabai -m query --spaces --space | jq -r '.index') && \
+lalt - 0x1E : yabai -m space --focus $(cur_space=$(yabai -m query --spaces --space | jq -r '.index') && \
                                       yabai -m query --displays | jq -r "sort_by(.frame.x) | [.[] | .spaces] | flatten | if index($cur_space) + 1 == length then first else .[index($cur_space) + 1] end")
-alt - 0x2A : yabai -m space --focus recent
+lalt - 0x2A : yabai -m space --focus recent
 
 # Focus display
 #   - u, i, o: focus the left display, the middle display, or the right display
 #   - z, x:    cycle through the displays
 #   - c:       focus the recently-focused display
-alt - u : yabai -m display --focus $(yabai -m query --displays | jq 'sort_by(.frame.x) | .[0].index')
-alt - i : yabai -m display --focus $(yabai -m query --displays | jq 'sort_by(.frame.x) | .[1].index')
-alt - o : yabai -m display --focus $(yabai -m query --displays | jq 'sort_by(.frame.x) | .[2].index')
-alt - z : yabai -m display --focus west || yabai -m display --focus $(yabai -m query --displays | jq 'sort_by(.frame.x) | last.index')
-alt - x : yabai -m display --focus east || yabai -m display --focus $(yabai -m query --displays | jq 'sort_by(.frame.x) | first.index')
-alt - c : yabai -m display --focus recent
+lalt - u : yabai -m display --focus $(yabai -m query --displays | jq 'sort_by(.frame.x) | .[0].index')
+lalt - i : yabai -m display --focus $(yabai -m query --displays | jq 'sort_by(.frame.x) | .[1].index')
+lalt - o : yabai -m display --focus $(yabai -m query --displays | jq 'sort_by(.frame.x) | .[2].index')
+lalt - z : yabai -m display --focus west || yabai -m display --focus $(yabai -m query --displays | jq 'sort_by(.frame.x) | last.index')
+lalt - x : yabai -m display --focus east || yabai -m display --focus $(yabai -m query --displays | jq 'sort_by(.frame.x) | first.index')
+lalt - c : yabai -m display --focus recent
 
 # }}} Changing focus
 
@@ -101,12 +101,12 @@ alt - c : yabai -m display --focus recent
 
 # Move (swap) window
 #   - k, j, h, l: swap the current window with the window above, below, left, or right
-#   - p:          swap the current window with the recently-focused window
+#   - r:          swap the current window with the recently-focused window
 alt + shift - k : yabai -m window --swap north
 alt + shift - j : yabai -m window --swap south
 alt + shift - h : yabai -m window --swap west
 alt + shift - l : yabai -m window --swap east
-alt + shift - p : yabai -m window --swap recent
+alt + shift - r : yabai -m window --swap recent
 
 # Send window to workspace and follow focus
 #   - 1-0:  send the current window to the workspace #1-#10, and focus that window

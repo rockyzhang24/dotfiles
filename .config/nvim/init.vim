@@ -6,7 +6,21 @@
 
 " Author: Rocky Zhang (@yanzhang0219)
 
-" ========== General ========== {{{
+" ========== Automation ========== {{{1
+
+if empty(glob('~/.config/nvim/pack/minpac'))
+  echo "Downloading minpac as the plugin manager..."
+  silent !git clone https://github.com/k-takata/minpac.git ~/.config/nvim/pack/minpac/opt/minpac
+  echo "Installing plugins..."
+  augroup plugins_install
+    autocmd!
+    autocmd VimEnter * call PackInit() | call minpac#update()
+  augroup END
+endif
+
+" }}}
+
+" ========== General ========== {{{1
 
 set nocompatible
 filetype plugin indent on
@@ -17,13 +31,17 @@ set cursorline
 set hidden  " allow buffer switch without saving
 set wrap
 set autoindent
-set scrolloff=4
+set scrolloff=5
 set autoread
 set showcmd
 set wildmenu
 set wildmode=list:longest,full
-set textwidth=0
+set wildignore+=.git,.svn
+set wildignore+=.jpg,.gif,.png,.jpeg,.heic
+set wildignore+=.DS_Store
+set textwidth=80
 set colorcolumn=80
+set formatprg=par\ -w80rq " use par as the formatter for gq
 set list
 set listchars=tab:›\ ,trail:▫,extends:#,nbsp:.
 set foldenable
@@ -50,6 +68,10 @@ set incsearch
 set ignorecase
 set smartcase
 set title
+set lazyredraw
+set noswapfile
+set signcolumn=auto:4
+set spelllang=en_us
 let &showbreak = '↪ '
 
 " Avoid highlighting the last search when sourcing vimrc
@@ -65,19 +87,54 @@ let g:neoterm_autoscroll = '1'
 
 " }}} General
 
-" ========== Dress up ========== {{{
+" ========== Dress up ========== {{{1
 
 set termguicolors
 
-colorscheme gruvbox
 set background=dark
 
-" Remove background color to make vim transparent in Alacritty
-hi Normal guibg=NONE ctermbg=NONE
+" Nord
+" let g:nord_cursor_line_number_background = 1
+" let g:nord_italic = 1
+
+" Gruvbox
+" autocmd vimenter * ++nested colorscheme gruvbox
+
+" Sonokai
+let g:sonokai_style = 'shusia'
+let g:sonokai_enable_italic = 1
+let g:sonokai_disable_italic_comment = 1
+let g:sonokai_better_performance = 1
+let g:sonokai_current_word = 'underline'
+
+colorscheme sonokai
+
+" In Alacritty, to make vim transparent, if the colorscheme doesn't have an option
+" to use transparent background, we should remove the background color by uncommenting
+" the line below (don't forget to use the same color for Alacritty itself)
+" hi Normal guibg=NONE ctermbg=NONE
+
+" Terminal
+let g:terminal_color_0  = '#21222C'
+let g:terminal_color_1  = '#FF5555'
+let g:terminal_color_2  = '#50FA7B'
+let g:terminal_color_3  = '#F1FA8C'
+let g:terminal_color_4  = '#BD93F9'
+let g:terminal_color_5  = '#FF79C6'
+let g:terminal_color_6  = '#8BE9FD'
+let g:terminal_color_7  = '#F8F8F2'
+let g:terminal_color_8  = '#6272A4'
+let g:terminal_color_9  = '#FF6E6E'
+let g:terminal_color_10 = '#69FF94'
+let g:terminal_color_11 = '#FFFFA5'
+let g:terminal_color_12 = '#D6ACFF'
+let g:terminal_color_13 = '#FF92DF'
+let g:terminal_color_14 = '#A4FFFF'
+let g:terminal_color_15 = '#FFFFFF'
 
 " }}} Dress up
 
-" ========== Autocommands ========== {{{
+" ========== Autocommands ========== {{{1
 
 augroup general
   autocmd!
@@ -87,15 +144,6 @@ augroup general
     \ if line("'\"") > 1 && line("'\"") <= line("$") && &filetype != 'gitcommit' |
       \ exe "normal! g'\"" |
     \ endif
-
-  " Automatically deletes all trailing whitespaces at end of each line on save
-  autocmd BufWritePre * %s/\s\+$//e
-
-  " Automatically start insert mode when enter terminal
-  autocmd TermOpen term://* startinsert
-
-  " Auto change working directory to the current dir
-  autocmd BufEnter * silent! lcd %:p:h
 
 augroup END
 
@@ -108,19 +156,62 @@ augroup filetypes
   " vim
   autocmd FileType vim setlocal foldmethod=marker foldlevel=0 textwidth=0
 
+  " make
+  autocmd FileType make setlocal tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab
+
   " markdown
-  autocmd FileType markdown packadd markdown-preview.nvim |
-                          \ source ~/.config/nvim/md-snippets.vim
+  autocmd FileType markdown packadd markdown-preview.nvim
+
+augroup END
+
+" Remove all trailing whitespaces at the end of each line on save excluding a few filetypes
+" Reference: http://vimcasts.org/episodes/tidying-whitespace/
+function! RemoveTrailingWhitespaces()
+  if !exists("b:exclusion")
+    let _s=@/
+    let l = line(".")
+    let c = col(".")
+    %s/\s\+$//e
+    let @/=_s
+    call cursor(l, c)
+  endif
+endfunction
+augroup remove_trailing_whitespaces
+  autocmd!
+  autocmd Filetype markdown let b:exclusion=1
+  autocmd BufWritePre * call RemoveTrailingWhitespaces()
+augroup END
+
+" Neovim builtin terminal
+augroup terminal
+  autocmd!
+
+  " Automatically start insert mode when enter terminal, and disable line number and indentline
+  autocmd TermOpen term://* startinsert |
+        \ setlocal nonumber norelativenumber |
+        \ IndentLinesDisable
+  autocmd BufWinEnter,WinEnter term://* startinsert
+
 augroup END
 
 " }}} Autocommands
 
-" ========== Mappings ========== {{{
+" ========== Mappings ========== {{{1
+
+" ---- General ---- {{{2
 
 let mapleader=" "
-let maplocalleader="\\"
 
-" ---- General ----
+" Make j and k move line by line, but behave normally when given a count
+nnoremap <expr> j (v:count == 0 ? 'gj' : 'j')
+nnoremap <expr> k (v:count == 0 ? 'gk' : 'k')
+
+noremap H ^
+noremap L $
+
+" Move the selections up and down with corresponding indentation
+xnoremap J :m '>+1<CR>gv=gv
+xnoremap K :m '<-2<CR>gv=gv
 
 " Jump to the next '<++>' and edit it
 nnoremap <silent> <Leader><Leader> <Esc>/<++><CR>:nohlsearch<CR>c4l
@@ -129,65 +220,65 @@ nnoremap <silent> <Leader><Leader> <Esc>/<++><CR>:nohlsearch<CR>c4l
 vnoremap < <gv
 vnoremap > >gv
 
-" Movement
-xnoremap J :m '>+1<CR>gv=gv
-xnoremap K :m '<-2<CR>gv=gv
-
-" ---- Prev & Next ----
-
-" Buffer
-nnoremap [b :bprevious<CR>
-nnoremap ]b :bnext<CR>
-
-" Quickfix
-nnoremap [q :cprevious<CR>
-nnoremap ]q :cnext<CR>
-
-" ---- Copy ----
-
+" Copy
 nnoremap Y y$
 vnoremap Y "+y
 
-" ---- Window ----
+" Delete but not save to a register
+nnoremap s "_d
 
-" Focus movement around windows
-nnoremap <C-k> <C-w>k
-nnoremap <C-j> <C-w>j
-nnoremap <C-h> <C-w>h
-nnoremap <C-l> <C-w>l
+" }}}
 
-" Resize splits with arrow keys (up/right -> enlarge, down/left -> shrink)
-noremap <Up> :res +5<CR>
-noremap <Down> :res -5<CR>
-noremap <Left> :vertical resize -5<CR>
-noremap <Right> :vertical resize +5<CR>
-
-" ---- Searching ----
-
-" Clean search highlighting
-nnoremap <silent> <Leader>/ :<C-u>nohlsearch<CR>
-
-" Use very magic mode when searching
-nnoremap / /\v
-nnoremap ? ?\v
-
-" n for searching forward and N for searching backward regardless of / or ?
-nnoremap <expr> n 'Nn'[v:searchforward].'zz'
-nnoremap <expr> N 'nN'[v:searchforward].'zz'
-
-" Grep by motion
-nnoremap <leader>G :set operatorfunc=<SID>GrepOperator<cr>g@
-vnoremap <leader>G :<c-u>call <SID>GrepOperator(visualmode())<cr>
-
-" ---- Operator-pending ----
+" ---- Operator-pending ---- {{{2
 
 " Inside next/last parentheses
 onoremap in( :<C-u>normal! f(vi(<CR>
 onoremap il( :<C-u>normal! F)vi(<CR>
 
-" ---- Command Line ----
+" Hunk (vim-gitgutter)
+omap ih <Plug>(GitGutterTextObjectInnerPending)
+xmap ih <Plug>(GitGutterTextObjectInnerVisual)
+omap ah <Plug>(GitGutterTextObjectOuterPending)
+xmap ah <Plug>(GitGutterTextObjectOuterVisual)
 
-" Cursor movement in command line
+" }}}
+
+" ---- Terminal (Meta) ---- {{{2
+
+" NOTE: Meta key is the right Option key in my iTerm2
+
+" Toggle a terminal at the bottom
+nnoremap <expr> <M-`> ':set splitbelow<CR>:split<CR>:resize +10<CR>' . (bufexists('term://term-main') ? ':buffer term://term-main<CR>' : ':terminal<CR><C-\><C-n>:file term://term-main<CR>A')
+tnoremap <M-`> <C-\><C-n>:quit<CR>
+
+" Close the current terminal window
+tnoremap <M-c> <C-\><C-n>:quit<CR>
+
+" Close and delete the current terminal buffer
+tnoremap <M-d> <C-\><C-n>:bdelete!<CR>
+
+" Back to normal mode in the terminal buffer
+tnoremap <M-[> <C-\><C-n>
+
+" Switching between split windows
+tnoremap <M-h> <C-\><C-n><C-w>h
+tnoremap <M-j> <C-\><C-n><C-w>j
+tnoremap <M-k> <C-\><C-n><C-w>k
+tnoremap <M-l> <C-\><C-n><C-w>l
+nnoremap <M-h> <C-w>h
+nnoremap <M-j> <C-w>j
+nnoremap <M-k> <C-w>k
+nnoremap <M-l> <C-w>l
+
+" In terminal mode, use <M-r> to simulate <C-r> in insert mode for inserting the content of a register
+" Reference: http://vimcasts.org/episodes/neovim-terminal-paste/
+tnoremap <expr> <M-r> '<C-\><C-n>"' . nr2char(getchar()) . 'pi'
+
+" }}}
+
+" ---- Command Line ---- {{{2
+
+" Cursor movement in command line (Emacs style)
 cnoremap <C-p> <Up>
 cnoremap <C-n> <Down>
 cnoremap <C-b> <Left>
@@ -198,37 +289,172 @@ cnoremap ∫ <S-Left>
 cnoremap ƒ <S-Right>
 
 " Ctrl-o to open command-line window
-cnoremap <C-o> <C-f>
+set cedit=\<C-o>
 
 " Save the file that requireds root permission
 cnoremap w!! w !sudo tee % >/dev/null
 
-" ---- Terminal ----
+" Get the full path of the current file
+cnoremap %% <C-R>=fnameescape(expand('%:h')).'/'<cr>
 
-tnoremap <C-n> <C-\><C-n>
-tnoremap <C-o> <C-\><C-n><C-o>
+" }}}
 
-" ---- Toggling ----
+" ---- Arglist (a) ---- {{{2
 
-" spell check
-nnoremap <Leader>ts :setlocal spell! spelllang=en_us<CR>
+nnoremap <Leader>an :next<CR>
+nnoremap <Leader>ap :previous<CR>
+nnoremap <Leader>aH :first<CR>
+nnoremap <Leader>aL :last<CR>
 
-" ---- Vimrc ----
+" }}}
 
-" Edit & source vimrc
-nnoremap <Leader>ve :vsplit $MYVIMRC<CR>
-nnoremap <Leader>vs :source $MYVIMRC<CR>
+" ---- Buffer (b) ---- {{{2
 
-" }}} Mapppings
+nnoremap <Leader>bh :Startify<CR>
+nnoremap <Leader>bn :bnext<CR>
+nnoremap <Leader>bp :bprevious<CR>
 
-" ========== Functions ========== {{{
+" Goto the alternate (recent) buffer
+nnoremap <Leader>br <C-^>
+
+" Close and delete the current buffer from the buffer list (vim-xtabline)
+nnoremap <Leader>bd :XTabCloseBuffer<CR>
+
+" Buffer delete (fzf.vim)
+nnoremap <Leader>bD :BD<CR>
+
+" fzf to switch buffers (fzf.vim)
+nnoremap <Leader>bb :Buffers<CR>
+
+" Switch to buffer N (vim-xtabline)
+nmap <Leader>b1 1<Plug>(XT-Select-Buffer)
+nmap <Leader>b2 2<Plug>(XT-Select-Buffer)
+nmap <Leader>b3 3<Plug>(XT-Select-Buffer)
+nmap <Leader>b4 4<Plug>(XT-Select-Buffer)
+nmap <Leader>b5 5<Plug>(XT-Select-Buffer)
+nmap <Leader>b6 6<Plug>(XT-Select-Buffer)
+nmap <Leader>b7 7<Plug>(XT-Select-Buffer)
+nmap <Leader>b8 8<Plug>(XT-Select-Buffer)
+nmap <Leader>b9 9<Plug>(XT-Select-Buffer)
+
+" Open current buffer in a new tab
+nnoremap <Leader>bT :tabedit %<CR>
+
+" Move buffer position on the tabline
+nnoremap <Leader>b[ :XTabMoveBufferPrev<CR>
+nnoremap <Leader>b] :XTabMoveBufferNext<CR>
+
+" }}}
+
+" ---- Find/Files (f) ---- {{{2
+
+" fzf to open file (fzf.vim)
+nnoremap <Leader>ff :Files<CR>
+nnoremap <Leader>fF :Files<Space>
+
+" }}}
+
+" ---- Git (g) ---- {{{2
+
+" Jump between hunks (vim-gitgutter)
+nmap <Leader>ghn <Plug>(GitGutterNextHunk)
+nmap <Leader>ghp <Plug>(GitGutterPrevHunk)
+
+" Load all hunks (in the current project) into quickfix
+nnoremap <Leader>ghq :GitGutterQuickFix<CR>:copen<CR>
+
+" Preview the hunk (vim-gitgutter)
+nmap <Leader>ghP <Plug>(GitGutterPreviewHunk)
+
+" Stage or undo hunks
+nmap <Leader>ghs <Plug>(GitGutterStageHunk)
+xmap <Leader>ghs <Plug>(GitGutterStageHunk)
+nmap <Leader>ghu <Plug>(GitGutterUndoHunk)
+
+" Fold/unfold all unchanged lines (vim-gitgutter)
+nnoremap <Leader>ghf :GitGutterFold<CR>
+
+" }}}
+
+" ---- History & Help (h) ---- {{{2
+
+" fzf for the command and search history (fzf.vim)
+nnoremap <Leader>h: :History:<CR>
+nnoremap <Leader>h/ :History/<CR>
+
+" fzf for help tags (fzf.vim)
+nnoremap <Leader>h? :Helptags<CR>
+
+" }}}
+
+" ---- markdown (m) ---- {{{2
+
+" Markdown preview in a browser window (markdown-preview.nvim)
+nnoremap <Leader>mp :MarkdownPreview<CR>
+
+" Generate TOC (vim-markdown-toc)
+nnoremap <Leader>mc :GenTocGFM<CR>
+
+" }}}
+
+" ---- Plugin management (P) ---- {{{2
+
+" Update/install or delete plugins
+nnoremap <Leader>Pu :PluginUpdate<CR>
+nnoremap <Leader>Pd :PluginDelete<CR>
+
+" Open the plugin's directory or github url by given the plugin's name
+nnoremap <Leader>PD :OpenPluginDir<Space>
+nnoremap <Leader>PU :OpenPluginUrl<Space>
+
+" }}}
+
+" ---- Quickfix (q) ---- {{{2
+
+nnoremap <Leader>qo :copen<CR>
+nnoremap <Leader>qc :close<CR>
+nnoremap <Leader>qn :cnext<CR>
+nnoremap <Leader>qp :cprevious<CR>
+nnoremap <Leader>qH :cfirst<CR>
+nnoremap <Leader>qL :clast<CR>
+
+" }}}
+
+" ---- Refactor (r) ---- {{{2
+
+" Alignment (tabular)
+noremap <Leader>ra :Tabularize /
+
+" Split one line into multiple lines, or join a block into a single-line statement (splitjoin.vim)
+nnoremap <Leader>rj :SplitjoinJoin<CR>
+nnoremap <Leader>rs :SplitjoinSplit<CR>
+
+" }}}
+
+" ---- Searching (s) ---- {{{2
+
+" Clean search highlighting
+nnoremap <silent> <Leader>/ :<C-u>nohlsearch<CR>
+
+" n for searching forward and N for searching backward regardless of / or ?
+nnoremap <expr> n (v:searchforward ? 'n' : 'N')
+nnoremap <expr> N (v:searchforward ? 'N' : 'n')
+
+" Make * and # work on visual mode
+function! s:VSetSearch(cmdtype)
+  let temp = @s
+  norm! gv"sy
+  let @/ = '\V' . substitute(escape(@s, a:cmdtype.'\'), '\n', '\\n', 'g')
+  let @s = temp
+endfunction
+xnoremap * :<C-u>call <SID>VSetSearch('/')<CR>/<C-R>=@/<CR><CR>
+xnoremap # :<C-u>call <SID>VSetSearch('?')<CR>?<C-R>=@/<CR><CR>
 
 " Implement a Grep Operator which can be used with any of Vim's built-in or custom motions to
 " select the text you want to search for.
 " Reference: https://learnvimscriptthehardway.stevelosh.com/chapters/32.html
 function! s:GrepOperator(type)
   let saved_unnamed_register = @@
-
   if a:type ==# 'v'
     normal! `<v`>y
   elseif a:type ==# 'char'
@@ -236,17 +462,175 @@ function! s:GrepOperator(type)
   else
     return
   endif
-
   silent execute "grep! -R " . shellescape(@@) . " ."
   copen
-
   let @@ = saved_unnamed_register
 endfunction
+nnoremap <Leader>sG :set operatorfunc=<SID>GrepOperator<cr>g@
+vnoremap <Leader>sG :<c-u>call <SID>GrepOperator(visualmode())<cr>
 
+" Rg under pwd (fzf)
+nnoremap <Leader>sr :Rg<CR>
 
-" }}} Functions
+" }}}
 
-" ========== Plugins ========== {{{
+" ---- Session (S) ---- {{{2
+
+" Session management (vim-xtabline)
+nnoremap <Leader>Ss :XTabSaveSession<CR>
+nnoremap <Leader>Sl :XTabLoadSession<CR>
+nnoremap <Leader>Sd :XTabDeleteSession<CR>
+
+" }}}
+
+" ---- Toggle/tab (t) ---- {{{2
+
+" Toggle spell checking
+nnoremap <Leader>ts :setlocal spell! spelllang=en_us<CR>
+
+" Toggle wrap
+nnoremap <Leader>tw :set wrap!<CR>
+
+" Toggle indent lines (indentLine)
+nnoremap <Leader>ti :IndentLinesToggle<CR>
+
+" Toggle colors (vim-hexokinase)
+nnoremap <Leader>tc :HexokinaseToggle<CR>
+
+" Toggle undotree (undotree.vim)
+nnoremap <Leader>tu :UndotreeToggle<CR>
+
+" }}}
+
+" ---- Tab (T) ---- {{{2
+
+" Create a new tab with a empty buffer
+nnoremap <Leader>Tt :tabedit<CR>
+
+" Change tabline mode (vim-xtabline)
+nnoremap <Leader>TMb :XTabMode buffers<CR>
+nnoremap <Leader>TMt :XTabMode tabs<CR>
+nnoremap <Leader>TMa :XTabMode arglist<CR>
+
+" Close the current tab and all its windows
+nnoremap <Leader>Tc :tabclose<CR>
+
+" Close all tabs except the current (o for only)
+nnoremap <Leader>To :tabonly<CR>
+
+" Go to the next/prev tab
+nnoremap <Leader>Tn :tabnext<CR>
+nnoremap <Leader>Tp :tabprevious<CR>
+
+" Go to the first/last tab
+nnoremap <Leader>TH :tabfirst<CR>
+nnoremap <Leader>TL :tablast<CR>
+
+" Go to the recent tab
+nnoremap <Leader>Tr <C-w>g<Tab>
+
+" Open a file in a new tab
+nnoremap <Leader>Te :tabedit<Space>
+
+" Focus tab by tab number
+let i = 1
+while i <= 9
+  execute 'nnoremap <silent> <Leader>T' . i . ' :' . i . 'tabnext<CR>'
+  let i = i + 1
+endwhile
+
+" List all tabs
+nnoremap <Leader>Tls :tabs<CR>
+
+" Move the current tab to the right/left
+nnoremap <Leader>T. :tabmove +<CR>
+nnoremap <Leader>T, :tabmove -<CR>
+
+" }}}
+
+" ---- Vimrc (v) ---- {{{2
+
+" edit and source vim config file
+nnoremap <Leader>ve :tabedit $MYVIMRC<CR>
+nnoremap <Leader>vs :source $MYVIMRC<CR>
+
+" }}}
+
+" ---- Window (w) ---- {{{2
+
+" Create a split window to up (horizontal), down (horizontal), left (vertical), right (vertical)
+nnoremap <silent> <Leader>wk :set nosplitbelow<CR><C-w>s:set splitbelow<CR>
+nnoremap <silent> <Leader>wj :set splitbelow<CR><C-w>s
+nnoremap <silent> <Leader>wh :set nosplitright<CR><C-w>v:set splitright<CR>
+nnoremap <silent> <Leader>wl :set splitright<CR><C-w>v
+
+" Change two-windows layout to up-and-down or side-by-side (the cursor retains in its original window)
+nnoremap <expr> <Leader>w- (winnr() == 1 ? '<C-w>K' : '<C-w>t<C-w>K<C-w>p')
+nnoremap <expr> <Leader>w\ (winnr() == 1 ? '<C-w>H' : '<C-w>t<C-w>H<C-w>p')
+
+" Focus movement around windows
+nnoremap <C-h> <C-w>h
+nnoremap <C-j> <C-w>j
+nnoremap <C-k> <C-w>k
+nnoremap <C-l> <C-w>l
+
+" Focus window by window number
+let i = 1
+while i <= 9
+  execute 'nnoremap <silent> <Leader>w' . i . ' :' . i . 'wincmd w<CR>'
+  let i = i + 1
+endwhile
+
+" Go to the recent window
+nnoremap <Leader>wr <C-w>p
+
+" Close the current window
+nnoremap <Leader>wc <C-w>c
+
+" Close all windows except the current (o for only)
+nnoremap <Leader>wo <C-w>o
+
+" Go to the preview window
+nnoremap <Leader>wP <C-w>P
+
+" Close the preview window
+nnoremap <Leader>wz <C-w>z
+
+" Move current window to new tab
+nnoremap <Leader>wT <C-w>T
+
+" Resize
+nnoremap <Leader>wJ <C-w>5-
+nnoremap <Leader>wK <C-w>5+
+nnoremap <Leader>wH <C-w>5<
+nnoremap <Leader>wL <C-w>5>
+
+" Balance size
+nnoremap <Leader>w= <C-w>=
+
+" Exchange the current window with window N (must be in the same column or row)
+nnoremap <Leader>wx <C-w>x
+
+" Focus the undotree window (undotree.vim)
+nnoremap <Leader>wu :UndotreeFocus<CR>
+
+" }}}
+
+" ---- Ranger (rnvimr) ---- {{{2
+" The <Leader> key, i.e., space key, conflicts with ranger, so use ,
+
+" Toggle on and off
+nnoremap <silent> ,r :RnvimrToggle<CR>
+tnoremap <silent> ,r <C-\><C-n>:RnvimrToggle<CR>
+
+" Toggle window and fullscreen (maximum)
+tnoremap <silent> ,m <C-\><C-n>:RnvimrResize<CR>
+
+" }}}
+
+" }}} Mapppings
+
+" ========== Plugins ========== {{{1
 
 " Minpac plugin manager (load minpac on demand)
 function! PackInit() abort
@@ -255,31 +639,49 @@ function! PackInit() abort
 
   call minpac#add('k-takata/minpac', {'type': 'opt'})
 
-  call minpac#add('neoclide/coc.nvim', {'branch': 'release'})
   call minpac#add('tpope/vim-surround')
   call minpac#add('junegunn/fzf.vim')
   call minpac#add('tomtom/tcomment_vim')
   call minpac#add('RRethy/vim-illuminate')
   call minpac#add('RRethy/vim-hexokinase', { 'do': 'make hexokinase' })
   call minpac#add('airblade/vim-rooter')
+  call minpac#add('AndrewRadev/splitjoin.vim')
+  call minpac#add('godlygeek/tabular')
+  call minpac#add('kevinhwang91/rnvimr')
+  call minpac#add('gcmt/wildfire.vim')
+  call minpac#add('mg979/vim-visual-multi')
+  call minpac#add('yggdroot/indentline')
+  call minpac#add('mbbill/undotree')
+  call minpac#add('mhinz/vim-startify')
+
+  " LSP
+  call minpac#add('neoclide/coc.nvim', {'branch': 'release'})
 
   " Git
   call minpac#add('tpope/vim-fugitive')
   call minpac#add('airblade/vim-gitgutter')
 
   " Markdown
-  call minpac#add('vimwiki/vimwiki', {'rev': 'dev'})
   call minpac#add('iamcco/markdown-preview.nvim', {'type': 'opt', 'do': 'packadd markdown-preview.nvim | call mkdp#util#install()'})
+  call minpac#add('mzlogin/vim-markdown-toc')
+  call minpac#add('dhruvasagar/vim-table-mode')
+  call minpac#add('dkarter/bullets.vim')
 
-  " Appearance
-  call minpac#add('yggdroot/indentline')
+  " Lines
+  call minpac#add('mg979/vim-xtabline')
   call minpac#add('yanzhang0219/eleline.vim')
-  call minpac#add('mhinz/vim-startify')
+
+  " Icons
   call minpac#add('ryanoasis/vim-devicons')
+
+  " Color schemes
   call minpac#add('morhetz/gruvbox')
+  call minpac#add('arcticicestudio/nord-vim')
+  call minpac#add('dracula/vim', { 'name': 'dracula' })
+  call minpac#add('sainnhe/sonokai')
+  call minpac#add('sainnhe/gruvbox-material')
 
   " Testing
-  " call minpac#add('mg979/vim-xtabline')
 
 endfunction
 
@@ -291,17 +693,33 @@ set rtp+=~/gitrepos/fzf
 
 " }}} Plugins
 
-" ========== Plugin settings ========== {{{
+" ========== Plugin settings ========== {{{1
 
-" ---- minpac ----
+" ---- minpac ---- {{{2
 
 command! PluginUpdate source $MYVIMRC | call PackInit() | call minpac#update()
 command! PluginDelete source $MYVIMRC | call PackInit() | call minpac#clean()
 command! PluginStatus packadd minpac | call minpac#status()
 
-" ---- fzf ----
+function! PackList(...)
+  call PackInit()
+  return join(sort(keys(minpac#getpluglist())), "\n")
+endfunction
 
-" Make the preview use the config of command-line fzf (defined in ~/.config/fzf/fzf) instead of
+" Define a command, OpenPluginDir, to open a new iTerm2 window and cd into the directory where a plugin is installed
+" (The custom command, iterm, is defined at ~/.config/bin/iterm)
+command! -nargs=1 -complete=custom,PackList
+      \ OpenPluginDir call PackInit() | silent exec "!iterm \"cd " . minpac#getpluginfo(<q-args>).dir . "\""
+
+" Define a command, OpenPluginUrl, to open the plugin's git repo in Chrome
+command! -nargs=1 -complete=custom,PackList
+      \ OpenPluginUrl call PackInit() | silent exec "!open -a \"Google Chrome\" " . minpac#getpluginfo(<q-args>).url
+
+" }}} minpac
+
+" ---- fzf ---- {{{2
+
+" Make the preview use the config of command-line fzf (defined in ~/.config/fzf/fzf-config) instead of
 " preview.sh shipped with fzf.vim
 " let g:fzf_preview_window = ''
 
@@ -314,8 +732,8 @@ endfunction
 let g:fzf_action = {
   \ 'ctrl-l': function('s:build_quickfix_list'),
   \ 'ctrl-t': 'tab split',
-  \ 'ctrl-x': 'split',
-  \ 'ctrl-v': 'vsplit' }
+  \ 'ctrl-h': 'split',
+  \ "ctrl-v": 'vsplit' }
 
 let g:fzf_history_dir = '~/.local/share/fzf-vim-history'
 
@@ -339,44 +757,174 @@ function! s:list_buffers()
   return split(list, "\n")
 endfunction
 
-function! s:delete_buffers(lines)
-  execute 'bwipeout' join(map(a:lines, {_, line -> split(line)[0]}))
+function! s:delete_buffers(lines, hasBang)
+  execute (a:hasBang ? 'bwipeout!' : 'bwipeout') join(map(a:lines, {_, line -> split(line)[0]}))
 endfunction
 
-command! BD call fzf#run(fzf#wrap({
+" Delete buffers from buffer list
+" BD[!], [!] to delete the unsaved buffers
+command! -bang BD call fzf#run(fzf#wrap({
   \ 'source': s:list_buffers(),
-  \ 'sink*': { lines -> s:delete_buffers(lines) },
-  \ 'options': '--multi --reverse --bind ctrl-a:select-all+accept'
+  \ 'sink*': { lines -> s:delete_buffers(lines, <bang>0) },
+  \ 'options': '--header "Select the buffers you want to delete from the buffer list" --multi --reverse --bind ctrl-a:select-all'
 \ }))
 
-" ---- vim-illuminate ----
+" }}} fzf
+
+" ---- tcomment_vim ---- {{{2
+
+" Disable the redundant preset map
+let g:tcomment_mapleader2 = ''
+
+" }}} tcomment_vim
+
+" ---- vim-illuminate ---- {{{2
 
 augroup illuminate_augroup
     autocmd!
     autocmd VimEnter * hi illuminatedWord cterm=underline gui=underline
 augroup END
 
-" ---- vim-hexokinase ----
+" }}} vim-illuminate
 
-let g:Hexokinase_ftEnabled = ['css', 'html', 'javascript']
+" ---- vim-hexokinase ---- {{{2
+
 let g:Hexokinase_highlighters = ['backgroundfull']
-nnoremap <Leader>tc :HexokinaseToggle<CR>
+let g:Hexokinase_optInPatterns = 'full_hex,rgb,rgba,hsl,hsla'
 
-" ---- vim-rooter ----
+" }}} vim-hexokinase
+
+" ---- vim-rooter ---- {{{2
 
 let g:rooter_pattern = ['.git']
 
-" ---- gitgutter ----
+" Only change directory for the current tab
+let g:rooter_cd_cmd = 'tcd'
 
+" For non-project file, change to the file's directory
+let g:rooter_change_directory_for_non_project_files = 'current'
+
+" }}} vim-rooter
+
+" ---- vim-xtabline ---- {{{2
+
+let g:xtabline_settings = get(g:, 'xtabline_settings', {})
+let g:xtabline_settings.tabline_modes = ['buffers', 'tabs', 'arglist']
+let g:xtabline_settings.enable_mappings = 0
+let g:xtabline_settings.wd_type_indicator = 1
+
+" }}} vim-xtabline
+
+" ---- splitjoin.vim ---- {{{2
+
+let g:splitjoin_split_mapping = ''
+let g:splitjoin_join_mapping = ''
+
+" }}} splitjoin.vim
+
+" ---- rnvimr ---- {{{2
+
+" Replace Netrw and be the file explorer
+let g:rnvimr_enable_ex = 1
+
+" Hidden ranger after picking a file
+let g:rnvimr_enable_picker = 1
+
+" Disable border for floating window
+let g:rnvimr_draw_border = 0
+
+highlight link RnvimrNormal CursorLine
+
+" I use x as the leader key (keep consistent in ranger) for my custom mappings
+let g:rnvimr_action = {
+            \ 'xT': 'NvimEdit tabedit',
+            \ 'x-': 'NvimEdit split',
+            \ 'x\': 'NvimEdit vsplit',
+            \ 'gw': 'JumpNvimCwd',
+            \ 'yw': 'EmitRangerCwd'
+            \ }
+
+" Ranger's default layout
+let g:rnvimr_layout = {
+            \ 'relative': 'editor',
+            \ 'width': float2nr(round(0.8 * &columns)),
+            \ 'height': float2nr(round(0.8 * &lines)),
+            \ 'col': float2nr(round(0.1 * &columns)),
+            \ 'row': float2nr(round(0.1 * &lines)),
+            \ 'style': 'minimal'
+            \ }
+
+" Some preset layouts we can switch to
+" I only put a fullscreen layout here, so toggle between window and fullscreen by ,m
+let g:rnvimr_presets = [
+            \ {},
+            \ {'width': &columns, 'height': &lines - 2, 'col': 0, 'row': 0}
+            \ ]
+
+" }}} rnvimr
+
+" ---- vim-gitgutter ---- {{{2
+
+" Disable the preset mappings
 let g:gitgutter_map_keys = 0
-" nnoremap <Leader>gf :GitGutterFold<CR>
-" nnoremap <Leader>gp :GitGutterPrevHunk<CR>
-" nnoremap <Leader>gn :GitGutterNextHunk<CR>
 
-" ---- vimwiki ----
-" let g:vimwiki_list = [{'path': '~/Dropbox/vimwiki/', 'syntax': 'markdown', 'ext': '.md'}]
+" Not to use floating window for hunk preview
+let g:gitgutter_preview_win_floating = 0
 
-" ---- markdown-preview ----
+" }}} vim-gitgutter
+
+" ---- vim-fugitive ---- {{{2
+
+" Reference: http://vimcasts.org/episodes/fugitive-vim-browsing-the-git-object-database/
+augroup fugitiveautocmd
+  autocmd!
+
+  " Use .. to go up to the parent directory if the buffer containing a git blob or tree
+  autocmd User fugitive
+        \ if fugitive#buffer().type() =~# '^\%(tree\|blob\)$' |
+        \   nnoremap <buffer> .. :edit %:h<CR> |
+        \ endif
+
+  " Make bufferlist clean
+  autocmd BufReadPost fugitive://* set bufhidden=delete
+
+augroup END
+
+" }}} vim-fugitive
+
+" ---- indentLine ---- {{{2
+
+let g:indentLine_fileTypeExclude = ['startify', 'help', 'markdown']
+let g:indentLine_bufTypeExclude = ['terminal']
+let g:indentLine_char = '|'
+
+" }}} indentLine
+
+" ---- eleline.vim ---- {{{2
+
+let g:eleline_powerline_fonts = 1
+
+" }}} eleline.vim
+
+" ---- vim-visual-multi ---- {{{2
+
+let g:VM_theme = 'iceblue'
+
+let g:VM_maps = {}
+let g:VM_maps["Undo"] = 'u'
+let g:VM_maps["Redo"] = '<C-r>'
+
+" }}} vim-visual-multi
+
+" ---- undotree.vim ---- {{{2
+
+let g:undotree_WindowLayout = 2
+let g:undotree_ShortIndicators = 1
+let g:undotree_SetFocusWhenToggle = 1
+
+" }}} undotree.vim
+
+" ---- markdown-preview.nvim ---- {{{
 
 " Open a new window of Chrome in the same workspace
 function! g:Open_browser(url)
@@ -384,13 +932,30 @@ function! g:Open_browser(url)
 endfunction
 let g:mkdp_browserfunc = 'g:Open_browser'
 
-" ---- indentLine ----
+" Not auto close the preview browser window
+let g:mkdp_auto_close = 0
 
-let g:indentLine_enabled = 0
-let g:indentLine_fileTypeExclude = ['startify', 'help', 'markdown']
-let g:indentLine_char = '¦'
+" Recognized filetypes (MarkdownPreview... commands will be availabe)
+let g:mkdp_filetypes = ['markdown']
 
-" ---- startify ----
+" }}} markdown-preview.nvim
+
+" ---- vim-markdown-toc ---- {{{
+
+let g:vmt_cycle_list_item_markers = 1
+
+" }}} vim-markdown-toc
+
+" ---- vim-table-mode ---- {{{
+
+let g:table_mode_map_prefix = '<Leader>mt'
+
+" }}} vim-table-mode
+
+" ---- vim-startify ---- {{{2
+
+" Make vim-rooter works when a file is opened from startify
+let g:startify_change_to_dir = 0
 
 function! StartifyEntryFormat()
   return 'WebDevIconsGetFileTypeSymbol(absolute_path) ." ". entry_path'
@@ -413,5 +978,7 @@ let g:startify_custom_header = 'startify#pad(g:ascii)'
 augroup starity
   autocmd User Startified setlocal cursorline
 augroup END
+
+" }}} vim-startify
 
 " }}} Plugin settings

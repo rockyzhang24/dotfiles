@@ -49,6 +49,7 @@ set foldmethod=indent
 set foldlevel=99
 set completeopt=menuone,preview,noinsert
 set ttimeoutlen=0
+set notimeout
 set shortmess+=c
 set inccommand=split
 set updatetime=100
@@ -68,9 +69,9 @@ set incsearch
 set ignorecase
 set smartcase
 set title
-set lazyredraw
 set noswapfile
-set signcolumn=auto:4
+set nobackup nowritebackup  " coc requirements
+set signcolumn=yes
 set spelllang=en_us
 let &showbreak = '↪ '
 
@@ -195,6 +196,36 @@ augroup terminal
 augroup END
 
 " }}} Autocommands
+
+" ========== Commands ========== {{{1
+
+" ---- coc.nvim ---- {{{2
+
+" Format the current buffer
+command! -nargs=0 Format :call CocAction('format')
+
+" Fold the current buffer
+command! -nargs=? Fold :call CocAction('fold', <f-args>)
+
+" Organize imports
+command! -nargs=0 OR :call CocAction('runCommand', 'editor.action.organizeImport')
+
+" }}}
+
+" }}} Commands
+
+" ========== Abbreviation ========== {{{1
+
+function! SetupCommandAbbrs(from, to)
+  exec 'cnoreabbrev <expr> '.a:from
+        \ .' ((getcmdtype() ==# ":" && getcmdline() ==# "'.a:from.'")'
+        \ .'? ("'.a:to.'") : ("'.a:from.'"))'
+endfunction
+
+" Open coc-settings.json
+call SetupCommandAbbrs('C', 'CocConfig')
+
+" }}} Abbreviation
 
 " ========== Mappings ========== {{{1
 
@@ -340,11 +371,107 @@ nmap <Leader>b9 9<Plug>(XT-Select-Buffer)
 " Open current buffer in a new tab
 nnoremap <Leader>bT :tabedit %<CR>
 
-" Move buffer position on the tabline
-nnoremap <Leader>b[ :XTabMoveBufferPrev<CR>
-nnoremap <Leader>b] :XTabMoveBufferNext<CR>
-
 " }}}
+
+" ---- coc.nvim (c) ---- {{{2
+
+" Use tab to trigger completion with characters ahead and navigate.
+inoremap <silent><expr> <TAB>
+      \ pumvisible() ? "\<C-n>" :
+      \ <SID>check_back_space() ? "\<TAB>" :
+      \ coc#refresh()
+inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
+
+function! s:check_back_space() abort
+  let col = col('.') - 1
+  return !col || getline('.')[col - 1]  =~# '\s'
+endfunction
+
+" Trigger completion.
+inoremap <silent><expr> <C-o> coc#refresh()
+
+" Make <CR> auto-select the first completion item and notify coc.nvim to format on enter
+inoremap <silent><expr> <CR> pumvisible() ? coc#_select_confirm()
+                              \: "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
+
+" Navigate diagnostics
+" Use `:CocDiagnostics` to get all diagnostics of current buffer in location list.
+nmap <silent> [g <Plug>(coc-diagnostic-prev)
+nmap <silent> ]g <Plug>(coc-diagnostic-next)
+
+" GoTo code navigation.
+nmap <silent> gd <Plug>(coc-definition)
+nmap <silent> gy <Plug>(coc-type-definition)
+nmap <silent> gi <Plug>(coc-implementation)
+nmap <silent> gr <Plug>(coc-references)
+
+" Show documentation in preview window.
+nnoremap <silent> K :call <SID>show_documentation()<CR>
+
+function! s:show_documentation()
+  if (index(['vim','help'], &filetype) >= 0)
+    execute 'h '.expand('<cword>')
+  elseif (coc#rpc#ready())
+    call CocActionAsync('doHover')
+  else
+    execute '!' . &keywordprg . " " . expand('<cword>')
+  endif
+endfunction
+
+" Symbol renaming (rename the symbol under the cursor and all its references)
+nmap <Leader>crn <Plug>(coc-rename)
+
+" Refactor (open a vsplit window for refactoring the symbol under the cursor like rename, add/remove lines, etc)
+" Reference: https://github.com/neoclide/coc.nvim/wiki/Multiple-cursors-support#use-refactor-action
+nmap <Leader>crf <Plug>(coc-refactor)
+
+" Formatting selected code.
+xmap <Leader>cf  <Plug>(coc-format-selected)
+nmap <Leader>cf  <Plug>(coc-format-selected)
+
+" Applying codeAction to the selected region.
+" Example: `<leader>aap` for current paragraph
+xmap <Leader>ca  <Plug>(coc-codeaction-selected)
+nmap <Leader>ca  <Plug>(coc-codeaction-selected)
+
+" Text objects regarding function and class
+" NOTE: Requires 'textDocument.documentSymbol' support from the language server.
+xmap if <Plug>(coc-funcobj-i)
+omap if <Plug>(coc-funcobj-i)
+xmap af <Plug>(coc-funcobj-a)
+omap af <Plug>(coc-funcobj-a)
+xmap ic <Plug>(coc-classobj-i)
+omap ic <Plug>(coc-classobj-i)
+xmap ac <Plug>(coc-classobj-a)
+omap ac <Plug>(coc-classobj-a)
+
+" Remap <C-f> and <C-b> for scroll float windows/popups.
+if has('nvim-0.4.0') || has('patch-8.2.0750')
+  nnoremap <silent><nowait><expr> <C-f> coc#float#has_scroll() ? coc#float#scroll(1) : "\<C-f>"
+  nnoremap <silent><nowait><expr> <C-b> coc#float#has_scroll() ? coc#float#scroll(0) : "\<C-b>"
+  inoremap <silent><nowait><expr> <C-f> coc#float#has_scroll() ? "\<c-r>=coc#float#scroll(1)\<cr>" : "\<Right>"
+  inoremap <silent><nowait><expr> <C-b> coc#float#has_scroll() ? "\<c-r>=coc#float#scroll(0)\<cr>" : "\<Left>"
+  vnoremap <silent><nowait><expr> <C-f> coc#float#has_scroll() ? coc#float#scroll(1) : "\<C-f>"
+  vnoremap <silent><nowait><expr> <C-b> coc#float#has_scroll() ? coc#float#scroll(0) : "\<C-b>"
+endif
+
+" Use CTRL-S for selections ranges (e.g., select the whole if block)
+" Requires 'textDocument/selectionRange' support of language server.
+nmap <silent> <C-s> <Plug>(coc-range-select)
+xmap <silent> <C-s> <Plug>(coc-range-select)
+
+" CocList (cl)
+nnoremap <silent><nowait> <Leader>clc :<C-u>CocList commands<CR>
+nnoremap <silent><nowait> <Leader>cld :<C-u>CocList diagnostics<CR>
+nnoremap <silent><nowait> <Leader>clo :<C-u>CocList outline<CR>
+nnoremap <silent><nowait> <Leader>cls :<C-u>CocList symbols<CR>
+" Yank list (coc-yank)
+nnoremap <silent><nowait> <Leader>cly :<C-u>CocList yank<cr>
+nnoremap <silent><nowait> <Leader>cln :<C-u>CocNext<CR>
+nnoremap <silent><nowait> <Leader>clp :<C-u>CocPrev<CR>
+nnoremap <silent><nowait> <Leader>clr :<C-u>CocListResume<CR>
+
+" }}} coc
 
 " ---- Find/Files (f) ---- {{{2
 
@@ -440,7 +567,7 @@ nnoremap <silent> <Leader>/ :<C-u>nohlsearch<CR>
 nnoremap <expr> n (v:searchforward ? 'n' : 'N')
 nnoremap <expr> N (v:searchforward ? 'N' : 'n')
 
-" Make * and # work on visual mode
+" Make * and # search for the current selection in visual mode
 function! s:VSetSearch(cmdtype)
   let temp = @s
   norm! gv"sy
@@ -508,9 +635,9 @@ nnoremap <Leader>tu :UndotreeToggle<CR>
 nnoremap <Leader>Tt :tabedit<CR>
 
 " Change tabline mode (vim-xtabline)
-nnoremap <Leader>TMb :XTabMode buffers<CR>
-nnoremap <Leader>TMt :XTabMode tabs<CR>
-nnoremap <Leader>TMa :XTabMode arglist<CR>
+nnoremap <Leader>Tmb :XTabMode buffers<CR>
+nnoremap <Leader>Tmt :XTabMode tabs<CR>
+nnoremap <Leader>Tma :XTabMode arglist<CR>
 
 " Close the current tab and all its windows
 nnoremap <Leader>Tc :tabclose<CR>
@@ -541,6 +668,10 @@ endwhile
 
 " List all tabs
 nnoremap <Leader>Tls :tabs<CR>
+
+" Move buffer position on the tabline (vim-xtabline)
+nnoremap <Leader>Tb[ :XTabMoveBufferPrev<CR>
+nnoremap <Leader>Tb] :XTabMoveBufferNext<CR>
 
 " Move the current tab to the right/left
 nnoremap <Leader>T. :tabmove +<CR>
@@ -595,6 +726,9 @@ nnoremap <Leader>wP <C-w>P
 
 " Close the preview window
 nnoremap <Leader>wz <C-w>z
+
+" Close the window right below the current window
+nnoremap <Leader>wbc <C-w>j:q<CR>
 
 " Move current window to new tab
 nnoremap <Leader>wT <C-w>T
@@ -656,6 +790,9 @@ function! PackInit() abort
 
   " LSP
   call minpac#add('neoclide/coc.nvim', {'branch': 'release'})
+
+  " Languages
+  call minpac#add('neoclide/jsonc.vim')
 
   " Git
   call minpac#add('tpope/vim-fugitive')
@@ -770,6 +907,37 @@ command! -bang BD call fzf#run(fzf#wrap({
 \ }))
 
 " }}} fzf
+
+" ---- coc.nvim ---- {{{2
+
+" Reference: https://github.com/neoclide/coc.nvim#example-vim-configuration
+
+" coc extensions
+let g:coc_global_extensions = [
+      \ 'coc-pyright',
+      \ 'coc-tsserver',
+      \ 'coc-html',
+      \ 'coc-css',
+      \ 'coc-json',
+      \ 'coc-vimlsp',
+      \ 'coc-yank',
+      \ 'coc-marketplace']
+
+augroup cocgroup
+  autocmd!
+  " Setup formatexpr specified filetype(s).
+  autocmd FileType typescript,json setl formatexpr=CocAction('formatSelected')
+  " Update signature help on jump placeholder.
+  autocmd User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
+augroup end
+
+" Highlight for cursor ranges
+hi CocCursorRange guibg=#b16286 guifg=#ebdbb2
+
+" Highlight for the yanked text (coc-yank)
+hi HighlightedyankRegion cterm=bold gui=bold ctermbg=0 guibg=#13354A
+
+" }}} coc.nvim
 
 " ---- tcomment_vim ---- {{{2
 
@@ -894,7 +1062,7 @@ augroup END
 
 " ---- indentLine ---- {{{2
 
-let g:indentLine_fileTypeExclude = ['startify', 'help', 'markdown']
+let g:indentLine_fileTypeExclude = ['startify', 'help', 'markdown', 'json', 'jsonc']
 let g:indentLine_bufTypeExclude = ['terminal']
 let g:indentLine_char = '|'
 

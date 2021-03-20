@@ -5,9 +5,11 @@
     "json",
     "html",
     "css",
+    "javascript",
     "python"
   ],
   "coc.preferences.snippetStatusText": "Ⓢ ",
+  "suggest.enablePreview": true,
   "suggest.completionItemKindLabels": {
     "keyword": "\uf1de",
     "variable": "\ue79b",
@@ -36,12 +38,39 @@
     "typeParameter": "\uf728",
     "default": "\uf29c"
   },
+  "diagnostic.errorSign": "",
+  "diagnostic.warningSign": "",
+  "diagnostic.infoSign": "",
+  "diagnostic.hintSign": "",
   "diagnostic.checkCurrentLine": true,
   "diagnostic.virtualText": true,
   "diagnostic.virtualTextPrefix": " ❯❯❯ ",
   "codeLens.enable": true,
   "yank.enableCompletion": false,
-  /* pyright */
   "python.formatting.provider": "yapf",
-  "python.formatting.yapfPath": "/usr/local/bin/yapf"
+  "python.formatting.yapfPath": "/usr/local/bin/yapf",
+  "prettier.singleQuote": false,
+  "prettier.eslintIntegration": true,
+  "languageserver": {
+    /* C/C++/Objective-C */
+    "ccls": {
+      "command": "ccls",
+      "filetypes": ["c", "cpp", "cuda", "objc", "objcpp"],
+      "rootPatterns": [
+        ".ccls",
+        ".ccls-root",
+        "compile_commands.json",
+        ".git/",
+        ".hg/"
+      ],
+      "initializationOptions": {
+        "cache": {
+          "directory": "/tmp/ccls"
+        },
+        "client": {
+          "snippetSupport": true
+        }
+      }
+    }
+  }
 }

@@ -1,10 +1,14 @@
+" ===========================================
 "  _   _ ____   __   _(_)_ __ ___  _ __ ___
 " | | | |_  /___\ \ / / | '_ ` _ \| '__/ __|
 " | |_| |/ /_____\ V /| | | | | | | | | (__
 "  \__, /___|     \_/ |_|_| |_| |_|_|  \___|
 "  |___/
+" ===========================================
 
-" Author: Rocky Zhang (@yanzhang0219)
+" Author: Rocky Zhang (yanzhang0219@gmail.com)
+" GitHub: https://github.com/yanzhang0219
+
 
 " ========== Automation ========== {{{1
 
@@ -36,12 +40,8 @@ set autoread
 set showcmd
 set wildmenu
 set wildmode=list:longest,full
-set wildignore+=.git,.svn
-set wildignore+=.jpg,.gif,.png,.jpeg,.heic
-set wildignore+=.DS_Store
 set textwidth=80
 set colorcolumn=80
-set formatprg=par\ -w80rq " use par as the formatter for gq
 set list
 set listchars=tab:›\ ,trail:▫,extends:#,nbsp:.
 set foldenable
@@ -73,7 +73,21 @@ set noswapfile
 set nobackup nowritebackup  " coc requirements
 set signcolumn=yes
 set spelllang=en_us
+set pumheight=20
+set grepprg=rg\ --vimgrep\ $*
+set grepformat=%f:%l:%c:%m
 let &showbreak = '↪ '
+set wildignore=*.o,*.obj,*~,*.exe,*.a,*.pdb,*.lib
+set wildignore+=*.so,*.dll,*.swp,*.egg,*.jar,*.class,*.pyc,*.pyo,*.bin,*.dex
+set wildignore+=*.log,*.pyc,*.sqlite,*.sqlite3,*.min.js,*.min.css,*.tags
+set wildignore+=*.zip,*.7z,*.rar,*.gz,*.tar,*.gzip,*.bz2,*.tgz,*.xz
+set wildignore+=*.png,*.jpg,*.gif,*.bmp,*.tga,*.pcx,*.ppm,*.img,*.iso
+set wildignore+=*.pdf,*.dmg,*.app,*.ipa,*.apk,*.mobi,*.epub
+set wildignore+=*.mp4,*.avi,*.flv,*.mov,*.mkv,*.swf,*.swc
+set wildignore+=*.ppt,*.pptx,*.doc,*.docx,*.xlt,*.xls,*.xlsx,*.odt,*.wps
+set wildignore+=*/.git/*,*/.svn/*,*.DS_Store
+set wildignore+=*/node_modules/*,*/nginx_runtime/*,*/build/*,*/logs/*,*/dist/*,*/tmp/*
+
 
 " Avoid highlighting the last search when sourcing vimrc
 exec "nohlsearch"
@@ -151,7 +165,7 @@ augroup END
 augroup filetypes
   autocmd!
 
-  " Disables auto-wrap using textwidth and automatic commenting on newline
+  " Disables auto-wrap text and comments
   autocmd FileType * setlocal formatoptions-=t formatoptions-=c formatoptions-=r formatoptions-=o
 
   " vim
@@ -199,8 +213,6 @@ augroup END
 
 " ========== Commands ========== {{{1
 
-" ---- coc.nvim ---- {{{2
-
 " Format the current buffer
 command! -nargs=0 Format :call CocAction('format')
 
@@ -210,7 +222,7 @@ command! -nargs=? Fold :call CocAction('fold', <f-args>)
 " Organize imports
 command! -nargs=0 OR :call CocAction('runCommand', 'editor.action.organizeImport')
 
-" }}}
+command! -nargs=0 VSCode execute ":!code -g %:p\:" . line('.') . ":" . col('.')
 
 " }}} Commands
 
@@ -222,8 +234,9 @@ function! SetupCommandAbbrs(from, to)
         \ .'? ("'.a:to.'") : ("'.a:from.'"))'
 endfunction
 
-" Open coc-settings.json
 call SetupCommandAbbrs('C', 'CocConfig')
+call SetupCommandAbbrs('L', 'CocList')
+call SetupCommandAbbrs('T', 'tabe')
 
 " }}} Abbreviation
 
@@ -258,9 +271,9 @@ vnoremap Y "+y
 " Delete but not save to a register
 nnoremap s "_d
 
-" }}}
+" }}} General
 
-" ---- Operator-pending ---- {{{2
+" ---- Object ---- {{{2
 
 " Inside next/last parentheses
 onoremap in( :<C-u>normal! f(vi(<CR>
@@ -272,7 +285,7 @@ xmap ih <Plug>(GitGutterTextObjectInnerVisual)
 omap ah <Plug>(GitGutterTextObjectOuterPending)
 xmap ah <Plug>(GitGutterTextObjectOuterVisual)
 
-" }}}
+" }}} Object
 
 " ---- Terminal (Meta) ---- {{{2
 
@@ -305,9 +318,9 @@ nnoremap <M-l> <C-w>l
 " Reference: http://vimcasts.org/episodes/neovim-terminal-paste/
 tnoremap <expr> <M-r> '<C-\><C-n>"' . nr2char(getchar()) . 'pi'
 
-" }}}
+" }}} Terminal
 
-" ---- Command Line ---- {{{2
+" ---- Command line ---- {{{2
 
 " Cursor movement in command line (Emacs style)
 cnoremap <C-p> <Up>
@@ -328,7 +341,7 @@ cnoremap w!! w !sudo tee % >/dev/null
 " Get the full path of the current file
 cnoremap %% <C-R>=fnameescape(expand('%:h')).'/'<cr>
 
-" }}}
+" }}} Command line
 
 " ---- Arglist (a) ---- {{{2
 
@@ -337,7 +350,7 @@ nnoremap <Leader>ap :previous<CR>
 nnoremap <Leader>aH :first<CR>
 nnoremap <Leader>aL :last<CR>
 
-" }}}
+" }}} Arglist
 
 " ---- Buffer (b) ---- {{{2
 
@@ -371,7 +384,7 @@ nmap <Leader>b9 9<Plug>(XT-Select-Buffer)
 " Open current buffer in a new tab
 nnoremap <Leader>bT :tabedit %<CR>
 
-" }}}
+" }}} Buffer
 
 " ---- coc.nvim (c) ---- {{{2
 
@@ -426,13 +439,16 @@ nmap <Leader>crn <Plug>(coc-rename)
 nmap <Leader>crf <Plug>(coc-refactor)
 
 " Formatting selected code.
-xmap <Leader>cf  <Plug>(coc-format-selected)
-nmap <Leader>cf  <Plug>(coc-format-selected)
+xmap <Leader>cf <Plug>(coc-format-selected)
+nmap <Leader>cf <Plug>(coc-format-selected)
 
 " Applying codeAction to the selected region.
-" Example: `<leader>aap` for current paragraph
-xmap <Leader>ca  <Plug>(coc-codeaction-selected)
-nmap <Leader>ca  <Plug>(coc-codeaction-selected)
+" Example: `<Leader>casap` for current paragraph
+xmap <Leader>cas <Plug>(coc-codeaction-selected)
+nmap <Leader>cas <Plug>(coc-codeaction-selected)
+" Run codeAction for the whole current file, the current line
+nmap <Leader>caf <Plug>(coc-codeaction)
+nmap <Leader>cal <Plug>(coc-codeaction-line)
 
 " Text objects regarding function and class
 " NOTE: Requires 'textDocument.documentSymbol' support from the language server.
@@ -446,14 +462,12 @@ xmap ac <Plug>(coc-classobj-a)
 omap ac <Plug>(coc-classobj-a)
 
 " Remap <C-f> and <C-b> for scroll float windows/popups.
-if has('nvim-0.4.0') || has('patch-8.2.0750')
-  nnoremap <silent><nowait><expr> <C-f> coc#float#has_scroll() ? coc#float#scroll(1) : "\<C-f>"
-  nnoremap <silent><nowait><expr> <C-b> coc#float#has_scroll() ? coc#float#scroll(0) : "\<C-b>"
-  inoremap <silent><nowait><expr> <C-f> coc#float#has_scroll() ? "\<c-r>=coc#float#scroll(1)\<cr>" : "\<Right>"
-  inoremap <silent><nowait><expr> <C-b> coc#float#has_scroll() ? "\<c-r>=coc#float#scroll(0)\<cr>" : "\<Left>"
-  vnoremap <silent><nowait><expr> <C-f> coc#float#has_scroll() ? coc#float#scroll(1) : "\<C-f>"
-  vnoremap <silent><nowait><expr> <C-b> coc#float#has_scroll() ? coc#float#scroll(0) : "\<C-b>"
-endif
+nnoremap <silent><nowait><expr> <C-f> coc#float#has_scroll() ? coc#float#scroll(1) : "\<C-f>"
+nnoremap <silent><nowait><expr> <C-b> coc#float#has_scroll() ? coc#float#scroll(0) : "\<C-b>"
+inoremap <silent><nowait><expr> <C-f> coc#float#has_scroll() ? "\<c-r>=coc#float#scroll(1)\<cr>" : "\<Right>"
+inoremap <silent><nowait><expr> <C-b> coc#float#has_scroll() ? "\<c-r>=coc#float#scroll(0)\<cr>" : "\<Left>"
+vnoremap <silent><nowait><expr> <C-f> coc#float#has_scroll() ? coc#float#scroll(1) : "\<C-f>"
+vnoremap <silent><nowait><expr> <C-b> coc#float#has_scroll() ? coc#float#scroll(0) : "\<C-b>"
 
 " Use CTRL-S for selections ranges (e.g., select the whole if block)
 " Requires 'textDocument/selectionRange' support of language server.
@@ -461,15 +475,23 @@ nmap <silent> <C-s> <Plug>(coc-range-select)
 xmap <silent> <C-s> <Plug>(coc-range-select)
 
 " CocList (cl)
-nnoremap <silent><nowait> <Leader>clc :<C-u>CocList commands<CR>
-nnoremap <silent><nowait> <Leader>cld :<C-u>CocList diagnostics<CR>
-nnoremap <silent><nowait> <Leader>clo :<C-u>CocList outline<CR>
-nnoremap <silent><nowait> <Leader>cls :<C-u>CocList symbols<CR>
+" Show all supported lists
+nnoremap <silent> <Leader>cll :<C-u>CocList<CR>
+" Shows commands
+nnoremap <silent> <Leader>clc :<C-u>CocList commands<CR>
+" Show all diagnostics
+nnoremap <silent> <Leader>cld :<C-u>CocList diagnostics<CR>
+" Show symbols of the current document
+nnoremap <silent> <Leader>clo :<C-u>CocList outline<CR>
+" Show symbols in workspace
+nnoremap <silent> <Leader>cls :<C-u>CocList -I symbols<CR>
 " Yank list (coc-yank)
-nnoremap <silent><nowait> <Leader>cly :<C-u>CocList yank<cr>
-nnoremap <silent><nowait> <Leader>cln :<C-u>CocNext<CR>
-nnoremap <silent><nowait> <Leader>clp :<C-u>CocPrev<CR>
-nnoremap <silent><nowait> <Leader>clr :<C-u>CocListResume<CR>
+nnoremap <silent> <Leader>cly :<C-u>CocList -A --normal yank<cr>
+" Do the default action for the next/prev item in the list (list won't be reopened)
+nnoremap <silent> <Leader>cln :<C-u>CocNext<CR>
+nnoremap <silent> <Leader>clp :<C-u>CocPrev<CR>
+" Reopen the latest list
+nnoremap <silent> <Leader>clr :<C-u>CocListResume<CR>
 
 " }}} coc
 
@@ -479,7 +501,7 @@ nnoremap <silent><nowait> <Leader>clr :<C-u>CocListResume<CR>
 nnoremap <Leader>ff :Files<CR>
 nnoremap <Leader>fF :Files<Space>
 
-" }}}
+" }}} Find/Files
 
 " ---- Git (g) ---- {{{2
 
@@ -501,7 +523,7 @@ nmap <Leader>ghu <Plug>(GitGutterUndoHunk)
 " Fold/unfold all unchanged lines (vim-gitgutter)
 nnoremap <Leader>ghf :GitGutterFold<CR>
 
-" }}}
+" }}} Git
 
 " ---- History & Help (h) ---- {{{2
 
@@ -512,9 +534,9 @@ nnoremap <Leader>h/ :History/<CR>
 " fzf for help tags (fzf.vim)
 nnoremap <Leader>h? :Helptags<CR>
 
-" }}}
+" }}} History & Help
 
-" ---- markdown (m) ---- {{{2
+" ---- Markdown (m) ---- {{{2
 
 " Markdown preview in a browser window (markdown-preview.nvim)
 nnoremap <Leader>mp :MarkdownPreview<CR>
@@ -522,7 +544,7 @@ nnoremap <Leader>mp :MarkdownPreview<CR>
 " Generate TOC (vim-markdown-toc)
 nnoremap <Leader>mc :GenTocGFM<CR>
 
-" }}}
+" }}} Markdown
 
 " ---- Plugin management (P) ---- {{{2
 
@@ -534,18 +556,18 @@ nnoremap <Leader>Pd :PluginDelete<CR>
 nnoremap <Leader>PD :OpenPluginDir<Space>
 nnoremap <Leader>PU :OpenPluginUrl<Space>
 
-" }}}
+" }}} Plugin management
 
 " ---- Quickfix (q) ---- {{{2
 
 nnoremap <Leader>qo :copen<CR>
-nnoremap <Leader>qc :close<CR>
+nnoremap <Leader>qc :cclose<CR>
 nnoremap <Leader>qn :cnext<CR>
 nnoremap <Leader>qp :cprevious<CR>
 nnoremap <Leader>qH :cfirst<CR>
 nnoremap <Leader>qL :clast<CR>
 
-" }}}
+" }}} Quickfix
 
 " ---- Refactor (r) ---- {{{2
 
@@ -556,7 +578,7 @@ noremap <Leader>ra :Tabularize /
 nnoremap <Leader>rj :SplitjoinJoin<CR>
 nnoremap <Leader>rs :SplitjoinSplit<CR>
 
-" }}}
+" }}} Refactor
 
 " ---- Searching (s) ---- {{{2
 
@@ -599,7 +621,7 @@ vnoremap <Leader>sG :<c-u>call <SID>GrepOperator(visualmode())<cr>
 " Rg under pwd (fzf)
 nnoremap <Leader>sr :Rg<CR>
 
-" }}}
+" }}} Searching
 
 " ---- Session (S) ---- {{{2
 
@@ -608,9 +630,9 @@ nnoremap <Leader>Ss :XTabSaveSession<CR>
 nnoremap <Leader>Sl :XTabLoadSession<CR>
 nnoremap <Leader>Sd :XTabDeleteSession<CR>
 
-" }}}
+" }}} Session
 
-" ---- Toggle/tab (t) ---- {{{2
+" ---- Toggle (t) ---- {{{2
 
 " Toggle spell checking
 nnoremap <Leader>ts :setlocal spell! spelllang=en_us<CR>
@@ -627,7 +649,10 @@ nnoremap <Leader>tc :HexokinaseToggle<CR>
 " Toggle undotree (undotree.vim)
 nnoremap <Leader>tu :UndotreeToggle<CR>
 
-" }}}
+" Toggle vista (vista.vim)
+nnoremap <Leader>tv :Vista!!<CR>
+
+" }}} Toggle
 
 " ---- Tab (T) ---- {{{2
 
@@ -677,15 +702,17 @@ nnoremap <Leader>Tb] :XTabMoveBufferNext<CR>
 nnoremap <Leader>T. :tabmove +<CR>
 nnoremap <Leader>T, :tabmove -<CR>
 
-" }}}
+" }}} Tab
 
-" ---- Vimrc (v) ---- {{{2
+" ---- Vista.vim & vimrc (v) ---- {{{2
 
-" edit and source vim config file
+nnoremap <Leader>vf :silent! Vista finder coc<CR>
+
+" Edit and source vim config file
 nnoremap <Leader>ve :tabedit $MYVIMRC<CR>
 nnoremap <Leader>vs :source $MYVIMRC<CR>
 
-" }}}
+" }}} Vista
 
 " ---- Window (w) ---- {{{2
 
@@ -748,7 +775,7 @@ nnoremap <Leader>wx <C-w>x
 " Focus the undotree window (undotree.vim)
 nnoremap <Leader>wu :UndotreeFocus<CR>
 
-" }}}
+" }}} Window
 
 " ---- Ranger (rnvimr) ---- {{{2
 " The <Leader> key, i.e., space key, conflicts with ranger, so use ,
@@ -760,7 +787,7 @@ tnoremap <silent> ,r <C-\><C-n>:RnvimrToggle<CR>
 " Toggle window and fullscreen (maximum)
 tnoremap <silent> ,m <C-\><C-n>:RnvimrResize<CR>
 
-" }}}
+" }}} Ranger
 
 " }}} Mapppings
 
@@ -773,23 +800,28 @@ function! PackInit() abort
 
   call minpac#add('k-takata/minpac', {'type': 'opt'})
 
-  call minpac#add('tpope/vim-surround')
-  call minpac#add('junegunn/fzf.vim')
-  call minpac#add('tomtom/tcomment_vim')
-  call minpac#add('RRethy/vim-illuminate')
-  call minpac#add('RRethy/vim-hexokinase', { 'do': 'make hexokinase' })
-  call minpac#add('airblade/vim-rooter')
-  call minpac#add('AndrewRadev/splitjoin.vim')
-  call minpac#add('godlygeek/tabular')
-  call minpac#add('kevinhwang91/rnvimr')
-  call minpac#add('gcmt/wildfire.vim')
-  call minpac#add('mg979/vim-visual-multi')
-  call minpac#add('yggdroot/indentline')
-  call minpac#add('mbbill/undotree')
-  call minpac#add('mhinz/vim-startify')
+   call minpac#add('tpope/vim-surround')
+   call minpac#add('junegunn/fzf.vim')
+   call minpac#add('tomtom/tcomment_vim')
+   call minpac#add('RRethy/vim-illuminate')
+   call minpac#add('RRethy/vim-hexokinase', { 'do': 'make hexokinase' })
+   call minpac#add('airblade/vim-rooter')
+   call minpac#add('AndrewRadev/splitjoin.vim')
+   call minpac#add('godlygeek/tabular')
+   call minpac#add('kevinhwang91/rnvimr')
+   call minpac#add('gcmt/wildfire.vim')
+   call minpac#add('mg979/vim-visual-multi')
+   call minpac#add('yggdroot/indentline')
+   call minpac#add('mbbill/undotree')
+   call minpac#add('mhinz/vim-startify')
 
   " LSP
   call minpac#add('neoclide/coc.nvim', {'branch': 'release'})
+
+  " Tags
+  call minpac#add('ludovicchabant/vim-gutentags')
+  call minpac#add('skywind3000/gutentags_plus')
+  call minpac#add('liuchengxu/vista.vim')
 
   " Languages
   call minpac#add('neoclide/jsonc.vim')
@@ -819,6 +851,7 @@ function! PackInit() abort
   call minpac#add('sainnhe/gruvbox-material')
 
   " Testing
+  call minpac#add('nvim-treesitter/nvim-treesitter', {'do': 'TSUpdate'})
 
 endfunction
 
@@ -832,27 +865,55 @@ set rtp+=~/gitrepos/fzf
 
 " ========== Plugin settings ========== {{{1
 
-" ---- minpac ---- {{{2
+" ---- coc.nvim ---- {{{2
 
-command! PluginUpdate source $MYVIMRC | call PackInit() | call minpac#update()
-command! PluginDelete source $MYVIMRC | call PackInit() | call minpac#clean()
-command! PluginStatus packadd minpac | call minpac#status()
+" Reference: https://github.com/neoclide/coc.nvim#example-vim-configuration
 
-function! PackList(...)
-  call PackInit()
-  return join(sort(keys(minpac#getpluglist())), "\n")
-endfunction
+" coc extensions
+let g:coc_global_extensions = [
+      \ 'coc-html',
+      \ 'coc-css',
+      \ 'coc-tsserver',
+      \ 'coc-pyright',
+      \ 'coc-go',
+      \ 'coc-json',
+      \ 'coc-prettier',
+      \ 'coc-eslint',
+      \ 'coc-rls',
+      \ 'coc-sh',
+      \ 'coc-vimlsp',
+      \ 'coc-yank',
+      \ 'coc-marketplace']
 
-" Define a command, OpenPluginDir, to open a new iTerm2 window and cd into the directory where a plugin is installed
-" (The custom command, iterm, is defined at ~/.config/bin/iterm)
-command! -nargs=1 -complete=custom,PackList
-      \ OpenPluginDir call PackInit() | silent exec "!iterm \"cd " . minpac#getpluginfo(<q-args>).dir . "\""
+augroup cocgroup
+  autocmd!
+  " Setup formatexpr specified filetype(s).
+  autocmd FileType typescript,json setl formatexpr=CocAction('formatSelected')
+  " Update signature help on jump placeholder.
+  autocmd User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
+augroup end
 
-" Define a command, OpenPluginUrl, to open the plugin's git repo in Chrome
-command! -nargs=1 -complete=custom,PackList
-      \ OpenPluginUrl call PackInit() | silent exec "!open -a \"Google Chrome\" " . minpac#getpluginfo(<q-args>).url
+" Highlight for cursor ranges
+hi CocCursorRange guibg=#b16286 guifg=#ebdbb2
 
-" }}} minpac
+" Highlight for the yanked text (coc-yank)
+hi HighlightedyankRegion cterm=bold gui=bold ctermbg=0 guibg=#13354A
+
+let g:coc_status_error_sign = ' '
+let g:coc_status_warning_sign = ' '
+
+command! -nargs=0 Prettier :CocCommand prettier.formatFile
+
+" Golang: auto-format and add missing imports on save
+autocmd BufWritePre *.go :call CocAction('runCommand', 'editor.action.organizeImport')
+
+" }}} coc.nvim
+
+" ---- eleline.vim ---- {{{2
+
+let g:eleline_powerline_fonts = 1
+
+" }}} eleline.vim
 
 " ---- fzf ---- {{{2
 
@@ -873,13 +934,6 @@ let g:fzf_action = {
   \ "ctrl-v": 'vsplit' }
 
 let g:fzf_history_dir = '~/.local/share/fzf-vim-history'
-
-" Disable the statusline for fzf window
-augroup fzf
-  autocmd!
-  autocmd  FileType fzf set laststatus=0 noshowmode noruler
-        \| autocmd BufLeave <buffer> set laststatus=2 showmode ruler
-augroup END
 
 " GGrep, a wrapper of git grep
 command! -bang -nargs=* GGrep
@@ -908,87 +962,65 @@ command! -bang BD call fzf#run(fzf#wrap({
 
 " }}} fzf
 
-" ---- coc.nvim ---- {{{2
+" ---- indentLine ---- {{{2
 
-" Reference: https://github.com/neoclide/coc.nvim#example-vim-configuration
+let g:indentLine_fileTypeExclude = ['startify', 'help', 'markdown', 'json', 'jsonc']
+let g:indentLine_bufTypeExclude = ['terminal']
+let g:indentLine_char = '|'
 
-" coc extensions
-let g:coc_global_extensions = [
-      \ 'coc-pyright',
-      \ 'coc-tsserver',
-      \ 'coc-html',
-      \ 'coc-css',
-      \ 'coc-json',
-      \ 'coc-vimlsp',
-      \ 'coc-yank',
-      \ 'coc-marketplace']
+" }}} indentLine
+"
+" ---- minpac ---- {{{2
 
-augroup cocgroup
-  autocmd!
-  " Setup formatexpr specified filetype(s).
-  autocmd FileType typescript,json setl formatexpr=CocAction('formatSelected')
-  " Update signature help on jump placeholder.
-  autocmd User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
-augroup end
+command! PluginUpdate source $MYVIMRC | call PackInit() | call minpac#update()
+command! PluginDelete source $MYVIMRC | call PackInit() | call minpac#clean()
+command! PluginStatus packadd minpac | call minpac#status()
 
-" Highlight for cursor ranges
-hi CocCursorRange guibg=#b16286 guifg=#ebdbb2
+function! PackList(...)
+  call PackInit()
+  return join(sort(keys(minpac#getpluglist())), "\n")
+endfunction
 
-" Highlight for the yanked text (coc-yank)
-hi HighlightedyankRegion cterm=bold gui=bold ctermbg=0 guibg=#13354A
+" Define a command, OpenPluginDir, to open a new iTerm2 window and cd into the directory where a plugin is installed
+" (The custom command, iterm, is defined at ~/.config/bin/iterm)
+command! -nargs=1 -complete=custom,PackList
+      \ OpenPluginDir call PackInit() | silent exec "!iterm \"cd " . minpac#getpluginfo(<q-args>).dir . "\""
 
-" }}} coc.nvim
+" Define a command, OpenPluginUrl, to open the plugin's git repo in Chrome
+command! -nargs=1 -complete=custom,PackList
+      \ OpenPluginUrl call PackInit() | silent exec "!open -a \"Google Chrome\" " . minpac#getpluginfo(<q-args>).url
 
-" ---- tcomment_vim ---- {{{2
+" }}} minpac
 
-" Disable the redundant preset map
-let g:tcomment_mapleader2 = ''
+" ---- markdown-preview.nvim ---- {{{
 
-" }}} tcomment_vim
+" Open a new window of Chrome in the same workspace
+function! g:Open_browser(url)
+    silent exe 'silent !open -na "Google Chrome" --args --new-window ' . a:url
+endfunction
+let g:mkdp_browserfunc = 'g:Open_browser'
 
-" ---- vim-illuminate ---- {{{2
+" Not auto close the preview browser window
+let g:mkdp_auto_close = 0
 
-augroup illuminate_augroup
-    autocmd!
-    autocmd VimEnter * hi illuminatedWord cterm=underline gui=underline
-augroup END
+" Recognized filetypes (MarkdownPreview... commands will be availabe)
+let g:mkdp_filetypes = ['markdown']
 
-" }}} vim-illuminate
+" }}} markdown-preview.nvim
 
-" ---- vim-hexokinase ---- {{{2
+" ---- nvim-treesitter ---- {{{2
 
-let g:Hexokinase_highlighters = ['backgroundfull']
-let g:Hexokinase_optInPatterns = 'full_hex,rgb,rgba,hsl,hsla'
+lua <<EOF
+require'nvim-treesitter.configs'.setup {
+  -- ensure_installed = {"java", "python", "html", "css", "javascript", "go", "lua", "c", "bash", "json"},
+  ensure_installed = "maintained",
+  highlight = {
+    enable = true,
+  },
+}
+EOF
 
-" }}} vim-hexokinase
-
-" ---- vim-rooter ---- {{{2
-
-let g:rooter_pattern = ['.git']
-
-" Only change directory for the current tab
-let g:rooter_cd_cmd = 'tcd'
-
-" For non-project file, change to the file's directory
-let g:rooter_change_directory_for_non_project_files = 'current'
-
-" }}} vim-rooter
-
-" ---- vim-xtabline ---- {{{2
-
-let g:xtabline_settings = get(g:, 'xtabline_settings', {})
-let g:xtabline_settings.tabline_modes = ['buffers', 'tabs', 'arglist']
-let g:xtabline_settings.enable_mappings = 0
-let g:xtabline_settings.wd_type_indicator = 1
-
-" }}} vim-xtabline
-
-" ---- splitjoin.vim ---- {{{2
-
-let g:splitjoin_split_mapping = ''
-let g:splitjoin_join_mapping = ''
-
-" }}} splitjoin.vim
+" }}}
 
 " ---- rnvimr ---- {{{2
 
@@ -1031,15 +1063,40 @@ let g:rnvimr_presets = [
 
 " }}} rnvimr
 
-" ---- vim-gitgutter ---- {{{2
+" ---- splitjoin.vim ---- {{{2
 
-" Disable the preset mappings
-let g:gitgutter_map_keys = 0
+let g:splitjoin_split_mapping = ''
+let g:splitjoin_join_mapping = ''
 
-" Not to use floating window for hunk preview
-let g:gitgutter_preview_win_floating = 0
+" }}} splitjoin.vim
 
-" }}} vim-gitgutter
+" ---- tcomment_vim ---- {{{2
+
+" Disable the redundant preset map
+let g:tcomment_mapleader2 = ''
+
+" }}} tcomment_vim
+
+" ---- undotree.vim ---- {{{2
+
+let g:undotree_WindowLayout = 2
+let g:undotree_ShortIndicators = 1
+let g:undotree_SetFocusWhenToggle = 1
+
+" }}} undotree.vim
+
+" ---- vista.vim ---- {{{2
+
+let g:vista_sidebar_width = 50
+let g:vista_default_executive = 'coc'
+let g:vista_fzf_preview = ['right:50%']
+let g:vista#render#enable_icon = 1
+let g:vista_icon_indent = ["╰─▸ ", "├─▸ "]
+
+" Show the nearest function in the statusline automatically
+autocmd VimEnter * call vista#RunForNearestMethodOrFunction()
+
+" }}} vista.vim
 
 " ---- vim-fugitive ---- {{{2
 
@@ -1060,53 +1117,66 @@ augroup END
 
 " }}} vim-fugitive
 
-" ---- indentLine ---- {{{2
+" ---- vim-gitgutter ---- {{{2
 
-let g:indentLine_fileTypeExclude = ['startify', 'help', 'markdown', 'json', 'jsonc']
-let g:indentLine_bufTypeExclude = ['terminal']
-let g:indentLine_char = '|'
+" Disable the preset mappings
+let g:gitgutter_map_keys = 0
 
-" }}} indentLine
+" Not to use floating window for hunk preview
+let g:gitgutter_preview_win_floating = 0
 
-" ---- eleline.vim ---- {{{2
+" }}} vim-gitgutter
 
-let g:eleline_powerline_fonts = 1
+" ---- vim-gutentags & gutentags_plus ---- {{{2
 
-" }}} eleline.vim
+" Reference: https://zhuanlan.zhihu.com/p/36279445
 
-" ---- vim-visual-multi ---- {{{2
+" Tips: If we need the tags for a project not managed by vcs, we can touch a .root file under the project root folder
+let g:gutentags_project_root = ['.root', '.project']
 
-let g:VM_theme = 'iceblue'
+" Tag file name for ctags
+let g:gutentags_ctags_tagfile = '.tags'
 
-let g:VM_maps = {}
-let g:VM_maps["Undo"] = 'u'
-let g:VM_maps["Redo"] = '<C-r>'
+" Using both ctags and gtags
+let g:gutentags_modules = []
+if executable('ctags')
+	let g:gutentags_modules += ['ctags']
+endif
+if executable('gtags-cscope') && executable('gtags')
+	let g:gutentags_modules += ['gtags_cscope']
+endif
 
-" }}} vim-visual-multi
+" Move tag files out of project dir to avoid being polluted
+let g:gutentags_cache_dir = expand('~/.cache/tags')
 
-" ---- undotree.vim ---- {{{2
+let g:gutentags_ctags_extra_args = ['--fields=+n']
 
-let g:undotree_WindowLayout = 2
-let g:undotree_ShortIndicators = 1
-let g:undotree_SetFocusWhenToggle = 1
+" Disable connecting gtags database automatically (gutentags_plus will handle the database connection)
+let g:gutentags_auto_add_cscope = 0
 
-" }}} undotree.vim
+" Disable default maps
+let g:gutentags_plus_nomap = 1
 
-" ---- markdown-preview.nvim ---- {{{
+" Focus to quickfix window after searching
+let g:gutentags_plus_switch = 1
 
-" Open a new window of Chrome in the same workspace
-function! g:Open_browser(url)
-    silent exe 'silent !open -na "Google Chrome" --args --new-window ' . a:url
-endfunction
-let g:mkdp_browserfunc = 'g:Open_browser'
+" }}}
 
-" Not auto close the preview browser window
-let g:mkdp_auto_close = 0
+" ---- vim-hexokinase ---- {{{2
 
-" Recognized filetypes (MarkdownPreview... commands will be availabe)
-let g:mkdp_filetypes = ['markdown']
+let g:Hexokinase_highlighters = ['backgroundfull']
+let g:Hexokinase_optInPatterns = 'full_hex,rgb,rgba,hsl,hsla'
 
-" }}} markdown-preview.nvim
+" }}} vim-hexokinase
+"
+" ---- vim-illuminate ---- {{{2
+
+augroup illuminate_augroup
+    autocmd!
+    autocmd VimEnter * hi illuminatedWord cterm=underline gui=underline
+augroup END
+
+" }}} vim-illuminate
 
 " ---- vim-markdown-toc ---- {{{
 
@@ -1114,11 +1184,17 @@ let g:vmt_cycle_list_item_markers = 1
 
 " }}} vim-markdown-toc
 
-" ---- vim-table-mode ---- {{{
+" ---- vim-rooter ---- {{{2
 
-let g:table_mode_map_prefix = '<Leader>mt'
+let g:rooter_pattern = ['.git/', 'package.json']
 
-" }}} vim-table-mode
+" Only change directory for the current tab
+let g:rooter_cd_cmd = 'tcd'
+
+" For non-project file, change to the file's directory
+let g:rooter_change_directory_for_non_project_files = 'current'
+
+" }}} vim-rooter
 
 " ---- vim-startify ---- {{{2
 
@@ -1148,5 +1224,30 @@ augroup starity
 augroup END
 
 " }}} vim-startify
+
+" ---- vim-table-mode ---- {{{
+
+let g:table_mode_map_prefix = '<Leader>mt'
+
+" }}} vim-table-mode
+
+" ---- vim-visual-multi ---- {{{2
+
+let g:VM_theme = 'iceblue'
+
+let g:VM_maps = {}
+let g:VM_maps["Undo"] = 'u'
+let g:VM_maps["Redo"] = '<C-r>'
+
+" }}} vim-visual-multi
+
+" ---- vim-xtabline ---- {{{2
+
+let g:xtabline_settings = get(g:, 'xtabline_settings', {})
+let g:xtabline_settings.tabline_modes = ['buffers', 'tabs', 'arglist']
+let g:xtabline_settings.enable_mappings = 0
+let g:xtabline_settings.wd_type_indicator = 1
+
+" }}} vim-xtabline
 
 " }}} Plugin settings

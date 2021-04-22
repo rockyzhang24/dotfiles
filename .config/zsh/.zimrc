@@ -1,19 +1,19 @@
 #!/usr/bin/env zsh
 
-zmodule environment # https://github.com/zimfw/environment
-zmodule git # https://github.com/zimfw/git
-zmodule input # https://github.com/zimfw/input
-zmodule termtitle # https://github.com/zimfw/termtitle
-zmodule archive # https://github.com/zimfw/archive
-# zmodule utility # https://github.com/zimfw/utility
-# zmodule git-info  # https://github.com/zimfw/git-info
-# zmodule steeef  # https://github.com/zimfw/steeef
-zmodule zsh-users/zsh-completions # https://github.com/zsh-users/zsh-completions
-zmodule completion  # https://github.com/zimfw/completion
-zmodule zsh-users/zsh-autosuggestions # https://github.com/zsh-users/zsh-autosuggestions
-zmodule zsh-users/zsh-syntax-highlighting # https://github.com/zsh-users/zsh-syntax-highlighting
-zmodule zsh-users/zsh-history-substring-search  # https://github.com/zsh-users/zsh-history-substring-search
-zmodule romkatv/powerlevel10k # https://github.com/romkatv/powerlevel10k
-zmodule skywind3000/z.lua # https://github.com/skywind3000/z.lua
-zmodule supercrabtree/k # https://github.com/supercrabtree/k
-zmodule Aloxaf/fzf-tab  # https://github.com/Aloxaf/fzf-tab
+zmodule environment                            # https://github.com/zimfw/environment
+zmodule git                                    # https://github.com/zimfw/git
+zmodule input                                  # https://github.com/zimfw/input
+zmodule termtitle                              # https://github.com/zimfw/termtitle
+zmodule archive                                # https://github.com/zimfw/archive
+# zmodule utility                              # https://github.com/zimfw/utility
+# zmodule git-info                             # https://github.com/zimfw/git-info
+# zmodule steeef                               # https://github.com/zimfw/steeef
+zmodule zsh-users/zsh-completions              # https://github.com/zsh-users/zsh-completions
+zmodule completion                             # https://github.com/zimfw/completion
+zmodule zsh-users/zsh-autosuggestions          # https://github.com/zsh-users/zsh-autosuggestions
+zmodule zsh-users/zsh-syntax-highlighting      # https://github.com/zsh-users/zsh-syntax-highlighting
+zmodule zsh-users/zsh-history-substring-search # https://github.com/zsh-users/zsh-history-substring-search
+zmodule romkatv/powerlevel10k                  # https://github.com/romkatv/powerlevel10k
+zmodule skywind3000/z.lua                      # https://github.com/skywind3000/z.lua
+zmodule supercrabtree/k                        # https://github.com/supercrabtree/k
+zmodule Aloxaf/fzf-tab                         # https://github.com/Aloxaf/fzf-tab

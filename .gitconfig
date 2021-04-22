@@ -40,3 +40,9 @@
 
 [credential]
 	helper = osxkeychain
+
+[diff]
+	tool = vimdiff
+
+[merge]
+	tool = vimdiff

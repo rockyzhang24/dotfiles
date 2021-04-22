@@ -362,7 +362,7 @@ nnoremap <Leader>bp :bprevious<CR>
 nnoremap <Leader>br <C-^>
 
 " Close and delete the current buffer from the buffer list (vim-xtabline)
-nnoremap <Leader>bd :XTabCloseBuffer<CR>
+nnoremap <Leader>bd :bdelete<CR>
 
 " Buffer delete (fzf.vim)
 nnoremap <Leader>bD :BD<CR>
@@ -800,20 +800,23 @@ function! PackInit() abort
 
   call minpac#add('k-takata/minpac', {'type': 'opt'})
 
-   call minpac#add('tpope/vim-surround')
-   call minpac#add('junegunn/fzf.vim')
-   call minpac#add('tomtom/tcomment_vim')
-   call minpac#add('RRethy/vim-illuminate')
-   call minpac#add('RRethy/vim-hexokinase', { 'do': 'make hexokinase' })
-   call minpac#add('airblade/vim-rooter')
-   call minpac#add('AndrewRadev/splitjoin.vim')
-   call minpac#add('godlygeek/tabular')
-   call minpac#add('kevinhwang91/rnvimr')
-   call minpac#add('gcmt/wildfire.vim')
-   call minpac#add('mg979/vim-visual-multi')
-   call minpac#add('yggdroot/indentline')
-   call minpac#add('mbbill/undotree')
-   call minpac#add('mhinz/vim-startify')
+  call minpac#add('tpope/vim-surround')
+  call minpac#add('junegunn/fzf.vim')
+  call minpac#add('tomtom/tcomment_vim')
+  call minpac#add('RRethy/vim-illuminate')
+  call minpac#add('RRethy/vim-hexokinase', { 'do': 'make hexokinase' })
+  call minpac#add('airblade/vim-rooter')
+  call minpac#add('AndrewRadev/splitjoin.vim')
+  call minpac#add('godlygeek/tabular')
+  call minpac#add('kevinhwang91/rnvimr')
+  call minpac#add('gcmt/wildfire.vim')
+  call minpac#add('mg979/vim-visual-multi')
+  call minpac#add('yggdroot/indentline')
+  call minpac#add('mbbill/undotree')
+  call minpac#add('mhinz/vim-startify')
+
+  " Tree-sitter
+  call minpac#add('nvim-treesitter/nvim-treesitter', {'do': 'TSUpdate'})
 
   " LSP
   call minpac#add('neoclide/coc.nvim', {'branch': 'release'})
@@ -851,7 +854,6 @@ function! PackInit() abort
   call minpac#add('sainnhe/gruvbox-material')
 
   " Testing
-  call minpac#add('nvim-treesitter/nvim-treesitter', {'do': 'TSUpdate'})
 
 endfunction
 
@@ -1016,6 +1018,7 @@ require'nvim-treesitter.configs'.setup {
   ensure_installed = "maintained",
   highlight = {
     enable = true,
+    disable = {}
   },
 }
 EOF
@@ -1090,7 +1093,7 @@ let g:undotree_SetFocusWhenToggle = 1
 let g:vista_sidebar_width = 50
 let g:vista_default_executive = 'coc'
 let g:vista_fzf_preview = ['right:50%']
-let g:vista#render#enable_icon = 1
+let g:vista#renderer#enable_icon = 1
 let g:vista_icon_indent = ["╰─▸ ", "├─▸ "]
 
 " Show the nearest function in the statusline automatically

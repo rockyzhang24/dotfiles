@@ -51,6 +51,7 @@
   "python.formatting.yapfPath": "/usr/local/bin/yapf",
   "prettier.singleQuote": false,
   "prettier.eslintIntegration": true,
+  "prettier.disableLanguages": ["vue"],
   "languageserver": {
     /* C/C++/Objective-C */
     "ccls": {

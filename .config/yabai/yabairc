@@ -33,6 +33,7 @@ yabai -m rule --add app="Fantastical Helper" manage=off # Fantastical menu bar d
 
 # Border on
 yabai -m rule --add app="kitty|Alacritty" border=on
+yabai -m rule --add app="iTerm2" title!="Preferences|Profiles|Updating|^$" border=on
 
 # ====
 # Signals

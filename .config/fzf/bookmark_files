@@ -2,6 +2,10 @@
 
 # ====== configs ======
 
+# Terminal
+/Users/yanzhang/.config/alacritty/alacritty.yml
+/Users/yanzhang/.config/kitty/kitty.conf
+
 # vim
 /Users/yanzhang/.config/nvim/init.vim
 

@@ -39,6 +39,7 @@ ncdu: disk usage for directries
 neofetch: display customizable system info
 nyancat: nyancat in terminal
 onefetch: display the git repo info (run it in a git repo)
+pbcopy/pbpaste: copy and paste. E.g., pbpaste > demo.md (paste the content in clipboard into file demo.md)
 prettypring: colorize and simplify ping's output. E.g., prettyping google.com
 rg: ultra-fast grep. E.g., rg "^export " ~/.config
 rga: rg but search in PDFs, E-Bookss, Office docs, zip, etc.

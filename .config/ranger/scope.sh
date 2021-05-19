@@ -295,9 +295,10 @@ handle_mime() {
             ## Syntax highlight
 
             ## Use bat first
-            if command -v bat &>/dev/null; then
-                env COLORTERM=8bit bat --color=always --style=numbers,changes --theme=Dracula "${FILE_PATH}" && exit 5
-            fi
+            ## NOTE: on macOS, bat cause ranger to freeze when moving cursor quickly across many text files
+            # if command -v bat &>/dev/null; then
+            #     env COLORTERM=8bit bat --color=always --style=numbers,changes --theme=Dracula "${FILE_PATH}" && exit 5
+            # fi
 
             if [[ "$( stat --printf='%s' -- "${FILE_PATH}" )" -gt "${HIGHLIGHT_SIZE_MAX}" ]]; then
                 exit 2

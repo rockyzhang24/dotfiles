@@ -39,8 +39,9 @@ _fzf_compgen_dir() {
   fd --type d --hidden --follow --exclude ".git" . "$1"
 }
 
-# Use fd for CTRL-t (paste the selected file or dir onto the command line)
+# Use fd for CTRL-t (paste the selected files and directories onto the command-line)
 export FZF_CTRL_T_COMMAND="fd --hidden --follow --exclude .git --exclude .DS_Store"
+export FZF_CTRL_T_OPTS="--header 'Paste the selected files and directories onto the command-line'"
 
 # Display the full command on the preview window (CTRL-r for command history search)
 export FZF_CTRL_R_OPTS="--preview 'echo {}' \
@@ -51,7 +52,8 @@ export FZF_CTRL_R_OPTS="--preview 'echo {}' \
 # CTRL-z for cd into the selected dir
 bindkey '^z' fzf-cd-widget
 export FZF_ALT_C_COMMAND="fd --type d --hidden --follow --exclude .git"
-export FZF_ALT_C_OPTS="--preview 'tree -C {} | head -200'"
+export FZF_ALT_C_OPTS="--preview 'tree -C {} | head -200' \
+                       --header 'cd into the selected directory'"
 
 # Utility commands (defined under ../fzfutils/)
 #   - f [DIR] [FZF ARGS]:  fzf with an optional directory argument

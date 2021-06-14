@@ -1,7 +1,5 @@
 # Bookmark files for bf command
 
-# ====== configs ======
-
 # Terminal
 /Users/yanzhang/.config/alacritty/alacritty.yml
 /Users/yanzhang/.config/kitty/kitty.conf
@@ -24,6 +22,9 @@
 
 # ranger
 /Users/yanzhang/.config/ranger/rc.conf
+
+# lf
+/Users/yanzhang/.config/lf/lfrc
 
 # fzf
 /Users/yanzhang/.config/fzf/fzf-config

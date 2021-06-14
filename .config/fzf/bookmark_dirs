@@ -1,7 +1,6 @@
 # Bookmark directories for bd command
 
-# ====== configs ======
-
+# Configs
 /Users/yanzhang/.config
 /Users/yanzhang/.config/bin
 /Users/yanzhang/.config/zsh
@@ -11,3 +10,7 @@
 /Users/yanzhang/.config/fzf/fzfutils
 /Users/yanzhang/.config/yabai/scripts
 /Users/yanzhang/.config/ranger
+/Users/yanzhang/.config/lf
+
+# Others
+/Users/yanzhang/oj/leetcode/algorithms/java

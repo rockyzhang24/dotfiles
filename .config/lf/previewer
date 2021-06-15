@@ -1,6 +1,7 @@
 #!/bin/sh
 
 case "$1" in
+  *.md) glow -s dark "$1";;
   *.tgz|*.tar.gz) tar tzf "$1";;
   *.tar.bz2|*.tbz2) tar tjf "$1";;
   *.tar.txz|*.txz) xz --list "$1";;
@@ -22,5 +23,5 @@ case "$1" in
   *.wav|*.mp3|*.flac|*.m4a|*.wma|*.ape|*.ac3|*.og[agx]|*.spx|*.opus|*.as[fx]|*.flac) mediainfo "$1";;
   *.avi|*.mp4|*.wmv|*.dat|*.3gp|*.ogv|*.mkv|*.mpg|*.mpeg|*.vob|*.fl[icv]|*.m2v|*.mov|*.webm|*.ts|*.mts|*.m4v|*.r[am]|*.qt|*.divx) mediainfo "$1";;
   *.json) jq --color-output . "$1";;
-  *) bat --color=always --style=numbers,changes --theme=Dracula "$1" || highlight -O truecolor -s molokai --force -l "$1" || cat "$1";;
+  *) bat --color=always --style=numbers,changes --theme=Dracula --line-range=:"$3" "$1" || highlight -O truecolor -s molokai --force -l --line-range=1-"$3" "$1" || cat "$1";;
 esac

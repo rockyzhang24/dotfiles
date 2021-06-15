@@ -11,6 +11,7 @@
 
 
 " ========== Automation ========== {{{1
+" ================================
 
 if empty(glob('~/.config/nvim/pack/minpac'))
   echo "Downloading minpac as the plugin manager..."
@@ -25,6 +26,7 @@ endif
 " }}}
 
 " ========== General ========== {{{1
+" =============================
 
 set nocompatible
 filetype plugin indent on
@@ -103,6 +105,7 @@ let g:neoterm_autoscroll = '1'
 " }}} General
 
 " ========== Dress up ========== {{{1
+" ==============================
 
 set termguicolors
 
@@ -150,6 +153,7 @@ let g:terminal_color_15 = '#FFFFFF'
 " }}} Dress up
 
 " ========== Autocommands ========== {{{1
+" ==================================
 
 augroup general
   autocmd!
@@ -167,13 +171,10 @@ augroup filetypes
 
   " Disables auto-wrap text and comments
   autocmd FileType * setlocal formatoptions-=t formatoptions-=c formatoptions-=r formatoptions-=o
-
   " vim
   autocmd FileType vim setlocal foldmethod=marker foldlevel=0 textwidth=0
-
   " make
   autocmd FileType make setlocal tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab
-
   " markdown
   autocmd FileType markdown packadd markdown-preview.nvim
 
@@ -212,6 +213,7 @@ augroup END
 " }}} Autocommands
 
 " ========== Commands ========== {{{1
+" ==============================
 
 " Format the current buffer
 command! -nargs=0 Format :call CocAction('format')
@@ -222,11 +224,13 @@ command! -nargs=? Fold :call CocAction('fold', <f-args>)
 " Organize imports
 command! -nargs=0 OR :call CocAction('runCommand', 'editor.action.organizeImport')
 
+" Open file in VSCode
 command! -nargs=0 VSCode execute ":!code -g %:p\:" . line('.') . ":" . col('.')
 
 " }}} Commands
 
 " ========== Abbreviation ========== {{{1
+" ==================================
 
 function! SetupCommandAbbrs(from, to)
   exec 'cnoreabbrev <expr> '.a:from
@@ -237,12 +241,15 @@ endfunction
 call SetupCommandAbbrs('C', 'CocConfig')
 call SetupCommandAbbrs('L', 'CocList')
 call SetupCommandAbbrs('T', 'tabe')
+call SetupCommandAbbrs('S', 'CocCommand snippets.editSnippets')
 
 " }}} Abbreviation
 
 " ========== Mappings ========== {{{1
+" ==============================
 
-" ---- General ---- {{{2
+" ----- General ----- {{{2
+" ===================
 
 let mapleader=" "
 
@@ -259,6 +266,7 @@ xnoremap K :m '<-2<CR>gv=gv
 
 " Jump to the next '<++>' and edit it
 nnoremap <silent> <Leader><Leader> <Esc>/<++><CR>:nohlsearch<CR>c4l
+inoremap <silent> ,f <Esc>/<++><CR>:nohlsearch<CR>"_c4l
 
 " Indent
 vnoremap < <gv
@@ -271,9 +279,10 @@ vnoremap Y "+y
 " Delete but not save to a register
 nnoremap s "_d
 
-" }}} General
+" }}}
 
-" ---- Object ---- {{{2
+" ----- Object ----- {{{2
+" ==================
 
 " Inside next/last parentheses
 onoremap in( :<C-u>normal! f(vi(<CR>
@@ -285,9 +294,19 @@ xmap ih <Plug>(GitGutterTextObjectInnerVisual)
 omap ah <Plug>(GitGutterTextObjectOuterPending)
 xmap ah <Plug>(GitGutterTextObjectOuterVisual)
 
-" }}} Object
+" }}}
 
-" ---- Terminal (Meta) ---- {{{2
+" ----- Misc ----- {{{2
+" ================
+
+" Javadoc comment (tcomment_vim)
+nmap <C-_>j <C-_>2<C-_>b
+imap <C-_>j <C-_>2<C-_>b
+
+" }}}
+
+" ----- Terminal (Meta) ----- {{{2
+" ===========================
 
 " NOTE: Meta key is the right Option key in my iTerm2
 
@@ -318,9 +337,10 @@ nnoremap <M-l> <C-w>l
 " Reference: http://vimcasts.org/episodes/neovim-terminal-paste/
 tnoremap <expr> <M-r> '<C-\><C-n>"' . nr2char(getchar()) . 'pi'
 
-" }}} Terminal
+" }}}
 
-" ---- Command line ---- {{{2
+" ----- Command line ----- {{{2
+" ========================
 
 " Cursor movement in command line (Emacs style)
 cnoremap <C-p> <Up>
@@ -341,18 +361,20 @@ cnoremap w!! w !sudo tee % >/dev/null
 " Get the full path of the current file
 cnoremap %% <C-R>=fnameescape(expand('%:h')).'/'<cr>
 
-" }}} Command line
+" }}}
 
-" ---- Arglist (a) ---- {{{2
+" ----- Arglist (a) ----- {{{2
+" =======================
 
 nnoremap <Leader>an :next<CR>
 nnoremap <Leader>ap :previous<CR>
 nnoremap <Leader>aH :first<CR>
 nnoremap <Leader>aL :last<CR>
 
-" }}} Arglist
+" }}}
 
-" ---- Buffer (b) ---- {{{2
+" ----- Buffer (b) ----- {{{2
+" ======================
 
 nnoremap <Leader>bh :Startify<CR>
 nnoremap <Leader>bn :bnext<CR>
@@ -384,9 +406,10 @@ nmap <Leader>b9 9<Plug>(XT-Select-Buffer)
 " Open current buffer in a new tab
 nnoremap <Leader>bT :tabedit %<CR>
 
-" }}} Buffer
+" }}}
 
-" ---- coc.nvim (c) ---- {{{2
+" ----- coc.nvim (c) ----- {{{2
+" ========================
 
 " Use tab to trigger completion with characters ahead and navigate.
 inoremap <silent><expr> <TAB>
@@ -493,17 +516,27 @@ nnoremap <silent> <Leader>clp :<C-u>CocPrev<CR>
 " Reopen the latest list
 nnoremap <silent> <Leader>clr :<C-u>CocListResume<CR>
 
-" }}} coc
+" coc-snippets
+" https://github.com/neoclide/coc-snippets
+imap <C-l> <Plug>(coc-snippets-expand)
+vmap <C-j> <Plug>(coc-snippets-select)
+let g:coc_snippet_next = '<C-j>'
+let g:coc_snippet_prev = '<C-k>'
+imap <C-j> <Plug>(coc-snippets-expand-jump)
 
-" ---- Find/Files (f) ---- {{{2
+" }}}
+
+" ----- Find/Files (f) ----- {{{2
+" ==========================
 
 " fzf to open file (fzf.vim)
 nnoremap <Leader>ff :Files<CR>
 nnoremap <Leader>fF :Files<Space>
 
-" }}} Find/Files
+" }}}
 
-" ---- Git (g) ---- {{{2
+" ----- Git (g) ----- {{{2
+" ===================
 
 " Jump between hunks (vim-gitgutter)
 nmap <Leader>ghn <Plug>(GitGutterNextHunk)
@@ -523,9 +556,10 @@ nmap <Leader>ghu <Plug>(GitGutterUndoHunk)
 " Fold/unfold all unchanged lines (vim-gitgutter)
 nnoremap <Leader>ghf :GitGutterFold<CR>
 
-" }}} Git
+" }}}
 
-" ---- History & Help (h) ---- {{{2
+" ----- History & Help (h) ----- {{{2
+" ==============================
 
 " fzf for the command and search history (fzf.vim)
 nnoremap <Leader>h: :History:<CR>
@@ -534,9 +568,10 @@ nnoremap <Leader>h/ :History/<CR>
 " fzf for help tags (fzf.vim)
 nnoremap <Leader>h? :Helptags<CR>
 
-" }}} History & Help
+" }}}
 
-" ---- Markdown (m) ---- {{{2
+" ----- Markdown (m) ----- {{{2
+" ========================
 
 " Markdown preview in a browser window (markdown-preview.nvim)
 nnoremap <Leader>mp :MarkdownPreview<CR>
@@ -544,9 +579,10 @@ nnoremap <Leader>mp :MarkdownPreview<CR>
 " Generate TOC (vim-markdown-toc)
 nnoremap <Leader>mc :GenTocGFM<CR>
 
-" }}} Markdown
+" }}}
 
-" ---- Plugin management (P) ---- {{{2
+" ----- Plugin management (P) ----- {{{2
+" =================================
 
 " Update/install or delete plugins
 nnoremap <Leader>Pu :PluginUpdate<CR>
@@ -556,9 +592,10 @@ nnoremap <Leader>Pd :PluginDelete<CR>
 nnoremap <Leader>PD :OpenPluginDir<Space>
 nnoremap <Leader>PU :OpenPluginUrl<Space>
 
-" }}} Plugin management
+" }}}
 
-" ---- Quickfix (q) ---- {{{2
+" ----- Quickfix (q) ----- {{{2
+" ========================
 
 nnoremap <Leader>qo :copen<CR>
 nnoremap <Leader>qc :cclose<CR>
@@ -567,9 +604,10 @@ nnoremap <Leader>qp :cprevious<CR>
 nnoremap <Leader>qH :cfirst<CR>
 nnoremap <Leader>qL :clast<CR>
 
-" }}} Quickfix
+" }}}
 
-" ---- Refactor (r) ---- {{{2
+" ----- Refactor (r) ----- {{{2
+" ========================
 
 " Alignment (tabular)
 noremap <Leader>ra :Tabularize /
@@ -578,9 +616,10 @@ noremap <Leader>ra :Tabularize /
 nnoremap <Leader>rj :SplitjoinJoin<CR>
 nnoremap <Leader>rs :SplitjoinSplit<CR>
 
-" }}} Refactor
+" }}}
 
-" ---- Searching (s) ---- {{{2
+" ----- Searching (s) ----- {{{2
+" =========================
 
 " Clean search highlighting
 nnoremap <silent> <Leader>/ :<C-u>nohlsearch<CR>
@@ -621,18 +660,20 @@ vnoremap <Leader>sG :<c-u>call <SID>GrepOperator(visualmode())<cr>
 " Rg under pwd (fzf)
 nnoremap <Leader>sr :Rg<CR>
 
-" }}} Searching
+" }}}
 
-" ---- Session (S) ---- {{{2
+" ----- Session (S) ----- {{{2
+" =======================
 
 " Session management (vim-xtabline)
 nnoremap <Leader>Ss :XTabSaveSession<CR>
 nnoremap <Leader>Sl :XTabLoadSession<CR>
 nnoremap <Leader>Sd :XTabDeleteSession<CR>
 
-" }}} Session
+" }}}
 
-" ---- Toggle (t) ---- {{{2
+" ----- Toggle (t) ----- {{{2
+" ======================
 
 " Toggle spell checking
 nnoremap <Leader>ts :setlocal spell! spelllang=en_us<CR>
@@ -652,9 +693,10 @@ nnoremap <Leader>tu :UndotreeToggle<CR>
 " Toggle vista (vista.vim)
 nnoremap <Leader>tv :Vista!!<CR>
 
-" }}} Toggle
+" }}}
 
-" ---- Tab (T) ---- {{{2
+" ----- Tab (T) ----- {{{2
+" ===================
 
 " Create a new tab with a empty buffer
 nnoremap <Leader>Tt :tabedit<CR>
@@ -702,9 +744,10 @@ nnoremap <Leader>Tb] :XTabMoveBufferNext<CR>
 nnoremap <Leader>T. :tabmove +<CR>
 nnoremap <Leader>T, :tabmove -<CR>
 
-" }}} Tab
+" }}}
 
-" ---- Vista.vim & vimrc (v) ---- {{{2
+" ----- Vista.vim & vimrc (v) ----- {{{2
+" =================================
 
 nnoremap <Leader>vf :silent! Vista finder coc<CR>
 
@@ -712,9 +755,10 @@ nnoremap <Leader>vf :silent! Vista finder coc<CR>
 nnoremap <Leader>ve :tabedit $MYVIMRC<CR>
 nnoremap <Leader>vs :source $MYVIMRC<CR>
 
-" }}} Vista
+" }}}
 
-" ---- Window (w) ---- {{{2
+" ----- Window (w) ----- {{{2
+" ======================
 
 " Create a split window to up (horizontal), down (horizontal), left (vertical), right (vertical)
 nnoremap <silent> <Leader>wk :set nosplitbelow<CR><C-w>s:set splitbelow<CR>
@@ -775,23 +819,12 @@ nnoremap <Leader>wx <C-w>x
 " Focus the undotree window (undotree.vim)
 nnoremap <Leader>wu :UndotreeFocus<CR>
 
-" }}} Window
-
-" ---- Ranger (rnvimr) ---- {{{2
-" The <Leader> key, i.e., space key, conflicts with ranger, so use ,
-
-" Toggle on and off
-nnoremap <silent> ,r :RnvimrToggle<CR>
-tnoremap <silent> ,r <C-\><C-n>:RnvimrToggle<CR>
-
-" Toggle window and fullscreen (maximum)
-tnoremap <silent> ,m <C-\><C-n>:RnvimrResize<CR>
-
-" }}} Ranger
+" }}}
 
 " }}} Mapppings
 
 " ========== Plugins ========== {{{1
+" =============================
 
 " Minpac plugin manager (load minpac on demand)
 function! PackInit() abort
@@ -808,12 +841,12 @@ function! PackInit() abort
   call minpac#add('airblade/vim-rooter')
   call minpac#add('AndrewRadev/splitjoin.vim')
   call minpac#add('godlygeek/tabular')
-  call minpac#add('kevinhwang91/rnvimr')
   call minpac#add('gcmt/wildfire.vim')
   call minpac#add('mg979/vim-visual-multi')
   call minpac#add('yggdroot/indentline')
   call minpac#add('mbbill/undotree')
   call minpac#add('mhinz/vim-startify')
+  call minpac#add('tyru/open-browser.vim')
 
   " Tree-sitter
   call minpac#add('nvim-treesitter/nvim-treesitter', {'do': 'TSUpdate'})
@@ -866,8 +899,10 @@ set rtp+=~/gitrepos/fzf
 " }}} Plugins
 
 " ========== Plugin settings ========== {{{1
+" =====================================
 
-" ---- coc.nvim ---- {{{2
+" ----- coc.nvim ----- {{{2
+" ====================
 
 " Reference: https://github.com/neoclide/coc.nvim#example-vim-configuration
 
@@ -885,6 +920,7 @@ let g:coc_global_extensions = [
       \ 'coc-sh',
       \ 'coc-vimlsp',
       \ 'coc-yank',
+      \ 'coc-snippets',
       \ 'coc-marketplace']
 
 augroup cocgroup
@@ -909,15 +945,17 @@ command! -nargs=0 Prettier :CocCommand prettier.formatFile
 " Golang: auto-format and add missing imports on save
 autocmd BufWritePre *.go :call CocAction('runCommand', 'editor.action.organizeImport')
 
-" }}} coc.nvim
+" }}}
 
-" ---- eleline.vim ---- {{{2
+" ----- eleline.vim ----- {{{2
+" =======================
 
 let g:eleline_powerline_fonts = 1
 
-" }}} eleline.vim
+" }}}
 
-" ---- fzf ---- {{{2
+" ----- fzf ----- {{{2
+" ===============
 
 " Make the preview use the config of command-line fzf (defined in ~/.config/fzf/fzf-config) instead of
 " preview.sh shipped with fzf.vim
@@ -962,17 +1000,19 @@ command! -bang BD call fzf#run(fzf#wrap({
   \ 'options': '--header "Select the buffers you want to delete from the buffer list" --multi --reverse --bind ctrl-a:select-all'
 \ }))
 
-" }}} fzf
+" }}}
 
-" ---- indentLine ---- {{{2
+" ----- indentLine ----- {{{2
+" ======================
 
 let g:indentLine_fileTypeExclude = ['startify', 'help', 'markdown', 'json', 'jsonc']
 let g:indentLine_bufTypeExclude = ['terminal']
 let g:indentLine_char = '|'
 
-" }}} indentLine
+" }}}
 "
-" ---- minpac ---- {{{2
+" ----- minpac ----- {{{2
+" ==================
 
 command! PluginUpdate source $MYVIMRC | call PackInit() | call minpac#update()
 command! PluginDelete source $MYVIMRC | call PackInit() | call minpac#clean()
@@ -992,13 +1032,14 @@ command! -nargs=1 -complete=custom,PackList
 command! -nargs=1 -complete=custom,PackList
       \ OpenPluginUrl call PackInit() | silent exec "!open -a \"Google Chrome\" " . minpac#getpluginfo(<q-args>).url
 
-" }}} minpac
+" }}}
 
-" ---- markdown-preview.nvim ---- {{{
+" ----- markdown-preview.nvim ----- {{{2
+" =================================
 
-" Open a new window of Chrome in the same workspace
+" Use a new window of Safari for markdown preview
 function! g:Open_browser(url)
-    silent exe 'silent !open -na "Google Chrome" --args --new-window ' . a:url
+    silent exe 'silent !osascript -e "tell application \"Safari\" to make new document with properties {URL:\"' . a:url . '\"}"'
 endfunction
 let g:mkdp_browserfunc = 'g:Open_browser'
 
@@ -1008,13 +1049,13 @@ let g:mkdp_auto_close = 0
 " Recognized filetypes (MarkdownPreview... commands will be availabe)
 let g:mkdp_filetypes = ['markdown']
 
-" }}} markdown-preview.nvim
+" }}}
 
-" ---- nvim-treesitter ---- {{{2
+" ----- nvim-treesitter ----- {{{2
+" ===========================
 
 lua <<EOF
 require'nvim-treesitter.configs'.setup {
-  -- ensure_installed = {"java", "python", "html", "css", "javascript", "go", "lua", "c", "bash", "json"},
   ensure_installed = "maintained",
   highlight = {
     enable = true,
@@ -1025,70 +1066,33 @@ EOF
 
 " }}}
 
-" ---- rnvimr ---- {{{2
-
-" Replace Netrw and be the file explorer
-let g:rnvimr_enable_ex = 1
-
-" Hidden ranger after picking a file
-let g:rnvimr_enable_picker = 1
-
-" Disable border for floating window
-let g:rnvimr_draw_border = 0
-
-highlight link RnvimrNormal CursorLine
-
-" I use x as the leader key (keep consistent in ranger) for my custom mappings
-let g:rnvimr_action = {
-            \ 'xT': 'NvimEdit tabedit',
-            \ 'x-': 'NvimEdit split',
-            \ 'x\': 'NvimEdit vsplit',
-            \ 'gw': 'JumpNvimCwd',
-            \ 'yw': 'EmitRangerCwd'
-            \ }
-
-" Ranger's default layout
-let g:rnvimr_layout = {
-            \ 'relative': 'editor',
-            \ 'width': float2nr(round(0.8 * &columns)),
-            \ 'height': float2nr(round(0.8 * &lines)),
-            \ 'col': float2nr(round(0.1 * &columns)),
-            \ 'row': float2nr(round(0.1 * &lines)),
-            \ 'style': 'minimal'
-            \ }
-
-" Some preset layouts we can switch to
-" I only put a fullscreen layout here, so toggle between window and fullscreen by ,m
-let g:rnvimr_presets = [
-            \ {},
-            \ {'width': &columns, 'height': &lines - 2, 'col': 0, 'row': 0}
-            \ ]
-
-" }}} rnvimr
-
-" ---- splitjoin.vim ---- {{{2
+" ----- splitjoin.vim ----- {{{2
+" =========================
 
 let g:splitjoin_split_mapping = ''
 let g:splitjoin_join_mapping = ''
 
-" }}} splitjoin.vim
+" }}}
 
-" ---- tcomment_vim ---- {{{2
+" ----- tcomment_vim ----- {{{2
+" ========================
 
 " Disable the redundant preset map
 let g:tcomment_mapleader2 = ''
 
-" }}} tcomment_vim
+" }}}
 
-" ---- undotree.vim ---- {{{2
+" ----- undotree.vim ----- {{{2
+" ========================
 
 let g:undotree_WindowLayout = 2
 let g:undotree_ShortIndicators = 1
 let g:undotree_SetFocusWhenToggle = 1
 
-" }}} undotree.vim
+" }}}
 
-" ---- vista.vim ---- {{{2
+" ----- vista.vim ----- {{{2
+" =====================
 
 let g:vista_sidebar_width = 50
 let g:vista_default_executive = 'coc'
@@ -1099,9 +1103,10 @@ let g:vista_icon_indent = ["╰─▸ ", "├─▸ "]
 " Show the nearest function in the statusline automatically
 autocmd VimEnter * call vista#RunForNearestMethodOrFunction()
 
-" }}} vista.vim
+" }}}
 
-" ---- vim-fugitive ---- {{{2
+" ----- vim-fugitive ----- {{{2
+" ========================
 
 " Reference: http://vimcasts.org/episodes/fugitive-vim-browsing-the-git-object-database/
 augroup fugitiveautocmd
@@ -1118,9 +1123,10 @@ augroup fugitiveautocmd
 
 augroup END
 
-" }}} vim-fugitive
+" }}}
 
-" ---- vim-gitgutter ---- {{{2
+" ----- vim-gitgutter ----- {{{2
+" =========================
 
 " Disable the preset mappings
 let g:gitgutter_map_keys = 0
@@ -1128,14 +1134,15 @@ let g:gitgutter_map_keys = 0
 " Not to use floating window for hunk preview
 let g:gitgutter_preview_win_floating = 0
 
-" }}} vim-gitgutter
+" }}}
 
-" ---- vim-gutentags & gutentags_plus ---- {{{2
+" ----- vim-gutentags & gutentags_plus ----- {{{2
+" ==========================================
 
 " Reference: https://zhuanlan.zhihu.com/p/36279445
 
 " Tips: If we need the tags for a project not managed by vcs, we can touch a .root file under the project root folder
-let g:gutentags_project_root = ['.root', '.project']
+let g:gutentags_project_root = ['.git', '.root', '.project']
 
 " Tag file name for ctags
 let g:gutentags_ctags_tagfile = '.tags'
@@ -1165,29 +1172,42 @@ let g:gutentags_plus_switch = 1
 
 " }}}
 
-" ---- vim-hexokinase ---- {{{2
+" ----- vim-hexokinase ----- {{{2
+" ==========================
 
 let g:Hexokinase_highlighters = ['backgroundfull']
 let g:Hexokinase_optInPatterns = 'full_hex,rgb,rgba,hsl,hsla'
 
-" }}} vim-hexokinase
+" }}}
 "
-" ---- vim-illuminate ---- {{{2
+" ----- vim-illuminate ----- {{{2
+" ==========================
 
 augroup illuminate_augroup
     autocmd!
     autocmd VimEnter * hi illuminatedWord cterm=underline gui=underline
 augroup END
 
-" }}} vim-illuminate
+" }}}
 
-" ---- vim-markdown-toc ---- {{{
+" ----- vim-markdown-toc ----- {{{2
+" ============================
 
 let g:vmt_cycle_list_item_markers = 1
 
-" }}} vim-markdown-toc
+" }}}
 
-" ---- vim-rooter ---- {{{2
+" ----- vim-openbrowser.vim ----- {{{2
+" ===============================
+
+let g:netrw_nogx = 1
+nmap gx <Plug>(openbrowser-smart-search)
+vmap gx <Plug>(openbrowser-smart-search)
+
+" ----}}}
+
+" ----- vim-rooter ----- {{{2
+" ======================
 
 let g:rooter_pattern = ['.git/', 'package.json']
 
@@ -1197,9 +1217,10 @@ let g:rooter_cd_cmd = 'tcd'
 " For non-project file, change to the file's directory
 let g:rooter_change_directory_for_non_project_files = 'current'
 
-" }}} vim-rooter
+" }}}
 
-" ---- vim-startify ---- {{{2
+" ----- vim-startify ----- {{{2
+" ========================
 
 " Make vim-rooter works when a file is opened from startify
 let g:startify_change_to_dir = 0
@@ -1226,15 +1247,17 @@ augroup starity
   autocmd User Startified setlocal cursorline
 augroup END
 
-" }}} vim-startify
+" }}}
 
-" ---- vim-table-mode ---- {{{
+" ----- vim-table-mode ----- {{{2
+" ==========================
 
 let g:table_mode_map_prefix = '<Leader>mt'
 
-" }}} vim-table-mode
+" }}}
 
-" ---- vim-visual-multi ---- {{{2
+" ----- vim-visual-multi ----- {{{2
+" ============================
 
 let g:VM_theme = 'iceblue'
 
@@ -1242,15 +1265,16 @@ let g:VM_maps = {}
 let g:VM_maps["Undo"] = 'u'
 let g:VM_maps["Redo"] = '<C-r>'
 
-" }}} vim-visual-multi
+" }}}
 
-" ---- vim-xtabline ---- {{{2
+" ----- vim-xtabline ----- {{{2
+" ========================
 
 let g:xtabline_settings = get(g:, 'xtabline_settings', {})
 let g:xtabline_settings.tabline_modes = ['buffers', 'tabs', 'arglist']
 let g:xtabline_settings.enable_mappings = 0
 let g:xtabline_settings.wd_type_indicator = 1
 
-" }}} vim-xtabline
+" }}}
 
 " }}} Plugin settings

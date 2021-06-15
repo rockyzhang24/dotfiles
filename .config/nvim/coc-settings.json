@@ -8,8 +8,9 @@
     "javascript",
     "python"
   ],
-  "coc.preferences.snippetStatusText": "Ⓢ ",
+  "coc.preferences.snippetStatusText": "S",
   "suggest.enablePreview": true,
+  "suggest.snippetIndicator": "",
   "suggest.completionItemKindLabels": {
     "keyword": "\uf1de",
     "variable": "\ue79b",
@@ -52,6 +53,13 @@
   "prettier.singleQuote": false,
   "prettier.eslintIntegration": true,
   "prettier.disableLanguages": ["vue"],
+  "snippets.ultisnips.directories": ["$HOME/.config/nvim/UltiSnips/"],
+  "snippets.userSnippetsDirectory": "$HOME/.config/nvim/UltiSnips/",
+  "snippets.extends": {
+    "cpp": ["c"],
+    "javascriptreact": ["javascript"],
+    "typescript": ["javascript"]
+  },
   "languageserver": {
     /* C/C++/Objective-C */
     "ccls": {

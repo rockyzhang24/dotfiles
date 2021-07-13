@@ -50,8 +50,9 @@ set foldenable
 set foldmethod=indent
 set foldlevel=99
 set completeopt=menuone,preview,noinsert
-set ttimeoutlen=0
-set notimeout
+set ttimeoutlen=50
+" set notimeout
+set timeoutlen=500
 set shortmess+=c
 set inccommand=split
 set updatetime=100
@@ -127,11 +128,6 @@ let g:sonokai_current_word = 'underline'
 
 colorscheme sonokai
 
-" In Alacritty, to make vim transparent, if the colorscheme doesn't have an option
-" to use transparent background, we should remove the background color by uncommenting
-" the line below (don't forget to use the same color for Alacritty itself)
-" hi Normal guibg=NONE ctermbg=NONE
-
 " Terminal
 let g:terminal_color_0  = '#21222C'
 let g:terminal_color_1  = '#FF5555'
@@ -173,11 +169,15 @@ augroup filetypes
   autocmd FileType * setlocal formatoptions-=t formatoptions-=c formatoptions-=r formatoptions-=o
   " vim
   autocmd FileType vim setlocal foldmethod=marker foldlevel=0 textwidth=0
-  " make
-  autocmd FileType make setlocal tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab
   " markdown
   autocmd FileType markdown packadd markdown-preview.nvim
 
+augroup END
+
+augroup tab_setting
+  autocmd FileType make setlocal tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab
+  autocmd FileType python setlocal tabstop=4 softtabstop=4 shiftwidth=4 noexpandtab
+  autocmd FileType markdown setlocal tabstop=4 softtabstop=4 shiftwidth=4 noexpandtab
 augroup END
 
 " Remove all trailing whitespaces at the end of each line on save excluding a few filetypes
@@ -281,7 +281,7 @@ nnoremap s "_d
 
 " }}}
 
-" ----- Object ----- {{{2
+" ----- Text object ----- {{{2
 " ==================
 
 " Inside next/last parentheses
@@ -308,7 +308,7 @@ imap <C-_>j <C-_>2<C-_>b
 " ----- Terminal (Meta) ----- {{{2
 " ===========================
 
-" NOTE: Meta key is the right Option key in my iTerm2
+" NOTE: I set the meta key to the right Option key.
 
 " Toggle a terminal at the bottom
 nnoremap <expr> <M-`> ':set splitbelow<CR>:split<CR>:resize +10<CR>' . (bufexists('term://term-main') ? ':buffer term://term-main<CR>' : ':terminal<CR><C-\><C-n>:file term://term-main<CR>A')
@@ -389,10 +389,10 @@ nnoremap <Leader>bd :bdelete<CR>
 " Buffer delete (fzf.vim)
 nnoremap <Leader>bD :BD<CR>
 
-" fzf to switch buffers (fzf.vim)
+" Go to a selected buffer (fzf.vim)
 nnoremap <Leader>bb :Buffers<CR>
 
-" Switch to buffer N (vim-xtabline)
+" Go to buffer N (vim-xtabline)
 nmap <Leader>b1 1<Plug>(XT-Select-Buffer)
 nmap <Leader>b2 2<Plug>(XT-Select-Buffer)
 nmap <Leader>b3 3<Plug>(XT-Select-Buffer)
@@ -432,8 +432,8 @@ inoremap <silent><expr> <CR> pumvisible() ? coc#_select_confirm()
 
 " Navigate diagnostics
 " Use `:CocDiagnostics` to get all diagnostics of current buffer in location list.
-nmap <silent> [g <Plug>(coc-diagnostic-prev)
-nmap <silent> ]g <Plug>(coc-diagnostic-next)
+nmap <silent> <Leader>cp <Plug>(coc-diagnostic-prev)
+nmap <silent> <Leader>cn <Plug>(coc-diagnostic-next)
 
 " GoTo code navigation.
 nmap <silent> gd <Plug>(coc-definition)
@@ -533,6 +533,13 @@ imap <C-j> <Plug>(coc-snippets-expand-jump)
 nnoremap <Leader>ff :Files<CR>
 nnoremap <Leader>fF :Files<Space>
 
+" fzf for the command and search history (fzf.vim)
+nnoremap <Leader>f: :History:<CR>
+nnoremap <Leader>f/ :History/<CR>
+
+" fzf for help tags (fzf.vim)
+nnoremap <Leader>f? :Helptags<CR>
+
 " }}}
 
 " ----- Git (g) ----- {{{2
@@ -555,18 +562,6 @@ nmap <Leader>ghu <Plug>(GitGutterUndoHunk)
 
 " Fold/unfold all unchanged lines (vim-gitgutter)
 nnoremap <Leader>ghf :GitGutterFold<CR>
-
-" }}}
-
-" ----- History & Help (h) ----- {{{2
-" ==============================
-
-" fzf for the command and search history (fzf.vim)
-nnoremap <Leader>h: :History:<CR>
-nnoremap <Leader>h/ :History/<CR>
-
-" fzf for help tags (fzf.vim)
-nnoremap <Leader>h? :Helptags<CR>
 
 " }}}
 
@@ -734,7 +729,7 @@ while i <= 9
 endwhile
 
 " List all tabs
-nnoremap <Leader>Tls :tabs<CR>
+nnoremap <Leader>Tl :tabs<CR>
 
 " Move buffer position on the tabline (vim-xtabline)
 nnoremap <Leader>Tb[ :XTabMoveBufferPrev<CR>
@@ -789,6 +784,9 @@ nnoremap <Leader>wr <C-w>p
 " Close the current window
 nnoremap <Leader>wc <C-w>c
 
+" Close the window right below the current window
+nnoremap <Leader>wC <C-w>j:q<CR>
+
 " Close all windows except the current (o for only)
 nnoremap <Leader>wo <C-w>o
 
@@ -797,9 +795,6 @@ nnoremap <Leader>wP <C-w>P
 
 " Close the preview window
 nnoremap <Leader>wz <C-w>z
-
-" Close the window right below the current window
-nnoremap <Leader>wbc <C-w>j:q<CR>
 
 " Move current window to new tab
 nnoremap <Leader>wT <C-w>T
@@ -812,9 +807,6 @@ nnoremap <Leader>wL <C-w>5>
 
 " Balance size
 nnoremap <Leader>w= <C-w>=
-
-" Exchange the current window with window N (must be in the same column or row)
-nnoremap <Leader>wx <C-w>x
 
 " Focus the undotree window (undotree.vim)
 nnoremap <Leader>wu :UndotreeFocus<CR>
@@ -847,6 +839,7 @@ function! PackInit() abort
   call minpac#add('mbbill/undotree')
   call minpac#add('mhinz/vim-startify')
   call minpac#add('tyru/open-browser.vim')
+  call minpac#add('folke/which-key.nvim')
 
   " Tree-sitter
   call minpac#add('nvim-treesitter/nvim-treesitter', {'do': 'TSUpdate'})
@@ -911,8 +904,8 @@ let g:coc_global_extensions = [
       \ 'coc-html',
       \ 'coc-css',
       \ 'coc-tsserver',
-      \ 'coc-pyright',
       \ 'coc-go',
+      \ 'coc-pyright',
       \ 'coc-json',
       \ 'coc-prettier',
       \ 'coc-eslint',
@@ -951,6 +944,14 @@ autocmd BufWritePre *.go :call CocAction('runCommand', 'editor.action.organizeIm
 " =======================
 
 let g:eleline_powerline_fonts = 1
+
+augroup eleline_autocmd
+
+  " This autocmd removes eleline's cached branch name so that e.g. after a `:Git checkout`,
+  " the branch name in eleline can be updated immediately.
+  autocmd User FugitiveChanged if exists("b:eleline_branch") | unlet b:eleline_branch | endif
+
+augroup END
 
 " }}}
 
@@ -1005,12 +1006,12 @@ command! -bang BD call fzf#run(fzf#wrap({
 " ----- indentLine ----- {{{2
 " ======================
 
-let g:indentLine_fileTypeExclude = ['startify', 'help', 'markdown', 'json', 'jsonc']
+let g:indentLine_fileTypeExclude = ['startify', 'help', 'markdown', 'json', 'jsonc', 'WhichKey']
 let g:indentLine_bufTypeExclude = ['terminal']
 let g:indentLine_char = '|'
 
 " }}}
-"
+
 " ----- minpac ----- {{{2
 " ==================
 
@@ -1023,12 +1024,11 @@ function! PackList(...)
   return join(sort(keys(minpac#getpluglist())), "\n")
 endfunction
 
-" Define a command, OpenPluginDir, to open a new iTerm2 window and cd into the directory where a plugin is installed
-" (The custom command, iterm, is defined at ~/.config/bin/iterm)
+" Define a command, OpenPluginDir, to open a new terminal window and cd into the directory where a plugin is installed
 command! -nargs=1 -complete=custom,PackList
-      \ OpenPluginDir call PackInit() | silent exec "!iterm \"cd " . minpac#getpluginfo(<q-args>).dir . "\""
+      \ OpenPluginDir call PackInit() | silent exec "!kitty --single-instance -d " . minpac#getpluginfo(<q-args>).dir . " &> /dev/null"
 
-" Define a command, OpenPluginUrl, to open the plugin's git repo in Chrome
+" Define a command, OpenPluginUrl, to open the plugin's git repo in browser
 command! -nargs=1 -complete=custom,PackList
       \ OpenPluginUrl call PackInit() | silent exec "!open -a \"Google Chrome\" " . minpac#getpluginfo(<q-args>).url
 
@@ -1179,7 +1179,7 @@ let g:Hexokinase_highlighters = ['backgroundfull']
 let g:Hexokinase_optInPatterns = 'full_hex,rgb,rgba,hsl,hsla'
 
 " }}}
-"
+
 " ----- vim-illuminate ----- {{{2
 " ==========================
 
@@ -1229,15 +1229,26 @@ function! StartifyEntryFormat()
   return 'WebDevIconsGetFileTypeSymbol(absolute_path) ." ". entry_path'
 endfunction
 
+" let g:ascii = [
+"       \ '                                 __                ',
+"       \ ' __  __  ____            __  __ /\_\    ___ ___    ',
+"       \ '/\ \/\ \/\_ ,`\  _______/\ \/\ \\/\ \ /'' __` __`\ ',
+"       \ '\ \ \_\ \/_/  /_/\______\ \ \_/ |\ \ \/\ \/\ \/\ \ ',
+"       \ ' \/`____ \/\____\/______/\ \___/  \ \_\ \_\ \_\ \_\',
+"       \ '  `/___/> \/____/         \/__/    \/_/\/_/\/_/\/_/',
+"       \ '     /\___/                                        ',
+"       \ '     \/__/                                         ',
+"       \ ]
+
 let g:ascii = [
-      \ '                                 __                ',
-      \ ' __  __  ____            __  __ /\_\    ___ ___    ',
-      \ '/\ \/\ \/\_ ,`\  _______/\ \/\ \\/\ \ /'' __` __`\ ',
-      \ '\ \ \_\ \/_/  /_/\______\ \ \_/ |\ \ \/\ \/\ \/\ \ ',
-      \ ' \/`____ \/\____\/______/\ \___/  \ \_\ \_\ \_\ \_\',
-      \ '  `/___/> \/____/         \/__/    \/_/\/_/\/_/\/_/',
-      \ '     /\___/                                        ',
-      \ '     \/__/                                         ',
+      \ '                                               ',
+      \ ' ██╗   ██╗███████╗     ██╗   ██╗██╗███╗   ███╗ ',
+      \ ' ╚██╗ ██╔╝╚══███╔╝     ██║   ██║██║████╗ ████║ ',
+      \ '  ╚████╔╝   ███╔╝█████╗██║   ██║██║██╔████╔██║ ',
+      \ '   ╚██╔╝   ███╔╝ ╚════╝╚██╗ ██╔╝██║██║╚██╔╝██║ ',
+      \ '    ██║   ███████╗      ╚████╔╝ ██║██║ ╚═╝ ██║ ',
+      \ '    ╚═╝   ╚══════╝       ╚═══╝  ╚═╝╚═╝     ╚═╝ ',
+      \ '                                               ',
       \ ]
 
 let g:startify_custom_header = 'startify#pad(g:ascii)'
@@ -1277,4 +1288,313 @@ let g:xtabline_settings.wd_type_indicator = 1
 
 " }}}
 
+" ---- which-key.nvim ---- {{{2
+" ========================
+
+lua << EOF
+  -- Basic settings
+  require("which-key").setup {
+    plugins = {
+      marks = false,
+      registers = false,
+      presets = false
+    },
+    window = {
+      border = "single",
+    },
+    show_help = false,
+    triggers = {"<leader>", "g"},
+  }
+
+  -- Document
+  local wk = require("which-key")
+
+  wk.register({
+    g = {
+      d = "Go to definition",
+      r = "Go to references",
+      y = "Go to type definition",
+      i = "Go to implementation",
+      x = "which_key_ignore",
+      ["%"] = "which_key_ignore",
+    },
+  })
+
+  wk.register({
+    ["/"] = "Clear highlight",
+    ["<space>"] = "Go to the next placeholder",
+  }, { prefix = "<leader>" })
+
+  -- arglist
+  wk.register({
+    a = {
+      name = "arglist",
+      n = "Next",
+      p = "Previous",
+      H = "First",
+      L = "Last",
+    },
+  }, { prefix = "<leader>" })
+
+  -- buffer
+  wk.register({
+    b = {
+      name = "buffer",
+      h = "Home (startify)",
+      n = "Next",
+      p = "Previous",
+      r = "Recent (alternate)",
+      d = "Close and delete the current buffer",
+      D = "Delete buffers (FZF)",
+      b = "Select buffer (FZF)",
+      ["1"] = "Go to buffer #1",
+      ["2"] = "Go to buffer #2",
+      ["3"] = "Go to buffer #3",
+      ["4"] = "Go to buffer #4",
+      ["5"] = "Go to buffer #5",
+      ["6"] = "Go to buffer #6",
+      ["7"] = "Go to buffer #7",
+      ["8"] = "Go to buffer #8",
+      ["9"] = "Go to buffer #9",
+      T = "Open the current buffer in a new tab",
+    },
+  }, { prefix = "<leader>" })
+
+  -- coc
+  wk.register({
+    c = {
+      name = "coc",
+      f = "Format",
+      n = "Jump to the next diagnostic position",
+      p = "Jump to the prev diagnostic position",
+      -- code action
+      a = {
+        name = "code action",
+        s = "Selected code",
+        f = "Whole file",
+        l = "Line",
+      },
+      -- coclists
+      l = {
+        name = "coclist",
+        l = "General list",
+        c = "Commands",
+        d = "Diagnostics",
+        o = "Outline",
+        s = "Symbols",
+        y = "Yank",
+        n = "Default action for the next item",
+        p = "Default action for the prev item",
+        r = "Reopen the last list",
+      },
+      -- refactor
+      r = {
+        name = "refactor",
+        n = "Symbols rename",
+        f = "Refector",
+      },
+    },
+  }, { prefix = "<leader>" })
+
+  -- find/file
+  wk.register({
+    f = {
+      name = "find/file",
+      f = "find & open files in PWD",
+      F = "find & open files in the given dir",
+      [":"] = "Find command-history",
+      ["/"] = "Find searching-history",
+      ["?"] = "Find help tags",
+    },
+  }, { prefix = "<leader>" })
+
+  -- git
+  wk.register({
+    g = {
+      name = "git",
+      -- hunks
+      h = {
+        name = "hunk",
+        hn = "Next hunk",
+        hp = "Prev hunk",
+        hq = "Load all hunks to quickfix",
+        hP = "Preview hunk",
+        hs = "Stage hunks",
+        hu = "Undo hunks",
+        hf = "Fold/unfold",
+      },
+    },
+  }, { prefix = "<leader>" })
+
+  -- markdown
+  wk.register({
+    m = {
+      name = "markdown",
+      p = "Preview",
+      c = "Generate TOC",
+    },
+  }, { prefix = "<leader>" })
+
+  -- plugin management
+  wk.register({
+    P = {
+      name = "plugin",
+      u = "Update Plugins",
+      d = "Delete Plugins",
+      U = "Open URL",
+      D = "Open directory",
+    },
+  }, { prefix = "<leader>" })
+
+  -- quickfix
+  wk.register({
+    q = {
+      name = "quickfix",
+      o = "Open",
+      c = "Close",
+      n = "Next",
+      p = "Prev",
+      H = "First",
+      L = "Last",
+    },
+  }, { prefix = "<leader>" })
+
+  -- refactor
+  wk.register({
+    r = {
+      name = "refactor",
+      a = "Tabularize",
+      j = "Join",
+      s = "Split",
+    },
+  }, { prefix = "<leader>" })
+
+  -- search
+  wk.register({
+    s = {
+      name = "search",
+      G = "Grep",
+      r = "Rg",
+    },
+  }, { prefix = "<leader>" })
+
+  -- session
+  wk.register({
+    S = {
+      name = "session",
+      s = "Save",
+      l = "Load",
+      d = "Delete",
+    },
+  }, { prefix = "<leader>" })
+
+  -- toggle
+  wk.register({
+    t = {
+      name = "toggle",
+      s = "Spell",
+      w = "Wrap",
+      i = "Indent line",
+      c = "Color",
+      u = "Undotree",
+      v = "Vista",
+    },
+  }, { prefix = "<leader>" })
+
+  -- tab
+  wk.register({
+    T = {
+      name = "tab",
+      t = "New tab with empty buffer",
+      c = "Close current tab and its windows",
+      o = "Close all but the current tabs",
+      n = "Next",
+      p = "Prev",
+      H = "First",
+      L = "Last",
+      r = "Recent",
+      e = "Open a file in new tab",
+      l = "List all tabs",
+      ["."] = "Move current tab to right",
+      [","] = "Move current tab to left",
+      ["1"] = "Go to tab #1",
+      ["2"] = "Go to tab #2",
+      ["3"] = "Go to tab #3",
+      ["4"] = "Go to tab #4",
+      ["5"] = "Go to tab #5",
+      ["6"] = "Go to tab #6",
+      ["7"] = "Go to tab #7",
+      ["8"] = "Go to tab #8",
+      ["9"] = "Go to tab #9",
+      -- change tabline mode
+      m = {
+        name = "tabline mode",
+        b = "Buffer mode",
+        t = "Tab mode",
+        a = "Arglist mode",
+      },
+      -- move buffer in the tabline
+      b = {
+        name = "move buffer in tabline",
+        ["["] = "Move to prev",
+        ["]"] = "Move to next",
+      },
+    },
+  }, { prefix = "<leader>" })
+
+  -- vista/vimrc
+  wk.register({
+    v = {
+      name = "vista/vimrc",
+      f = "FZF finder for LSP symbols",
+      e = "Edit vimrc",
+      s = "Source vimrc",
+    },
+  }, { prefix = "<leader>" })
+
+  -- window
+  wk.register({
+    w = {
+      name = "window",
+      h = "Split (Up)",
+      j = "Split (Down)",
+      h = "Split (Left)",
+      l = "SPlit (Right)",
+      ["-"] = "Change layout to up-and-down",
+      ["\\"] = "change layout to side-by-side",
+      ["1"] = "Go to window #1",
+      ["2"] = "Go to window #2",
+      ["3"] = "Go to window #3",
+      ["4"] = "Go to window #4",
+      ["5"] = "Go to window #5",
+      ["6"] = "Go to window #6",
+      ["7"] = "Go to window #7",
+      ["8"] = "Go to window #8",
+      ["9"] = "Go to window #9",
+      r = "Go to the recent window",
+      c = "Close window",
+      C = " Close window below",
+      o = "Close all but the current window",
+      P = "Go to the preview window",
+      z = "Close the preview window",
+      T = "Move window to a new tab",
+      ["="] = "Balance size",
+      u = "Go to undotree window",
+      J = "Resize: decrease height",
+      K = "Resize: increase height",
+      H = "Resize: decrease width",
+      L = "Resize: increase width",
+    },
+  }, { prefix = "<leader>" })
+EOF
+
+" }}}
+
 " }}} Plugin settings
+
+" ========== Lua ========== {{{1
+" =========================
+
+lua require('config')
+
+" }}} Lua

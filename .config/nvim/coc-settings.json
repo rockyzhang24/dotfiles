@@ -9,6 +9,7 @@
     "python"
   ],
   "coc.preferences.snippetStatusText": "S",
+  "coc.preferences.currentFunctionSymbolAutoUpdate": true,
   "suggest.enablePreview": true,
   "suggest.snippetIndicator": "",
   "suggest.completionItemKindLabels": {

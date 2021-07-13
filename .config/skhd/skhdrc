@@ -29,8 +29,8 @@ hyper - r : launchctl kickstart -k "gui/${UID}/homebrew.mxcl.yabai"
 
 # Open a new terminal window
 # cmd - return : /Applications/alacritty.app/Contents/MacOS/alacritty
-# cmd - return : kitty --single-instance -d ~ &> /dev/null
-cmd - return : ~/.config/yabai/scripts/open-iterm.sh
+cmd - return : kitty --single-instance -d ~ &> /dev/null
+# cmd - return : ~/.config/yabai/scripts/open-iterm.sh
 
 # ========== Changing focus (Left ALT) ========== {{{
 

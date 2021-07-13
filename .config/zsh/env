@@ -19,6 +19,10 @@ export PATH=$GOPATH/bin:$PATH   # Golong programs
 export PATH=/Users/yanzhang/gitrepos/diff-so-fancy:$PATH  # diff-so-fancy
 export PATH=/usr/local/opt/llvm/bin:$PATH   # llvm
 
+export PATH=/Users/yanzhang/oj/leetcode/scripts:$PATH   # leetcode
+
+# export PATH=/Users/yanzhang/Downloads/nvim-osx64/bin:$PATH # neovim beta
+
 # Use Neovim as "preferred editor"
 export EDITOR="nvim"
 
@@ -34,7 +38,7 @@ export LESS="-R -M -i"
 
 # Gtags
 export GTAGSLABEL='native-pygments'
-export GTAGSCONF='/usr/local/Cellar/global/6.6.4_1/share/gtags/gtags.conf'
+export GTAGSCONF='/usr/local/Cellar/global/6.6.7/share/gtags/gtags.conf'
 
 # For virtual environment (virtualenv) in python3
 export VIRTUALENVWRAPPER_PYTHON=/usr/local/bin/python3

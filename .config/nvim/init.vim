@@ -120,13 +120,21 @@ set background=dark
 " autocmd vimenter * ++nested colorscheme gruvbox
 
 " Sonokai
-let g:sonokai_style = 'shusia'
-let g:sonokai_enable_italic = 1
-let g:sonokai_disable_italic_comment = 1
-let g:sonokai_better_performance = 1
-let g:sonokai_current_word = 'underline'
+" let g:sonokai_style = 'shusia'
+" let g:sonokai_enable_italic = 1
+" let g:sonokai_disable_italic_comment = 1
+" let g:sonokai_better_performance = 1
+" let g:sonokai_current_word = 'underline'
 
-colorscheme sonokai
+" Gruvbox-material
+let g:gruvbox_material_disable_italic_comment = 1
+let g:gruvbox_material_enable_bold = 1
+let g:gruvbox_material_enable_italic = 1
+let g:gruvbox_material_current_word = 'underline'
+let g:gruvbox_material_better_performance = 1
+let g:gruvbox_material_palette = 'original'
+
+colorscheme gruvbox-material
 
 " Terminal
 let g:terminal_color_0  = '#21222C'
@@ -205,7 +213,7 @@ augroup terminal
   " Automatically start insert mode when enter terminal, and disable line number and indentline
   autocmd TermOpen term://* startinsert |
         \ setlocal nonumber norelativenumber |
-        \ IndentLinesDisable
+        \ IndentBlanklineDisable
   autocmd BufWinEnter,WinEnter term://* startinsert
 
 augroup END
@@ -278,6 +286,9 @@ vnoremap Y "+y
 
 " Delete but not save to a register
 nnoremap s "_d
+
+" Paste and then format
+nnoremap p p=`]
 
 " }}}
 
@@ -676,8 +687,8 @@ nnoremap <Leader>ts :setlocal spell! spelllang=en_us<CR>
 " Toggle wrap
 nnoremap <Leader>tw :set wrap!<CR>
 
-" Toggle indent lines (indentLine)
-nnoremap <Leader>ti :IndentLinesToggle<CR>
+" Toggle indent lines (indent-blankline.nvim)
+nnoremap <Leader>ti :IndentBlanklineToggle<CR>
 
 " Toggle colors (vim-hexokinase)
 nnoremap <Leader>tc :HexokinaseToggle<CR>
@@ -835,11 +846,12 @@ function! PackInit() abort
   call minpac#add('godlygeek/tabular')
   call minpac#add('gcmt/wildfire.vim')
   call minpac#add('mg979/vim-visual-multi')
-  call minpac#add('yggdroot/indentline')
+  call minpac#add('lukas-reineke/indent-blankline.nvim')
   call minpac#add('mbbill/undotree')
   call minpac#add('mhinz/vim-startify')
   call minpac#add('tyru/open-browser.vim')
   call minpac#add('folke/which-key.nvim')
+  call minpac#add('p00f/nvim-ts-rainbow')
 
   " Tree-sitter
   call minpac#add('nvim-treesitter/nvim-treesitter', {'do': 'TSUpdate'})
@@ -878,6 +890,7 @@ function! PackInit() abort
   call minpac#add('dracula/vim', { 'name': 'dracula' })
   call minpac#add('sainnhe/sonokai')
   call minpac#add('sainnhe/gruvbox-material')
+  call minpac#add('tanvirtin/monokai.nvim')
 
   " Testing
 
@@ -1003,12 +1016,14 @@ command! -bang BD call fzf#run(fzf#wrap({
 
 " }}}
 
-" ----- indentLine ----- {{{2
-" ======================
+" ----- indent-blankline.nvim ----- {{{2
+" =================================
 
-let g:indentLine_fileTypeExclude = ['startify', 'help', 'markdown', 'json', 'jsonc', 'WhichKey']
-let g:indentLine_bufTypeExclude = ['terminal']
-let g:indentLine_char = '|'
+let g:indent_blankline_filetype_exclude = ['startify', 'help', 'markdown', 'json', 'jsonc', 'WhichKey']
+let g:indent_blankline_buftype_exclude = ['terminal']
+let g:indent_blankline_use_treesitter = v:true
+let g:indent_blankline_show_current_context = v:true
+
 
 " }}}
 
@@ -1061,6 +1076,21 @@ require'nvim-treesitter.configs'.setup {
     enable = true,
     disable = {}
   },
+}
+EOF
+
+" }}}
+
+" ----- nvim-ts-rainbow ----- {{{2
+" =========================
+
+lua <<EOF
+require'nvim-treesitter.configs'.setup {
+  rainbow = {
+    enable = true,
+    extended_mode = true,
+    max_file_lines = 1000,
+  }
 }
 EOF
 
@@ -1288,7 +1318,7 @@ let g:xtabline_settings.wd_type_indicator = 1
 
 " }}}
 
-" ---- which-key.nvim ---- {{{2
+" ----- which-key.nvim ----- {{{2
 " ========================
 
 lua << EOF
@@ -1396,6 +1426,17 @@ lua << EOF
     },
   }, { prefix = "<leader>" })
 
+  wk.register({
+    c = {
+      name = "coc",
+      f = "Format",
+      a = {
+        name = "code action",
+        s = "Selected code",
+      },
+    },
+  }, { prefix = "<leader>", mode = "v" })
+
   -- find/file
   wk.register({
     f = {
@@ -1415,16 +1456,26 @@ lua << EOF
       -- hunks
       h = {
         name = "hunk",
-        hn = "Next hunk",
-        hp = "Prev hunk",
-        hq = "Load all hunks to quickfix",
-        hP = "Preview hunk",
-        hs = "Stage hunks",
-        hu = "Undo hunks",
-        hf = "Fold/unfold",
+        n = "Next hunk",
+        p = "Prev hunk",
+        q = "Load all hunks to quickfix",
+        P = "Preview hunk",
+        s = "Stage hunks",
+        u = "Undo hunks",
+        f = "Fold/unfold",
       },
     },
   }, { prefix = "<leader>" })
+
+  wk.register({
+    g = {
+      name = "git",
+      h = {
+        name = "hunk",
+        s = "Stage hunks",
+      },
+    },
+  }, { prefix = "<leader>", mode = "v" })
 
   -- markdown
   wk.register({
@@ -1432,8 +1483,23 @@ lua << EOF
       name = "markdown",
       p = "Preview",
       c = "Generate TOC",
+      t = {
+        name = "Table mode",
+        m = "Toggle table mode",
+        t = "Tableize",
+      },
     },
   }, { prefix = "<leader>" })
+
+  wk.register({
+    m = {
+      name = "markdown",
+      t = {
+        name = "Table mode",
+        t = "Tableize",
+      },
+    },
+  }, { prefix = "<leader>", mode = "v" })
 
   -- plugin management
   wk.register({
@@ -1469,6 +1535,13 @@ lua << EOF
     },
   }, { prefix = "<leader>" })
 
+  wk.register({
+    r = {
+      name = "refactor",
+      a = "Tabularize",
+    },
+  }, { prefix = "<leader>", mode = "v" })
+
   -- search
   wk.register({
     s = {
@@ -1477,6 +1550,13 @@ lua << EOF
       r = "Rg",
     },
   }, { prefix = "<leader>" })
+
+  wk.register({
+    s = {
+      name = "search",
+      G = "Grep",
+    },
+  }, { prefix = "<leader>", mode = "v" })
 
   -- session
   wk.register({

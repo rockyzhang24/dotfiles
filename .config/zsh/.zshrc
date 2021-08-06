@@ -12,9 +12,6 @@ source ~/.config/zsh/keybindings
 # fzf
 source ~/.config/fzf/fzf-config
 
-# python3 virtual environment (virtualenv)
-source /usr/local/bin/virtualenvwrapper.sh
-
 # perl5
 source ~/perl5/perlbrew/etc/bashrc
 

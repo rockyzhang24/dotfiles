@@ -3,15 +3,28 @@
 # set codesigning certificate name here (default: yabai-cert)
 export SPACEBAR_CERT=
 
-# stop yabai
-printf "\n************** Stop spacebar ... ****************\n"
-brew services stop somdoron/formulae/spacebar
+# stop spacebar
+if [[ $(brew services list | grep spacebar | awk '{print $2}') != 'stopped' ]]; then
+  printf "\n************** Stop spacebar ... ****************\n"
+  brew services stop somdoron/formulae/spacebar
+fi
+
 
 # reinstall spacebar
 printf "\n************** Reinstall spacebar ... ****************\n"
 brew reinstall somdoron/formulae/spacebar
 codesign -fs "${SPACEBAR_CERT:-spacebar-cert}" "$(brew --prefix spacebar)/bin/spacebar"
 
-# start spacebar
-printf "\n************** Start spacebar ... ****************\n"
-brew services start somdoron/formulae/spacebar
+# start spacebar or not
+while true; do
+  read -p "Do you want to start spacebar service (y/n) ? " yn
+  case $yn in
+    [Yy]* ) printf "\n************** Start spacebar ... ****************\n"
+            brew services start somdoron/formulae/spacebar
+            break;;
+    [Nn]* ) break;;
+    * ) echo "Please answer yes or no.";;
+  esac
+done
+
+printf "\n************** !spacebar update finished! ****************\n"

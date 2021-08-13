@@ -8,8 +8,10 @@ brew unpin koekeishiya/formulae/yabai
 export YABAI_CERT=
 
 # stop yabai
-printf "\n************** Stop yabai ... ****************\n"
-brew services stop koekeishiya/formulae/yabai
+if [[ $(brew services list | grep yabai | awk '{print $2}') != 'stopped' ]]; then
+  printf "\n************** Stop yabai ... ****************\n"
+  brew services stop koekeishiya/formulae/yabai
+fi
 
 # reinstall yabai
 printf "\n************** Reinstall yabai ... ****************\n"
@@ -21,9 +23,17 @@ printf "\n************** Reinstall scripting addition ... ****************\n"
 sudo yabai --uninstall-sa
 sudo yabai --install-sa
 
-# start yabai
-printf "\n************** Start yabai ... ****************\n"
-brew services start koekeishiya/formulae/yabai
+# start yabai or not
+while true; do
+  read -p "Do you want to start yabai service (y/n) ? " yn
+  case $yn in
+    [Yy]* ) printf "\n************** Start yabai ... ****************\n"
+            brew services start koekeishiya/formulae/yabai
+            break;;
+    [Nn]* ) break;;
+    * ) echo "Please answer yes or no.";;
+  esac
+done
 
 # pin yabai
 printf "\n************** Pin yabai ... ****************\n"

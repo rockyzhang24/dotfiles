@@ -46,6 +46,9 @@ export _ZL_ROOT_MARKERS=".git,.svn,.hg,.root,package.json"
 # Ranger: avoid loading config twice (only loading the custom config under ~/.config/ranger/, not loading the default/global config)
 export RANGER_LOAD_DEFAULT_RC=FALSE
 
+# CA certificate for SSL
+export SSL_CERT_FILE=$HOME/.config/misc/cacert.pem
+
 
 #
 # Below configs are taken from zimfw utility: https://github.com/zimfw/utility/blob/master/init.zsh

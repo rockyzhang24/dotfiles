@@ -25,11 +25,7 @@ export FZF_DEFAULT_OPTS="--multi \
                          --height 40%\
                          --history /tmp/fzfhistory \
                          --bind 'ctrl-d:half-page-down,ctrl-u:half-page-up,shift-down:preview-half-page-down,shift-up:preview-half-page-up,ctrl-a:select-all,ctrl-x:deselect-all,ctrl-/:toggle-preview,ctrl-o:execute(open {+}),ctrl-y:execute-silent(echo -n {+} | pbcopy),ctrl-v:execute(\$EDITOR {+} < /dev/tty > /dev/tty 2>&1),ctrl-t:execute[/Users/yanzhang/.config/bin/iterm \"cd \$(pwd) && \$EDITOR {+} \"],change:top' \
-                         --color=dark \
-                         --color=fg:#f8f8f2,bg:#282a36,hl:#bd93f9 \
-                         --color=fg+:#f8f8f2,bg+:#44475a,hl+:#bd93f9 \
-                         --color=info:#ffb86c,prompt:#50fa7b,pointer:#ff79c6 \
-                         --color=marker:#ff79c6,spinner:#ffb86c,header:#6272a4"
+                         --color=dark"
 
 # Use fd for FZF completion
 # 1). listing files and dirs ($1 is the base path to start search) such as "vim ~/.config/**<TAB>"

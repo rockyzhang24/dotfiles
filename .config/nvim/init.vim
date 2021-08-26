@@ -66,7 +66,7 @@ set tabstop=2
 set shiftwidth=2
 set softtabstop=2
 set shiftround
-set mouse=a
+" set mouse=a
 set hlsearch
 set incsearch
 set ignorecase
@@ -90,6 +90,7 @@ set wildignore+=*.mp4,*.avi,*.flv,*.mov,*.mkv,*.swf,*.swc
 set wildignore+=*.ppt,*.pptx,*.doc,*.docx,*.xlt,*.xls,*.xlsx,*.odt,*.wps
 set wildignore+=*/.git/*,*/.svn/*,*.DS_Store
 set wildignore+=*/node_modules/*,*/nginx_runtime/*,*/build/*,*/logs/*,*/dist/*,*/tmp/*
+set confirm
 
 
 " Avoid highlighting the last search when sourcing vimrc
@@ -112,29 +113,7 @@ set termguicolors
 
 set background=dark
 
-" Nord
-" let g:nord_cursor_line_number_background = 1
-" let g:nord_italic = 1
-
-" Gruvbox
-" autocmd vimenter * ++nested colorscheme gruvbox
-
-" Sonokai
-" let g:sonokai_style = 'shusia'
-" let g:sonokai_enable_italic = 1
-" let g:sonokai_disable_italic_comment = 1
-" let g:sonokai_better_performance = 1
-" let g:sonokai_current_word = 'underline'
-
-" Gruvbox-material
-let g:gruvbox_material_disable_italic_comment = 1
-let g:gruvbox_material_enable_bold = 1
-let g:gruvbox_material_enable_italic = 1
-let g:gruvbox_material_current_word = 'underline'
-let g:gruvbox_material_better_performance = 1
-let g:gruvbox_material_palette = 'original'
-
-colorscheme gruvbox-material
+colorscheme srcery
 
 " Terminal
 let g:terminal_color_0  = '#21222C'
@@ -885,12 +864,12 @@ function! PackInit() abort
   call minpac#add('ryanoasis/vim-devicons')
 
   " Color schemes
-  call minpac#add('morhetz/gruvbox')
   call minpac#add('arcticicestudio/nord-vim')
   call minpac#add('dracula/vim', { 'name': 'dracula' })
   call minpac#add('sainnhe/sonokai')
   call minpac#add('sainnhe/gruvbox-material')
   call minpac#add('tanvirtin/monokai.nvim')
+  call minpac#add('srcery-colors/srcery-vim')
 
   " Testing
 

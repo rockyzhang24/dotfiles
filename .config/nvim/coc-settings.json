@@ -62,13 +62,12 @@
     "typescript": ["javascript"]
   },
   "languageserver": {
-    /* C/C++/Objective-C */
     "ccls": {
       "command": "ccls",
-      "filetypes": ["c", "cpp", "cuda", "objc", "objcpp"],
+      "filetypes": ["c", "cc", "cpp", "c++", "cuda", "objc", "objcpp"],
       "rootPatterns": [
-        ".ccls",
         ".ccls-root",
+        ".ccls",
         "compile_commands.json",
         ".git/",
         ".hg/"

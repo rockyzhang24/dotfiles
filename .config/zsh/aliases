@@ -27,6 +27,16 @@ alias lm="ll -tr" # sort by modification time, i.e., mtime, newest last
 alias lc="lm -c"  # sort by change (status) time, i.e., ctime, newest last
 alias lx="ll -X"  # sort by extension
 
+# brew
+alias bru="brew update"
+alias brU="brew upgrade"
+alias brs="brew search"
+alias bri="brew info"
+alias brI="brew install"
+alias brx="brew uninsall"
+alias brl="brew list"
+alias brL="brew link"
+
 # Misc
 alias t="trash -Fv"
 alias sc="shellcheck"

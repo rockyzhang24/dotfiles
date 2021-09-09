@@ -89,6 +89,7 @@ yabai -m config bottom_padding               5
 yabai -m config left_padding                 5
 yabai -m config right_padding                5
 yabai -m config window_gap                   5
+# yabai -m config external_bar                 all:28:0
 
 # Refresh yabai SwfitBar plugin after reboot
 open -g 'swiftbar://refreshplugin?name=yabai'

@@ -113,25 +113,7 @@ set termguicolors
 
 set background=dark
 
-colorscheme srcery
-
-" Terminal
-let g:terminal_color_0  = '#21222C'
-let g:terminal_color_1  = '#FF5555'
-let g:terminal_color_2  = '#50FA7B'
-let g:terminal_color_3  = '#F1FA8C'
-let g:terminal_color_4  = '#BD93F9'
-let g:terminal_color_5  = '#FF79C6'
-let g:terminal_color_6  = '#8BE9FD'
-let g:terminal_color_7  = '#F8F8F2'
-let g:terminal_color_8  = '#6272A4'
-let g:terminal_color_9  = '#FF6E6E'
-let g:terminal_color_10 = '#69FF94'
-let g:terminal_color_11 = '#FFFFA5'
-let g:terminal_color_12 = '#D6ACFF'
-let g:terminal_color_13 = '#FF92DF'
-let g:terminal_color_14 = '#A4FFFF'
-let g:terminal_color_15 = '#FFFFFF'
+colorscheme tokyonight
 
 " }}} Dress up
 
@@ -140,25 +122,21 @@ let g:terminal_color_15 = '#FFFFFF'
 
 augroup general
   autocmd!
-
   " Jump to the position when you last quit
   autocmd BufReadPost *
     \ if line("'\"") > 1 && line("'\"") <= line("$") && &filetype != 'gitcommit' |
       \ exe "normal! g'\"" |
     \ endif
-
 augroup END
 
 augroup filetypes
   autocmd!
-
   " Disables auto-wrap text and comments
   autocmd FileType * setlocal formatoptions-=t formatoptions-=c formatoptions-=r formatoptions-=o
   " vim
   autocmd FileType vim setlocal foldmethod=marker foldlevel=0 textwidth=0
   " markdown
   autocmd FileType markdown packadd markdown-preview.nvim
-
 augroup END
 
 augroup tab_setting
@@ -188,13 +166,11 @@ augroup END
 " Neovim builtin terminal
 augroup terminal
   autocmd!
-
   " Automatically start insert mode when enter terminal, and disable line number and indentline
   autocmd TermOpen term://* startinsert |
         \ setlocal nonumber norelativenumber |
         \ IndentBlanklineDisable
   autocmd BufWinEnter,WinEnter term://* startinsert
-
 augroup END
 
 " }}} Autocommands
@@ -275,8 +251,8 @@ nnoremap p p=`]
 " ==================
 
 " Inside next/last parentheses
-onoremap in( :<C-u>normal! f(vi(<CR>
-onoremap il( :<C-u>normal! F)vi(<CR>
+onoremap in) :<C-u>normal! f(vi(<CR>
+onoremap il) :<C-u>normal! F)vi(<CR>
 
 " Hunk (vim-gitgutter)
 omap ih <Plug>(GitGutterTextObjectInnerPending)
@@ -635,7 +611,7 @@ function! s:GrepOperator(type)
   else
     return
   endif
-  silent execute "grep! -R " . shellescape(@@) . " ."
+  silent execute "grep! " . shellescape(@@) . " ."
   copen
   let @@ = saved_unnamed_register
 endfunction
@@ -831,6 +807,7 @@ function! PackInit() abort
   call minpac#add('tyru/open-browser.vim')
   call minpac#add('folke/which-key.nvim')
   call minpac#add('p00f/nvim-ts-rainbow')
+  call minpac#add('tpope/vim-repeat')
 
   " Tree-sitter
   call minpac#add('nvim-treesitter/nvim-treesitter', {'do': 'TSUpdate'})
@@ -864,12 +841,13 @@ function! PackInit() abort
   call minpac#add('ryanoasis/vim-devicons')
 
   " Color schemes
-  call minpac#add('arcticicestudio/nord-vim')
+  call minpac#add('arcticicestudio/nord-vim', { 'branch': 'develop' })
   call minpac#add('dracula/vim', { 'name': 'dracula' })
   call minpac#add('sainnhe/sonokai')
   call minpac#add('sainnhe/gruvbox-material')
   call minpac#add('tanvirtin/monokai.nvim')
   call minpac#add('srcery-colors/srcery-vim')
+  call minpac#add('folke/tokyonight.nvim')
 
   " Testing
 
@@ -935,7 +913,7 @@ autocmd BufWritePre *.go :call CocAction('runCommand', 'editor.action.organizeIm
 " ----- eleline.vim ----- {{{2
 " =======================
 
-let g:eleline_powerline_fonts = 1
+let g:eleline_nerdfont = 1
 
 augroup eleline_autocmd
 
@@ -1632,7 +1610,7 @@ lua << EOF
       ["9"] = "Go to window #9",
       r = "Go to the recent window",
       c = "Close window",
-      C = " Close window below",
+      C = "Close window below",
       o = "Close all but the current window",
       P = "Go to the preview window",
       z = "Close the preview window",

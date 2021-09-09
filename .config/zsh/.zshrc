@@ -18,11 +18,5 @@ source ~/perl5/perlbrew/etc/bashrc
 # lf
 source $HOME/.config/lf/icons
 
-# The next line updates PATH for the Google Cloud SDK.
-if [ -f '/Users/yanzhang/google-cloud-sdk/path.zsh.inc' ]; then . '/Users/yanzhang/google-cloud-sdk/path.zsh.inc'; fi
-
-# The next line enables shell command completion for gcloud.
-if [ -f '/Users/yanzhang/google-cloud-sdk/completion.zsh.inc' ]; then . '/Users/yanzhang/google-cloud-sdk/completion.zsh.inc'; fi
-
 # iTerm2 Shell Integration
 test -e "${ZDOTDIR}/.iterm2_shell_integration.zsh" && source "${ZDOTDIR}/.iterm2_shell_integration.zsh"

@@ -1651,7 +1651,7 @@
 			<key>Non-ASCII Anti Aliased</key>
 			<true/>
 			<key>Normal Font</key>
-			<string>DejaVuSansMonoNerdFontComplete-Book 13</string>
+			<string>SauceCodeProNerdFontComplete-Regular 13</string>
 			<key>Only The Default BG Color Uses Transparency</key>
 			<false/>
 			<key>Option Key Sends</key>
@@ -1816,7 +1816,7 @@
 	<key>TabStyle</key>
 	<integer>0</integer>
 	<key>TabStyleWithAutomaticOption</key>
-	<integer>6</integer>
+	<integer>1</integer>
 	<key>TabViewType</key>
 	<integer>1</integer>
 	<key>TabsHaveCloseButton</key>

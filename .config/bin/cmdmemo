@@ -26,6 +26,7 @@ glances: system monitoring tool (alternative of top/htop
 gibo: easy access to gitignore boilerplates. E.g., gibo dump Swift Xcode >> .gitignore
 highlight: convert sourcecode to HTML, LaTex, escape sequences (ansi, truecolor), etc with syntax highlighting. E.g., highlight -o hello.html -i hello.py (output a html file showing the python sourcecode)
 httpie (http and https commands): command-line HTTP client for testing, debugging, and interacting with APIs and HTTP servers. E.g., http PUT pie.dev/put X-API-Token:123 name=John
+hyperfine: command-line benchmarking tool. E.g., hyperfine --warmup 3 'fd -e jpg -uu'
 imgcat: display image in terminal
 ifstat: report network interface bandwidth
 jq: powerful command-line JSON processor

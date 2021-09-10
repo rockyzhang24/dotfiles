@@ -79,7 +79,9 @@ set spelllang=en_us
 set pumheight=20
 set grepprg=rg\ --vimgrep\ $*
 set grepformat=%f:%l:%c:%m
-let &showbreak = '↪ '
+set breakindent
+set breakindentopt=shift:2
+set showbreak=↳
 set wildignore=*.o,*.obj,*~,*.exe,*.a,*.pdb,*.lib
 set wildignore+=*.so,*.dll,*.swp,*.egg,*.jar,*.class,*.pyc,*.pyo,*.bin,*.dex
 set wildignore+=*.log,*.pyc,*.sqlite,*.sqlite3,*.min.js,*.min.css,*.tags
@@ -91,15 +93,10 @@ set wildignore+=*.ppt,*.pptx,*.doc,*.docx,*.xlt,*.xls,*.xlsx,*.odt,*.wps
 set wildignore+=*/.git/*,*/.svn/*,*.DS_Store
 set wildignore+=*/node_modules/*,*/nginx_runtime/*,*/build/*,*/logs/*,*/dist/*,*/tmp/*
 set confirm
-
+set undofile " presistent undo (use set undodir=... to change the undodir, default is ~/.local/share/nvim/undo)
 
 " Avoid highlighting the last search when sourcing vimrc
 exec "nohlsearch"
-
-" presistent undo (use set undodir=... to change the undodir, default is ~/.local/share/nvim/undo)
-if has('persistent_undo')
-  set undofile
-endif
 
 " Terminal
 let g:neoterm_autoscroll = '1'
@@ -127,6 +124,9 @@ augroup general
     \ if line("'\"") > 1 && line("'\"") <= line("$") && &filetype != 'gitcommit' |
       \ exe "normal! g'\"" |
     \ endif
+
+  " Automatically equalize splits when Vim is resized
+  autocmd VimResized * wincmd =
 augroup END
 
 augroup filetypes
@@ -216,9 +216,9 @@ call SetupCommandAbbrs('S', 'CocCommand snippets.editSnippets')
 
 let mapleader=" "
 
-" Make j and k move line by line, but behave normally when given a count
-nnoremap <expr> j (v:count == 0 ? 'gj' : 'j')
-nnoremap <expr> k (v:count == 0 ? 'gk' : 'k')
+" Smarter j and k navigation
+nnoremap <expr> j v:count ? (v:count > 5 ? "m'" . v:count : '') . 'j' : 'gj'
+nnoremap <expr> k v:count ? (v:count > 5 ? "m'" . v:count : '') . 'k' : 'gk'
 
 noremap H ^
 noremap L $
@@ -244,6 +244,40 @@ nnoremap s "_d
 
 " Paste and then format
 nnoremap p p=`]
+
+" Increment and decrement
+nnoremap + <C-a>
+nnoremap - <C-x>
+xnoremap + g<C-a>
+xnoremap - g<C-x>
+
+" Switch between the current and the last buffer
+nnoremap <Backspace> <C-^>
+
+" When navigating, center the cursor
+nnoremap {  {zz
+nnoremap }  }zz
+nnoremap n  nzz
+nnoremap N  Nzz
+nnoremap ]c ]czz
+nnoremap [c [czz
+nnoremap [j <C-o>zz
+nnoremap ]j <C-i>zz
+nnoremap ]s ]szz
+nnoremap [s [szz
+
+" Make dot work over visual line selections
+xnoremap . :norm.<CR>
+
+" Execute a macro over visual line selections
+xnoremap Q :'<,'>:normal @q<CR>
+
+" Redirect change operations to the blackhole
+nnoremap c "_c
+nnoremap C "_C
+
+" Clone current paragraph
+nnoremap cp yap<S-}>p
 
 " }}}
 

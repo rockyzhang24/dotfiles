@@ -73,7 +73,6 @@ set ignorecase
 set smartcase
 set title
 set noswapfile
-set nobackup nowritebackup  " coc requirements
 set signcolumn=yes
 set spelllang=en_us
 set pumheight=20
@@ -178,15 +177,6 @@ augroup END
 " ========== Commands ========== {{{1
 " ==============================
 
-" Format the current buffer
-command! -nargs=0 Format :call CocAction('format')
-
-" Fold the current buffer
-command! -nargs=? Fold :call CocAction('fold', <f-args>)
-
-" Organize imports
-command! -nargs=0 OR :call CocAction('runCommand', 'editor.action.organizeImport')
-
 " Open file in VSCode
 command! -nargs=0 VSCode execute ":!code -g %:p\:" . line('.') . ":" . col('.')
 
@@ -201,10 +191,7 @@ function! SetupCommandAbbrs(from, to)
         \ .'? ("'.a:to.'") : ("'.a:from.'"))'
 endfunction
 
-call SetupCommandAbbrs('C', 'CocConfig')
-call SetupCommandAbbrs('L', 'CocList')
 call SetupCommandAbbrs('T', 'tabe')
-call SetupCommandAbbrs('S', 'CocCommand snippets.editSnippets')
 
 " }}} Abbreviation
 
@@ -408,124 +395,6 @@ nnoremap <Leader>bT :tabedit %<CR>
 
 " }}}
 
-" ----- coc.nvim (c) ----- {{{2
-" ========================
-
-" Use tab to trigger completion with characters ahead and navigate.
-inoremap <silent><expr> <TAB>
-      \ pumvisible() ? "\<C-n>" :
-      \ <SID>check_back_space() ? "\<TAB>" :
-      \ coc#refresh()
-inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
-
-function! s:check_back_space() abort
-  let col = col('.') - 1
-  return !col || getline('.')[col - 1]  =~# '\s'
-endfunction
-
-" Trigger completion.
-inoremap <silent><expr> <C-o> coc#refresh()
-
-" Make <CR> auto-select the first completion item and notify coc.nvim to format on enter
-inoremap <silent><expr> <CR> pumvisible() ? coc#_select_confirm()
-                              \: "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
-
-" Navigate diagnostics
-" Use `:CocDiagnostics` to get all diagnostics of current buffer in location list.
-nmap <silent> <Leader>cp <Plug>(coc-diagnostic-prev)
-nmap <silent> <Leader>cn <Plug>(coc-diagnostic-next)
-
-" GoTo code navigation.
-nmap <silent> gd <Plug>(coc-definition)
-nmap <silent> gy <Plug>(coc-type-definition)
-nmap <silent> gi <Plug>(coc-implementation)
-nmap <silent> gr <Plug>(coc-references)
-
-" Show documentation in preview window.
-nnoremap <silent> K :call <SID>show_documentation()<CR>
-
-function! s:show_documentation()
-  if (index(['vim','help'], &filetype) >= 0)
-    execute 'h '.expand('<cword>')
-  elseif (coc#rpc#ready())
-    call CocActionAsync('doHover')
-  else
-    execute '!' . &keywordprg . " " . expand('<cword>')
-  endif
-endfunction
-
-" Symbol renaming (rename the symbol under the cursor and all its references)
-nmap <Leader>crn <Plug>(coc-rename)
-
-" Refactor (open a vsplit window for refactoring the symbol under the cursor like rename, add/remove lines, etc)
-" Reference: https://github.com/neoclide/coc.nvim/wiki/Multiple-cursors-support#use-refactor-action
-nmap <Leader>crf <Plug>(coc-refactor)
-
-" Formatting selected code.
-xmap <Leader>cf <Plug>(coc-format-selected)
-nmap <Leader>cf <Plug>(coc-format-selected)
-
-" Applying codeAction to the selected region.
-" Example: `<Leader>casap` for current paragraph
-xmap <Leader>cas <Plug>(coc-codeaction-selected)
-nmap <Leader>cas <Plug>(coc-codeaction-selected)
-" Run codeAction for the whole current file, the current line
-nmap <Leader>caf <Plug>(coc-codeaction)
-nmap <Leader>cal <Plug>(coc-codeaction-line)
-
-" Text objects regarding function and class
-" NOTE: Requires 'textDocument.documentSymbol' support from the language server.
-xmap if <Plug>(coc-funcobj-i)
-omap if <Plug>(coc-funcobj-i)
-xmap af <Plug>(coc-funcobj-a)
-omap af <Plug>(coc-funcobj-a)
-xmap ic <Plug>(coc-classobj-i)
-omap ic <Plug>(coc-classobj-i)
-xmap ac <Plug>(coc-classobj-a)
-omap ac <Plug>(coc-classobj-a)
-
-" Remap <C-f> and <C-b> for scroll float windows/popups.
-nnoremap <silent><nowait><expr> <C-f> coc#float#has_scroll() ? coc#float#scroll(1) : "\<C-f>"
-nnoremap <silent><nowait><expr> <C-b> coc#float#has_scroll() ? coc#float#scroll(0) : "\<C-b>"
-inoremap <silent><nowait><expr> <C-f> coc#float#has_scroll() ? "\<c-r>=coc#float#scroll(1)\<cr>" : "\<Right>"
-inoremap <silent><nowait><expr> <C-b> coc#float#has_scroll() ? "\<c-r>=coc#float#scroll(0)\<cr>" : "\<Left>"
-vnoremap <silent><nowait><expr> <C-f> coc#float#has_scroll() ? coc#float#scroll(1) : "\<C-f>"
-vnoremap <silent><nowait><expr> <C-b> coc#float#has_scroll() ? coc#float#scroll(0) : "\<C-b>"
-
-" Use CTRL-S for selections ranges (e.g., select the whole if block)
-" Requires 'textDocument/selectionRange' support of language server.
-nmap <silent> <C-s> <Plug>(coc-range-select)
-xmap <silent> <C-s> <Plug>(coc-range-select)
-
-" CocList (cl)
-" Show all supported lists
-nnoremap <silent> <Leader>cll :<C-u>CocList<CR>
-" Shows commands
-nnoremap <silent> <Leader>clc :<C-u>CocList commands<CR>
-" Show all diagnostics
-nnoremap <silent> <Leader>cld :<C-u>CocList diagnostics<CR>
-" Show symbols of the current document
-nnoremap <silent> <Leader>clo :<C-u>CocList outline<CR>
-" Show symbols in workspace
-nnoremap <silent> <Leader>cls :<C-u>CocList -I symbols<CR>
-" Yank list (coc-yank)
-nnoremap <silent> <Leader>cly :<C-u>CocList -A --normal yank<cr>
-" Do the default action for the next/prev item in the list (list won't be reopened)
-nnoremap <silent> <Leader>cln :<C-u>CocNext<CR>
-nnoremap <silent> <Leader>clp :<C-u>CocPrev<CR>
-" Reopen the latest list
-nnoremap <silent> <Leader>clr :<C-u>CocListResume<CR>
-
-" coc-snippets
-" https://github.com/neoclide/coc-snippets
-imap <C-l> <Plug>(coc-snippets-expand)
-vmap <C-j> <Plug>(coc-snippets-select)
-let g:coc_snippet_next = '<C-j>'
-let g:coc_snippet_prev = '<C-k>'
-imap <C-j> <Plug>(coc-snippets-expand-jump)
-
-" }}}
-
 " ----- Find/Files (f) ----- {{{2
 " ==========================
 
@@ -685,9 +554,6 @@ nnoremap <Leader>tc :HexokinaseToggle<CR>
 " Toggle undotree (undotree.vim)
 nnoremap <Leader>tu :UndotreeToggle<CR>
 
-" Toggle vista (vista.vim)
-nnoremap <Leader>tv :Vista!!<CR>
-
 " }}}
 
 " ----- Tab (T) ----- {{{2
@@ -741,10 +607,8 @@ nnoremap <Leader>T, :tabmove -<CR>
 
 " }}}
 
-" ----- Vista.vim & vimrc (v) ----- {{{2
+" ----- vimrc (v) ----- {{{2
 " =================================
-
-nnoremap <Leader>vf :silent! Vista finder coc<CR>
 
 " Edit and source vim config file
 nnoremap <Leader>ve :tabedit $MYVIMRC<CR>
@@ -846,16 +710,9 @@ function! PackInit() abort
   " Tree-sitter
   call minpac#add('nvim-treesitter/nvim-treesitter', {'do': 'TSUpdate'})
 
-  " LSP
-  call minpac#add('neoclide/coc.nvim', {'branch': 'release'})
-
   " Tags
   call minpac#add('ludovicchabant/vim-gutentags')
   call minpac#add('skywind3000/gutentags_plus')
-  call minpac#add('liuchengxu/vista.vim')
-
-  " Languages
-  call minpac#add('neoclide/jsonc.vim')
 
   " Git
   call minpac#add('tpope/vim-fugitive')
@@ -869,18 +726,11 @@ function! PackInit() abort
 
   " Lines
   call minpac#add('mg979/vim-xtabline')
-  call minpac#add('yanzhang0219/eleline.vim')
 
   " Icons
   call minpac#add('ryanoasis/vim-devicons')
 
   " Color schemes
-  call minpac#add('arcticicestudio/nord-vim', { 'branch': 'develop' })
-  call minpac#add('dracula/vim', { 'name': 'dracula' })
-  call minpac#add('sainnhe/sonokai')
-  call minpac#add('sainnhe/gruvbox-material')
-  call minpac#add('tanvirtin/monokai.nvim')
-  call minpac#add('srcery-colors/srcery-vim')
   call minpac#add('folke/tokyonight.nvim')
 
   " Testing
@@ -897,67 +747,6 @@ set rtp+=~/gitrepos/fzf
 
 " ========== Plugin settings ========== {{{1
 " =====================================
-
-" ----- coc.nvim ----- {{{2
-" ====================
-
-" Reference: https://github.com/neoclide/coc.nvim#example-vim-configuration
-
-" coc extensions
-let g:coc_global_extensions = [
-      \ 'coc-html',
-      \ 'coc-css',
-      \ 'coc-tsserver',
-      \ 'coc-go',
-      \ 'coc-pyright',
-      \ 'coc-json',
-      \ 'coc-prettier',
-      \ 'coc-eslint',
-      \ 'coc-rls',
-      \ 'coc-sh',
-      \ 'coc-vimlsp',
-      \ 'coc-yank',
-      \ 'coc-snippets',
-      \ 'coc-marketplace']
-
-augroup cocgroup
-  autocmd!
-  " Setup formatexpr specified filetype(s).
-  autocmd FileType typescript,json setl formatexpr=CocAction('formatSelected')
-  " Update signature help on jump placeholder.
-  autocmd User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
-augroup end
-
-" Highlight for cursor ranges
-hi CocCursorRange guibg=#b16286 guifg=#ebdbb2
-
-" Highlight for the yanked text (coc-yank)
-hi HighlightedyankRegion cterm=bold gui=bold ctermbg=0 guibg=#13354A
-
-let g:coc_status_error_sign = ' '
-let g:coc_status_warning_sign = ' '
-
-command! -nargs=0 Prettier :CocCommand prettier.formatFile
-
-" Golang: auto-format and add missing imports on save
-autocmd BufWritePre *.go :call CocAction('runCommand', 'editor.action.organizeImport')
-
-" }}}
-
-" ----- eleline.vim ----- {{{2
-" =======================
-
-let g:eleline_nerdfont = 1
-
-augroup eleline_autocmd
-
-  " This autocmd removes eleline's cached branch name so that e.g. after a `:Git checkout`,
-  " the branch name in eleline can be updated immediately.
-  autocmd User FugitiveChanged if exists("b:eleline_branch") | unlet b:eleline_branch | endif
-
-augroup END
-
-" }}}
 
 " ----- fzf ----- {{{2
 " ===============
@@ -1109,20 +898,6 @@ let g:tcomment_mapleader2 = ''
 let g:undotree_WindowLayout = 2
 let g:undotree_ShortIndicators = 1
 let g:undotree_SetFocusWhenToggle = 1
-
-" }}}
-
-" ----- vista.vim ----- {{{2
-" =====================
-
-let g:vista_sidebar_width = 50
-let g:vista_default_executive = 'coc'
-let g:vista_fzf_preview = ['right:50%']
-let g:vista#renderer#enable_icon = 1
-let g:vista_icon_indent = ["╰─▸ ", "├─▸ "]
-
-" Show the nearest function in the statusline automatically
-autocmd VimEnter * call vista#RunForNearestMethodOrFunction()
 
 " }}}
 
@@ -1381,53 +1156,6 @@ lua << EOF
     },
   }, { prefix = "<leader>" })
 
-  -- coc
-  wk.register({
-    c = {
-      name = "coc",
-      f = "Format",
-      n = "Jump to the next diagnostic position",
-      p = "Jump to the prev diagnostic position",
-      -- code action
-      a = {
-        name = "code action",
-        s = "Selected code",
-        f = "Whole file",
-        l = "Line",
-      },
-      -- coclists
-      l = {
-        name = "coclist",
-        l = "General list",
-        c = "Commands",
-        d = "Diagnostics",
-        o = "Outline",
-        s = "Symbols",
-        y = "Yank",
-        n = "Default action for the next item",
-        p = "Default action for the prev item",
-        r = "Reopen the last list",
-      },
-      -- refactor
-      r = {
-        name = "refactor",
-        n = "Symbols rename",
-        f = "Refector",
-      },
-    },
-  }, { prefix = "<leader>" })
-
-  wk.register({
-    c = {
-      name = "coc",
-      f = "Format",
-      a = {
-        name = "code action",
-        s = "Selected code",
-      },
-    },
-  }, { prefix = "<leader>", mode = "v" })
-
   -- find/file
   wk.register({
     f = {
@@ -1568,7 +1296,6 @@ lua << EOF
       i = "Indent line",
       c = "Color",
       u = "Undotree",
-      v = "Vista",
     },
   }, { prefix = "<leader>" })
 
@@ -1613,11 +1340,10 @@ lua << EOF
     },
   }, { prefix = "<leader>" })
 
-  -- vista/vimrc
+  -- vimrc
   wk.register({
     v = {
-      name = "vista/vimrc",
-      f = "FZF finder for LSP symbols",
+      name = "vimrc",
       e = "Edit vimrc",
       s = "Source vimrc",
     },

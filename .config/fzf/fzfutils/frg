@@ -17,7 +17,7 @@ read -r file line <<<$(rg --line-number --color=always --smart-case $@ \
                             --delimiter : \
                             --preview 'bat --color=always --style=numbers,changes,header --theme=Dracula --highlight-line {2} {1}' \
                             --preview-window +{2}-/2 \
-                            --bind 'ctrl-t:execute[/Users/yanzhang/.config/bin/iterm "cd $(pwd) && $EDITOR {1} +{2} "]' \
+                            --bind 'ctrl-t:execute(nohup /Applications/kitty.app/Contents/MacOS/kitty --single-instance \$EDITOR {+} &)' \
                             --header 'CTRL-t: open selections via EDITOR in a separate iTerm2 window' \
                       | awk -F: '{print $1, $2}')
 

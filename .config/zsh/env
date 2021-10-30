@@ -9,19 +9,18 @@ export PAGER=less
 export GOPATH=$HOME/go
 
 # PATH
-export PATH=/Users/yanzhang/Development/apache-maven-3.6.1/bin:$PATH
-export PATH=/Users/yanzhang/.emacs.d/bin:$PATH  # Doom Emacs
-export PATH=/Users/yanzhang/Library/Python/2.7/bin:$PATH  # pip, pip2, pip2.7
+export PATH=/Users/rockyzhang/Development/apache-maven-3.6.1/bin:$PATH
+export PATH=/Users/rockyzhang/.emacs.d/bin:$PATH  # Doom Emacs
+export PATH=/Users/rockyzhang/Library/Python/2.7/bin:$PATH  # pip, pip2, pip2.7
 export PATH=/opt/local/bin:/opt/local/sbin:$PATH  # MacPorts
-export PATH=$HOME/.cargo/bin:$PATH  # Rust package manager
 export PATH=$(/usr/local/bin/gfind $HOME/.config/bin -type d -printf "%p:")$PATH # my own scripts
 export PATH=$GOPATH/bin:$PATH   # Golong programs
-export PATH=/Users/yanzhang/gitrepos/diff-so-fancy:$PATH  # diff-so-fancy
+export PATH=/Users/rockyzhang/gitrepos/diff-so-fancy:$PATH  # diff-so-fancy
 export PATH=/usr/local/opt/llvm/bin:$PATH   # llvm
 
-export PATH=/Users/yanzhang/oj/leetcode/scripts:$PATH   # leetcode
+export PATH=/Users/rockyzhang/oj/leetcode/scripts:$PATH   # leetcode
 
-# export PATH=/Users/yanzhang/Downloads/nvim-osx64/bin:$PATH # neovim beta
+# export PATH=/Users/rockyzhang/Downloads/nvim-osx64/bin:$PATH # neovim beta
 
 # Use Neovim as "preferred editor"
 export EDITOR="nvim"

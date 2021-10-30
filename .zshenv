@@ -1,5 +1,8 @@
 #!/bin/zsh
 
+# Environment variables
+source $HOME/.config/zsh/env
+
 # Change zsh dotfiles location
 export ZDOTDIR="$HOME/.config/zsh"
 

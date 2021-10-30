@@ -2,7 +2,6 @@ source ~/.config/zsh/prompt # Powerlevel10k, should be at the top of zshrc
 
 # zsh
 source ~/.config/zsh/general
-source ~/.config/zsh/env
 source ~/.config/zsh/completion
 source ~/.config/zsh/vi
 source ~/.config/zsh/plugins
@@ -12,8 +11,8 @@ source ~/.config/zsh/keybindings
 # fzf
 source ~/.config/fzf/fzf-config
 
-# perl5
-source ~/perl5/perlbrew/etc/bashrc
+# Rust
+source ~/.cargo/env
 
 # lf
 source $HOME/.config/lf/icons

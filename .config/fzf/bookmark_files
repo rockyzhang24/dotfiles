@@ -1,37 +1,35 @@
 # Bookmark files for bf command
 
 # Terminal
-/Users/yanzhang/.config/alacritty/alacritty.yml
-/Users/yanzhang/.config/kitty/kitty.conf
+/Users/rockyzhang/.config/alacritty/alacritty.yml
+/Users/rockyzhang/.config/kitty/kitty.conf
 
 # vim
-/Users/yanzhang/.config/nvim/init.vim
+/Users/rockyzhang/.config/nvim/init.vim
 
 # zsh
-/Users/yanzhang/.config/zsh/.zshrc
-/Users/yanzhang/.config/zsh/aliases
-/Users/yanzhang/.config/zsh/env
-/Users/yanzhang/.config/zsh/keybindings
+/Users/rockyzhang/.zshenv
+/Users/rockyzhang/.config/zsh/.zshrc
+/Users/rockyzhang/.config/zsh/aliases
+/Users/rockyzhang/.config/zsh/env
+/Users/rockyzhang/.config/zsh/keybindings
 
 # zimfw (zsh plugin manager)
-/Users/yanzhang/.config/zsh/.zimrc
+/Users/rockyzhang/.config/zsh/.zimrc
 
 # wm
-/Users/yanzhang/.config/yabai/yabairc
-/Users/yanzhang/.config/skhd/skhdrc
-
-# ranger
-/Users/yanzhang/.config/ranger/rc.conf
+/Users/rockyzhang/.config/yabai/yabairc
+/Users/rockyzhang/.config/skhd/skhdrc
 
 # lf
-/Users/yanzhang/.config/lf/lfrc
+/Users/rockyzhang/.config/lf/lfrc
 
 # fzf
-/Users/yanzhang/.config/fzf/fzf-config
+/Users/rockyzhang/.config/fzf/fzf-config
 
 # bookmarks
-/Users/yanzhang/.config/fzf/bookmark_files
-/Users/yanzhang/.config/fzf/bookmark_dirs
+/Users/rockyzhang/.config/fzf/bookmark_files
+/Users/rockyzhang/.config/fzf/bookmark_dirs
 
 # misc
-/Users/yanzhang/.config/bin/cmdmemo
+/Users/rockyzhang/.config/bin/cmdmemo

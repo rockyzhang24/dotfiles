@@ -9,22 +9,6 @@
 " Author: Rocky Zhang (yanzhang0219@gmail.com)
 " GitHub: https://github.com/yanzhang0219
 
-
-" ========== Automation ========== {{{1
-" ================================
-
-if empty(glob('~/.config/nvim/pack/minpac'))
-  echo "Downloading minpac as the plugin manager..."
-  silent !git clone https://github.com/k-takata/minpac.git ~/.config/nvim/pack/minpac/opt/minpac
-  echo "Installing plugins..."
-  augroup plugins_install
-    autocmd!
-    autocmd VimEnter * call PackInit() | call minpac#update()
-  augroup END
-endif
-
-" }}}
-
 " ========== General ========== {{{1
 " =============================
 
@@ -131,7 +115,7 @@ augroup END
 augroup filetypes
   autocmd!
   " Disables auto-wrap text and comments
-  autocmd FileType * setlocal formatoptions-=t formatoptions-=c formatoptions-=r formatoptions-=o
+  autocmd FileType * setlocal formatoptions-=t formatoptions-=c
   " vim
   autocmd FileType vim setlocal foldmethod=marker foldlevel=0 textwidth=0
   " markdown
@@ -707,6 +691,14 @@ function! PackInit() abort
   call minpac#add('p00f/nvim-ts-rainbow')
   call minpac#add('tpope/vim-repeat')
 
+  " LSP
+  call minpac#add('neovim/nvim-lspconfig')
+
+  " Autocomplete
+  call minpac#add('hrsh7th/cmp-nvim-lsp')
+  call minpac#add('hrsh7th/cmp-buffer')
+  call minpac#add('hrsh7th/nvim-cmp')
+
   " Tree-sitter
   call minpac#add('nvim-treesitter/nvim-treesitter', {'do': 'TSUpdate'})
 
@@ -843,6 +835,44 @@ let g:mkdp_auto_close = 0
 
 " Recognized filetypes (MarkdownPreview... commands will be availabe)
 let g:mkdp_filetypes = ['markdown']
+
+" }}}
+
+" ----- nvim-cmp ----- {{{2
+" ====================
+
+lua <<EOF
+  -- Setup nvim-cmp.
+  local cmp = require'cmp'
+
+  cmp.setup({
+    snippet = {
+      expand = function(args)
+      end,
+    },
+    mapping = {
+      ['<C-p>'] = cmp.mapping.select_prev_item(),
+      ['<C-n>'] = cmp.mapping.select_next_item(),
+    },
+    sources = {
+      { name = 'nvim_lsp' },
+      { name = 'buffer' },
+    }
+  })
+
+EOF
+
+" }}}
+
+" ----- nvim-lspconfig ----- {{{2
+" ==========================
+
+" vim
+lua << EOF
+require'lspconfig'.vimls.setup{
+  capabilities = require('cmp_nvim_lsp').update_capabilities(vim.lsp.protocol.make_client_capabilities())
+}
+EOF
 
 " }}}
 

@@ -1,0 +1,9 @@
+# macOS
+.DS_Store
+
+# Tags
+tags
+.tags
+GTAGS
+GRTAGS
+GPATH

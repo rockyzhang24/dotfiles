@@ -1,5 +1,5 @@
 {
-    "_comment": " All the key changes I made: 1) caps_lock -> left_ctrl, and it performs as ESC if press it alone; 2) left_ctrl -> right_ctrl, and right_ctrl -> MEH key; 3) right_command -> caps_lock, and caps_lock -> HYPER key",
+    "_comment": " 1) left_ctrl -> right_ctrl. 2) right_ctrl -> MEH key. 3) caps_lock -> left_ctrl or ESC if pressed alone. 4) right_command -> HYPER key. ",
     "global": {
         "check_for_updates_on_startup": true,
         "show_in_menu_bar": true,
@@ -19,9 +19,9 @@
                     {
                         "manipulators": [
                             {
-                                "description": "HYPER Key: Change caps_lock to command+control+option+shift.",
+                                "description": "HYPER Key: Change right_command to command+control+option+shift.",
                                 "from": {
-                                    "key_code": "caps_lock",
+                                    "key_code": "right_command",
                                     "modifiers": {
                                         "optional": [
                                             "any"
@@ -73,11 +73,11 @@
                         ]
                     },
                     {
-                        "description": "ESC key: left_control is pressed alone.",
                         "manipulators": [
                             {
+                                "description": "Change caps_lock to left_control or ESC if pressed alone.",
                                 "from": {
-                                    "key_code": "left_control",
+                                    "key_code": "caps_lock",
                                     "modifiers": {
                                         "optional": [
                                             "any"
@@ -107,57 +107,12 @@
                     "identifiers": {
                         "is_keyboard": true,
                         "is_pointing_device": false,
-                        "product_id": 34050,
-                        "vendor_id": 2652
-                    },
-                    "ignore": false,
-                    "manipulate_caps_lock_led": false,
-                    "simple_modifications": [
-                        {
-                            "from": {
-                                "key_code": "left_command"
-                            },
-                            "to": [
-                                {
-                                    "key_code": "left_option"
-                                }
-                            ]
-                        },
-                        {
-                            "from": {
-                                "key_code": "left_option"
-                            },
-                            "to": [
-                                {
-                                    "key_code": "left_command"
-                                }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    "disable_built_in_keyboard_if_exists": false,
-                    "fn_function_keys": [],
-                    "identifiers": {
-                        "is_keyboard": true,
-                        "is_pointing_device": false,
-                        "product_id": 610,
+                        "product_id": 835,
                         "vendor_id": 1452
                     },
                     "ignore": false,
                     "manipulate_caps_lock_led": true,
-                    "simple_modifications": [
-                        {
-                            "from": {
-                                "key_code": "caps_lock"
-                            },
-                            "to": [
-                                {
-                                    "key_code": "left_control"
-                                }
-                            ]
-                        }
-                    ]
+                    "simple_modifications": []
                 }
             ],
             "fn_function_keys": [
@@ -282,7 +237,7 @@
                     ]
                 }
             ],
-            "name": "R0ckyY2",
+            "name": "r0cky",
             "parameters": {
                 "delay_milliseconds_before_open_device": 1000
             },
@@ -290,31 +245,11 @@
             "simple_modifications": [
                 {
                     "from": {
-                        "key_code": "caps_lock"
-                    },
-                    "to": [
-                        {
-                            "key_code": "left_control"
-                        }
-                    ]
-                },
-                {
-                    "from": {
                         "key_code": "left_control"
                     },
                     "to": [
                         {
                             "key_code": "right_control"
-                        }
-                    ]
-                },
-                {
-                    "from": {
-                        "key_code": "right_command"
-                    },
-                    "to": [
-                        {
-                            "key_code": "caps_lock"
                         }
                     ]
                 }

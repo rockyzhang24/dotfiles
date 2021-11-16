@@ -37,7 +37,8 @@ export LESS="-R -M -i"
 
 # Gtags
 export GTAGSLABEL='native-pygments'
-export GTAGSCONF='/usr/local/Cellar/global/6.6.7_2/share/gtags/gtags.conf'
+local conf_path="/opt/homebrew/Cellar/global/*/share/gtags/gtags.conf"
+export GTAGSCONF=$(print ${~conf_path})
 
 # z.lua
 export _ZL_ROOT_MARKERS=".git,.svn,.hg,.root,package.json"

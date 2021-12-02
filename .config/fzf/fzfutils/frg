@@ -9,7 +9,6 @@ local line
 
 # Feed rg results into fzf and use awk to extract the file name and the target line number.
 # Preview the file with the target line highlighted in the center of the preview window.
-# Use ctrl-t to open the selection via EDITOR in a separate iTerm2 window
 read -r file line <<<$(rg --line-number --color=always --smart-case $@ \
                       | fzf --ansi \
                             --exit-0 \
@@ -17,8 +16,6 @@ read -r file line <<<$(rg --line-number --color=always --smart-case $@ \
                             --delimiter : \
                             --preview 'bat --color=always --style=numbers,changes,header --theme=Dracula --highlight-line {2} {1}' \
                             --preview-window +{2}-/2 \
-                            --bind 'ctrl-t:execute(nohup /Applications/kitty.app/Contents/MacOS/kitty --single-instance \$EDITOR {+} &)' \
-                            --header 'CTRL-t: open selections via EDITOR in a separate iTerm2 window' \
                       | awk -F: '{print $1, $2}')
 
 if [[ -n $file ]]

@@ -14,3 +14,7 @@ source ${ZIM_HOME}/init.zsh
 zstyle ':zim:input' double-dot-expand yes
 
 ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets)
+
+# Fix https://github.com/Aloxaf/fzf-tab/issues/24
+zstyle -d ':completion:*' format
+zstyle ':completion:*:descriptions' format '[%d]'

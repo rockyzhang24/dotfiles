@@ -112,10 +112,10 @@ map A rename # at the very end
 map I push A<c-a> # at the very beginning
 map r push A<c-u> # new rename
 
-# Use . as the leader key
-map .. set hidden! # toggle hidden
-map .c push :zip<space> # compress (give a name like abc and it will compress the selected items to abc.zip)
-map .x extract # extract
+# Use \ as the leader key
+map \\. set hidden! # toggle hidden
+map \\c push :zip<space> # compress (give a name like abc and it will compress the selected items to abc.zip)
+map \\x extract # extract
 
 # Fast navigation
 map Jh cd ~

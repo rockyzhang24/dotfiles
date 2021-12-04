@@ -9,6 +9,6 @@ setopt CORRECT
 # Make right prompt aligned to the rightmost
 ZLE_RPROMPT_INDENT=0
 
-# My own defined autoload functions (under ../functions/)
+# My own defined autoload functions (under ~/.config/zsh/functions/)
 fpath+=${0:h}/functions
 autoload -Uz ${0:h}/functions/*(.:t)

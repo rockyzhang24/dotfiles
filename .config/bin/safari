@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+# Open a new Safari window with a given URL
+# SYNOPSIS: safari [URL]
+
+osascript <<EOD
+  tell application "Safari" to make new document with properties {URL:"$1"}
+  return
+EOD

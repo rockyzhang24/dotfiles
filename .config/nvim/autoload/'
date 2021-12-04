@@ -1,0 +1,8 @@
+let s:isOpen = 0
+function! markdown#TogglePreview() abort
+  if isOpen == 0
+    InstantMarkdownPreview
+  else
+    InstantMarkdownStop
+  endif
+endfunction

@@ -1,1 +1,3 @@
+# gitignore for the git bare repo managing dotfiles
+
 .config/nvim/pack/

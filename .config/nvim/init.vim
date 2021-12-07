@@ -400,21 +400,15 @@ function! PackInit() abort
   " Tree-sitter
   call minpac#add('nvim-treesitter/nvim-treesitter', {'do': 'TSUpdate'})
 
-  " Tags
-  call minpac#add('ludovicchabant/vim-gutentags')
-  call minpac#add('skywind3000/gutentags_plus')
-
   " Git
   call minpac#add('tpope/vim-fugitive')
   call minpac#add('airblade/vim-gitgutter')
 
   " Markdown
-  call minpac#add('mzlogin/vim-markdown-toc') " run :toc
-  call minpac#add('dhruvasagar/vim-table-mode', {'type': 'opt'}) " <Leader>tm to toggle on/off
-  call minpac#add('instant-markdown/vim-instant-markdown', {'type': 'opt'})
-  call minpac#add('dkarter/bullets.vim')
+  call minpac#add('instant-markdown/vim-instant-markdown')
 
   " Icons
+  call minpac#add('dhruvasagar/vim-table-mode') " <Leader>tm to toggle on/off
   call minpac#add('ryanoasis/vim-devicons')
 
   " Color schemes
@@ -638,41 +632,6 @@ xmap ah <Plug>(GitGutterTextObjectOuterVisual)
 
 " }}}
 
-" gutentags {{{
-
-" Reference: https://zhuanlan.zhihu.com/p/36279445
-
-" Tips: If we need the tags for a project not managed by vcs, we can touch a .root file under the project root folder
-let g:gutentags_project_root = ['.git', '.root', '.project']
-
-" Tag file name for ctags
-let g:gutentags_ctags_tagfile = '.tags'
-
-" Using both ctags and gtags
-let g:gutentags_modules = []
-if executable('ctags')
-	let g:gutentags_modules += ['ctags']
-endif
-if executable('gtags-cscope') && executable('gtags')
-	let g:gutentags_modules += ['gtags_cscope']
-endif
-
-" Move tag files out of project dir to avoid being polluted
-let g:gutentags_cache_dir = expand('~/.cache/tags')
-
-let g:gutentags_ctags_extra_args = ['--fields=+n']
-
-" Disable connecting gtags database automatically (gutentags_plus will handle the database connection)
-let g:gutentags_auto_add_cscope = 0
-
-" Disable default maps
-let g:gutentags_plus_nomap = 1
-
-" Focus to quickfix window after searching
-let g:gutentags_plus_switch = 1
-
-" }}}
-
 " lualine {{{
 
 lua require('plugin_config.lualine')
@@ -744,12 +703,6 @@ let g:startify_custom_header = 'startify#pad(g:ascii)'
 augroup starity
   autocmd User Startified setlocal cursorline
 augroup END
-
-" }}}
-
-" markdown {{{
-
-" See ~/.config/nvim/after/ftplugin/markdown.vim
 
 " }}}
 

@@ -1,8 +1,3 @@
-" --- [ Load plugins ] ---
-
-packadd vim-table-mode
-packadd vim-instant-markdown
-
 " --- [ Snippets ] ---
 
 " Move to the next placeholder
@@ -33,12 +28,6 @@ inoremap <buffer> ,c ```<Enter><++><Enter>```<Enter><Enter><++><Esc>4kA
 inoremap <buffer> ,t - [] <++><Esc>F[a
 
 " --- [ Plugin config ] ---
-
-" markdown-toc
-
-let g:vmt_cycle_list_item_markers = 1
-
-call utils#SetupCommandAbbrs('toc', 'GenTocGFM')
 
 " vim-instant-markdown
 

@@ -66,7 +66,6 @@ set wildignore+=*.ppt,*.pptx,*.doc,*.docx,*.xlt,*.xls,*.xlsx,*.odt,*.wps
 set wildignore+=*/.git/*,*/.svn/*,*.DS_Store
 set wildignore+=*/node_modules/*,*/nginx_runtime/*,*/build/*,*/logs/*,*/dist/*,*/tmp/*
 set confirm
-set formatoptions-=tc
 set undofile " presistent undo (use set undodir=... to change the undodir, default is ~/.local/share/nvim/undo)
 
 " Avoid highlighting the last search when sourcing vimrc
@@ -81,7 +80,15 @@ let g:neoterm_autoscroll = '1'
 
 set termguicolors
 set background=dark
-colorscheme tokyonight
+
+let g:gruvbox_material_palette = 'original'
+let g:gruvbox_material_enable_bold = 1
+let g:gruvbox_material_enable_italic = 1
+" let g:gruvbox_material_transparent_background = 1
+let g:gruvbox_material_visual = 'green background'
+let g:gruvbox_material_better_performance = 1
+
+colorscheme gruvbox-material
 
 " }}}
 
@@ -98,6 +105,9 @@ augroup general
 
   " Automatically equalize splits when Vim is resized
   autocmd VimResized * wincmd =
+
+  " Make it not be overwritten by the default setting of neovim
+  autocmd FileType * set formatoptions-=t formatoptions-=c formatoptions-=r formatoptions-=o
 
 augroup END
 
@@ -135,6 +145,8 @@ noremap L $
 " Move the selections up and down with corresponding indentation
 xnoremap J :m '>+1<CR>gv=gv
 xnoremap K :m '<-2<CR>gv=gv
+inoremap <C-j> <Esc>:m .+1<CR>==a
+inoremap <C-k> <Esc>:m .-2<CR>==a
 
 " Jump to the next '<++>' and edit it
 nnoremap <silent> <Leader><Leader> <Esc>/<++><CR>:nohlsearch<CR>c4l
@@ -199,8 +211,6 @@ nnoremap <silent> _= :call utils#Preserve("normal gg=G")<CR>;
 " When navigating, center the cursor
 nnoremap {  {zz
 nnoremap }  }zz
-nnoremap n  nzz
-nnoremap N  Nzz
 nnoremap ]c ]czz
 nnoremap [c [czz
 nnoremap [j <C-o>zz
@@ -244,8 +254,9 @@ nnoremap <silent> yos :setlocal spell! spelllang=en_us<CR>:set spell?<CR>
 " Toggle wrap
 nnoremap <silent> yow :set wrap!<CR>:set wrap?<CR>
 
-" Close location list or quickfix list windows
-nnoremap <silent> \q :<C-u>windo lclose <Bar> cclose <CR>
+" Toggle quickfix window
+nnoremap <silent> \q :call utils#ToggleQuickFix()<CR>
+nnoremap <silent> \l :call utils#ToggleLocationList()<CR>
 
 " Delete the current buffer and switch back to the previous one
 nnoremap <silent> \d :<C-u>bprevious <Bar> bdelete #<CR>
@@ -269,18 +280,14 @@ nnoremap <C-j> <C-w>j
 nnoremap <C-k> <C-w>k
 nnoremap <C-l> <C-w>l
 
+" Go to the previous window
+nnoremap <C-p> <C-w>p
+
 " Create a split window to up (horizontal), down (horizontal), left (vertical), right (vertical)
 nnoremap <silent> <Leader>wk :set nosplitbelow<CR><C-w>s:set splitbelow<CR>
 nnoremap <silent> <Leader>wj :set splitbelow<CR><C-w>s
 nnoremap <silent> <Leader>wh :set nosplitright<CR><C-w>v:set splitright<CR>
 nnoremap <silent> <Leader>wl :set splitright<CR><C-w>v
-
-" Focus window by window number
-let i = 1
-while i <= 9
-  execute 'nnoremap <silent> <Leader>' . i . ' :' . i . 'wincmd w<CR>'
-  let i = i + 1
-endwhile
 
 " Close all windows except the current (o for only)
 nnoremap <Leader>wo <C-w>o
@@ -300,16 +307,16 @@ nnoremap <Leader>= <C-w>=
 nnoremap <silent> \/ :<C-u>nohlsearch<CR>
 
 " n for searching forward and N for searching backward regardless of / or ?
-nnoremap <expr> n (v:searchforward ? 'n' : 'N')
-nnoremap <expr> N (v:searchforward ? 'N' : 'n')
+nnoremap <expr> n (v:searchforward ? 'nzzzv' : 'Nzzzv')
+nnoremap <expr> N (v:searchforward ? 'Nzzzv' : 'nzzzv')
 
 " Make * and # search for the current selection
 xnoremap * :<C-u>call utils#VSetSearch('/')<CR>/<C-R>=@/<CR><CR>
 xnoremap # :<C-u>call utils#VSetSearch('?')<CR>?<C-R>=@/<CR><CR>
 
 " Grep operator
-nnoremap \g :<C-u>set operatorfunc=utils#GrepOperator<cr>g@
-xnoremap \g :<C-u>call utils#GrepOperator(visualmode())<cr>
+nnoremap <silent> \g :<C-u>set operatorfunc=utils#GrepOperator<cr>g@
+xnoremap <silent> \g :<C-u>call utils#GrepOperator(visualmode())<cr>
 
 " Find and replace
 nnoremap \s :%s/
@@ -400,6 +407,10 @@ function! PackInit() abort
   " Tree-sitter
   call minpac#add('nvim-treesitter/nvim-treesitter', {'do': 'TSUpdate'})
 
+  " Tags
+  call minpac#add('ludovicchabant/vim-gutentags')
+  call minpac#add('skywind3000/gutentags_plus')
+
   " Git
   call minpac#add('tpope/vim-fugitive')
   call minpac#add('airblade/vim-gitgutter')
@@ -408,11 +419,12 @@ function! PackInit() abort
   call minpac#add('instant-markdown/vim-instant-markdown')
 
   " Icons
-  call minpac#add('dhruvasagar/vim-table-mode') " <Leader>tm to toggle on/off
   call minpac#add('ryanoasis/vim-devicons')
 
   " Color schemes
   call minpac#add('folke/tokyonight.nvim')
+  call minpac#add('dracula/vim')
+  call minpac#add('sainnhe/gruvbox-material')
 
 endfunction
 
@@ -632,6 +644,42 @@ xmap ah <Plug>(GitGutterTextObjectOuterVisual)
 
 " }}}
 
+" gutentags {{{
+
+" Reference: https://zhuanlan.zhihu.com/p/36279445
+
+" Tips: If we need the tags for a project not managed by vcs, we can touch a .root file under the project root folder
+let g:gutentags_project_root = ['.git', '.root', '.project']
+
+" Tag file name for ctags
+let g:gutentags_ctags_tagfile = '.tags'
+
+" Using both ctags and gtags
+let g:gutentags_modules = []
+if executable('ctags')  " the ctags file generated by gutentags will be prepended to 'tags' option
+  let g:gutentags_modules += ['ctags']
+endif
+if executable('gtags-cscope') && executable('gtags')
+  let g:gutentags_modules += ['gtags_cscope'] "'cscopeprg' will be set to gtags-cscope
+endif
+
+" Move tag files out of project dir to avoid being polluted
+let g:gutentags_cache_dir = expand('~/.cache/tags')
+
+" Options for ctags
+let g:gutentags_ctags_extra_args = ['--fields=+niazS', '--extra=+q']
+
+" Disable connecting gtags database automatically (gutentags_plus will handle the database connection)
+let g:gutentags_auto_add_gtags_cscope = 0
+
+" Disable default maps
+let g:gutentags_plus_nomap = 1
+
+" Focus to quickfix window after searching
+let g:gutentags_plus_switch = 1
+
+" }}}
+
 " lualine {{{
 
 lua require('plugin_config.lualine')
@@ -650,9 +698,17 @@ nnoremap yoc :HexokinaseToggle<CR>
 
 " vim-illuminate {{{
 
+" TODO: LSP configuration (https://github.com/RRethy/vim-illuminate#lsp-configuration)
+
+let g:Illuminate_delay = 300
+
+let g:Illuminate_ftblacklist = ['startify']
+
+highlight selectionHighlightBackground ctermbg=94 guibg=#6E552F
+
 augroup illuminate_augroup
     autocmd!
-    autocmd VimEnter * hi link illuminatedWord CursorLine
+    autocmd VimEnter * highlight link illuminatedWord selectionHighlightBackground
 augroup END
 
 " }}}

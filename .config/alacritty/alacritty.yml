@@ -880,6 +880,10 @@ key_bindings:
   # Vi mode
   - { key: Space,    mods: Command|Option|Shift|Control,    action: ToggleViMode }
 
+  # Make <S-Enter> and <C-Enter> send the key-code that vim expects
+  - { key: Return,   mods: Shift,   chars: "\x1b[13;2u" }
+  - { key: Return,   mods: Control, chars: "\x1b[13;5u" }
+
 #debug:
   # Display the time it takes to redraw each frame.
   #render_timer: false

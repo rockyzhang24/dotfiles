@@ -12,7 +12,6 @@ local line
 read -r file line <<<$(rg --line-number --color=always --smart-case $@ \
                       | fzf --ansi \
                             --exit-0 \
-                            --select-1 \
                             --delimiter : \
                             --preview 'bat --color=always --style=numbers,changes,header --highlight-line {2} {1}' \
                             --preview-window +{2}-/2 \

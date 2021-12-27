@@ -14,6 +14,7 @@ set wrap
 set autoindent
 set scrolloff=5
 set autoread
+set noshowmode
 set showcmd
 set wildmenu
 set wildmode=list:longest,full
@@ -49,7 +50,9 @@ set title
 set noswapfile
 set signcolumn=yes
 set spelllang=en_us
+set pumblend=10
 set pumheight=20
+set winblend=10
 set grepprg=rg\ --vimgrep\ --smart-case\ $*
 set grepformat=%f:%l:%c:%m
 set breakindent
@@ -107,7 +110,7 @@ augroup general
   autocmd VimResized * wincmd =
 
   " Make it not be overwritten by the default setting of neovim
-  autocmd FileType * set formatoptions-=t formatoptions-=c formatoptions-=r formatoptions-=o
+  autocmd FileType * set formatoptions-=t formatoptions-=c formatoptions-=o
 
 augroup END
 
@@ -268,6 +271,10 @@ nnoremap <silent> \w :tabclose<CR>
 nnoremap <expr> [<Space> 'm`' . v:count . 'O<Esc>``'
 nnoremap <expr> ]<Space> 'm`' . v:count . 'o<Esc>``'
 
+" Opens line above or below the current line
+inoremap <C-CR> <C-o>O
+inoremap <S-CR> <C-o>o
+
 " Edit and source vim config file
 nnoremap <silent> <Leader>ve :<C-u>tabedit $MYVIMRC<CR>
 nnoremap <silent> <Leader>vs :<C-u>source $MYVIMRC<CR>
@@ -304,7 +311,7 @@ nnoremap <Leader>= <C-w>=
 " Searching
 
 " Clean search highlighting
-nnoremap <silent> \/ :<C-u>nohlsearch<CR>
+nnoremap <silent> <Leader>/ :<C-U>nohlsearch<C-R>=has('diff')?'<Bar>diffupdate':''<CR><CR><C-L>
 
 " n for searching forward and N for searching backward regardless of / or ?
 nnoremap <expr> n (v:searchforward ? 'nzzzv' : 'Nzzzv')
@@ -381,9 +388,11 @@ function! PackInit() abort
 
   call minpac#add('k-takata/minpac', {'type': 'opt'})
 
+  call minpac#add('nvim-lua/plenary.nvim')  " lua library used by other lua plugins
+  call minpac#add('nvim-telescope/telescope-fzf-native.nvim', { 'do': 'make' })  " sorter for telescope
+  call minpac#add('nvim-telescope/telescope.nvim')
+  call minpac#add('tpope/vim-commentary')
   call minpac#add('tpope/vim-surround')
-  call minpac#add('junegunn/fzf.vim')
-  call minpac#add('tomtom/tcomment_vim')
   call minpac#add('RRethy/vim-illuminate')
   call minpac#add('RRethy/vim-hexokinase', { 'do': 'make hexokinase' })
   call minpac#add('airblade/vim-rooter')
@@ -419,7 +428,7 @@ function! PackInit() abort
   call minpac#add('instant-markdown/vim-instant-markdown')
 
   " Icons
-  call minpac#add('ryanoasis/vim-devicons')
+  call minpac#add('kyazdani42/nvim-web-devicons')
 
   " Color schemes
   call minpac#add('folke/tokyonight.nvim')
@@ -437,162 +446,6 @@ set rtp+=~/gitrepos/fzf
 " }}}
 
 " ---------- [ Plugin settings ] ---------- {{{
-
-" fzf {{{
-
-" Make the preview use the config of command-line fzf (defined in ~/.config/fzf/fzf-config) instead of
-" preview.sh shipped with fzf.vim
-" let g:fzf_preview_window = ''
-
-function! s:build_quickfix_list(lines)
-  call setqflist(map(copy(a:lines), '{ "filename": v:val }'))
-  copen
-  cc
-endfunction
-
-let g:fzf_action = {
-  \ 'ctrl-l': function('s:build_quickfix_list'),
-  \ 'ctrl-t': 'tab split',
-  \ 'ctrl-x': 'split',
-  \ "ctrl-v": 'vsplit' }
-
-let g:fzf_history_dir = '~/.local/share/fzf-vim-history'
-
-" GGrep, a wrapper of git grep
-command! -bang -nargs=* GGrep
-  \ call fzf#vim#grep(
-  \   'git grep --line-number -- '.shellescape(<q-args>), 0,
-  \   fzf#vim#with_preview({'dir': systemlist('git rev-parse --show-toplevel')[0]}), <bang>0)
-
-" Delete buffers from buffer list
-" Run command :BD[!], [!] to delete the unsaved buffers
-function! s:list_buffers()
-  redir => list
-  silent ls
-  redir END
-  return split(list, "\n")
-endfunction
-
-function! s:delete_buffers(lines, hasBang)
-  execute (a:hasBang ? 'bwipeout!' : 'bwipeout') join(map(a:lines, {_, line -> split(line)[0]}))
-endfunction
-
-command! -bang BD call fzf#run(fzf#wrap({
-  \ 'source': s:list_buffers(),
-  \ 'sink*': { lines -> s:delete_buffers(lines, <bang>0) },
-  \ 'options': '--header "Select the buffers you want to delete from the buffer list" --multi --reverse --bind ctrl-a:select-all'
-\ }))
-
-" Go to a selected buffer
-nnoremap <silent> <Leader>fb :Buffers<CR>
-
-" Files
-nnoremap <silent> <Leader>ff :Files<CR>
-
-" Grep
-nnoremap <silent> <Leader>fg :Rg<CR>
-
-" Histories
-nnoremap <silent> <Leader>f: :History:<CR>
-nnoremap <silent> <Leader>f/ :History/<CR>
-
-" Vim help tags
-nnoremap <silent> <Leader>f? :Helptags<CR>
-
-" }}}
-
-" indent-blankline {{{
-
-let g:indent_blankline_filetype_exclude = ['startify', 'help', 'markdown', 'json', 'jsonc', 'WhichKey']
-let g:indent_blankline_buftype_exclude = ['terminal']
-let g:indent_blankline_use_treesitter = v:true
-let g:indent_blankline_show_current_context = v:true
-
-" Toggle indent line
-nnoremap yoi :IndentBlanklineToggle<CR>
-
-" }}}
-
-" minpac {{{
-
-command! PluginUpdate source $MYVIMRC | call PackInit() | call minpac#update()
-command! PluginDelete source $MYVIMRC | call PackInit() | call minpac#clean()
-command! PluginStatus packadd minpac | call minpac#status()
-
-function! PackList(...)
-  call PackInit()
-  return join(sort(keys(minpac#getpluglist())), "\n")
-endfunction
-
-" Define a command, OpenPluginDir, to open a new terminal window and cd into the directory where a plugin is installed
-command! -nargs=1 -complete=custom,PackList
-      \ OpenPluginDir call PackInit() | silent exec "!kitty --single-instance -d " . minpac#getpluginfo(<q-args>).dir . " &> /dev/null"
-
-" Define a command, OpenPluginUrl, to open the plugin's git repo in browser
-command! -nargs=1 -complete=custom,PackList
-      \ OpenPluginUrl call PackInit() | silent exec "!open -a \"Safari\" " . minpac#getpluginfo(<q-args>).url
-
-call utils#SetupCommandAbbrs('pu', 'PluginUpdate')
-call utils#SetupCommandAbbrs('pd', 'PluginDelete')
-call utils#SetupCommandAbbrs('pU', 'OpenPluginUrl')
-call utils#SetupCommandAbbrs('pD', 'OpenPluginDir')
-
-" }}}
-
-" nvim-cmp {{{
-
-lua require('plugin_config.cmp')
-
-" }}}
-
-" nvim-lspconfig {{{
-
-lua require('plugin_config.lsp')
-
-" }}}
-
-" treesitter {{{
-
-lua require('plugin_config.treesitter')
-
-" }}}
-
-" nvim-ts-rainbow {{{
-
-lua require('plugin_config.nvim-ts-rainbow')
-
-" }}}
-
-" tcomment_vim {{{
-
-" Disable the redundant preset map
-let g:tcomment_mapleader2 = ''
-
-" Javadoc comment (in kitty on macOS, use <C-/> to act as <C-_>)
-nmap <C-_>j <C-_>2<C-_>b
-imap <C-_>j <C-_>2<C-_>b
-
-" }}}
-
-" tabular {{{
-
-nnoremap \a :Tabularize /
-xnoremap \a :Tabularize /
-
-" Find extra config at ./after/plugin/tabular.vim
-
-" }}}
-
-" undotree {{{
-
-let g:undotree_WindowLayout = 2
-let g:undotree_ShortIndicators = 1
-let g:undotree_SetFocusWhenToggle = 1
-
-" Toggle undotree
-nnoremap you :UndotreeToggle<CR>
-
-" }}}
 
 " fugitive {{{
 
@@ -680,9 +533,65 @@ let g:gutentags_plus_switch = 1
 
 " }}}
 
+" indent-blankline {{{
+
+let g:indent_blankline_filetype_exclude = ['startify', 'help', 'markdown', 'json', 'jsonc', 'WhichKey']
+let g:indent_blankline_buftype_exclude = ['terminal']
+let g:indent_blankline_use_treesitter = v:true
+let g:indent_blankline_show_current_context = v:true
+
+" Toggle indent line
+nnoremap yoi :IndentBlanklineToggle<CR>
+
+" }}}
+
 " lualine {{{
 
 lua require('plugin_config.lualine')
+
+" }}}
+
+" minpac {{{
+
+command! PluginUpdate source $MYVIMRC | call PackInit() | call minpac#update()
+command! PluginDelete source $MYVIMRC | call PackInit() | call minpac#clean()
+command! PluginStatus packadd minpac | call minpac#status()
+
+function! PackList(...)
+  call PackInit()
+  return join(sort(keys(minpac#getpluglist())), "\n")
+endfunction
+
+" Define a command, OpenPluginDir, to open a new terminal window and cd into the directory where a plugin is installed
+command! -nargs=1 -complete=custom,PackList
+      \ OpenPluginDir call PackInit() | silent exec "!kitty --single-instance -d " . minpac#getpluginfo(<q-args>).dir . " &> /dev/null"
+
+" Define a command, OpenPluginUrl, to open the plugin's git repo in browser
+command! -nargs=1 -complete=custom,PackList
+      \ OpenPluginUrl call PackInit() | silent exec "!open -a \"Safari\" " . minpac#getpluginfo(<q-args>).url
+
+call utils#SetupCommandAbbrs('pu', 'PluginUpdate')
+call utils#SetupCommandAbbrs('pd', 'PluginDelete')
+call utils#SetupCommandAbbrs('pU', 'OpenPluginUrl')
+call utils#SetupCommandAbbrs('pD', 'OpenPluginDir')
+
+" }}}
+
+" nvim-cmp {{{
+
+lua require('plugin_config.cmp')
+
+" }}}
+
+" nvim-lspconfig {{{
+
+lua require('plugin_config.lsp')
+
+" }}}
+
+" nvim-ts-rainbow {{{
+
+lua require('plugin_config.nvim-ts-rainbow')
 
 " }}}
 
@@ -738,10 +647,20 @@ let g:rooter_change_directory_for_non_project_files = 'current'
 " Make vim-rooter works when a file is opened from startify
 let g:startify_change_to_dir = 0
 
-function! StartifyEntryFormat()
-  return 'WebDevIconsGetFileTypeSymbol(absolute_path) ." ". entry_path'
+" Devicons
+lua << EOF
+function _G.webDevIcons(path)
+  local filename = vim.fn.fnamemodify(path, ':t')
+  local extension = vim.fn.fnamemodify(path, ':e')
+  return require'nvim-web-devicons'.get_icon(filename, extension, { default = true })
+end
+EOF
+
+function! StartifyEntryFormat() abort
+  return 'v:lua.webDevIcons(absolute_path) . " " . entry_path'
 endfunction
 
+" Header
 let g:ascii = [
       \ '                                               ',
       \ ' ██╗   ██╗███████╗     ██╗   ██╗██╗███╗   ███╗ ',
@@ -759,6 +678,46 @@ let g:startify_custom_header = 'startify#pad(g:ascii)'
 augroup starity
   autocmd User Startified setlocal cursorline
 augroup END
+
+" }}}
+
+" treesitter {{{
+
+lua require('plugin_config.treesitter')
+
+" }}}
+
+" telescope {{{
+
+lua require('plugin_config.telescope.config')
+
+nnoremap <Leader>ff <Cmd>Telescope find_files<CR>
+nnoremap <Leader>fg <Cmd>Telescope live_grep<CR>
+nnoremap <Leader>fb <Cmd>Telescope buffers<CR>
+nnoremap <Leader>ft <Cmd>Telescope tags<CR>
+nnoremap <Leader>fh <Cmd>Telescope help_tags<CR>
+
+nnoremap <Leader>f. <Cmd>lua require("plugin_config.telescope.my_picker").dotfiles()<CR>
+
+" }}}
+
+" tabular {{{
+
+nnoremap \a :Tabularize /
+xnoremap \a :Tabularize /
+
+" Find extra config at ./after/plugin/tabular.vim
+
+" }}}
+
+" undotree {{{
+
+let g:undotree_WindowLayout = 2
+let g:undotree_ShortIndicators = 1
+let g:undotree_SetFocusWhenToggle = 1
+
+" Toggle undotree
+nnoremap you :UndotreeToggle<CR>
 
 " }}}
 

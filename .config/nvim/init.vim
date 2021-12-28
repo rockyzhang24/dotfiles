@@ -695,7 +695,7 @@ nnoremap <Leader>ff <Cmd>Telescope find_files<CR>
 nnoremap <Leader>fg <Cmd>Telescope live_grep<CR>
 nnoremap <Leader>fb <Cmd>Telescope buffers<CR>
 nnoremap <Leader>ft <Cmd>Telescope tags<CR>
-nnoremap <Leader>fh <Cmd>Telescope help_tags<CR>
+nnoremap <Leader>f? <Cmd>Telescope help_tags<CR>
 
 nnoremap <Leader>f. <Cmd>lua require("plugin_config.telescope.my_picker").dotfiles()<CR>
 

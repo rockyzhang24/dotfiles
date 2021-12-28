@@ -32,3 +32,6 @@ require'lspconfig'.sumneko_lua.setup {
     },
   },
 }
+
+-- Golang
+require'lspconfig'.gopls.setup {}

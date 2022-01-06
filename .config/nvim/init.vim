@@ -31,7 +31,7 @@ set ttimeoutlen=50
 set timeoutlen=500
 set shortmess+=c
 set inccommand=split
-set updatetime=100  " For vim-gitgutter
+set updatetime=250
 set laststatus=2
 set showtabline=2
 set matchpairs+=<:>
@@ -89,6 +89,8 @@ let g:gruvbox_material_enable_bold = 1
 let g:gruvbox_material_enable_italic = 1
 " let g:gruvbox_material_transparent_background = 1
 let g:gruvbox_material_visual = 'green background'
+let g:gruvbox_material_diagnostic_virtual_text = 'colored'
+let g:gruvbox_material_statusline_style = 'original'
 let g:gruvbox_material_better_performance = 1
 
 colorscheme gruvbox-material
@@ -136,6 +138,9 @@ call utils#SetupCommandAbbrs('T', 'tabedit')
 " ---------- [ Mappings ] ---------- {{{
 
 let mapleader=" "
+
+" The normal , acts as a leader key for lsp mappings
+nnoremap <Leader>, ,
 
 " Smarter j and k navigation
 nnoremap <expr> j v:count ? (v:count > 5 ? "m'" . v:count : '') . 'j' : 'gj'
@@ -585,7 +590,7 @@ lua require('plugin_config.cmp')
 
 " nvim-lspconfig {{{
 
-lua require('plugin_config.lsp')
+lua require('plugin_config.lsp.lsp-config')
 
 " }}}
 
@@ -662,17 +667,18 @@ endfunction
 
 " Header
 let g:ascii = [
-      \ '                                               ',
-      \ ' ██╗   ██╗███████╗     ██╗   ██╗██╗███╗   ███╗ ',
-      \ ' ╚██╗ ██╔╝╚══███╔╝     ██║   ██║██║████╗ ████║ ',
-      \ '  ╚████╔╝   ███╔╝█████╗██║   ██║██║██╔████╔██║ ',
-      \ '   ╚██╔╝   ███╔╝ ╚════╝╚██╗ ██╔╝██║██║╚██╔╝██║ ',
-      \ '    ██║   ███████╗      ╚████╔╝ ██║██║ ╚═╝ ██║ ',
-      \ '    ╚═╝   ╚══════╝       ╚═══╝  ╚═╝╚═╝     ╚═╝ ',
-      \ '                                               ',
+      \ '          ▀████▀▄▄              ▄█ ',
+      \ '            █▀    ▀▀▄▄▄▄▄    ▄▄▀▀█ ',
+      \ '    ▄        █          ▀▀▀▀▄  ▄▀  ',
+      \ '   ▄▀ ▀▄      ▀▄              ▀▄▀  ',
+      \ '  ▄▀    █     █▀   ▄█▀▄      ▄█    ',
+      \ '  ▀▄     ▀▄  █     ▀██▀     ██▄█   ',
+      \ '   ▀▄    ▄▀ █   ▄██▄   ▄  ▄  ▀▀ █  ',
+      \ '    █  ▄▀  █    ▀██▀    ▀▀ ▀▀  ▄▀  ',
+      \ '   █   █  █      ▄▄           ▄▀   ',
       \ ]
 
-let g:startify_custom_header = 'startify#pad(g:ascii)'
+let g:startify_custom_header = 'startify#pad(g:ascii + startify#fortune#boxed())'
 
 " Enable cursorline
 augroup starity
@@ -689,7 +695,7 @@ lua require('plugin_config.treesitter')
 
 " telescope {{{
 
-lua require('plugin_config.telescope.config')
+lua require('plugin_config.telescope.telescope-config')
 
 nnoremap <Leader>ff <Cmd>Telescope find_files<CR>
 nnoremap <Leader>fg <Cmd>Telescope live_grep<CR>

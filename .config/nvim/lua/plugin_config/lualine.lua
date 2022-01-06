@@ -10,11 +10,18 @@ require'lualine'.setup {
   sections = {
     lualine_a = {'mode'},
     lualine_b = {
-      'branch', 
-      'diff', 
+      'branch',
+      'diff',
       {
-        'diagnostics', 
+        'diagnostics',
         sources = {"nvim_diagnostic"},
+        -- Same as the sign colors of diagnostics
+        diagnostics_color = {
+          error = { fg = '#fb4934' },
+          warn = { fg = '#fabd2f' },
+          info = { fg = '#83a598' },
+          hint = { fg = '#8ec07c' },
+        },
       }
     },
     lualine_c = {'filename'},

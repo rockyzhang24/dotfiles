@@ -26,7 +26,7 @@ set fillchars=fold:\ ,
 set foldenable
 set foldmethod=indent
 set foldlevel=99
-set completeopt=menuone,preview,noinsert
+set completeopt=menu,menuone,noselect
 set ttimeoutlen=50
 set timeoutlen=500
 set shortmess+=c
@@ -417,6 +417,14 @@ function! PackInit() abort
   call minpac#add('hrsh7th/nvim-cmp')
   call minpac#add('hrsh7th/cmp-nvim-lsp')
   call minpac#add('hrsh7th/cmp-buffer')
+  call minpac#add('hrsh7th/cmp-path')
+  call minpac#add('hrsh7th/cmp-cmdline')
+  call minpac#add('hrsh7th/cmp-nvim-lua')
+  call minpac#add('onsails/lspkind-nvim')
+
+  " Snips
+  call minpac#add('L3MON4D3/LuaSnip')
+  call minpac#add('saadparwaiz1/cmp_luasnip')
 
   " Tree-sitter
   call minpac#add('nvim-treesitter/nvim-treesitter', {'do': 'TSUpdate'})

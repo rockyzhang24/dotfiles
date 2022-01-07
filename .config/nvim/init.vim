@@ -153,8 +153,8 @@ noremap L $
 " Move the selections up and down with corresponding indentation
 xnoremap J :m '>+1<CR>gv=gv
 xnoremap K :m '<-2<CR>gv=gv
-inoremap <C-j> <Esc>:m .+1<CR>==a
-inoremap <C-k> <Esc>:m .-2<CR>==a
+inoremap <M-j> <Esc>:m .+1<CR>==a
+inoremap <M-k> <Esc>:m .-2<CR>==a
 
 " Jump to the next '<++>' and edit it
 nnoremap <silent> <Leader><Leader> <Esc>/<++><CR>:nohlsearch<CR>c4l
@@ -561,6 +561,12 @@ nnoremap yoi :IndentBlanklineToggle<CR>
 " lualine {{{
 
 lua require('plugin_config.lualine')
+
+" }}}
+
+" luasnip {{{
+
+lua require('plugin_config.luasnip')
 
 " }}}
 

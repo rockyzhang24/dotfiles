@@ -16,7 +16,6 @@ cmp.setup({
     ['<C-e>'] = cmp.mapping(cmp.mapping.abort(), { 'i', 'c' }),
     ['<C-y>'] = cmp.mapping(cmp.mapping.confirm({ select = true }), { 'i', 'c' }),
 
-
     -- Then the default <C-n> and <C-p> for selecting the next/previous item
   },
 

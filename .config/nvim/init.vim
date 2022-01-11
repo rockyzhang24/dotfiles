@@ -366,7 +366,7 @@ tnoremap <M-c> <C-\><C-n>:quit<CR>
 tnoremap <M-d> <C-\><C-n>:bdelete!<CR>
 
 " Back to normal mode in the terminal buffer
-tnoremap <M-[> <C-\><C-n>
+tnoremap <M-Esc> <C-\><C-n>
 
 " Switching between split windows
 tnoremap <M-h> <C-\><C-n><C-w>h
@@ -710,14 +710,6 @@ lua require('plugin_config.treesitter')
 " telescope {{{
 
 lua require('plugin_config.telescope.telescope-config')
-
-nnoremap <Leader>ff <Cmd>Telescope find_files<CR>
-nnoremap <Leader>fg <Cmd>Telescope live_grep<CR>
-nnoremap <Leader>fb <Cmd>Telescope buffers<CR>
-nnoremap <Leader>ft <Cmd>Telescope tags<CR>
-nnoremap <Leader>f? <Cmd>Telescope help_tags<CR>
-
-nnoremap <Leader>f. <Cmd>lua require("plugin_config.telescope.my_picker").dotfiles()<CR>
 
 " }}}
 

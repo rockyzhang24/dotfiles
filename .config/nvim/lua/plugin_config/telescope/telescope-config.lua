@@ -1,4 +1,7 @@
-require('telescope').setup {
+local tele = require("telescope")
+local api = vim.api
+
+tele.setup {
 
   defaults = {
     prompt_prefix = "❯ ",
@@ -23,6 +26,8 @@ require('telescope').setup {
         ["<S-Down>"] = "preview_scrolling_down",
         ["<C-n>"] = "cycle_history_next",
         ["<C-p>"] = "cycle_history_prev",
+        ["<Esc>"] = "close",
+        ["<M-Esc>"] = { "<Esc>", type = "command" },
       },
     },
 
@@ -49,4 +54,21 @@ require('telescope').setup {
 }
 
 -- FZF as the sorter
-require('telescope').load_extension('fzf')
+tele.load_extension('fzf')
+
+-- Mappings
+local map_options = {
+  noremap = true,
+  silent = true,
+}
+
+api.nvim_set_keymap('n', '<Leader>ff', '<Cmd>lua require("telescope.builtin").find_files()<CR>', map_options)
+api.nvim_set_keymap('n', '<Leader>fb', '<Cmd>lua require("telescope.builtin").buffers()<CR>', map_options)
+api.nvim_set_keymap('n', '<Leader>fg', '<Cmd>lua require("telescope.builtin").live_grep()<CR>', map_options)
+api.nvim_set_keymap('n', '<Leader>ft', '<Cmd>lua require("telescope.builtin").tags()<CR>', map_options)
+api.nvim_set_keymap('n', '<Leader>f?', '<Cmd>lua require("telescope.builtin").help_tags()<CR>', map_options)
+api.nvim_set_keymap('n', '<Leader>fo', '<Cmd>lua require("telescope.builtin").oldfiles()<CR>', map_options)
+
+api.nvim_set_keymap('n', '<Leader>f.', '<Cmd>lua require("plugin_config.telescope.my_picker").dotfiles()<CR>', map_options)
+
+-- Other mappings regarding LSP picker are set in the nvim-lspconfig setup ../lsp/lsp-config.lua

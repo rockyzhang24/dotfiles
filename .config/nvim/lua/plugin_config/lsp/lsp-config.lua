@@ -29,30 +29,44 @@ local on_attach = function(client, bufnr)
   end
 
   -- Mappings
-  -- Comma (,) key acts as a leader key for lsp mappings
+  -- Comma (,) key acts as a leader key for the lsp mappings
   local opts = { noremap=true, silent=true }
 
   buf_set_keymap('n', 'gD', '<cmd>lua vim.lsp.buf.declaration()<CR>', opts)
-  buf_set_keymap('n', 'gd', '<cmd>lua vim.lsp.buf.definition()<CR>', opts)
+  buf_set_keymap('n', 'gd', '<cmd>lua require("telescope.builtin").lsp_definitions(require("telescope.themes").get_dropdown({}))<CR>', opts)  -- definitions
+  buf_set_keymap('n', 'gt', '<cmd>lua require("telescope.builtin").lsp_type_definitions(require("telescope.themes").get_dropdown({}))<CR>', opts) -- type definitions
+  buf_set_keymap('n', 'gi', '<cmd>lua require("telescope.builtin").lsp_implementations(require("telescope.themes").get_dropdown({}))<CR>', opts)  -- implementations
+  buf_set_keymap('n', 'gr', '<cmd>lua require("telescope.builtin").lsp_references(require("telescope.themes").get_dropdown({}))<CR>', opts) -- references
+
+  buf_set_keymap('n', ',r', '<cmd>lua vim.lsp.buf.rename()<CR>', opts)
+  buf_set_keymap('n', ',a', '<cmd>lua require("telescope.builtin").lsp_code_actions(require("telescope.themes").get_cursor({}))<CR>', opts)
+
   buf_set_keymap('n', 'K', '<cmd>lua vim.lsp.buf.hover()<CR>', opts)
-  buf_set_keymap('n', 'gi', '<cmd>lua vim.lsp.buf.implementation()<CR>', opts)
-  buf_set_keymap('n', '<C-k>', '<cmd>lua vim.lsp.buf.signature_help()<CR>', opts)
+  buf_set_keymap('n', ',k', '<cmd>lua vim.lsp.buf.signature_help()<CR>', opts)
+
+  -- Symbols (<C-l> for filtering by type of symbol)
+  buf_set_keymap('n', ',s', '<cmd>lua require("telescope.builtin").lsp_document_symbols()<CR>', opts) -- current buffer
+  buf_set_keymap('n', ',S', '<cmd>lua require("telescope.builtin").lsp_dynamic_workspace_symbols()<CR>', opts) -- all workspace symbols
+
+  -- Workspace
   buf_set_keymap('n', ',wa', '<cmd>lua vim.lsp.buf.add_workspace_folder()<CR>', opts)
   buf_set_keymap('n', ',wr', '<cmd>lua vim.lsp.buf.remove_workspace_folder()<CR>', opts)
   buf_set_keymap('n', ',wl', '<cmd>lua print(vim.inspect(vim.lsp.buf.list_workspace_folders()))<CR>', opts)
-  buf_set_keymap('n', ',D', '<cmd>lua vim.lsp.buf.type_definition()<CR>', opts)
-  buf_set_keymap('n', ',r', '<cmd>lua vim.lsp.buf.rename()<CR>', opts)
-  buf_set_keymap('n', ',a', '<cmd>lua vim.lsp.buf.code_action()<CR>', opts)
-  buf_set_keymap('n', 'gr', '<cmd>lua vim.lsp.buf.references()<CR>', opts)
+
+  -- Diagnostics
   buf_set_keymap('n', ',e', '<cmd>lua vim.diagnostic.open_float()<CR>', opts)
   buf_set_keymap('n', '[d', '<cmd>lua vim.diagnostic.goto_prev()<CR>', opts)
   buf_set_keymap('n', ']d', '<cmd>lua vim.diagnostic.goto_next()<CR>', opts)
   buf_set_keymap('n', ',q', '<cmd>lua vim.diagnostic.setloclist()<CR>', opts)
 
-  -- Format the whole buffer, range format with a motion, or format a given range
-  buf_set_keymap('n', ',F', '<cmd>lua vim.lsp.buf.formatting()<CR>', opts)
-  buf_set_keymap('n', ',f', '<cmd>lua require("plugin_config.lsp.lsp-utils").format_range_operator()<CR>', opts)
-  buf_set_keymap('x', ',f', '<cmd>lua require("plugin_config.lsp.lsp-utils").format_range_operator()<CR>', opts)
+  -- List diagnostics (<C-l> to filter by type of diagnostic)
+  buf_set_keymap('n', ',d', '<cmd>lua require("telescope.builtin").diagnostics({bufnr = 0})<CR>', opts)  -- current buffer
+  buf_set_keymap('n', ',D', '<cmd>lua require("telescope.builtin").diagnostics()<CR>', opts)  -- all opened buffers
+
+  -- Format
+  buf_set_keymap('n', ',F', '<cmd>lua vim.lsp.buf.formatting()<CR>', opts)  -- whole buffer
+  buf_set_keymap('n', ',f', '<cmd>lua require("plugin_config.lsp.lsp-utils").format_range_operator()<CR>', opts)  -- range format with a motion
+  buf_set_keymap('x', ',f', '<cmd>lua require("plugin_config.lsp.lsp-utils").format_range_operator()<CR>', opts)  -- format a given range
 
 end
 

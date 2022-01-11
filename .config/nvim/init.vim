@@ -48,7 +48,7 @@ set ignorecase
 set smartcase
 set title
 set noswapfile
-set signcolumn=yes
+set signcolumn=yes:2
 set spelllang=en_us
 set pumblend=10
 set pumheight=20
@@ -422,7 +422,7 @@ function! PackInit() abort
   call minpac#add('hrsh7th/cmp-nvim-lua')
   call minpac#add('onsails/lspkind-nvim')
 
-  " Snips
+  " Snippets
   call minpac#add('L3MON4D3/LuaSnip')
   call minpac#add('saadparwaiz1/cmp_luasnip')
 
@@ -435,7 +435,7 @@ function! PackInit() abort
 
   " Git
   call minpac#add('tpope/vim-fugitive')
-  call minpac#add('airblade/vim-gitgutter')
+  call minpac#add('lewis6991/gitsigns.nvim')
 
   " Markdown
   call minpac#add('instant-markdown/vim-instant-markdown')
@@ -479,34 +479,9 @@ augroup END
 
 " }}}
 
-" gitgutter {{{
+" gitsigns {{{
 
-" Disable the preset mappings
-let g:gitgutter_map_keys = 0
-
-" Not to use floating window for hunk preview
-let g:gitgutter_preview_win_floating = 0
-
-" Jump between hunks
-nmap [h <Plug>(GitGutterPrevHunk)
-nmap ]h <Plug>(GitGutterNextHunk)
-
-" Preview the hunk
-nmap ghp <Plug>(GitGutterPreviewHunk)
-
-" Fold/unfold all unchanged lines
-nnoremap <silent> ghf :GitGutterFold<CR>
-
-" Stage or undo hunks
-nmap ghs <Plug>(GitGutterStageHunk)
-xmap ghs <Plug>(GitGutterStageHunk)
-nmap ghu <Plug>(GitGutterUndoHunk)
-
-" Text object for hunk
-omap ih <Plug>(GitGutterTextObjectInnerPending)
-xmap ih <Plug>(GitGutterTextObjectInnerVisual)
-omap ah <Plug>(GitGutterTextObjectOuterPending)
-xmap ah <Plug>(GitGutterTextObjectOuterVisual)
+lua require('plugin_config.gitsigns')
 
 " }}}
 

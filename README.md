@@ -3,12 +3,12 @@
 These are my config files on macOS.
 
 Settings for:
-* Neovim (text editor)
+* Neovim (my life)
 * zsh (shell)
 * yabai & skhd & spacebar (window manager)
-* ranger/vifm/lf (file manager, currently using ranger)
-* iTerm2/alacritty/kitty (terminal, currently using iTerm2)
-* karabiner (keyboard customization)
+* ranger/vifm/lf (file manager, currently using lf)
+* iTerm2/alacritty/kitty (terminal, currently using kitty)
+* karabiner (keyboard customizer)
 
 # How I am managing the dotfiles
 

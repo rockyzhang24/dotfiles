@@ -13,4 +13,15 @@ function M.format_range_operator()
   vim.api.nvim_feedkeys('g@', 'n', false)
 end
 
+local diagnostics_on = true
+
+function M.toggle_diagnostics()
+  if diagnostics_on then
+    vim.diagnostic.disable()
+  else
+    vim.diagnostic.enable()
+  end
+  diagnostics_on = not diagnostics_on
+end
+
 return M

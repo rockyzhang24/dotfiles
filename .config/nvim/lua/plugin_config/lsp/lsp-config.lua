@@ -68,6 +68,9 @@ local on_attach = function(client, bufnr)
   buf_set_keymap('n', ',f', '<cmd>lua require("plugin_config.lsp.lsp-utils").format_range_operator()<CR>', opts)  -- range format with a motion
   buf_set_keymap('x', ',f', '<cmd>lua require("plugin_config.lsp.lsp-utils").format_range_operator()<CR>', opts)  -- format a given range
 
+  -- Toggle diagnostics
+  buf_set_keymap('n', 'yod', '<cmd>lua require("plugin_config.lsp.lsp-utils").toggle_diagnostics()<CR>', opts)
+
 end
 
 -- Update the capabilities (nvim-cmp supports) sent to the server

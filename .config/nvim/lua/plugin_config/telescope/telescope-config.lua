@@ -69,6 +69,7 @@ api.nvim_set_keymap('n', '<Leader>ft', '<Cmd>lua require("telescope.builtin").ta
 api.nvim_set_keymap('n', '<Leader>f?', '<Cmd>lua require("telescope.builtin").help_tags()<CR>', map_options)
 api.nvim_set_keymap('n', '<Leader>fo', '<Cmd>lua require("telescope.builtin").oldfiles()<CR>', map_options)
 
-api.nvim_set_keymap('n', '<Leader>f.', '<Cmd>lua require("plugin_config.telescope.my_picker").dotfiles()<CR>', map_options)
+api.nvim_set_keymap('n', '<Leader>f.', '<Cmd>lua require("plugin_config.telescope.my_picker").dotfiles()<CR>', map_options) -- find_files in dotfiles
+api.nvim_set_keymap('n', '<Leader>fv', '<Cmd>lua require("plugin_config.telescope.my_picker").grep_nvim_config()<CR>', map_options) -- live_grep in nvim config files
 
 -- Other mappings regarding LSP picker are set in the nvim-lspconfig setup ../lsp/lsp-config.lua

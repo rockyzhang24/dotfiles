@@ -304,6 +304,9 @@ nnoremap <silent> <Leader>wl :set splitright<CR><C-w>v
 " Close all windows except the current (o for only)
 nnoremap <Leader>wo <C-w>o
 
+" Move current window to new tab
+nnoremap <Leader>wt <C-w>T
+
 " Sizing
 nnoremap <C-Down> <C-w>5-
 nnoremap <C-Up> <C-w>5+
@@ -541,7 +544,7 @@ lua require('plugin_config.lualine')
 
 " luasnip {{{
 
-lua require('plugin_config.luasnip')
+lua require('plugin_config.luasnip.luasnip-config')
 
 " }}}
 

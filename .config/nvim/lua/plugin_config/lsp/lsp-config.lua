@@ -106,8 +106,32 @@ nvim_lsp.sumneko_lua.setup {
         path = runtime_path,
       },
       diagnostics = {
-        -- Get the language server to recognize the `vim` global
-        globals = {'vim'},
+        -- Get the language server to recognize global
+        globals = {
+          -- For vim
+          'vim',
+          -- For luasnip
+          's',
+          'sn',
+          'isn',
+          't',
+          'i',
+          'f',
+          'c',
+          'd',
+          'r',
+          'l',
+          'rep',
+          'p',
+          'm',
+          'n',
+          'dl',
+          'fmt',
+          'fmta',
+          'conds',
+          'parse',
+          'ai',
+        },
       },
       workspace = {
         -- Make the server aware of Neovim runtime files

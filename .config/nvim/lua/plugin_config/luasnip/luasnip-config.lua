@@ -1,3 +1,6 @@
+-- An offcial example to demo the basic config and how to create snippets:
+-- https://github.com/L3MON4D3/LuaSnip/blob/master/Examples/snippets.lua
+
 local ls = require("luasnip")
 local types = require("luasnip.util.types")
 
@@ -16,6 +19,9 @@ ls.config.setup({
       }
     },
   },
+  -- Use treesitter for getting the current filetype. This allows correctly resolving
+  -- the current filetype in eg. a markdown-code block or `vim.cmd()`.
+  ft_func = require("luasnip.extras.filetype_functions").from_cursor
 })
 
 -- Mappings

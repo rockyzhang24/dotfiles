@@ -2,17 +2,15 @@
 
 # MNEMONIC: [F]uzzy search [O]pen
 # SYNOPSIS: fo [DIR] [QUERY]
-# DESCRIPTION: Fuzzy finder for opening a file under DIR based on QUERY (CTRL-o for default application,
-# CTRL-v or ENTER for $EDITOR)
+# DESCRIPTION: Fuzzy finder for opening files under DIR based on QUERY
+#   - CTRL-o: using the default application
+#   - CTRL-v or ENTER: using $EDITOR
 
 IFS=$'\n'
 if [[ -d $1 ]]; then
-  out=("$(fd --hidden --follow --type f --exclude .git --exclude .DS_Store '.*' $1 | fzf --query="$2" --exit-0 --expect=ctrl-o,ctrl-v)")
+  files=("$(fd --hidden --follow --type f --exclude .git --exclude .DS_Store '.*' $1 | fzf --query="$2" --exit-0)")
 else
-  out=("$(fd --hidden --follow --type f --exclude .git --exclude .DS_Store '.*' | fzf --query="$1" --exit-0 --expect=ctrl-o,ctrl-v)")
+  files=("$(fd --hidden --follow --type f --exclude .git --exclude .DS_Store '.*' | fzf --query="$1" --exit-0)")
 fi
-key=$(head -1 <<< "$out")
-file=$(head -2 <<< "$out" | tail -1)
-if [ -n "$file" ]; then
-  [ "$key" = ctrl-o ] && open "$file" || ${EDITOR:-vim} "$file"
-fi
+[[ -n "$files" ]] && ${EDITOR:-vim} "${files[@]}"
+

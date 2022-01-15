@@ -2,22 +2,18 @@
 
 # MNEMONIC: [F]uzzy search [R]ip[G]rep
 # SYNOPSIS: same with rg
-# DESCRIPTION: Fuzzy search for the results of rg and open the corresponding file using $EDITOR with the cursor positioned on the matching line
+# DESCRIPTION: Fuzzy search for the results of rg
+#   - ENTER: open EDITOR by feeding the selections into quickfix list
 
-local file
-local line
+local errorfile_path=$HOME/.local/share/rg
+[[ ! -e $errorfile_path ]] && mkdir $errorfile_path
 
-# Feed rg results into fzf and use awk to extract the file name and the target line number.
-# Preview the file with the target line highlighted in the center of the preview window.
-read -r file line <<<$(rg --line-number --color=always --smart-case $@ \
-                      | fzf --ansi \
-                            --exit-0 \
-                            --delimiter : \
-                            --preview 'bat --color=always --style=numbers,changes,header --highlight-line {2} {1}' \
-                            --preview-window +{2}-/2 \
-                      | awk -F: '{print $1, $2}')
+local selection=$(rg --line-number --color=always --smart-case --column $@ \
+                 | fzf --ansi \
+                       --exit-0 \
+                       --delimiter : \
+                       --preview 'bat --color=always --style=numbers,changes,header --highlight-line {2} {1}' \
+                       --preview-window +{2}-/2 \
+                       --bind 'ctrl-d:half-page-down,ctrl-u:half-page-up,shift-down:preview-half-page-down,shift-up:preview-half-page-up,ctrl-a:select-all,ctrl-x:deselect-all,ctrl-/:toggle-preview,change:top')
 
-if [[ -n $file ]]
-then
-  $EDITOR $file +$line
-fi
+[[ -n "$selection" ]] && echo $selection >| $errorfile_path/frg-errorfile && ${EDITOR:-vim} -q $errorfile_path/frg-errorfile

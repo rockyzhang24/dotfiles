@@ -1,0 +1,8 @@
+# vim: filetype=zsh
+
+# MNEMONIC: [F]uzzy search [.]dotfiles
+# SYNOPSIS: f.
+# DESCRIPTION: Fuzzy search for the dotfiles and open the selected files via vim
+
+local selection=($(git --git-dir=/Users/rockyzhang/dotfiles/ --work-tree=/Users/rockyzhang/ ls-files | fzf))
+[[ -n "$selection" ]] && ${EDITOR:-vim} "${selection[@]}"

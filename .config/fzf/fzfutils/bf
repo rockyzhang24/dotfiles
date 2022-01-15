@@ -2,9 +2,7 @@
 
 # MNEMONIC: [B]ookmark [F]iles
 # SYNOPSIS: bf
-# DESCRIPTION: Fuzzy search for the bookmark files and open the selected file via vim
+# DESCRIPTION: Fuzzy search for the bookmark files and open the selected files via vim
 
-local selection=$(cat $HOME/.config/fzf/bookmark_files | sed 's/#.*//g' | sed '/^\s*$/d' | fzf)
-if [[ $selection != '' ]]; then
-  $EDITOR "$selection"
-fi
+local selection=($(cat $HOME/.config/fzf/bookmark_files | sed 's/#.*//g' | sed '/^\s*$/d' | fzf))
+[[ -n "$selection" ]] && ${EDITOR:-vim} "${selection[@]}"

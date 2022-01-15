@@ -23,6 +23,7 @@ require('gitsigns').setup {
 
     ['n <leader>hp'] = '<cmd>Gitsigns preview_hunk<CR>',
     ['n <leader>hb'] = '<cmd>lua require"gitsigns".blame_line{full=true}<CR>',
+    ['n <leader>hd'] = '<cmd>Gitsigns toggle_deleted<CR>',  -- toggle showing deleted/changed lines via virtual lines
 
     -- Text objects
     ['o ih'] = ':<C-U>Gitsigns select_hunk<CR>',

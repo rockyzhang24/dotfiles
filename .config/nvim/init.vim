@@ -24,6 +24,8 @@ set fillchars=fold:\ ,
 set foldenable
 set foldmethod=indent
 set foldlevel=99
+" set foldmethod=expr
+" set foldexpr=nvim_treesitter#foldexpr() " treesitter based folding
 set completeopt=menu,menuone,noselect
 set ttimeoutlen=50
 set timeoutlen=500
@@ -429,6 +431,7 @@ function! PackInit() abort
 
   " Tree-sitter
   call minpac#add('nvim-treesitter/nvim-treesitter', {'do': 'TSUpdate'})
+  call minpac#add('nvim-treesitter/nvim-treesitter-textobjects')
 
   " Tags
   call minpac#add('ludovicchabant/vim-gutentags')
@@ -453,9 +456,6 @@ endfunction
 
 " Enable matchit.vim plugin which is shipped with Vim
 runtime macros/matchit.vim
-
-" Basic vim plugin in FZF
-set rtp+=~/gitrepos/fzf
 
 " }}}
 

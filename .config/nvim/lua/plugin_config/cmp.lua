@@ -28,8 +28,8 @@ cmp.setup({
     { name = 'nvim_lua' }, -- nvim_lua make it only be enabled for Lua filetype
   },
 
-  -- Icons
   formatting = {
+    -- Icons
     format = lspkind.cmp_format({
       with_text = true,
       menu = ({
@@ -64,9 +64,6 @@ cmp.setup({
 --     autocmd Filetype xxx lua require('cmp').setup.buffer { enabled = false }
 --   augroup END
 -- ]]
-
-
-
 
 -- Helpful resources:
 -- 1) How to create your own cmp source?

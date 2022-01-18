@@ -431,7 +431,6 @@ function! PackInit() abort
 
   " Tree-sitter
   call minpac#add('nvim-treesitter/nvim-treesitter', {'do': 'TSUpdate'})
-  call minpac#add('nvim-treesitter/nvim-treesitter-textobjects')
 
   " Tags
   call minpac#add('ludovicchabant/vim-gutentags')
@@ -453,9 +452,6 @@ function! PackInit() abort
   call minpac#add('sainnhe/gruvbox-material')
 
 endfunction
-
-" Enable matchit.vim plugin which is shipped with Vim
-runtime macros/matchit.vim
 
 " }}}
 

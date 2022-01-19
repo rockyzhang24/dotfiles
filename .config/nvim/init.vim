@@ -412,6 +412,7 @@ function! PackInit() abort
   call minpac#add('tyru/open-browser.vim')
   call minpac#add('p00f/nvim-ts-rainbow')
   call minpac#add('nvim-lualine/lualine.nvim')
+  call minpac#add('junegunn/vim-after-object')
 
   " LSP
   call minpac#add('neovim/nvim-lspconfig')
@@ -630,6 +631,15 @@ let g:rooter_cd_cmd = 'tcd'
 
 " For non-project file, change to the file's directory
 let g:rooter_change_directory_for_non_project_files = 'current'
+
+" }}}
+
+" vim-after-object {{{
+
+augroup after-object
+  autocmd!
+  autocmd VimEnter * call after_object#enable([']', '['], '=', ':', '-', '#', ' ')
+augroup END
 
 " }}}
 

@@ -413,6 +413,7 @@ function! PackInit() abort
   call minpac#add('p00f/nvim-ts-rainbow')
   call minpac#add('nvim-lualine/lualine.nvim')
   call minpac#add('junegunn/vim-after-object')
+  call minpac#add('michaeljsmith/vim-indent-object')
 
   " LSP
   call minpac#add('neovim/nvim-lspconfig')
@@ -432,6 +433,7 @@ function! PackInit() abort
 
   " Tree-sitter
   call minpac#add('nvim-treesitter/nvim-treesitter', {'do': 'TSUpdate'})
+  call minpac#add('nvim-treesitter/nvim-treesitter-textobjects')
 
   " Tags
   call minpac#add('ludovicchabant/vim-gutentags')

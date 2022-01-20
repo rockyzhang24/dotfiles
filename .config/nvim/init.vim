@@ -414,6 +414,8 @@ function! PackInit() abort
   call minpac#add('nvim-lualine/lualine.nvim')
   call minpac#add('junegunn/vim-after-object')
   call minpac#add('michaeljsmith/vim-indent-object')
+  call minpac#add('kevinhwang91/nvim-bqf')
+  call minpac#add('junegunn/fzf', { 'do': 'packloadall! | call fzf#install()' })  " as a filter for bqf
 
   " LSP
   call minpac#add('neovim/nvim-lspconfig')

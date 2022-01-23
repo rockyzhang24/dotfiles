@@ -43,7 +43,7 @@ source $HOME/.config/vifm/icons
 
 " Marks -------------------- {{{
 
-mark b ~/Dropbox/
+mark b ~/Library/CloudStorage/Dropbox/
 mark c ~/.config/
 mark d ~/Documents/
 mark D ~/Downloads/

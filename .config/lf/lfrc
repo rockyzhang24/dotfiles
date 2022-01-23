@@ -121,7 +121,7 @@ map \\x extract # extract
 map Jh cd ~
 map Jd cd ~/Documents
 map JD cd ~/Downloads
-map JB cd ~/Dropbox
+map JB cd ~/Library/CloudStorage/Dropbox/
 map Jg cd ~/gitrepos
 map Jp cd ~/projects
 map Jl cd ~/oj/leetcode

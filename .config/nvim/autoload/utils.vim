@@ -37,6 +37,20 @@ function! utils#GrepOperator(type) abort
   let @@ = saved_unnamed_register
 endfunction
 
+" Operator for grep_string of Telescope
+function! utils#TelescopeGrepOperator(type) abort
+  let saved_unnamed_register = @@
+  if a:type ==# 'v'
+    normal! `<v`>y
+  elseif a:type ==# 'char'
+    normal! `[v`]y
+  else
+    return
+  endif
+  silent execute "lua require('telescope.builtin').grep_string({search = " . shellescape(@@) . "})"
+  let @@ = saved_unnamed_register
+endfunction
+
 " Define abbreviation
 function! utils#SetupCommandAbbrs(from, to) abort
   exec 'cnoreabbrev <expr> '.a:from

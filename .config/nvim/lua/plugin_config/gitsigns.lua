@@ -1,37 +1,13 @@
 require('gitsigns').setup {
+
+  signcolumn = true,
   numhl = true,
+  linehl = false,
+  word_diff = false,
+
   sign_priority = 1,
 
-  keymaps = {
-    -- Mapping options
-    noremap = true,
-    silent = true,
-
-    ['n [h'] = { expr = true, "&diff ? '[c' : '<cmd>Gitsigns prev_hunk<CR>'"},
-    ['n ]h'] = { expr = true, "&diff ? ']c' : '<cmd>Gitsigns next_hunk<CR>'"},
-
-    ['n <leader>hs'] = '<cmd>Gitsigns stage_hunk<CR>',
-    ['v <leader>hs'] = ':Gitsigns stage_hunk<CR>',
-    ['n <leader>hS'] = '<cmd>Gitsigns stage_buffer<CR>',
-
-    ['n <leader>hu'] = '<cmd>Gitsigns undo_stage_hunk<CR>',
-    ['n <leader>hU'] = '<cmd>Gitsigns reset_buffer_index<CR>',  -- undo all hunks of current buffer
-
-    ['n <leader>hr'] = '<cmd>Gitsigns reset_hunk<CR>',  -- "reset" means discarding changes
-    ['v <leader>hr'] = ':Gitsigns reset_hunk<CR>',
-    ['n <leader>hR'] = '<cmd>Gitsigns reset_buffer<CR>',
-
-    ['n <leader>hp'] = '<cmd>Gitsigns preview_hunk<CR>',
-    ['n <leader>hb'] = '<cmd>lua require"gitsigns".blame_line{full=true}<CR>',
-    ['n <leader>hd'] = '<cmd>Gitsigns toggle_deleted<CR>',  -- toggle showing deleted/changed lines via virtual lines
-
-    -- Text objects
-    ['o ih'] = ':<C-U>Gitsigns select_hunk<CR>',
-    ['x ih'] = ':<C-U>Gitsigns select_hunk<CR>',
-
-  },
-
-   preview_config = {
+  preview_config = {
     -- Options passed to nvim_open_win
     border = 'rounded',
     style = 'minimal',
@@ -39,4 +15,46 @@ require('gitsigns').setup {
     row = 0,
     col = 1
   },
+
+  signs = {
+    add          = {show_count = false, text = '┃' },
+    change       = {show_count = false, text = '┃' },
+    delete       = {show_count = true },
+    topdelete    = {show_count = true },
+    changedelete = {show_count = true},
+  },
+
+  -- Keymaps (vim.keymap API requires Neovim 0.7)
+  on_attach = function(bufnr)
+    local gs = package.loaded.gitsigns
+
+    local function map(mode, l, r, opts)
+      opts = opts or {}
+      opts.buffer = bufnr
+      vim.keymap.set(mode, l, r, opts)
+    end
+
+    -- Navigation
+    map('n', '[h', "&diff ? '[c' : '<cmd>Gitsigns prev_hunk<CR>'", {expr=true})
+    map('n', ']h', "&diff ? ']c' : '<cmd>Gitsigns next_hunk<CR>'", {expr=true})
+
+    -- Stage hunk or buffer
+    map({'n', 'v'}, '<Leader>hs', gs.stage_hunk)
+    map('n', '<Leader>hS', gs.stage_buffer)
+
+    -- Unstage hunk or buffer
+    map('n', '<Leader>hu', gs.undo_stage_hunk)
+    map('n', '<Leader>hU', gs.reset_buffer_index) -- git reset HEAD
+
+    -- Discard changes
+    map({'n', 'v'}, '<Leader>hr', gs.reset_hunk)
+    map('n', '<Leader>hR', gs.reset_buffer)
+
+    map('n', '<Leader>hp', gs.preview_hunk)
+    map('n', '<Leader>hb', function() gs.blame_line{full=true} end)
+    map('n', '<Leader>\\c', gs.toggle_deleted) -- toggle showing deleted/changed lines via virtual lines
+
+    -- Text object
+    map({'o', 'x'}, 'ih', ':<C-U>Gitsigns select_hunk<CR>')
+  end
 }

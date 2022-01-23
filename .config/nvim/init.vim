@@ -239,16 +239,16 @@ nnoremap <silent> [B :<C-u>bfirst<CR>
 nnoremap <silent> ]B :<C-u>blast<CR>
 
 " Navigation in the quickfix list
-nnoremap <silent> [q :<C-u>cprevious<CR>
-nnoremap <silent> ]q :<C-u>cnext<CR>
-nnoremap <silent> [Q :<C-u>cfirst<CR>
-nnoremap <silent> ]Q :<C-u>clast<CR>
+nnoremap <silent> [q :<C-u>cprevious<CR>zv
+nnoremap <silent> ]q :<C-u>cnext<CR>zv
+nnoremap <silent> [Q :<C-u>cfirst<CR>zv
+nnoremap <silent> ]Q :<C-u>clast<CR>zv
 
 " Navigation in the location list
-nnoremap <silent> [l :<C-u>lprevious<CR>
-nnoremap <silent> ]l :<C-u>lnext<CR>
-nnoremap <silent> [L :<C-u>lfirst<CR>
-nnoremap <silent> ]L :<C-u>llast<CR>
+nnoremap <silent> [l :<C-u>lprevious<CR>zv
+nnoremap <silent> ]l :<C-u>lnext<CR>zv
+nnoremap <silent> [L :<C-u>lfirst<CR>zv
+nnoremap <silent> ]L :<C-u>llast<CR>zv
 
 " Navigate in the tabs
 nnoremap <silent> [t :<C-u>tabprevious<CR>
@@ -257,10 +257,10 @@ nnoremap <silent> [T :<C-u>tabfirst<CR>
 nnoremap <silent> ]T :<C-u>tablast<CR>
 
 " Toggle spell checking
-nnoremap <silent> yos :setlocal spell! spelllang=en_us<CR>:set spell?<CR>
+nnoremap <silent> <Leader>\s :setlocal spell! spelllang=en_us<CR>:set spell?<CR>
 
 " Toggle wrap
-nnoremap <silent> yow :set wrap!<CR>:set wrap?<CR>
+nnoremap <silent> <Leader>\w :set wrap!<CR>:set wrap?<CR>
 
 " Toggle quickfix window
 nnoremap <silent> \q :call utils#ToggleQuickFix()<CR>
@@ -291,6 +291,10 @@ nnoremap <C-h> <C-w>h
 nnoremap <C-j> <C-w>j
 nnoremap <C-k> <C-w>k
 nnoremap <C-l> <C-w>l
+
+" Scroll the other window
+nnoremap <A-d> <C-w>w<C-d><C-w>w
+nnoremap <A-u> <C-w>w<C-u><C-w>w
 
 " Go to the previous window
 nnoremap <C-p> <C-w>p
@@ -330,8 +334,8 @@ xnoremap * :<C-u>call utils#VSetSearch('/')<CR>/<C-R>=@/<CR><CR>
 xnoremap # :<C-u>call utils#VSetSearch('?')<CR>?<C-R>=@/<CR><CR>
 
 " Grep operator
-nnoremap <silent> \g :<C-u>set operatorfunc=utils#GrepOperator<cr>g@
-xnoremap <silent> \g :<C-u>call utils#GrepOperator(visualmode())<cr>
+nnoremap <silent> \g :<C-u>set operatorfunc=utils#GrepOperator<CR>g@
+xnoremap <silent> \g :<C-u>call utils#GrepOperator(visualmode())<CR>
 
 " Find and replace
 nnoremap \s :%s/
@@ -531,7 +535,7 @@ let g:indent_blankline_use_treesitter = v:true
 let g:indent_blankline_show_current_context = v:true
 
 " Toggle indent line
-nnoremap yoi :IndentBlanklineToggle<CR>
+nnoremap <Leader>\i :IndentBlanklineToggle<CR>
 
 " }}}
 
@@ -597,7 +601,7 @@ let g:Hexokinase_highlighters = ['backgroundfull']
 let g:Hexokinase_optInPatterns = 'full_hex,rgb,rgba,hsl,hsla'
 
 " Toggle
-nnoremap yoc :HexokinaseToggle<CR>
+nnoremap <Leader>\c :HexokinaseToggle<CR>
 
 " }}}
 
@@ -715,7 +719,7 @@ let g:undotree_ShortIndicators = 1
 let g:undotree_SetFocusWhenToggle = 1
 
 " Toggle undotree
-nnoremap you :UndotreeToggle<CR>
+nnoremap <Leader>\u :UndotreeToggle<CR>
 
 " }}}
 

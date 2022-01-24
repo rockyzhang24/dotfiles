@@ -1,0 +1,10 @@
+# vim: filetype=zsh
+
+# MNEMONIC: [F]uzzy search for cfg [A]dd
+# SYNOPSIS: fa
+# DESCRIPTION: Fuzzy finder for cfg add (a bare repo to manage my dotfiles)
+
+home="/Users/rockyzhang"
+prefix="git --git-dir=/Users/rockyzhang/dotfiles/ --work-tree=/Users/rockyzhang/"
+files=($(eval "$prefix diff --name-only" | sed "s~^~$home/~" | fzf --exit-0 --preview "$prefix diff --color=always {} | diff-so-fancy"))
+[[ -n $files ]] && eval "$prefix add ${files[@]}"

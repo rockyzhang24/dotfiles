@@ -6,11 +6,10 @@
 #   - CTRL-o: using the default application
 #   - CTRL-v or ENTER: using $EDITOR
 
-IFS=$'\n'
 if [[ -d $1 ]]; then
-  files=("$(fd --hidden --follow --type f --exclude .git --exclude .DS_Store '.*' $1 | fzf --query="$2" --exit-0)")
+  files=($(fd --hidden --follow --type f --exclude .git --exclude .DS_Store '.*' $1 | fzf --query="$2" --exit-0))
 else
-  files=("$(fd --hidden --follow --type f --exclude .git --exclude .DS_Store '.*' | fzf --query="$1" --exit-0)")
+  files=($(fd --hidden --follow --type f --exclude .git --exclude .DS_Store '.*' | fzf --query="$1" --exit-0))
 fi
-[[ -n "$files" ]] && ${EDITOR:-vim} "${files[@]}"
+[[ -n $files ]] && ${EDITOR:-vim} ${files[@]}
 

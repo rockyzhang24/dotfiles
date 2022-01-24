@@ -4,5 +4,6 @@
 # SYNOPSIS: f.
 # DESCRIPTION: Fuzzy search for the dotfiles and open the selected files via vim
 
-local selection=($(git --git-dir=/Users/rockyzhang/dotfiles/ --work-tree=/Users/rockyzhang/ ls-files | fzf))
-[[ -n "$selection" ]] && ${EDITOR:-vim} "${selection[@]}"
+local prefix="/Users/rockyzhang"
+local selections=($(git --git-dir=/Users/rockyzhang/dotfiles/ --work-tree=/Users/rockyzhang/ ls-tree --full-tree -r HEAD --name-only | sed "s~^~$prefix/~" | fzf))
+[[ -n "$selections" ]] && ${EDITOR:-vim} "${selections[@]}"

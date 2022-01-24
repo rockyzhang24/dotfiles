@@ -8,9 +8,9 @@ local types = require("luasnip.util.types")
 ls.config.setup({
   history = true,
   delete_check_events = "TextChanged",
-  updateevents = "InsertLeave",
+  updateevents = "TextChanged, TextChangedI",
   region_check_events = "CursorHold",
-  enable_autosnippets = false,
+  enable_autosnippets = true,
   store_selection_keys = "<TAB>",
   ext_opts = {
     [types.choiceNode] = {
@@ -24,19 +24,42 @@ ls.config.setup({
   ft_func = require("luasnip.extras.filetype_functions").from_cursor
 })
 
--- Mappings
-vim.cmd [[
-imap <silent><expr> <C-j> luasnip#expand_or_jumpable() ? '<Plug>luasnip-expand-or-jump' : ''
-inoremap <silent> <C-k> <cmd>lua require'luasnip'.jump(-1)<Cr>
+-- Mappings (vim.keymap requires Neovim 0.7)
 
-imap <silent><expr> <C-l> luasnip#choice_active() ? '<Plug>luasnip-next-choice' : '<C-l>'
-smap <silent><expr> <C-l> luasnip#choice_active() ? '<Plug>luasnip-next-choice' : '<C-l>'
-imap <silent><expr> <C-h> luasnip#choice_active() ? '<Plug>luasnip-prev-choice' : '<C-h>'
-smap <silent><expr> <C-h> luasnip#choice_active() ? '<Plug>luasnip-prev-choice' : '<C-h>'
+local function map(mode, l, r, opts)
+  opts = opts or {}
+  opts.silent = true
+  vim.keymap.set(mode, l, r, opts)
+end
 
-snoremap <silent> <C-j> <cmd>lua require('luasnip').jump(1)<Cr>
-snoremap <silent> <C-k> <cmd>lua require('luasnip').jump(-1)<Cr>
-]]
+-- <C-j> is my expansion key
+-- This will expand the current item or jump to the next item within the snippet.
+map({ "i", "s" }, "<C-j>", function()
+  if ls.expand_or_jumpable() then
+    ls.expand_or_jump()
+  end
+end)
+
+-- <C-k> is my jump backwards key.
+-- This always moves to the previous item within the snippet
+map({ "i", "s" }, "<C-k>", function()
+  if ls.jumpable(-1) then
+    ls.jump(-1)
+  end
+end)
+
+-- <C-l> and <C-h> for changing choices in choiceNodes
+map({ "i", "s" }, "<C-l>", function()
+  if ls.choice_active() then
+    ls.change_choice(1)
+  end
+end)
+map({ "i", "s" }, "<C-h>", function()
+  if ls.choice_active() then
+    ls.change_choice(-1)
+  end
+end)
+
 
 -- Split up snippets by filetype, load on demand and reload after change
 -- Snippets for each filetype are saved as modules in ~/.config/nvim/lua/snippets/<filetype>.lua

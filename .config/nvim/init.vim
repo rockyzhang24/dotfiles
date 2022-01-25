@@ -416,10 +416,13 @@ function! PackInit() abort
   call minpac#add('tyru/open-browser.vim')
   call minpac#add('p00f/nvim-ts-rainbow')
   call minpac#add('nvim-lualine/lualine.nvim')
-  call minpac#add('junegunn/vim-after-object')
-  call minpac#add('michaeljsmith/vim-indent-object')
   call minpac#add('kevinhwang91/nvim-bqf')
   call minpac#add('junegunn/fzf', { 'do': 'packloadall! | call fzf#install()' })  " as a filter for bqf
+
+  " Text object
+  call minpac#add('junegunn/vim-after-object')
+  call minpac#add('michaeljsmith/vim-indent-object')
+  call minpac#add('wellle/targets.vim')
 
   " LSP
   call minpac#add('neovim/nvim-lspconfig')
@@ -611,7 +614,7 @@ nnoremap <Leader>\c :HexokinaseToggle<CR>
 
 let g:Illuminate_delay = 300
 
-let g:Illuminate_ftblacklist = ['startify']
+let g:Illuminate_ftblacklist = ['startify', 'qf']
 
 highlight selectionHighlightBackground ctermbg=94 guibg=#6E552F
 
@@ -709,6 +712,18 @@ nnoremap \a :Tabularize /
 xnoremap \a :Tabularize /
 
 " Find extra config at ./after/plugin/tabular.vim
+
+" }}}
+
+" targets.vim {{{
+
+" Text object surrounded by any opening and closing characters can be customized
+" Ref: https://github.com/wellle/targets.vim#targetsmappingsextend
+augroup define_object
+  autocmd User targets#mappings#user call targets#mappings#extend({
+        \ 'a': {'argument': [{'o':'(', 'c':')', 's': ','}]}
+        \ })
+augroup END
 
 " }}}
 

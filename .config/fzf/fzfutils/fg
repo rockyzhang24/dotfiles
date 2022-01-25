@@ -8,7 +8,7 @@
 local errorfile_path=$HOME/.local/share/rg
 [[ ! -e $errorfile_path ]] && mkdir $errorfile_path
 
-local selection=$(rg --line-number --color=always --smart-case --column $@ \
+local selection=$(rg --line-number --color=always --smart-case --vimgrep $@ \
                  | fzf --ansi \
                        --exit-0 \
                        --delimiter : \
@@ -16,4 +16,4 @@ local selection=$(rg --line-number --color=always --smart-case --column $@ \
                        --preview-window +{2}-/2 \
                        --bind 'ctrl-d:half-page-down,ctrl-u:half-page-up,shift-down:preview-half-page-down,shift-up:preview-half-page-up,ctrl-a:select-all,ctrl-x:deselect-all,ctrl-/:toggle-preview,change:top')
 
-[[ -n "$selection" ]] && echo $selection >| $errorfile_path/frg-errorfile && ${EDITOR:-vim} -q $errorfile_path/frg-errorfile
+[[ -n "$selection" ]] && echo $selection >| $errorfile_path/frg-errorfile && ${EDITOR:-vim} -q $errorfile_path/frg-errorfile +copen

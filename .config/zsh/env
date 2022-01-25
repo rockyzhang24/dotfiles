@@ -33,7 +33,7 @@ export WORDCHARS=${WORDCHARS//[\/]}
 
 # less
 export LESSOPEN="| $(which highlight) -O truecolor -s molokai --force -l %s"
-export LESS="-R -M -i"
+export LESS="-R -M -i -j5"
 
 # Gtags
 export GTAGSLABEL='native-pygments'

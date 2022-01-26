@@ -23,19 +23,19 @@ endfunction
 
 " Grep operator
 " Reference: https://learnvimscriptthehardway.stevelosh.com/chapters/32.html
-function! utils#GrepOperator(type) abort
-  let saved_unnamed_register = @@
-  if a:type ==# 'v'
-    normal! `<v`>y
-  elseif a:type ==# 'char'
-    normal! `[v`]y
-  else
-    return
-  endif
-  silent execute "grep! " . shellescape(@@) . " ."
-  copen
-  let @@ = saved_unnamed_register
-endfunction
+" function! utils#GrepOperator(type) abort
+"   let saved_unnamed_register = @@
+"   if a:type ==# 'v'
+"     normal! `<v`>y
+"   elseif a:type ==# 'char'
+"     normal! `[v`]y
+"   else
+"     return
+"   endif
+"   silent execute "grep! " . shellescape(@@) . " ."
+"   copen
+"   let @@ = saved_unnamed_register
+" endfunction
 
 " Operator for grep_string of Telescope
 function! utils#TelescopeGrepOperator(type) abort

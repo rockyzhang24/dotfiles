@@ -333,9 +333,9 @@ nnoremap <expr> N (v:searchforward ? 'Nzzzv' : 'nzzzv')
 xnoremap * :<C-u>call utils#VSetSearch('/')<CR>/<C-R>=@/<CR><CR>
 xnoremap # :<C-u>call utils#VSetSearch('?')<CR>?<C-R>=@/<CR><CR>
 
-" Grep operator
-nnoremap <silent> \g :<C-u>set operatorfunc=utils#GrepOperator<CR>g@
-xnoremap <silent> \g :<C-u>call utils#GrepOperator(visualmode())<CR>
+" Grep operator (now using vim-grepper instead)
+" nnoremap <silent> \g :<C-u>set operatorfunc=utils#GrepOperator<CR>g@
+" xnoremap <silent> \g :<C-u>call utils#GrepOperator(visualmode())<CR>
 
 " Find and replace
 nnoremap \s :%s/
@@ -418,6 +418,7 @@ function! PackInit() abort
   call minpac#add('nvim-lualine/lualine.nvim')
   call minpac#add('kevinhwang91/nvim-bqf')
   call minpac#add('junegunn/fzf', { 'do': 'packloadall! | call fzf#install()' })  " as a filter for bqf
+  call minpac#add('mhinz/vim-grepper')
 
   " Text object
   call minpac#add('junegunn/vim-after-object')
@@ -468,6 +469,12 @@ endfunction
 " }}}
 
 " ---------- [ Plugin settings ] ---------- {{{
+
+" bqf {{{
+
+lua require('plugin_config.bqf')
+
+" }}}
 
 " fugitive {{{
 
@@ -651,6 +658,27 @@ augroup after-object
   autocmd!
   autocmd VimEnter * call after_object#enable([']', '['], '=', ':', '-', '#', ' ')
 augroup END
+
+" }}}
+
+" vim-grepper {{{
+
+let g:grepper = {}
+let g:grepper.dir = 'repo,file'
+let g:grepper.repo = ['.git', '.hg', '.svn']
+let g:grepper.tools = ['rg', 'git']
+let g:grepper.prompt_mapping_tool = '\g'
+let g:grepper.rg = {
+      \ 'grepprg': 'rg -H --no-heading --vimgrep --smart-case',
+      \ 'grepformat': '%f:%l:%c:%m,%f',
+      \ 'escape': '\^$.*+?()[]{}|'
+      \ }
+
+" Operator
+nmap gs <Plug>(GrepperOperator)
+xmap gs <Plug>(GrepperOperator)
+
+nnoremap \g :Grepper<CR>
 
 " }}}
 

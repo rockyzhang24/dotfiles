@@ -416,6 +416,7 @@ function! PackInit() abort
   call minpac#add('junegunn/fzf', { 'do': 'packloadall! | call fzf#install()' })  " as a filter for bqf
   call minpac#add('mhinz/vim-grepper')
   call minpac#add('phaazon/hop.nvim')
+  call minpac#add('kevinhwang91/nvim-hlslens')
 
   " Text object
   call minpac#add('junegunn/vim-after-object')

@@ -280,10 +280,6 @@ nnoremap <expr> ]<Space> 'm`' . v:count . 'o<Esc>``'
 inoremap <C-CR> <C-o>O
 inoremap <S-CR> <C-o>o
 
-" Edit and source vim config file
-nnoremap <silent> <Leader>ve :<C-u>tabedit $MYVIMRC<CR>
-nnoremap <silent> <Leader>vs :<C-u>source $MYVIMRC<CR>
-
 " Window
 
 " Focus movement around windows
@@ -419,6 +415,7 @@ function! PackInit() abort
   call minpac#add('kevinhwang91/nvim-bqf')
   call minpac#add('junegunn/fzf', { 'do': 'packloadall! | call fzf#install()' })  " as a filter for bqf
   call minpac#add('mhinz/vim-grepper')
+  call minpac#add('phaazon/hop.nvim')
 
   " Text object
   call minpac#add('junegunn/vim-after-object')
@@ -534,6 +531,12 @@ let g:gutentags_plus_nomap = 1
 
 " Focus to quickfix window after searching
 let g:gutentags_plus_switch = 1
+
+" }}}
+
+" hop {{{
+
+lua require('plugin_config.hop')
 
 " }}}
 

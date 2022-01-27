@@ -188,3 +188,12 @@ nvim_lsp.rust_analyzer.setup {
   },
   capabilities = capabilities,
 }
+
+-- TypeScript/JavaScript
+nvim_lsp.tsserver.setup {
+  on_attach = on_attach,
+  flags = {
+    debounce_text_changes = 150,
+  },
+  capabilities = capabilities,
+}

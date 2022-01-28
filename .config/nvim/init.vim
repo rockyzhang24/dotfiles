@@ -178,6 +178,9 @@ nnoremap p p=`]
 " Paste over the selected text
 xnoremap p "_c<Esc>p
 
+" Select the last changed (or pasted) text
+nnoremap <expr> gp '`[' . strpart(getregtype(), 0, 1) . '`]'
+
 " Delete but not save to a register
 nnoremap s "_d
 xnoremap s "_d

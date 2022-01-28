@@ -1,3 +1,8 @@
+-- Display an indicator of tag generation progress
+local function gutenTagsProgress()
+  return vim.fn['gutentags#statusline']('[', ']')
+end
+
 require'lualine'.setup {
   options = {
     icons_enabled = true,
@@ -26,7 +31,7 @@ require'lualine'.setup {
     },
     lualine_c = {'filename'},
 
-    lualine_x = {'encoding', 'fileformat', 'filetype'},
+    lualine_x = {gutenTagsProgress, 'encoding', 'fileformat', 'filetype'},
     lualine_y = {'progress'},
     lualine_z = {'location'}
   },
@@ -41,3 +46,4 @@ require'lualine'.setup {
   tabline = {},
   extensions = {'quickfix', 'fugitive'}
 }
+

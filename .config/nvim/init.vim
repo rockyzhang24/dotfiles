@@ -415,6 +415,7 @@ function! PackInit() abort
   call minpac#add('tyru/open-browser.vim')
   call minpac#add('p00f/nvim-ts-rainbow')
   call minpac#add('nvim-lualine/lualine.nvim')
+  call minpac#add('j-hui/fidget.nvim')
   call minpac#add('kevinhwang91/nvim-bqf')
   call minpac#add('junegunn/fzf', { 'do': 'packloadall! | call fzf#install()' })  " as a filter for bqf
   call minpac#add('mhinz/vim-grepper')
@@ -493,6 +494,12 @@ augroup fugitiveautocmd
   autocmd BufReadPost fugitive://* set bufhidden=delete
 
 augroup END
+
+" }}}
+
+" fidget {{{
+
+lua require('plugin_config.fidget')
 
 " }}}
 

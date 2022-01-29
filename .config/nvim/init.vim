@@ -420,6 +420,7 @@ function! PackInit() abort
   call minpac#add('mhinz/vim-grepper')
   call minpac#add('phaazon/hop.nvim')
   call minpac#add('kevinhwang91/nvim-hlslens')
+  call minpac#add('tommcdo/vim-exchange') " cx{motion}, cxx (line), X (visual), cxc (clear), `.` is supported
 
   " Text object
   call minpac#add('junegunn/vim-after-object')

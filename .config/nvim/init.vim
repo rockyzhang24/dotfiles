@@ -406,7 +406,6 @@ function! PackInit() abort
   call minpac#add('tpope/vim-surround')
   call minpac#add('RRethy/vim-illuminate')
   call minpac#add('RRethy/vim-hexokinase', { 'do': 'make hexokinase' })
-  call minpac#add('airblade/vim-rooter')
   call minpac#add('AndrewRadev/splitjoin.vim')  " gS and gJ for split and join
   call minpac#add('godlygeek/tabular')
   call minpac#add('lukas-reineke/indent-blankline.nvim')
@@ -654,18 +653,6 @@ vmap gx <Plug>(openbrowser-smart-search)
 
 " ----}}}
 
-" vim-rooter {{{
-
-let g:rooter_pattern = ['.git/', 'package.json']
-
-" Only change directory for the current tab
-let g:rooter_cd_cmd = 'tcd'
-
-" For non-project file, change to the file's directory
-let g:rooter_change_directory_for_non_project_files = 'current'
-
-" }}}
-
 " vim-after-object {{{
 
 augroup after-object
@@ -733,6 +720,12 @@ let g:startify_custom_header = 'startify#pad(g:ascii + startify#fortune#boxed())
 augroup starity
   autocmd User Startified setlocal cursorline
 augroup END
+
+" Session management
+nnoremap <silent> <Leader>ss :SSave<CR>
+nnoremap <silent> <Leader>sl :SLoad<CR>
+nnoremap <silent> <Leader>sc :SClose<CR>
+nnoremap <silent> <Leader>sd :SDelete<CR>
 
 " }}}
 

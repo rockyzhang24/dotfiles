@@ -447,6 +447,7 @@ function! PackInit() abort
   " Tree-sitter
   call minpac#add('nvim-treesitter/nvim-treesitter', {'do': 'TSUpdate'})
   call minpac#add('nvim-treesitter/nvim-treesitter-textobjects')
+  call minpac#add('JoosepAlviste/nvim-ts-context-commentstring')
 
   " Tags
   call minpac#add('ludovicchabant/vim-gutentags')

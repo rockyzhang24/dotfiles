@@ -1,4 +1,5 @@
 local nvim_lsp = require("lspconfig")
+local aerial = require("aerial")
 
 -- Config diagnostic options globally
 vim.diagnostic.config({
@@ -70,6 +71,9 @@ local on_attach = function(client, bufnr)
 
   -- Toggle diagnostics
   buf_set_keymap('n', '<Leader>\\d', '<cmd>lua require("plugin_config.lsp.lsp-utils").toggle_diagnostics()<CR>', opts)
+
+  -- For Aerial.nvim to display symbols outline
+  aerial.on_attach(client, bufnr)
 
 end
 

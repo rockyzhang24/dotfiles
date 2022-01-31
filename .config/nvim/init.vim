@@ -414,7 +414,6 @@ function! PackInit() abort
   call minpac#add('tyru/open-browser.vim')
   call minpac#add('p00f/nvim-ts-rainbow')
   call minpac#add('nvim-lualine/lualine.nvim')
-  call minpac#add('j-hui/fidget.nvim')
   call minpac#add('kevinhwang91/nvim-bqf')
   call minpac#add('junegunn/fzf', { 'do': 'packloadall! | call fzf#install()' })  " as a filter for bqf
   call minpac#add('mhinz/vim-grepper')
@@ -429,6 +428,8 @@ function! PackInit() abort
 
   " LSP
   call minpac#add('neovim/nvim-lspconfig')
+  call minpac#add('j-hui/fidget.nvim')
+  call minpac#add('stevearc/aerial.nvim')
 
   " Autocomplete
   call minpac#add('hrsh7th/nvim-cmp')
@@ -471,6 +472,12 @@ endfunction
 " }}}
 
 " ---------- [ Plugin settings ] ---------- {{{
+
+" aerial.nvim {{{
+
+lua require('plugin_config.aerial')
+
+" }}}
 
 " bqf {{{
 
@@ -553,7 +560,7 @@ lua require('plugin_config.hop')
 
 " indent-blankline {{{
 
-let g:indent_blankline_filetype_exclude = ['startify', 'help', 'markdown', 'json', 'jsonc', 'WhichKey']
+let g:indent_blankline_filetype_exclude = ['startify', 'help', 'markdown', 'json', 'jsonc', 'WhichKey', 'man', 'aerial']
 let g:indent_blankline_buftype_exclude = ['terminal']
 let g:indent_blankline_use_treesitter = v:true
 let g:indent_blankline_show_current_context = v:true
@@ -581,23 +588,8 @@ command! PluginUpdate source $MYVIMRC | call PackInit() | call minpac#update()
 command! PluginDelete source $MYVIMRC | call PackInit() | call minpac#clean()
 command! PluginStatus packadd minpac | call minpac#status()
 
-function! PackList(...)
-  call PackInit()
-  return join(sort(keys(minpac#getpluglist())), "\n")
-endfunction
-
-" Define a command, OpenPluginDir, to open a new terminal window and cd into the directory where a plugin is installed
-command! -nargs=1 -complete=custom,PackList
-      \ OpenPluginDir call PackInit() | silent exec "!kitty --single-instance -d " . minpac#getpluginfo(<q-args>).dir . " &> /dev/null"
-
-" Define a command, OpenPluginUrl, to open the plugin's git repo in browser
-command! -nargs=1 -complete=custom,PackList
-      \ OpenPluginUrl call PackInit() | silent exec "!open -a \"Safari\" " . minpac#getpluginfo(<q-args>).url
-
 call utils#SetupCommandAbbrs('pu', 'PluginUpdate')
 call utils#SetupCommandAbbrs('pd', 'PluginDelete')
-call utils#SetupCommandAbbrs('pU', 'OpenPluginUrl')
-call utils#SetupCommandAbbrs('pD', 'OpenPluginDir')
 
 " }}}
 

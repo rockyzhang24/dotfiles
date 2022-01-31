@@ -55,6 +55,9 @@ tele.setup {
 -- FZF as the sorter
 tele.load_extension('fzf')
 
+-- Aerial.nvim
+tele.load_extension('aerial')
+
 -- Mappings
 local map_options = {
   noremap = true,

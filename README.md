@@ -1,14 +1,28 @@
-# My config files ...
+# My configuration files
 
-These are my config files on macOS.
+This repo hosts my config files for macOS. They should also work on Linux but have not been tested yet.
+Just cherry pick the piece of code you totally understand.
 
-Settings for:
-* [Neovim](./.config/nvim/) (my life)
-* [Zsh](./.config/zsh/) (shell)
-* [yabai](./.config/yabai/) & [skhd](./.config/skhd/) (window manager)
-* [lf](./.config/lf/)/[vifm](./.config/vifm/)/[ranger](./.config/ranger/) (file manager)
-* [kitty](./.config/kitty/)/[alacritty](./.config/alacritty/)/iTerm2 (terminal)
-* [karabiner](./.config/karabiner/) (keyboard customizer)
+[Neovim](./.config/nvim/): The text editor I've been in love with
+
+[Zsh](./.config/zsh/): Shell
+
+* Use [Zim](https://github.com/zimfw/zimfw) to manage Zsh plugins
+* The prompt theme is [Powerlevel10k](https://github.com/romkatv/powerlevel10k[])
+* [fzf](./.config/fzf): Fuzzy finder I use widely in my daily workflow. I created some fzf-based [scripts](./.config/fzf/fzfutils/) to boost productivity.
+* [bin](./.config/bin): Very useful scripts
+
+[kitty](./.config/kitty/)/[alacritty](./.config/alacritty/): Terminal
+
+[yabai](./.config/yabai/), [skhd](./.config/skhd/): Tiling window manager
+
+[lf](./.config/lf/)/[vifm](./.config/vifm/)/[ranger](./.config/ranger/): Console file manager
+
+[karabiner-Elements](./.config/karabiner/): keyboard customizer
+
+* `Caps Lock` as `Esc` and `L-Ctrl`
+* `R-Command` as `HYPER` key
+* `L-Ctrl` as `MEH` key
 
 # How I am managing the dotfiles
 

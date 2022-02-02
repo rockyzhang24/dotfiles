@@ -3,7 +3,7 @@ require("aerial").setup {
   -- Mappings
   on_attach = function(bufnr)
     -- Toggle aerial window
-    vim.api.nvim_buf_set_keymap(bufnr, 'n', '<Leader>\\a', '<Cmd>AerialToggle!<CR>', {})
+    vim.api.nvim_buf_set_keymap(bufnr, 'n', '\\a', '<Cmd>AerialToggle!<CR>', {})
     -- Jump forwards/backwards
     vim.api.nvim_buf_set_keymap(bufnr, 'n', '<Leader>{', '<cmd>AerialPrev<CR>', {})
     vim.api.nvim_buf_set_keymap(bufnr, 'n', '<Leader>}', '<cmd>AerialNext<CR>', {})

@@ -52,7 +52,7 @@ require('gitsigns').setup {
 
     map('n', '<Leader>hp', gs.preview_hunk)
     map('n', '<Leader>hb', function() gs.blame_line{full=true} end)
-    map('n', '<Leader>\\c', gs.toggle_deleted) -- toggle showing deleted/changed lines via virtual lines
+    map('n', '\\c', gs.toggle_deleted) -- toggle showing deleted/changed lines via virtual lines
 
     -- Text object
     map({'o', 'x'}, 'ih', ':<C-U>Gitsigns select_hunk<CR>')

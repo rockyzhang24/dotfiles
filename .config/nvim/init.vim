@@ -260,20 +260,20 @@ nnoremap <silent> [T :<C-u>tabfirst<CR>
 nnoremap <silent> ]T :<C-u>tablast<CR>
 
 " Toggle spell checking
-nnoremap <silent> <Leader>\s :setlocal spell! spelllang=en_us<CR>:set spell?<CR>
+nnoremap <silent> \s :setlocal spell! spelllang=en_us<CR>:set spell?<CR>
 
 " Toggle wrap
-nnoremap <silent> <Leader>\w :set wrap!<CR>:set wrap?<CR>
+nnoremap <silent> \w :set wrap!<CR>:set wrap?<CR>
 
 " Toggle quickfix window
 nnoremap <silent> \q :call utils#ToggleQuickFix()<CR>
 nnoremap <silent> \l :call utils#ToggleLocationList()<CR>
 
 " Delete the current buffer and switch back to the previous one
-nnoremap <silent> \d :<C-u>bprevious <Bar> bdelete #<CR>
+nnoremap <silent> <Leader>xd :<C-u>bprevious <Bar> bdelete #<CR>
 
 " Close the current tab
-nnoremap <silent> \w :tabclose<CR>
+nnoremap <silent> <Leader>xt :tabclose<CR>
 
 " Insert blank lines above or below the current line and preserve the cursor position
 nnoremap <expr> [<Space> 'm`' . v:count . 'O<Esc>``'
@@ -568,7 +568,7 @@ let g:indent_blankline_use_treesitter = v:true
 let g:indent_blankline_show_current_context = v:true
 
 " Toggle indent line
-nnoremap <Leader>\i :IndentBlanklineToggle<CR>
+nnoremap \i :IndentBlanklineToggle<CR>
 
 " }}}
 
@@ -625,7 +625,7 @@ let g:Hexokinase_highlighters = ['backgroundfull']
 let g:Hexokinase_optInPatterns = 'full_hex,rgb,rgba,hsl,hsla'
 
 " Toggle
-nnoremap <Leader>\c :HexokinaseToggle<CR>
+nnoremap \c :HexokinaseToggle<CR>
 
 " }}}
 
@@ -744,8 +744,8 @@ lua require('plugin_config.telescope.telescope-config')
 
 " tabular {{{
 
-nnoremap \a :Tabularize /
-xnoremap \a :Tabularize /
+nnoremap <Leader>a :Tabularize /
+xnoremap <Leader>a :Tabularize /
 
 " Find extra config at ./after/plugin/tabular.vim
 
@@ -770,7 +770,7 @@ let g:undotree_ShortIndicators = 1
 let g:undotree_SetFocusWhenToggle = 1
 
 " Toggle undotree
-nnoremap <Leader>\u :UndotreeToggle<CR>
+nnoremap \u :UndotreeToggle<CR>
 
 " }}}
 

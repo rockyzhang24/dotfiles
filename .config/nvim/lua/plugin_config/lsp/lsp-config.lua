@@ -70,7 +70,7 @@ local on_attach = function(client, bufnr)
   buf_set_keymap('x', ',f', '<cmd>lua require("plugin_config.lsp.lsp-utils").format_range_operator()<CR>', opts)  -- format a given range
 
   -- Toggle diagnostics
-  buf_set_keymap('n', '<Leader>\\d', '<cmd>lua require("plugin_config.lsp.lsp-utils").toggle_diagnostics()<CR>', opts)
+  buf_set_keymap('n', '\\d', '<cmd>lua require("plugin_config.lsp.lsp-utils").toggle_diagnostics()<CR>', opts)
 
   -- For Aerial.nvim to display symbols outline
   aerial.on_attach(client, bufnr)

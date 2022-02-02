@@ -420,6 +420,7 @@ function! PackInit() abort
   call minpac#add('phaazon/hop.nvim')
   call minpac#add('kevinhwang91/nvim-hlslens')
   call minpac#add('tommcdo/vim-exchange') " cx{motion}, cxx (line), X (visual), cxc (clear), `.` is supported
+  call minpac#add('kyazdani42/nvim-tree.lua')
 
   " Text object
   call minpac#add('junegunn/vim-after-object')
@@ -561,7 +562,7 @@ lua require('plugin_config.hop')
 
 " indent-blankline {{{
 
-let g:indent_blankline_filetype_exclude = ['startify', 'help', 'markdown', 'json', 'jsonc', 'WhichKey', 'man', 'aerial']
+let g:indent_blankline_filetype_exclude = ['startify', 'help', 'markdown', 'json', 'jsonc', 'WhichKey', 'man', 'aerial', 'NvimTree']
 let g:indent_blankline_buftype_exclude = ['terminal']
 let g:indent_blankline_use_treesitter = v:true
 let g:indent_blankline_show_current_context = v:true
@@ -612,6 +613,12 @@ lua require('plugin_config.nvim-ts-rainbow')
 
 " }}}
 
+" nvim-tree {{{
+
+lua require('plugin_config.nvim-tree')
+
+" }}}
+
 " vim-hexokinase {{{
 
 let g:Hexokinase_highlighters = ['backgroundfull']
@@ -628,7 +635,7 @@ nnoremap <Leader>\c :HexokinaseToggle<CR>
 
 let g:Illuminate_delay = 300
 
-let g:Illuminate_ftblacklist = ['startify', 'qf']
+let g:Illuminate_ftblacklist = ['startify', 'qf', 'NvimTree']
 
 highlight selectionHighlightBackground ctermbg=94 guibg=#6E552F
 

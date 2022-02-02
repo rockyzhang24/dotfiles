@@ -294,6 +294,8 @@ nnoremap <C-l> <C-w>l
 " Scroll the other window
 nnoremap <A-d> <C-w>w<C-d><C-w>w
 nnoremap <A-u> <C-w>w<C-u><C-w>w
+inoremap <A-d> <Esc><C-w>w<C-d><C-w>wa
+inoremap <A-u> <Esc><C-w>w<C-u><C-w>wa
 
 " Go to the previous window
 nnoremap <C-p> <C-w>p

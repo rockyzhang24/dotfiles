@@ -691,6 +691,9 @@ nnoremap \g :Grepper<CR>
 " Make vim-rooter works when a file is opened from startify
 let g:startify_change_to_dir = 0
 
+" Filter MRU files
+let g:startify_skiplist = ['tmp\..*']
+
 " Devicons
 lua << EOF
 function _G.webDevIcons(path)

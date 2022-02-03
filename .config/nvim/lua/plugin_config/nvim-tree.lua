@@ -8,6 +8,10 @@ require'nvim-tree'.setup {
   filters = {
     custom = {'.DS_Store'},
   },
+  diagnostics = {
+    enable = true,
+    show_on_dirs = true,
+  },
   view = {
     mappings = {
       custom_only = true,
@@ -41,7 +45,7 @@ require'nvim-tree'.setup {
         { key = "[g", action = "prev_git_item" },
         { key = "]g", action = "next_git_item" },
         { key = "o", action = "system_open" },
-        { key = "yc", action = "copy_name" },
+        { key = "yn", action = "copy_name" },
         { key = "yp", action = "copy_path" },
         { key = "yP", action = "copy_absolute_path" },
         { key = "q", action = "close" },

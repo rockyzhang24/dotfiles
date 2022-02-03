@@ -32,7 +32,7 @@ export SPROMPT='zsh: correct %F{red}%R%f to %F{green}%r%f [nyae]? '
 export WORDCHARS=${WORDCHARS//[\/]}
 
 # less
-export LESSOPEN="| $(which highlight) -O truecolor -s molokai --force -l %s"
+export LESSOPEN="| highlight -O truecolor -s molokai --force -l %s"
 export LESS="-R -M -i -j5"
 
 # Gtags

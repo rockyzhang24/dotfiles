@@ -30,6 +30,15 @@ cmd open ${{
 
 cmd mkdir $mkdir -p "$(echo $* | tr ' ' '\ ')"
 
+# Create a directory with the selected items
+cmd new-folder-with-selection ${{
+  set -f
+  printf "Directory name: "
+  read newd
+  mkdir -- "$newd"
+  mv -- $fx "$newd"
+}}
+
 cmd chmod ${{
   printf "\nMode Bits: "
   read ans
@@ -41,17 +50,17 @@ cmd chmod ${{
 }}
 
 cmd extract ${{
-    set -f
-    case $f in
-        *.tar.bz|*.tar.bz2|*.tbz|*.tbz2) tar xjvf $f;;
-        *.tar.gz|*.tgz) tar xzvf $f;;
-        *.tar.xz|*.txz) tar xJvf $f;;
-        *.tar) tar xvf $f;;
-        *.zip) unzip $f;;
-        *.rar) unrar x $f;;
-        *.7z) 7z x $f;;
-        *) echo "Unsupported format";;
-    esac
+  set -f
+  case $f in
+    *.tar.bz|*.tar.bz2|*.tbz|*.tbz2) tar xjvf $f;;
+    *.tar.gz|*.tgz) tar xzvf $f;;
+    *.tar.xz|*.txz) tar xJvf $f;;
+    *.tar) tar xvf $f;;
+    *.zip) unzip $f;;
+    *.rar) unrar x $f;;
+    *.7z) 7z x $f;;
+    *) echo "Unsupported format";;
+  esac
 }}
 
 cmd tar ${{
@@ -75,7 +84,9 @@ cmd delete ${{
   printf "\n$fx\n"
   printf "delete?[y/N]"
   read ans
-  [ $ans = "y" ] && rm -rf $fx
+  if [[ $ans == "y" ]]; then
+    rm -rf $fx
+  fi
 }}
 
 cmd trash ${{
@@ -83,25 +94,75 @@ cmd trash ${{
   printf "\n$fx\n"
   printf "trash?[y/N]"
   read ans
-  [ $ans = "y" ] && trash -Fv $fx
+  if [[ $ans == "y" ]]; then
+    trash -Fv $fx
+  fi
 }}
 
 cmd select-all :unselect; invert
+
+# Bulk rename on selected files or all the non-hidden files in the current directory if no selection
+cmd bulk-rename ${{
+  old="$(mktemp)"
+  new="$(mktemp)"
+  if [ -n "$fs" ]; then
+    fs="$(basename $fs)"
+  else
+    fs="$(ls)"
+  fi
+  printf '%s\n' "$fs" >"$old"
+  printf '%s\n' "$fs" >"$new"
+  $EDITOR "$new"
+  [ "$(wc -l < "$new")" -ne "$(wc -l < "$old")" ] && exit
+  paste "$old" "$new" | while IFS= read -r names; do
+    src="$(printf '%s' "$names" | cut -f1)"
+    dst="$(printf '%s' "$names" | cut -f2)"
+    if [ "$src" = "$dst" ] || [ -e "$dst" ]; then
+        continue
+    fi
+    mv -- "$src" "$dst"
+  done
+  rm -- "$old" "$new"
+  lf -remote "send $id unselect"
+}}
+
+# Copy the file names (including extension) of the selections separated by \n
+cmd copy-filename ${{
+  names="$(echo $fx | tr ' ' '\n' | xargs -I{} basename {})"
+  echo $names | tr ' ' '\n' | pbcopy
+}}
+
+# Copy the absolute paths of selections separated by \n
+cmd copy-absolute-path ${{
+  echo $fx | tr ' ' '\n' | pbcopy
+}}
 
 # ========== Mappings ==========
 
 # Remove some defaults
 map gh
 map d
+map y
 
+map yy copy
+# copy the file names of the selections
+map yn copy-filename
+# copy the absolute paths of the selections
+map yP copy-absolute-path
 map <enter> shell
-map DD delete
+map D delete
 map T trash
-map U !printf "\n";du -csh * # list the size of each item in the current directory
-map <c-f> $lf -remote "send $id select '$(fd --hidden --follow --exclude .git --exclude .DS_Store | fzf)'" # search a file or directory and then make lf select it
-map <c-n> push :mkdir<space> # give a name and then make a directory
+# list the size of each item in the current directory
+map U !printf "\n";du -csh *
+# search a file or directory and then make lf select it
+map <c-f> $lf -remote "send $id select '$(fd --hidden --follow --exclude .git --exclude .DS_Store | fzf)'"
+# give a name and then make a directory
+map <c-n> push :mkdir<space>
+# Create a new folder with the selected items
+map <a-n> new-folder-with-selection
 map x cut
-map V push :!nvim<space> # give a name and then use neovim to edit it
+# give a name and then use neovim to edit it
+map V push :!nvim<space>
 
 # Navigate among the parent directories
 map [ push hkl
@@ -111,11 +172,13 @@ map ] push hjl
 map A rename # at the very end
 map I push A<c-a> # at the very beginning
 map r push A<c-u> # new rename
+map <c-r> bulk-rename
 
 # Use \ as the leader key
-map \\. set hidden! # toggle hidden
-map \\c push :zip<space> # compress (give a name like abc and it will compress the selected items to abc.zip)
-map \\x extract # extract
+# compress (give a name like abc and it will compress the selected items to abc.zip)
+map \\c push :zip<space>
+# extract
+map \\x extract
 
 # Fast navigation
 map Jh cd ~

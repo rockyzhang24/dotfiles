@@ -137,6 +137,8 @@ call utils#SetupCommandAbbrs('T', 'tabedit')
 
 " ---------- [ Mappings ] ---------- {{{
 
+" Misc {{{
+
 let mapleader=" "
 
 " The normal , acts as a leader key for lsp mappings
@@ -270,10 +272,7 @@ nnoremap <silent> \q :call utils#ToggleQuickFix()<CR>
 nnoremap <silent> \l :call utils#ToggleLocationList()<CR>
 
 " Delete the current buffer and switch back to the previous one
-nnoremap <silent> <Leader>xd :<C-u>bprevious <Bar> bdelete #<CR>
-
-" Close the current tab
-nnoremap <silent> <Leader>xt :tabclose<CR>
+nnoremap <silent> <Leader>xb :<C-u>bprevious <Bar> bdelete #<CR>
 
 " Insert blank lines above or below the current line and preserve the cursor position
 nnoremap <expr> [<Space> 'm`' . v:count . 'O<Esc>``'
@@ -283,7 +282,9 @@ nnoremap <expr> ]<Space> 'm`' . v:count . 'o<Esc>``'
 inoremap <C-CR> <C-o>O
 inoremap <S-CR> <C-o>o
 
-" Window
+" }}}
+
+" Window {{{
 
 " Focus movement around windows
 nnoremap <C-h> <C-w>h
@@ -321,7 +322,26 @@ nnoremap <C-Right> <C-w>5>
 " Balance size
 nnoremap <Leader>= <C-w>=
 
-" Searching
+" }}}
+
+" tab {{{
+
+" Open a new tab with an empty window
+nnoremap <silent> <Leader>tn :$tabnew<CR>
+
+" Close the current tab
+nnoremap <silent> <Leader>xt :tabclose<CR>
+
+" Close all other tabs
+nnoremap <silent> <Leader>to :tabonly<CR>
+
+" Move the current tab to the left or right
+nnoremap <silent> <Leader>t[ :-tabmove<CR>
+nnoremap <silent> <Leader>t] :+tabmove<CR>
+
+" }}}
+
+" Searching {{{
 
 " Clean search highlighting
 nnoremap <silent> <Leader>/ :<C-U>nohlsearch<C-R>=has('diff')?'<Bar>diffupdate':''<CR><CR><C-L>
@@ -342,7 +362,9 @@ xnoremap # :<C-u>call utils#VSetSearch('?')<CR>?<C-R>=@/<CR><CR>
 nnoremap \s :%s/
 xnoremap \s :s/
 
-" Command-line
+" }}}
+
+" Command-line {{{
 
 " Cursor movement in command line (Emacs style)
 cnoremap <C-p> <Up>
@@ -360,7 +382,9 @@ set cedit=\<C-o>
 " Get the full path of the current file
 cnoremap %% <C-R>=fnameescape(expand('%:h')).'/'<cr>
 
-" Terminal
+" }}}
+
+" Terminal {{{
 " right Option as Meta
 
 " Toggle a terminal at the bottom
@@ -389,6 +413,8 @@ nnoremap <M-l> <C-w>l
 " In terminal mode, use <M-r> to simulate <C-r> in insert mode for inserting the content of a register
 " Reference: http://vimcasts.org/episodes/neovim-terminal-paste/
 tnoremap <expr> <M-r> '<C-\><C-n>"' . nr2char(getchar()) . 'pi'
+
+" }}}
 
 " }}}
 
@@ -423,6 +449,7 @@ function! PackInit() abort
   call minpac#add('kevinhwang91/nvim-hlslens')
   call minpac#add('tommcdo/vim-exchange') " cx{motion}, cxx (line), X (visual), cxc (clear), `.` is supported
   call minpac#add('kyazdani42/nvim-tree.lua')
+  call minpac#add('nanozuki/tabby.nvim')
 
   " Text object
   call minpac#add('junegunn/vim-after-object')
@@ -765,6 +792,12 @@ augroup define_object
         \ 'a': {'argument': [{'o':'(', 'c':')', 's': ','}]}
         \ })
 augroup END
+
+" }}}
+
+" tabby {{{
+
+lua require('plugin_config.tabby')
 
 " }}}
 

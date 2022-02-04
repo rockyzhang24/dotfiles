@@ -478,6 +478,7 @@ function! PackInit() abort
   call minpac#add('nvim-treesitter/nvim-treesitter', {'do': 'TSUpdate'})
   call minpac#add('nvim-treesitter/nvim-treesitter-textobjects')
   call minpac#add('JoosepAlviste/nvim-ts-context-commentstring')
+  call minpac#add('mizlan/iswap.nvim')
 
   " Tags
   call minpac#add('ludovicchabant/vim-gutentags')
@@ -598,6 +599,13 @@ let g:indent_blankline_show_current_context = v:true
 
 " Toggle indent line
 nnoremap \i :IndentBlanklineToggle<CR>
+
+" }}}
+
+" iswap {{{
+
+" Use cx to be consistent with vim-exchange
+nnoremap <silent> <Leader>cx <Cmd>ISwap<CR>
 
 " }}}
 

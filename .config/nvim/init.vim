@@ -440,7 +440,6 @@ function! PackInit() abort
   call minpac#add('mbbill/undotree')
   call minpac#add('mhinz/vim-startify')
   call minpac#add('tyru/open-browser.vim')
-  call minpac#add('p00f/nvim-ts-rainbow')
   call minpac#add('nvim-lualine/lualine.nvim')
   call minpac#add('kevinhwang91/nvim-bqf')
   call minpac#add('junegunn/fzf', { 'do': 'packloadall! | call fzf#install()' })  " as a filter for bqf
@@ -479,6 +478,7 @@ function! PackInit() abort
   call minpac#add('nvim-treesitter/nvim-treesitter-textobjects')
   call minpac#add('JoosepAlviste/nvim-ts-context-commentstring')
   call minpac#add('mizlan/iswap.nvim')
+  call minpac#add('p00f/nvim-ts-rainbow')
 
   " Tags
   call minpac#add('ludovicchabant/vim-gutentags')
@@ -503,19 +503,7 @@ endfunction
 
 " }}}
 
-" ---------- [ Plugin settings ] ---------- {{{
-
-" aerial.nvim {{{
-
-lua require('plugin_config.aerial')
-
-" }}}
-
-" bqf {{{
-
-lua require('plugin_config.bqf')
-
-" }}}
+" ---------- [ Viml plugin settings ] ---------- {{{
 
 " fugitive {{{
 
@@ -533,18 +521,6 @@ augroup fugitiveautocmd
   autocmd BufReadPost fugitive://* set bufhidden=delete
 
 augroup END
-
-" }}}
-
-" fidget {{{
-
-lua require('plugin_config.fidget')
-
-" }}}
-
-" gitsigns {{{
-
-lua require('plugin_config.gitsigns')
 
 " }}}
 
@@ -584,12 +560,6 @@ let g:gutentags_plus_switch = 1
 
 " }}}
 
-" hop {{{
-
-lua require('plugin_config.hop')
-
-" }}}
-
 " indent-blankline {{{
 
 let g:indent_blankline_filetype_exclude = ['startify', 'help', 'markdown', 'json', 'jsonc', 'WhichKey', 'man', 'aerial', 'NvimTree']
@@ -609,18 +579,6 @@ nnoremap <silent> <Leader>cx <Cmd>ISwap<CR>
 
 " }}}
 
-" lualine {{{
-
-lua require('plugin_config.lualine')
-
-" }}}
-
-" luasnip {{{
-
-lua require('plugin_config.luasnip.luasnip-config')
-
-" }}}
-
 " minpac {{{
 
 command! PluginUpdate source $MYVIMRC | call PackInit() | call minpac#update()
@@ -629,30 +587,6 @@ command! PluginStatus packadd minpac | call minpac#status()
 
 call utils#SetupCommandAbbrs('pu', 'PluginUpdate')
 call utils#SetupCommandAbbrs('pd', 'PluginDelete')
-
-" }}}
-
-" nvim-cmp {{{
-
-lua require('plugin_config.cmp')
-
-" }}}
-
-" nvim-lspconfig {{{
-
-lua require('plugin_config.lsp.lsp-config')
-
-" }}}
-
-" nvim-ts-rainbow {{{
-
-lua require('plugin_config.nvim-ts-rainbow')
-
-" }}}
-
-" nvim-tree {{{
-
-lua require('plugin_config.nvim-tree')
 
 " }}}
 
@@ -770,18 +704,6 @@ nnoremap <silent> <Leader>sd :SDelete<CR>
 
 " }}}
 
-" treesitter {{{
-
-lua require('plugin_config.treesitter')
-
-" }}}
-
-" telescope {{{
-
-lua require('plugin_config.telescope.telescope-config')
-
-" }}}
-
 " tabular {{{
 
 nnoremap <Leader>a :Tabularize /
@@ -803,12 +725,6 @@ augroup END
 
 " }}}
 
-" tabby {{{
-
-lua require('plugin_config.tabby')
-
-" }}}
-
 " undotree {{{
 
 let g:undotree_WindowLayout = 2
@@ -819,5 +735,51 @@ let g:undotree_SetFocusWhenToggle = 1
 nnoremap \u :UndotreeToggle<CR>
 
 " }}}
+
+" }}}
+
+" ---------- [ Lua plugin settings ] ---------- {{{
+
+" aerial.nvim
+lua require('plugin_config.aerial')
+
+" nvim-bqf
+lua require('plugin_config.bqf')
+
+" fidget.nvim
+lua require('plugin_config.fidget')
+
+"gitsigns.nvim
+lua require('plugin_config.gitsigns')
+
+" hop.nvim
+lua require('plugin_config.hop')
+
+" lualine.nvim
+lua require('plugin_config.lualine')
+
+" LuaSnip
+lua require('plugin_config.luasnip.luasnip-config')
+
+" nvim-cmp
+lua require('plugin_config.cmp')
+
+" nvim-lspconfig
+lua require('plugin_config.lsp.lsp-config')
+
+" nvim-ts-rainbow
+lua require('plugin_config.nvim-ts-rainbow')
+
+" nvim-tree.lua
+lua require('plugin_config.nvim-tree')
+
+" nvim-treesitter
+lua require('plugin_config.treesitter')
+
+" telescope.nvim
+lua require('plugin_config.telescope.telescope-config')
+
+" tabby.nvim
+lua require('plugin_config.tabby')
 
 " }}}

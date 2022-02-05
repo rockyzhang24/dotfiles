@@ -58,6 +58,9 @@ tele.load_extension('fzf')
 -- Aerial.nvim
 tele.load_extension('aerial')
 
+-- nvim-neoclip.lua
+tele.load_extension('neoclip')
+
 -- Mappings
 local map_options = {
   noremap = true,

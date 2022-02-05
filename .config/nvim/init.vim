@@ -428,8 +428,7 @@ function! PackInit() abort
   call minpac#add('k-takata/minpac', {'type': 'opt'})
 
   call minpac#add('nvim-lua/plenary.nvim')  " lua library used by other lua plugins
-  call minpac#add('nvim-telescope/telescope-fzf-native.nvim', { 'do': 'make' })  " sorter for telescope
-  call minpac#add('nvim-telescope/telescope.nvim')
+  call minpac#add('tami5/sqlite.lua')
   call minpac#add('tpope/vim-commentary')
   call minpac#add('tpope/vim-surround')
   call minpac#add('RRethy/vim-illuminate')
@@ -449,6 +448,11 @@ function! PackInit() abort
   call minpac#add('tommcdo/vim-exchange') " cx{motion}, cxx (line), X (visual), cxc (clear), `.` is supported
   call minpac#add('kyazdani42/nvim-tree.lua')
   call minpac#add('nanozuki/tabby.nvim')
+
+  " Telescope
+  call minpac#add('nvim-telescope/telescope-fzf-native.nvim', { 'do': 'make' })  " sorter for telescope
+  call minpac#add('nvim-telescope/telescope.nvim')
+  call minpac#add('AckslD/nvim-neoclip.lua')
 
   " Text object
   call minpac#add('junegunn/vim-after-object')
@@ -760,6 +764,9 @@ lua require('plugin_config.lualine')
 
 " LuaSnip
 lua require('plugin_config.luasnip.luasnip-config')
+
+" nvim-neoclip.lua
+lua require('plugin_config.neoclip')
 
 " nvim-cmp
 lua require('plugin_config.cmp')

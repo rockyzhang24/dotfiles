@@ -195,12 +195,6 @@ xnoremap c "_c
 nnoremap C "_C
 nnoremap cc "_cc
 
-" Increment and decrement
-nnoremap + <C-a>
-nnoremap - <C-x>
-xnoremap + g<C-a>
-xnoremap - g<C-x>
-
 " Switch between the current and the last buffer
 nnoremap <Backspace> <C-^>
 
@@ -450,6 +444,7 @@ function! PackInit() abort
   call minpac#add('tommcdo/vim-exchange') " cx{motion}, cxx (line), X (visual), cxc (clear), `.` is supported
   call minpac#add('kyazdani42/nvim-tree.lua')
   call minpac#add('nanozuki/tabby.nvim')
+  call minpac#add('t9md/vim-choosewin')
 
   " Telescope
   call minpac#add('nvim-telescope/telescope-fzf-native.nvim', { 'do': 'make' })  " sorter for telescope
@@ -509,6 +504,14 @@ endfunction
 " }}}
 
 " ---------- [ Viml plugin settings ] ---------- {{{
+
+" choosewin {{{
+
+nmap  -  <Plug>(choosewin)
+let g:choosewin_blink_on_land = 0
+let g:choosewin_tabline_replace = 0
+
+" }}}
 
 " fugitive {{{
 

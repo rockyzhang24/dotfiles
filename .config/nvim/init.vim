@@ -158,6 +158,8 @@ xnoremap K :m '<-2<CR>gv=gv
 inoremap <M-j> <Esc>:m .+1<CR>==a
 inoremap <M-k> <Esc>:m .-2<CR>==a
 
+" Fast insert a place holder
+inoremap ,p <++>
 " Jump to the next '<++>' and edit it
 nnoremap <silent> <Leader><Leader> <Esc>/<++><CR>:nohlsearch<CR>c4l
 inoremap <silent> ,f <Esc>/<++><CR>:nohlsearch<CR>"_c4l

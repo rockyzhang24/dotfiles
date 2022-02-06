@@ -454,7 +454,6 @@ function! PackInit() abort
   " Telescope
   call minpac#add('nvim-telescope/telescope-fzf-native.nvim', { 'do': 'make' })  " sorter for telescope
   call minpac#add('nvim-telescope/telescope.nvim')
-  call minpac#add('AckslD/nvim-neoclip.lua')
 
   " Text object
   call minpac#add('junegunn/vim-after-object')
@@ -766,9 +765,6 @@ lua require('plugin_config.lualine')
 
 " LuaSnip
 lua require('plugin_config.luasnip.luasnip-config')
-
-" nvim-neoclip.lua
-lua require('plugin_config.neoclip')
 
 " nvim-cmp
 lua require('plugin_config.cmp')

@@ -769,6 +769,9 @@ lua require('plugin_config.lualine')
 " LuaSnip
 lua require('plugin_config.luasnip.luasnip-config')
 
+" hlslens
+lua require('plugin_config.hlslens')
+
 " nvim-cmp
 lua require('plugin_config.cmp')
 

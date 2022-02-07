@@ -31,6 +31,7 @@ require('gitsigns').setup {
     local function map(mode, l, r, opts)
       opts = opts or {}
       opts.buffer = bufnr
+      opts.silent = true
       vim.keymap.set(mode, l, r, opts)
     end
 
@@ -39,7 +40,7 @@ require('gitsigns').setup {
     map('n', ']h', "&diff ? ']c' : '<cmd>Gitsigns next_hunk<CR>'", {expr=true})
 
     -- Stage hunk or buffer
-    map({'n', 'v'}, '<Leader>hs', gs.stage_hunk)
+    map({'n', 'v'}, '<Leader>hs', ':Gitsigns stage_hunk<CR>')
     map('n', '<Leader>hS', gs.stage_buffer)
 
     -- Unstage hunk or buffer
@@ -47,12 +48,16 @@ require('gitsigns').setup {
     map('n', '<Leader>hU', gs.reset_buffer_index) -- git reset HEAD
 
     -- Discard changes
-    map({'n', 'v'}, '<Leader>hr', gs.reset_hunk)
+    map({'n', 'v'}, '<Leader>hr', ':Gitsigns reset_hunk<CR>')
     map('n', '<Leader>hR', gs.reset_buffer)
 
     map('n', '<Leader>hp', gs.preview_hunk)
     map('n', '<Leader>hb', function() gs.blame_line{full=true} end)
     map('n', '\\c', gs.toggle_deleted) -- toggle showing deleted/changed lines via virtual lines
+
+    -- Diff
+    map('n', '<leader>hd', gs.diffthis)
+    map('n', '<leader>hD', function() gs.diffthis('~') end)
 
     -- Text object
     map({'o', 'x'}, 'ih', ':<C-U>Gitsigns select_hunk<CR>')

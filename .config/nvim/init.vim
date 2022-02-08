@@ -15,7 +15,7 @@ set autoread
 set noshowmode
 set showcmd
 set wildmenu
-set wildmode=list:longest,full
+set wildmode=longest:full,full
 set textwidth=80
 set colorcolumn=80
 set list

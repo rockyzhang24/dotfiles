@@ -36,4 +36,4 @@ let g:instant_markdown_mathjax = 1
 let g:instant_markdown_mermaid = 1
 let g:instant_markdown_browser = "safari"
 
-nnoremap <silent> \mp :call markdown#TogglePreview()<CR>
+nnoremap <silent> \m :call markdown#TogglePreview()<CR>

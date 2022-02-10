@@ -7,10 +7,14 @@ set nocompatible
 set number
 set relativenumber
 set cursorline
+set cursorlineopt=number,screenline
+" set foldcolumn=1
 set hidden  " Allow buffer switch without saving
 set wrap
 set autoindent
+set clipboard+=unnamedplus
 set scrolloff=5
+set sidescrolloff=5
 set autoread
 set noshowmode
 set showcmd
@@ -19,8 +23,8 @@ set wildmode=longest:full,full
 set textwidth=80
 set colorcolumn=80
 set list
-set listchars=tab:›\ ,trail:▫,extends:#,nbsp:.
-set fillchars=fold:\ ,
+set listchars=tab:›\ ,trail:▫,extends:#,nbsp:.,precedes:❮,extends:❯
+set fillchars=fold:\ ,eob:\ ,msgsep:‾
 set foldenable
 set foldmethod=indent
 set foldlevel=99
@@ -29,7 +33,7 @@ set foldlevel=99
 set completeopt=menu,menuone,noselect
 set ttimeoutlen=50
 set timeoutlen=500
-set shortmess+=c
+set shortmess+=a shortmess+=c shortmess+=I
 set inccommand=split
 set updatetime=250
 set laststatus=2
@@ -40,19 +44,22 @@ set splitright
 set expandtab
 set tabstop=2
 set shiftwidth=2
-set softtabstop=2
+set softtabstop=-1 " use the value of 'shiftwidth'
 set shiftround
 set hlsearch
 set incsearch
 set ignorecase
 set smartcase
 set title
+set titlestring=%(%m%)\ %(%{expand(\"%:~\")}%)
+set diffopt+=vertical diffopt+=algorithm:patience
 set noswapfile
 set signcolumn=yes:2
 set spelllang=en_us
 set pumblend=10
 set pumheight=20
 set winblend=10
+set winminwidth=10
 set grepprg=rg\ --vimgrep\ --smart-case\ $*
 set grepformat=%f:%l:%c:%m
 set breakindent
@@ -70,6 +77,7 @@ set wildignore+=*/.git/*,*/.svn/*,*.DS_Store
 set wildignore+=*/node_modules/*,*/nginx_runtime/*,*/build/*,*/logs/*,*/dist/*,*/tmp/*
 set confirm
 set undofile " presistent undo (use set undodir=... to change the undodir, default is ~/.local/share/nvim/undo)
+set nrformats=octal,bin,hex,unsigned,alpha
 
 " Avoid highlighting the last search when sourcing vimrc
 exec "nohlsearch"
@@ -159,8 +167,9 @@ call utils#SetupCommandAbbrs('T', 'tabedit')
 " Misc {{{
 
 let mapleader=" "
+nnoremap <Space> <NOP>
 
-" The normal , acts as a leader key for lsp mappings
+" The normal `,` is used as a leader key for lsp mappings
 nnoremap <Leader>, ,
 
 " Smarter j and k navigation
@@ -189,7 +198,6 @@ xnoremap > >gv
 
 " Copy
 nnoremap Y y$
-xnoremap Y "+y
 
 " Copy the entire buffer
 nnoremap <silent> y% :<C-u>%y<CR>
@@ -420,10 +428,6 @@ tnoremap <M-h> <C-\><C-n><C-w>h
 tnoremap <M-j> <C-\><C-n><C-w>j
 tnoremap <M-k> <C-\><C-n><C-w>k
 tnoremap <M-l> <C-\><C-n><C-w>l
-nnoremap <M-h> <C-w>h
-nnoremap <M-j> <C-w>j
-nnoremap <M-k> <C-w>k
-nnoremap <M-l> <C-w>l
 
 " In terminal mode, use <M-r> to simulate <C-r> in insert mode for inserting the content of a register
 " Reference: http://vimcasts.org/episodes/neovim-terminal-paste/

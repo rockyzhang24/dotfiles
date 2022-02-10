@@ -12,7 +12,7 @@ set cursorlineopt=number,screenline
 set hidden  " Allow buffer switch without saving
 set wrap
 set autoindent
-set clipboard+=unnamedplus
+" set clipboard+=unnamedplus
 set scrolloff=5
 set sidescrolloff=5
 set autoread
@@ -198,6 +198,7 @@ xnoremap > >gv
 
 " Copy
 nnoremap Y y$
+xnoremap Y "+y
 
 " Copy the entire buffer
 nnoremap <silent> y% :<C-u>%y<CR>
@@ -470,6 +471,7 @@ function! PackInit() abort
   call minpac#add('kyazdani42/nvim-tree.lua')
   call minpac#add('nanozuki/tabby.nvim')
   call minpac#add('t9md/vim-choosewin')
+  call minpac#add('lewis6991/foldsigns.nvim')
 
   " Telescope
   call minpac#add('nvim-telescope/telescope-fzf-native.nvim', { 'do': 'make' })  " sorter for telescope
@@ -781,6 +783,12 @@ lua require('plugin_config.bqf')
 
 " fidget.nvim
 lua require('plugin_config.fidget')
+
+" foldsigns {{{
+
+lua require('foldsigns').setup()
+
+" }}}
 
 "gitsigns.nvim
 lua require('plugin_config.gitsigns')

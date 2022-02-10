@@ -38,7 +38,7 @@ alias brl="brew list"
 alias brL="brew link"
 
 # Misc
-alias t="trash -Fv"
+alias t="trash" # trash is ~/.config/zsh/functions/trash
 alias sc="shellcheck"
 alias iina="open -a 'IINA'"
 

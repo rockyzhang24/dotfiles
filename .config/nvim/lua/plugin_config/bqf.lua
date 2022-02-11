@@ -6,3 +6,11 @@ cmd(([[
     au User Grepper ++nested %s
   aug END
 ]]):format([[call setqflist([], 'r', {'context': {'bqf': {'pattern_hl': '\%#' . getreg('/')}}})]]))
+
+require('bqf').setup {
+  filter = {
+    fzf = {
+      extra_opts = {'--delimiter', '│'}
+    }
+  }
+}

@@ -85,6 +85,9 @@ exec "nohlsearch"
 " Terminal
 let g:neoterm_autoscroll = '1'
 
+" Dress up quickfix window
+lua require('qf')
+
 " }}}
 
 " ---------- [ Colors ] ---------- {{{
@@ -442,8 +445,6 @@ tnoremap <expr> <M-r> '<C-\><C-n>"' . nr2char(getchar()) . 'pi'
 
 " Minpac plugin manager (load minpac on demand)
 function! PackInit() abort
-  unlet $GIT_DIR
-  unlet $GIT_WORK_TREE
   packadd minpac
   call minpac#init({'progress_open': 'vertical', 'status_open': 'vertical', 'status_auto': 'TRUE'})
 
@@ -675,6 +676,7 @@ let g:grepper = {}
 let g:grepper.dir = 'repo,file'
 let g:grepper.repo = ['.git', '.hg', '.svn']
 let g:grepper.tools = ['rg', 'git']
+let g:grepper.searchreg = 1
 let g:grepper.prompt_mapping_tool = '\g'
 let g:grepper.rg = {
       \ 'grepprg': 'rg -H --no-heading --vimgrep --smart-case',
@@ -784,11 +786,8 @@ lua require('plugin_config.bqf')
 " fidget.nvim
 lua require('plugin_config.fidget')
 
-" foldsigns {{{
-
+" foldsigns
 lua require('foldsigns').setup()
-
-" }}}
 
 "gitsigns.nvim
 lua require('plugin_config.gitsigns')

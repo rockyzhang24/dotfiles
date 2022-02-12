@@ -473,6 +473,7 @@ function! PackInit() abort
   call minpac#add('nanozuki/tabby.nvim')
   call minpac#add('t9md/vim-choosewin')
   call minpac#add('lewis6991/foldsigns.nvim')
+  call minpac#add('gelguy/wilder.nvim', { 'do': 'let &rtp=&rtp | UpdateRemotePlugins' })
 
   " Telescope
   call minpac#add('nvim-telescope/telescope-fzf-native.nvim', { 'do': 'make' })  " sorter for telescope
@@ -770,6 +771,77 @@ let g:undotree_SetFocusWhenToggle = 1
 
 " Toggle undotree
 nnoremap \u :UndotreeToggle<CR>
+
+" }}}
+
+" wilder {{{
+
+call wilder#setup({
+      \ 'modes': [':', '/', '?'],
+      \ })
+
+" A helper function
+function! s:shouldDisable(x)
+  let l:cmd = wilder#cmdline#parse(a:x).cmd
+  return l:cmd ==# 'Man' || a:x =~# 'Git fetch origin '
+endfunction
+
+" Use fuzzy matching instead of substring matching (file completion is supported
+" as well)
+" NOTE: The completion process for some commands like `Man` take a while and it
+" is synchronously, so Neovim will block. We should check this and disable
+" wilder for these commands, and Neovim's builtin wildmenu will be used as the
+" fallback (Ref: https://github.com/gelguy/wilder.nvim/issues/107)
+call wilder#set_option('pipeline', [
+      \   wilder#branch(
+      \     [
+      \       wilder#check({-> getcmdtype() ==# ':'}),
+      \       {ctx, x -> s:shouldDisable(x) ? v:true : v:false},
+      \     ],
+      \     wilder#python_file_finder_pipeline({
+      \       'file_command': {_, arg -> arg[0] ==# '.' ? ['rg', '--files', '--hidden'] : ['rg', '--files']},
+      \       'dir_command': {_, arg -> arg[0] ==# '.' ? ['fd', '-tf', '-H'] : ['fd', '-tf']},
+      \       'filters': ['fuzzy_filter', 'difflib_sorter'],
+      \     }),
+      \     wilder#cmdline_pipeline({
+      \       'language': 'python',
+      \       'fuzzy': 1,
+      \     }),
+      \     wilder#python_search_pipeline({
+      \       'pattern': wilder#python_fuzzy_pattern(),
+      \       'sorter': wilder#python_difflib_sorter(),
+      \       'engine': 're2',
+      \     }),
+      \   ),
+      \ ])
+
+" Customize the appearance
+" Use popupmenu for command and wildmenu for search
+call wilder#set_option('renderer', wilder#renderer_mux({
+      \ ':': wilder#popupmenu_renderer(wilder#popupmenu_border_theme({
+      \   'highlighter': wilder#basic_highlighter(),
+      \   'border': 'rounded',
+      \   'max_height': 15,
+      \   'highlights': {
+      \     'border': 'Normal',
+      \     'default': 'Normal',
+      \     'accent': wilder#make_hl('PopupmenuAccent', 'Normal', [{}, {}, {'foreground': '#f4468f'}]),
+      \   },
+      \   'left': [
+      \     ' ', wilder#popupmenu_devicons(),
+      \   ],
+      \   'right': [
+      \     ' ', wilder#popupmenu_scrollbar(),
+      \   ],
+      \ })),
+      \
+      \ '/': wilder#wildmenu_renderer({
+      \   'highlighter': wilder#basic_highlighter(),
+      \   'highlights': {
+      \     'accent': wilder#make_hl('WildmenuAccent', 'StatusLine', [{}, {}, {'foreground': '#f4468f'}]),
+      \   },
+      \ }),
+      \ }))
 
 " }}}
 

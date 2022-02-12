@@ -1,3 +1,5 @@
+local gps = require("nvim-gps")
+
 -- Display an indicator of tag generation progress
 local function gutenTagsProgress()
   return vim.fn['gutentags#statusline']('[', ']')
@@ -7,12 +9,15 @@ require'lualine'.setup {
   options = {
     icons_enabled = true,
     theme = 'auto',
+    -- component_separators = { left = '', right = ''},
+    -- section_separators = { left = '', right = ''},
     component_separators = '',
     section_separators = '',
     disabled_filetypes = {},
     always_divide_middle = true,
   },
   sections = {
+    -- Left
     lualine_a = {'mode'},
     lualine_b = {
       'branch',
@@ -31,7 +36,14 @@ require'lualine'.setup {
     },
     lualine_c = {'filename'},
 
-    lualine_x = {gutenTagsProgress, 'encoding', 'fileformat', 'filetype'},
+    -- Right
+    lualine_x = {
+      { gps.get_location, cond = gps.is_available },
+      gutenTagsProgress,
+      'encoding',
+      'fileformat',
+      'filetype'
+    },
     lualine_y = {'progress'},
     lualine_z = {'location'}
   },

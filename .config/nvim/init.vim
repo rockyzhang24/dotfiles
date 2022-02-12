@@ -474,6 +474,7 @@ function! PackInit() abort
   call minpac#add('t9md/vim-choosewin')
   call minpac#add('lewis6991/foldsigns.nvim')
   call minpac#add('gelguy/wilder.nvim', { 'do': 'let &rtp=&rtp | UpdateRemotePlugins' })
+  call minpac#add('SmiteshP/nvim-gps')
 
   " Telescope
   call minpac#add('nvim-telescope/telescope-fzf-native.nvim', { 'do': 'make' })  " sorter for telescope
@@ -890,6 +891,9 @@ lua require('plugin_config.nvim-tree')
 
 " nvim-treesitter
 lua require('plugin_config.treesitter')
+
+" nvim-gps
+lua require('plugin_config.nvim-gps')
 
 " telescope.nvim
 lua require('plugin_config.telescope.telescope-config')

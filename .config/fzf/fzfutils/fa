@@ -1,8 +1,8 @@
 # vim: filetype=zsh
 
-# MNEMONIC: [F]uzzy search for cfg [A]dd
+# MNEMONIC: [F]uzzy search for dot [A]dd
 # SYNOPSIS: fa
-# DESCRIPTION: Fuzzy finder for cfg add (a bare repo to manage my dotfiles)
+# DESCRIPTION: Fuzzy finder for the unstaged files in the dotfiles bare repository
 
 home="/Users/rockyzhang"
 prefix="git --git-dir=/Users/rockyzhang/dotfiles/ --work-tree=/Users/rockyzhang/"

@@ -64,7 +64,7 @@ alias icat="highlight --out-format=truecolor"
 command -v nvim >/dev/null && alias vim="nvim" vi="nvim" v="nvim" vimdiff="nvim -d"
 
 # Dotfiles management
-alias cfg="git --git-dir=$HOME/dotfiles/ --work-tree=$HOME"
+alias dot="git --git-dir=$HOME/dotfiles/ --work-tree=$HOME"
 
 # Convert video to GIF (with 2K resolution) using ffmpeg
 # Usage: vtg input_name output_name, then output_name.gif will be generated

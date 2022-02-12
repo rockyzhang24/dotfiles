@@ -139,6 +139,10 @@ augroup END
 " otherwise the normal repository will not be recognized.
 function! s:SetGitEnv() abort
   let cur_file = expand('%')
+  " Only set the Git env for the buffer containing a real file
+  if !filereadable(cur_file)
+    return
+  endif
   let git_dir = expand('~/dotfiles')
   let work_tree = expand('~')
   let jib = jobstart(["git", "--git-dir", git_dir, "--work-tree", work_tree, "ls-files", "--error-unmatch", cur_file])
@@ -619,9 +623,15 @@ nnoremap <silent> <Leader>cx <Cmd>ISwap<CR>
 
 " minpac {{{
 
-command! PluginUpdate source $MYVIMRC | call PackInit() | call minpac#update()
+function! s:PluginUpdate() abort
+  " Unset the Git env to avoid git errors caused by minpac#update()
+  unlet $GIT_DIR
+  unlet $GIT_WORK_TREE
+  call minpac#update()
+endfunction
+
+command! PluginUpdate source $MYVIMRC | call PackInit() | call s:PluginUpdate()
 command! PluginDelete source $MYVIMRC | call PackInit() | call minpac#clean()
-command! PluginStatus packadd minpac | call minpac#status()
 
 call utils#SetupCommandAbbrs('pu', 'PluginUpdate')
 call utils#SetupCommandAbbrs('pd', 'PluginDelete')

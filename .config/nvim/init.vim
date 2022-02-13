@@ -479,6 +479,7 @@ function! PackInit() abort
   call minpac#add('lewis6991/foldsigns.nvim')
   call minpac#add('gelguy/wilder.nvim', { 'do': 'let &rtp=&rtp | UpdateRemotePlugins' })
   call minpac#add('SmiteshP/nvim-gps')
+  call minpac#add('tversteeg/registers.nvim')
 
   " Telescope
   call minpac#add('nvim-telescope/telescope-fzf-native.nvim', { 'do': 'make' })  " sorter for telescope
@@ -782,6 +783,12 @@ let g:undotree_SetFocusWhenToggle = 1
 
 " Toggle undotree
 nnoremap \u :UndotreeToggle<CR>
+
+" }}}
+
+" registers {{{
+
+let g:registers_window_border = "rounded"
 
 " }}}
 

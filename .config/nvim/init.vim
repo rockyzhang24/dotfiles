@@ -466,7 +466,7 @@ function! PackInit() abort
   call minpac#add('mbbill/undotree')
   call minpac#add('mhinz/vim-startify')
   call minpac#add('tyru/open-browser.vim')
-  call minpac#add('nvim-lualine/lualine.nvim')
+  call minpac#add('yanzhang0219/lualine.nvim')
   call minpac#add('kevinhwang91/nvim-bqf')
   call minpac#add('junegunn/fzf', { 'do': 'packloadall! | call fzf#install()' })  " as a filter for bqf
   call minpac#add('mhinz/vim-grepper')

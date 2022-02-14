@@ -1,4 +1,5 @@
-" Do something and preserve the state (i.e., not change the search history and cursor position)
+" Do something and preserve the state (i.e., not change the search history and
+" cursor position)
 " Reference: http://vimcasts.org/episodes/tidying-whitespace/
 function! utils#Preserve(command) abort
   " Preparation: save last search, and cursor position.
@@ -51,27 +52,34 @@ function! utils#TelescopeGrepOperator(type) abort
   let @@ = saved_unnamed_register
 endfunction
 
-" Define abbreviation
-function! utils#SetupCommandAbbrs(from, to) abort
-  exec 'cnoreabbrev <expr> '.a:from
-        \ .' ((getcmdtype() ==# ":" && getcmdline() ==# "'.a:from.'")'
-        \ .'? ("'.a:to.'") : ("'.a:from.'"))'
+" Delete all the other unmodified buffers
+function! utils#CleanBufs() abort
+  for buf in getbufinfo({'buflisted':1})
+    if (buf.hidden && !buf.changed)
+      execute buf.bufnr . 'bdelete'
+    endif
+  endfor
 endfunction
 
-" Toggle quickfix window
-function! utils#ToggleQuickFix() abort
-  if getqflist({'winid' : 0}).winid
-    cclose
-  else
-    copen
+" Change indentation for the current buffer
+" It needs two arguments, one is the curren indentation and the other is the new
+" indentation
+function utils#reindent(...)
+  if a:0 != 2
+    echoerr "Two arguments are required"
   endif
-endfunction
-
-" Toggle location list window
-function! utils#ToggleLocationList() abort
-  if getloclist(0, {'winid' : 0}).winid
-    lclose
-  else
-    lopen
-  endif
+  let save_et = &et
+  let save_ts = &ts
+  try
+    let &ts = a:1
+    set noet
+    retab!
+    let &ts = a:2
+    set et
+    retab!
+    let &l:sw = a:2
+  finally
+    let &et = save_et
+    let &ts = save_ts
+  endtry
 endfunction

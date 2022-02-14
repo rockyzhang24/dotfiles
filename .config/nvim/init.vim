@@ -163,9 +163,27 @@ augroup END
 
 " }}}
 
+" ---------- [ Commands ] ---------- {{{
+
+" Delete all the other unmodifed buffers
+command BufClean call utils#CleanBufs()
+
+" Change indentation for the current buffer
+" `:Reindent cur_indent new_indent`, E.g., `:Reindent 2 4` for changing the
+" indentation from 2 to 4
+command -nargs=+ Reindent call utils#reindent(<f-args>)
+
+" }}}
+
 " ---------- [ Abbreviation ] ---------- {{{
 
-call utils#SetupCommandAbbrs('T', 'tabedit')
+function! s:SetupCommandAbbrs(from, to) abort
+  exec 'cnoreabbrev <expr> '.a:from
+        \ .' ((getcmdtype() ==# ":" && getcmdline() ==# "'.a:from.'")'
+        \ .'? ("'.a:to.'") : ("'.a:from.'"))'
+endfunction
+
+call s:SetupCommandAbbrs('T', 'tabedit')
 
 " }}}
 
@@ -298,9 +316,12 @@ nnoremap <silent> \s :setlocal spell! spelllang=en_us<CR>:set spell?<CR>
 " Toggle wrap
 nnoremap <silent> \w :set wrap!<CR>:set wrap?<CR>
 
+" Toggle relativenumber
+nnoremap <silent> \r :call toggle#ToggleRelativeNum()<CR>
+
 " Toggle quickfix window
-nnoremap <silent> \q :call utils#ToggleQuickFix()<CR>
-nnoremap <silent> \l :call utils#ToggleLocationList()<CR>
+nnoremap <silent> \q :call toggle#ToggleQuickFix()<CR>
+nnoremap <silent> \l :call toggle#ToggleLocationList()<CR>
 
 " Delete the current buffer and switch back to the previous one
 nnoremap <silent> <Leader>xb :<C-u>bprevious <Bar> bdelete #<CR>
@@ -634,8 +655,8 @@ endfunction
 command! PluginUpdate source $MYVIMRC | call PackInit() | call s:PluginUpdate()
 command! PluginDelete source $MYVIMRC | call PackInit() | call minpac#clean()
 
-call utils#SetupCommandAbbrs('pu', 'PluginUpdate')
-call utils#SetupCommandAbbrs('pd', 'PluginDelete')
+call s:SetupCommandAbbrs('pu', 'PluginUpdate')
+call s:SetupCommandAbbrs('pd', 'PluginDelete')
 
 " }}}
 

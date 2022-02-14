@@ -27,6 +27,12 @@ tele.setup {
         ["<C-p>"] = "cycle_history_prev",
         ["<Esc>"] = "close",
         ["<M-Esc>"] = { "<Esc>", type = "command" },
+        -- To disable builtin mappings
+        ["<C-c>"] = false,
+        ["<Down>"] = false,
+        ["<Up>"] = false,
+        ["<PageDown>"] = false,
+        ["<PageUp>"] = false,
       },
     },
 
@@ -40,6 +46,17 @@ tele.setup {
       "--smart-case",
       "--trim"  -- Remove indentation for grep
     }
+  },
+
+  pickers = {
+    buffers = {
+      mappings = {
+        i = {
+          -- c for clean, i.e., buffer clean
+          ["<C-c>"] = "delete_buffer",
+        },
+      },
+    },
   },
 
   extensions = {

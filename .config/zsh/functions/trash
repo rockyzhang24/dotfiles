@@ -3,6 +3,10 @@
 # SYNOPSIS: trash file1 file2 ...
 # DESCRIPTION: Move files into the system trash bin
 
+if [[ $# == 0 ]]; then
+  echo "Failed! Please give files/dirs to trash."
+  return 1
+fi
 echo -n "trash $@ ? [y/N]"
 read ans
 if [[ $ans == "y" ]]; then

@@ -22,7 +22,7 @@ set previewer ~/.config/lf/previewer
 # ========== Commands ==========
 
 cmd open ${{
-    case $(file --mime-type $f -b) in
+    case $(file --mime-type "$(readlink -f $f)" -b) in
         text/*|application/json|application/octet-stream) $EDITOR $fx;;
         *) for f in $fx; do open $f > /dev/null 2> /dev/null & done;;
     esac

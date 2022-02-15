@@ -611,7 +611,7 @@ endif
 let g:gutentags_cache_dir = expand('~/.cache/tags')
 
 " Options for ctags
-let g:gutentags_ctags_extra_args = ['--fields=+niazS', '--extra=+q']
+let g:gutentags_ctags_extra_args = ['--fields=+niazS', '--extras=+q']
 
 " Disable connecting gtags database automatically (gutentags_plus will handle the database connection)
 let g:gutentags_auto_add_gtags_cscope = 0

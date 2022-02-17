@@ -1,5 +1,39 @@
 vim.cmd([[
 let g:nvim_tree_indent_markers = 1
+let g:nvim_tree_window_picker_exclude = {
+    \   'filetype': [
+    \     'notify',
+    \     'packer',
+    \     'qf',
+    \     'aerial'
+    \   ],
+    \   'buftype': [
+    \     'terminal'
+    \   ]
+    \ }
+let g:nvim_tree_icons = {
+    \ 'default': '',
+    \ 'symlink': '',
+    \ 'git': {
+    \   'unstaged': "✗",
+    \   'staged': "✓",
+    \   'unmerged': "",
+    \   'renamed': "➜",
+    \   'untracked': "★",
+    \   'deleted': "",
+    \   'ignored': "◌"
+    \   },
+    \ 'folder': {
+    \   'arrow_open': "",
+    \   'arrow_closed': "",
+    \   'default': "",
+    \   'open': "",
+    \   'empty': "",
+    \   'empty_open': "",
+    \   'symlink': "",
+    \   'symlink_open': "",
+    \   }
+    \ }
 ]])
 
 require'nvim-tree'.setup {
@@ -8,9 +42,24 @@ require'nvim-tree'.setup {
   filters = {
     custom = {'.DS_Store'},
   },
+  trash = {
+    cmd = 'trash -F', -- for macOS https://hasseg.org/trash/
+    require_confirm = true,
+  },
   diagnostics = {
     enable = true,
     show_on_dirs = true,
+    icons = {
+      hint = " ",
+      info = " ",
+      warning = " ",
+      error = " ",
+    }
+  },
+  git = {
+    enable = true,
+    ignore = true,
+    timeout = 400,
   },
   view = {
     mappings = {
@@ -55,6 +104,9 @@ require'nvim-tree'.setup {
   },
 }
 
-vim.keymap.set('n', '\\t', '<Cmd>NvimTreeToggle<CR>', {silent = true})
+-- Toggle the tree, and when open it, do not focus the tree.
+vim.keymap.set('n', '\\t', function() require('nvim-tree').toggle(false, true) end, {silent = true})
+
 vim.keymap.set('n', '<Leader>tt', '<Cmd>NvimTreeFocus<CR>', {silent = true})
 vim.keymap.set('n', '<Leader>tf', '<Cmd>NvimTreeFindFile<CR>', {silent = true})
+vim.keymap.set('n', '<Leader>tr', '<Cmd>NvimTreeRefresh<CR>', {silent = true})

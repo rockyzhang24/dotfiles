@@ -123,6 +123,12 @@ augroup general
   autocmd FileType * set formatoptions-=t formatoptions-=o formatoptions-=r textwidth=80
 augroup END
 
+" Highlight selection on yank
+augroup highlight_yank
+  autocmd!
+  autocmd TextYankPost * silent! lua vim.highlight.on_yank({timeout=300})
+augroup END
+
 " Neovim builtin terminal
 augroup nvim_terminal
   autocmd!

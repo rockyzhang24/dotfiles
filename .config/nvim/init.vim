@@ -126,7 +126,7 @@ augroup END
 " Highlight selection on yank
 augroup highlight_yank
   autocmd!
-  autocmd TextYankPost * silent! lua vim.highlight.on_yank({timeout=300})
+  autocmd TextYankPost * silent! lua vim.highlight.on_yank({higroup="Substitute", timeout=300})
 augroup END
 
 " Neovim builtin terminal

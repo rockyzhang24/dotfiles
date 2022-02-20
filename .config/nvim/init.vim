@@ -507,6 +507,7 @@ function! PackInit() abort
   call minpac#add('gelguy/wilder.nvim', { 'do': 'let &rtp=&rtp | UpdateRemotePlugins' })
   call minpac#add('SmiteshP/nvim-gps')
   call minpac#add('tversteeg/registers.nvim')
+  call minpac#add('ThePrimeagen/harpoon')
 
   " Telescope
   call minpac#add('nvim-telescope/telescope-fzf-native.nvim', { 'do': 'make' })  " sorter for telescope
@@ -565,7 +566,7 @@ endfunction
 
 " }}}
 
-" ---------- [ Viml plugin settings ] ---------- {{{
+" ---------- [ Plugin config - viml ] ---------- {{{
 
 " choosewin {{{
 
@@ -627,6 +628,17 @@ let g:gutentags_plus_nomap = 1
 
 " Focus to quickfix window after searching
 let g:gutentags_plus_switch = 1
+
+" }}}
+
+" harpoon {{{
+
+nnoremap <silent> <Leader>ha :lua require("harpoon.mark").add_file()<CR>
+nnoremap <silent> \h :lua require("harpoon.ui").toggle_quick_menu()<CR>
+nnoremap <silent> <Leader>1 :lua require("harpoon.ui").nav_file(1)<CR>
+nnoremap <silent> <Leader>2 :lua require("harpoon.ui").nav_file(2)<CR>
+nnoremap <silent> <Leader>3 :lua require("harpoon.ui").nav_file(3)<CR>
+nnoremap <silent> <Leader>4 :lua require("harpoon.ui").nav_file(4)<CR>
 
 " }}}
 
@@ -892,57 +904,24 @@ call wilder#set_option('renderer', wilder#renderer_mux({
 
 " }}}
 
-" ---------- [ Lua plugin settings ] ---------- {{{
+" ---------- [ Plugin config - lua ] ---------- {{{
 
-" aerial.nvim
 lua require('plugin_config.aerial')
-
-" nvim-bqf
 lua require('plugin_config.bqf')
-
-" fidget.nvim
 lua require('plugin_config.fidget')
-
-" foldsigns
 lua require('foldsigns').setup()
-
-"gitsigns.nvim
 lua require('plugin_config.gitsigns')
-
-" hop.nvim
 lua require('plugin_config.hop')
-
-" lualine.nvim
 lua require('plugin_config.lualine')
-
-" LuaSnip
 lua require('plugin_config.luasnip.luasnip-config')
-
-" hlslens
 lua require('plugin_config.hlslens')
-
-" nvim-cmp
 lua require('plugin_config.cmp')
-
-" nvim-lspconfig
 lua require('plugin_config.lsp.lsp-config')
-
-" nvim-ts-rainbow
 lua require('plugin_config.nvim-ts-rainbow')
-
-" nvim-tree.lua
 lua require('plugin_config.nvim-tree')
-
-" nvim-treesitter
 lua require('plugin_config.treesitter')
-
-" nvim-gps
 lua require('plugin_config.nvim-gps')
-
-" telescope.nvim
 lua require('plugin_config.telescope.telescope-config')
-
-" tabby.nvim
 lua require('plugin_config.tabby')
 
 " }}}

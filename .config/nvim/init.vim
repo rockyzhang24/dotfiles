@@ -365,6 +365,12 @@ nnoremap <silent> <Leader>wj :set splitbelow<CR><C-w>s
 nnoremap <silent> <Leader>wh :set nosplitright<CR><C-w>v:set splitright<CR>
 nnoremap <silent> <Leader>wl :set splitright<CR><C-w>v
 
+" Change vertical to horizontal
+nnoremap <Leader>w- <C-w>t<C-w>K
+
+" Change horizontal to vertical
+nnoremap <Leader>w\ <C-w>t<C-w>H
+
 " Close all windows except the current (o for only)
 nnoremap <Leader>wo <C-w>o
 

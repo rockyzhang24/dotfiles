@@ -1,5 +1,5 @@
 {
-    "_comment": " 1) left_ctrl -> right_ctrl. 2) right_ctrl -> MEH key. 3) caps_lock -> left_ctrl or ESC if pressed alone. 4) right_command -> HYPER key. ",
+    "_comment": " 1) left_ctrl -> right_ctrl. 2) right_ctrl -> MEH key. 3) caps_lock -> left_ctrl or ESC if pressed alone. 4) right_command -> HYPER key or F19 if pressed alone",
     "global": {
         "check_for_updates_on_startup": true,
         "show_in_menu_bar": true,
@@ -19,7 +19,7 @@
                     {
                         "manipulators": [
                             {
-                                "description": "HYPER Key: Change right_command to command+control+option+shift.",
+                                "description": "Change right_command to HYPER key (command+control+option+shift), or F19 if pressed alone",
                                 "from": {
                                     "key_code": "right_command",
                                     "modifiers": {
@@ -50,7 +50,7 @@
                     {
                         "manipulators": [
                             {
-                                "description": "MEH Key: Change right_control to shift+option+control.",
+                                "description": "Change right_control to MEH key (shift+option+control)",
                                 "from": {
                                     "key_code": "right_control",
                                     "modifiers": {

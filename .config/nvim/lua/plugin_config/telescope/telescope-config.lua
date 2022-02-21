@@ -60,12 +60,13 @@ tele.setup {
   },
 
   extensions = {
+    -- telescope-fzf-native as the sorter
     fzf = {
       fuzzy = true,
       override_generic_sorter = true,
       override_file_sorter = true,
       case_mode = "smart_case",
-    }
+    },
   }
 }
 
@@ -83,18 +84,22 @@ local map_options = {
 
 local keymap = vim.api.nvim_set_keymap
 
+-- Files
 keymap('n', '<Leader>ff', '<Cmd>lua require("telescope.builtin").find_files()<CR>', map_options)
+keymap('n', '<Leader>f.', '<Cmd>lua require("plugin_config.telescope.my_picker").dotfiles()<CR>', map_options) -- find_files in dotfiles
+keymap('n', '<Leader>fo', '<Cmd>lua require("telescope.builtin").oldfiles()<CR>', map_options)
+keymap('n', '<Leader>fg', '<Cmd>lua require("telescope.builtin").git_files()<CR>', map_options)
+
+-- Misc
 keymap('n', '<Leader>fb', '<Cmd>lua require("telescope.builtin").buffers()<CR>', map_options)
 keymap('n', '<Leader>ft', '<Cmd>lua require("telescope.builtin").tags()<CR>', map_options)
 keymap('n', '<Leader>f?', '<Cmd>lua require("telescope.builtin").help_tags()<CR>', map_options)
-keymap('n', '<Leader>fo', '<Cmd>lua require("telescope.builtin").oldfiles()<CR>', map_options)
 keymap('n', '<Leader>fr', '<Cmd>lua require("telescope.builtin").resume()<CR>', map_options)
-keymap('n', '<Leader>f.', '<Cmd>lua require("plugin_config.telescope.my_picker").dotfiles()<CR>', map_options) -- find_files in dotfiles
 
 -- Grep
 keymap('n', '<Leader>g/', '<Cmd>lua require("telescope.builtin").live_grep()<CR>', map_options)
 keymap('n', '<Leader>gv', '<Cmd>lua require("plugin_config.telescope.my_picker").grep_nvim_config()<CR>', map_options) -- live_grep in nvim config files
-keymap('n', '<Leader>gp', '<Cmd>lua require("plugin_config.telescope.my_picker").grep_prompt()<CR>', map_options) -- live_grep in nvim config files
+keymap('n', '<Leader>gs', '<Cmd>lua require("plugin_config.telescope.my_picker").grep_prompt()<CR>', map_options) -- grep by giving a query string
 
 -- grep_string operator
 keymap('n', '<Leader>g', '<Cmd>set operatorfunc=utils#TelescopeGrepOperator<CR>g@', map_options)

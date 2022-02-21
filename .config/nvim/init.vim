@@ -219,6 +219,7 @@ inoremap <M-k> <Esc>:m .-2<CR>==a
 
 " Fast insert a place holder
 inoremap ,p <++>
+
 " Jump to the next '<++>' and edit it
 nnoremap <silent> <Leader><Leader> <Esc>/<++><CR>:nohlsearch<CR>c4l
 inoremap <silent> ,f <Esc>/<++><CR>:nohlsearch<CR>"_c4l
@@ -227,45 +228,21 @@ inoremap <silent> ,f <Esc>/<++><CR>:nohlsearch<CR>"_c4l
 xnoremap < <gv
 xnoremap > >gv
 
-" Copy
-nnoremap Y y$
-xnoremap Y "+y
-
-" Copy the entire buffer
-nnoremap <silent> y% :<C-u>%y<CR>
-nnoremap <silent> Y% :<C-u>%y +<CR>
-
-" Paste and then format
-nnoremap p p=`]
-
-" Paste over the selected text
-xnoremap p "_c<Esc>p
-
-" Select the last changed (or pasted) text
-nnoremap <expr> gp '`[' . strpart(getregtype(), 0, 1) . '`]'
-
 " Delete but not save to a register
-nnoremap s "_d
-xnoremap s "_d
-nnoremap S "_D
-nnoremap ss "_dd
+nnoremap <Leader>d "_d
+xnoremap <Leader>d "_d
+nnoremap <Leader>D "_D
+nnoremap <Leader>dd "_dd
 nnoremap c "_c
 xnoremap c "_c
 nnoremap C "_C
 nnoremap cc "_cc
-
-" Switch between the current and the last buffer
-nnoremap <Backspace> <C-^>
 
 " Make dot work over visual line selections
 xnoremap . :norm.<CR>
 
 " Execute a macro over visual line selections
 xnoremap Q :'<,'>:normal @q<CR>
-
-" Redirect change operations to the blackhole
-nnoremap c "_c
-nnoremap C "_C
 
 " Clone current paragraph
 nnoremap cp yap<S-}>p
@@ -329,16 +306,46 @@ nnoremap <silent> \r :call toggle#ToggleRelativeNum()<CR>
 nnoremap <silent> \q :call toggle#ToggleQuickFix()<CR>
 nnoremap <silent> \l :call toggle#ToggleLocationList()<CR>
 
-" Delete the current buffer and switch back to the previous one
-nnoremap <silent> <Leader>xb :<C-u>bprevious <Bar> bdelete #<CR>
-
 " Insert blank lines above or below the current line and preserve the cursor position
 nnoremap <expr> [<Space> 'm`' . v:count . 'O<Esc>``'
 nnoremap <expr> ]<Space> 'm`' . v:count . 'o<Esc>``'
 
-" Opens line above or below the current line
+" Open a line above or below the current line
 inoremap <C-CR> <C-o>O
 inoremap <S-CR> <C-o>o
+
+" }}}
+
+" Copy and past {{{
+
+" Copy
+nnoremap Y y$
+nnoremap <Leader>y "+y
+vnoremap <Leader>y "+y
+nnoremap <Leader>Y "+Y
+
+" Copy the entire buffer
+nnoremap <silent> y% :<C-u>%y<CR>
+nnoremap <silent> Y% :<C-u>%y +<CR>
+
+" Paste and then format
+nnoremap p p=`]
+
+" Paste over the selected text
+xnoremap p "_c<Esc>p
+
+" Select the last changed (or pasted) text
+nnoremap <expr> gp '`[' . strpart(getregtype(), 0, 1) . '`]'
+
+" }}}
+
+" Buffer {{{
+
+" Switch between the current and the last buffer
+nnoremap <Backspace> <C-^>
+
+" Delete the current buffer and switch back to the previous one
+nnoremap <silent> <Leader>xb :<C-u>bprevious <Bar> bdelete #<CR>
 
 " }}}
 

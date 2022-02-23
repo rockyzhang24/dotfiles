@@ -24,7 +24,7 @@ set textwidth=80
 set colorcolumn=80
 set list
 set listchars=tab:›\ ,trail:▫,extends:#,nbsp:.,precedes:❮,extends:❯
-set fillchars=fold:\ ,eob:\ ,msgsep:‾
+set fillchars=fold:\ ,eob:\ ,msgsep:‾,vert:\|
 set foldenable
 set foldmethod=indent
 set foldlevel=99
@@ -78,6 +78,7 @@ set wildignore+=*/node_modules/*,*/nginx_runtime/*,*/build/*,*/logs/*,*/dist/*,*
 set confirm
 set undofile " presistent undo (use set undodir=... to change the undodir, default is ~/.local/share/nvim/undo)
 set nrformats=octal,bin,hex,unsigned,alpha
+set sessionoptions+=terminal
 
 " Avoid highlighting the last search when sourcing vimrc
 exec "nohlsearch"
@@ -134,7 +135,7 @@ augroup nvim_terminal
   autocmd!
   " Automatically start insert mode when enter terminal, and disable line number and indentline
   autocmd TermOpen term://* startinsert |
-        \ setlocal nonumber norelativenumber |
+        \ setlocal nonumber norelativenumber signcolumn=no |
         \ IndentBlanklineDisable
   autocmd BufWinEnter,WinEnter term://* startinsert
 augroup END
@@ -345,7 +346,7 @@ nnoremap <expr> gp '`[' . strpart(getregtype(), 0, 1) . '`]'
 nnoremap <Backspace> <C-^>
 
 " Delete the current buffer and switch back to the previous one
-nnoremap <silent> <Leader>xb :<C-u>bprevious <Bar> bdelete #<CR>
+nnoremap <silent> <Leader>bd :<C-u>bprevious <Bar> bdelete #<CR>
 
 " }}}
 
@@ -401,7 +402,7 @@ nnoremap <Leader>= <C-w>=
 nnoremap <silent> <Leader>tn :$tabnew<CR>
 
 " Close the current tab
-nnoremap <silent> <Leader>xt :tabclose<CR>
+nnoremap <silent> <Leader>tc :tabclose<CR>
 
 " Close all other tabs
 nnoremap <silent> <Leader>to :tabonly<CR>
@@ -456,11 +457,6 @@ cnoremap %% <C-R>=fnameescape(expand('%:h')).'/'<cr>
 " }}}
 
 " Terminal {{{
-" right Option as Meta
-
-" Toggle a terminal at the bottom
-nnoremap <expr> <M-`> ':set splitbelow<CR>:split<CR>:resize +10<CR>' . (bufexists('term://term-main') ? ':buffer term://term-main<CR>' : ':terminal<CR><C-\><C-n>:file term://term-main<CR>A')
-tnoremap <M-`> <C-\><C-n>:quit<CR>
 
 " Close the current terminal window
 tnoremap <M-c> <C-\><C-n>:quit<CR>
@@ -469,7 +465,7 @@ tnoremap <M-c> <C-\><C-n>:quit<CR>
 tnoremap <M-d> <C-\><C-n>:bdelete!<CR>
 
 " Back to normal mode in the terminal buffer
-tnoremap <M-Esc> <C-\><C-n>
+tnoremap <Esc> <C-\><C-n>
 
 " Switching between split windows
 tnoremap <M-h> <C-\><C-n><C-w>h

@@ -97,6 +97,8 @@ require'nvim-tree'.setup {
         { key = "yn", action = "copy_name" },
         { key = "yp", action = "copy_path" },
         { key = "yP", action = "copy_absolute_path" },
+        { key = "W", action = "collapse_all" },
+        { key = "S", action = "search_node" },
         { key = "q", action = "close" },
         { key = "?", action = "toggle_help" },
       },

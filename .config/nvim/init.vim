@@ -517,6 +517,7 @@ function! PackInit() abort
   call minpac#add('SmiteshP/nvim-gps')
   call minpac#add('tversteeg/registers.nvim')
   call minpac#add('ThePrimeagen/harpoon')
+  call minpac#add('akinsho/toggleterm.nvim')
 
   " Telescope
   call minpac#add('nvim-telescope/telescope-fzf-native.nvim', { 'do': 'make' })  " sorter for telescope
@@ -932,5 +933,6 @@ lua require('plugin_config.treesitter')
 lua require('plugin_config.nvim-gps')
 lua require('plugin_config.telescope.telescope-config')
 lua require('plugin_config.tabby')
+lua require('plugin_config.toggleterm')
 
 " }}}

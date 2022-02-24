@@ -5,15 +5,13 @@ tele.setup {
   defaults = {
     prompt_prefix = "❯ ",
     selection_caret = "❯ ",
-
     winblend = 10,
-
     layout_strategy = "flex",
     layout_config = {
       width = 0.95,
       height = 0.85,
     },
-
+    file_ignore_patterns = { '%.jpg', '%.jpeg', '%.png', '%.avi', '%.mp4'},
     mappings = {
       i = {
         -- Consistent with fzf in terminal
@@ -35,7 +33,6 @@ tele.setup {
         ["<PageUp>"] = false,
       },
     },
-
     vimgrep_arguments = {
       "rg",
       "--color=never",
@@ -47,7 +44,6 @@ tele.setup {
       "--trim"  -- Remove indentation for grep
     }
   },
-
   pickers = {
     buffers = {
       mappings = {
@@ -58,7 +54,6 @@ tele.setup {
       },
     },
   },
-
   extensions = {
     -- telescope-fzf-native as the sorter
     fzf = {

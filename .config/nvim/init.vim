@@ -359,19 +359,17 @@ nnoremap <C-k> <C-w>k
 nnoremap <C-l> <C-w>l
 
 " Scroll the other window
-nnoremap <A-d> <C-w>w<C-d><C-w>w
-nnoremap <A-u> <C-w>w<C-u><C-w>w
-inoremap <A-d> <Esc><C-w>w<C-d><C-w>wa
-inoremap <A-u> <Esc><C-w>w<C-u><C-w>wa
+nnoremap <M-d> <C-w>w<C-d><C-w>w
+nnoremap <M-u> <C-w>w<C-u><C-w>w
+inoremap <M-d> <Esc><C-w>w<C-d><C-w>wa
+inoremap <M-u> <Esc><C-w>w<C-u><C-w>wa
 
 " Go to the previous window
 nnoremap <C-p> <C-w>p
 
-" Create a split window to up (horizontal), down (horizontal), left (vertical), right (vertical)
-nnoremap <silent> <Leader>wk :set nosplitbelow<CR><C-w>s:set splitbelow<CR>
-nnoremap <silent> <Leader>wj :set splitbelow<CR><C-w>s
-nnoremap <silent> <Leader>wh :set nosplitright<CR><C-w>v:set splitright<CR>
-nnoremap <silent> <Leader>wl :set splitright<CR><C-w>v
+" Create a split window
+nnoremap <silent> s- :split<CR>
+nnoremap <silent> s\ :vsplit<CR>
 
 " Change vertical to horizontal
 nnoremap <Leader>w- <C-w>t<C-w>K
@@ -386,10 +384,10 @@ nnoremap <Leader>wo <C-w>o
 nnoremap <Leader>wt <C-w>T
 
 " Sizing
-nnoremap <C-Down> <C-w>5-
-nnoremap <C-Up> <C-w>5+
-nnoremap <C-Left> <C-w>5<
-nnoremap <C-Right> <C-w>5>
+nnoremap <Leader><Down> <C-w>5-
+nnoremap <Leader><Up> <C-w>5+
+nnoremap <Leader><Left> <C-w>5<
+nnoremap <Leader><Right> <C-w>5>
 
 " Balance size
 nnoremap <Leader>= <C-w>=

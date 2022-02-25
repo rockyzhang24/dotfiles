@@ -429,8 +429,8 @@ xnoremap # :<C-u>call utils#VSetSearch('?')<CR>?<C-R>=@/<CR><CR>
 " xnoremap <silent> \g :<C-u>call utils#GrepOperator(visualmode())<CR>
 
 " Find and replace
-nnoremap \s :%s/
-xnoremap \s :s/
+nnoremap <Leader>r :%s/
+xnoremap <Leader>r :s/
 
 " }}}
 
@@ -516,6 +516,7 @@ function! PackInit() abort
   call minpac#add('tversteeg/registers.nvim')
   call minpac#add('ThePrimeagen/harpoon')
   call minpac#add('akinsho/toggleterm.nvim')
+  call minpac#add('mg979/vim-visual-multi')
 
   " Telescope
   call minpac#add('nvim-telescope/telescope-fzf-native.nvim', { 'do': 'make' })  " sorter for telescope
@@ -752,6 +753,15 @@ nnoremap \g :Grepper<CR>
 
 " }}}
 
+" vim-visual-multi {{{
+
+let g:VM_theme = 'iceblue'
+let g:VM_maps = {}
+let g:VM_maps["Undo"] = 'u'
+let g:VM_maps["Redo"] = '<C-r>'
+
+" }}}
+
 " startify {{{
 
 " Make vim-rooter works when a file is opened from startify
@@ -843,6 +853,7 @@ let g:registers_window_border = "rounded"
 
 call wilder#setup({
       \ 'modes': [':', '/', '?'],
+      \ 'enable_cmdline_enter': 0,
       \ })
 
 " A helper function

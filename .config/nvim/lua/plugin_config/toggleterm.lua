@@ -11,7 +11,7 @@ require("toggleterm").setup{
   terminal_mappings = true,
   shade_terminals = true,
   start_in_insert = true,
-  direction = 'float', -- can be 'vertical', 'horizontal', 'window', 'float'
+  direction = 'horizontal', -- can be 'vertical', 'horizontal', 'window', 'float'
   shell = vim.o.shell,
   float_opts = {
     border = 'curved',

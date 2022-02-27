@@ -1,7 +1,17 @@
-# My configuration files
+<div align="center">
+  
+# .dotfiles
 
-This repo hosts my config files for macOS. They should also work on Linux but have not been tested yet.
-Just cherry pick the piece of code you totally understand.
+My dotfiles files for `macOS` and `Linux`. Just cherry pick the piece of code you totally understand.
+
+![platform](https://img.shields.io/badge/platform-macOS%2FLinux-blue)
+![last commit](https://img.shields.io/github/last-commit/rockyzhang24/dotfiles)
+
+<img width="1672" alt="image" src="https://user-images.githubusercontent.com/11582667/155833559-28dce007-218f-4ab5-87d5-a8d3bfa6252b.png">
+
+</div>
+  
+# Features
 
 [Neovim](./.config/nvim/): The text editor I've been in love with
 
@@ -9,12 +19,12 @@ Just cherry pick the piece of code you totally understand.
 
 * Use [Zim](https://github.com/zimfw/zimfw) to manage Zsh plugins
 * The prompt theme is [Powerlevel10k](https://github.com/romkatv/powerlevel10k[])
-* [fzf](./.config/fzf): Fuzzy finder I use widely in my daily workflow. I created some fzf-based [scripts](./.config/fzf/fzfutils/) to boost productivity.
+* [fzf](./.config/fzf): Fuzzy finder I use widely in my daily workflow. I created some fzf-based [scripts](./.config/fzf/fzfutils/) to boost productivity
 * [bin](./.config/bin): Very useful scripts
 
 [kitty](./.config/kitty/)/[alacritty](./.config/alacritty/): Terminal
 
-[yabai](./.config/yabai/), [skhd](./.config/skhd/): Tiling window manager
+[yabai](./.config/yabai/) and [skhd](./.config/skhd/): Tiling window manager
 
 [lf](./.config/lf/)/[vifm](./.config/vifm/)/[ranger](./.config/ranger/): Console file manager
 

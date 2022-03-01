@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+
+# Generate the thumbnail for video (ffmpegthumbnailer is required)
+
+if ! [ -f "$1" ]; then
+	exit 1
+fi
+
+cache="$HOME/.cache/vidthumb"
+index="$cache/index.json"
+movie="$(realpath "$1")"
+
+mkdir -p "$cache"
+
+if [ -f "$index" ]; then
+	thumbnail="$(jq -r ". \"$movie\"" <"$index")"
+	if [[ "$thumbnail" != "null" ]]; then
+		if [[ ! -f "$cache/$thumbnail" ]]; then
+			exit 1
+		fi
+		echo "$cache/$thumbnail"
+		exit 0
+	fi
+fi
+
+thumbnail="$(uuidgen).jpg"
+
+if ! ffmpegthumbnailer -i "$movie" -o "$cache/$thumbnail" -s 0 2>/dev/null; then
+	exit 1
+fi
+
+if [[ ! -f "$index" ]]; then
+	echo "{\"$movie\": \"$thumbnail\"}" >"$index"
+fi
+json="$(jq -r --arg "$movie" "$thumbnail" ". + {\"$movie\": \"$thumbnail\"}" <"$index")"
+echo "$json" >"$index"
+
+echo "$cache/$thumbnail"

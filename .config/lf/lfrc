@@ -18,6 +18,7 @@ set tabstop 4
 set info 'size'
 set preview
 set previewer ~/.config/lf/previewer
+set cleaner ~/.config/lf/cleaner
 
 # ========== Commands ==========
 

@@ -1,27 +1,39 @@
 #!/bin/sh
 
-case "$1" in
-  *.md) glow -s dark "$1";;
-  *.tgz|*.tar.gz) tar tzf "$1";;
-  *.tar.bz2|*.tbz2) tar tjf "$1";;
-  *.tar.txz|*.txz) xz --list "$1";;
-  *.tar) tar tf "$1";;
-  *.zip|*.jar|*.war|*.ear|*.oxt) unzip -l "$1";;
-  *.rar) unrar l "$1";;
-  *.7z) 7z l "$1";;
-  *.[1-8]) man "$1" | col -b ;;
-  *.o) nm "$1" | less ;;
-  *.torrent) transmission-show "$1";;
-  *odt,*.ods,*.odp,*.sxw) odt2txt "$1";;
-  *.doc) antiword "$1" ;;
-  *.docx) docx2txt.pl "$1" - ;;
-  .xls) xls2csv "$1";;
-  *.xlsx) xlsx2csv "$1";;
-  *.csv) cat "$1" | sed s/,/\\n/g ;;
-  *.pdf) pdftotext -l 10 -nopgbrk -q "$1" -;;
-  *.bmp|*.jpg|*.jpeg|*.png|*.xpm) mediainfo "$1";;
-  *.wav|*.mp3|*.flac|*.m4a|*.wma|*.ape|*.ac3|*.og[agx]|*.spx|*.opus|*.as[fx]|*.flac) mediainfo "$1";;
-  *.avi|*.mp4|*.wmv|*.dat|*.3gp|*.ogv|*.mkv|*.mpg|*.mpeg|*.vob|*.fl[icv]|*.m2v|*.mov|*.webm|*.ts|*.mts|*.m4v|*.r[am]|*.qt|*.divx) mediainfo "$1";;
-  *.json) jq --color-output . "$1" || bat --color=always --style=numbers,changes --line-range=:"$3" "$1";;
-  *) bat --color=always --style=numbers,changes --line-range=:"$3" "$1" || highlight -O truecolor -s molokai --force -l --line-range=1-"$3" "$1" || cat "$1";;
+file=$1
+w=$2
+h=$3
+x=$4
+y=$5
+
+conf_path=$HOME/.config/lf
+
+case "$file" in
+  *.md) glow -s dark "$file";;
+  *.tgz|*.tar.gz) tar tzf "$file";;
+  *.tar.bz2|*.tbz2) tar tjf "$file";;
+  *.tar.txz|*.txz) xz --list "$file";;
+  *.tar) tar tf "$file";;
+  *.zip|*.jar|*.war|*.ear|*.oxt) unzip -l "$file";;
+  *.rar) unrar l "$file";;
+  *.7z) 7z l "$file";;
+  *.[1-8]) man "$file" | col -b ;;
+  *.o) nm "$file" | less ;;
+  *.torrent) transmission-show "$file";;
+  *odt,*.ods,*.odp,*.sxw) odt2txt "$file";;
+  *.doc) antiword "$file" ;;
+  *.docx) docx2txt.pl "$file" - ;;
+  .xls) xls2csv "$file";;
+  *.xlsx) xlsx2csv "$file";;
+  *.csv) cat "$file" | sed s/,/\\n/g ;;
+  *.pdf) pdftotext -l 10 -nopgbrk -q "$file" -;;
+  *.bmp|*.jpg|*.jpeg|*.png|*.xpm) kitty +icat --silent --transfer-mode file --place "${w}x${h}@${x}x${y}" "$file" && exit 1;;
+  *.wav|*.mp3|*.flac|*.m4a|*.wma|*.ape|*.ac3|*.og[agx]|*.spx|*.opus|*.as[fx]|*.flac) mediainfo "$file";;
+  *.avi|*.mp4|*.wmv|*.dat|*.3gp|*.ogv|*.mkv|*.mpg|*.mpeg|*.vob|*.fl[icv]|*.m2v|*.mov|*.webm|*.ts|*.mts|*.m4v|*.r[am]|*.qt|*.divx)
+    kitty +icat --silent --transfer-mode file --place "${w}x${h}@${x}x${y}" "$($conf_path/vidthumb "$file")" && exit 1 \
+    || mediainfo "$file";;
+  *.json) jq --color-output . "$file" || bat --color=always --style=numbers,changes --line-range=:"$3" "$file";;
+  *) bat --color=always --style=numbers,changes --line-range=:"$3" "$file" \
+    || highlight -O truecolor -s molokai --force -l --line-range=1-"$3" "$file" \
+    || cat "$file";;
 esac

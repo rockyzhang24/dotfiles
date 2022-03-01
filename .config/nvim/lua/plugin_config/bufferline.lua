@@ -1,0 +1,4 @@
+require("bufferline").setup{
+  options = {
+  },
+}

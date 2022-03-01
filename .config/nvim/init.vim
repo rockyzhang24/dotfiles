@@ -501,6 +501,7 @@ function! PackInit() abort
   call minpac#add('mhinz/vim-startify')
   call minpac#add('tyru/open-browser.vim')
   call minpac#add('yanzhang0219/lualine.nvim')
+  call minpac#add('akinsho/bufferline.nvim')
   call minpac#add('kevinhwang91/nvim-bqf')
   call minpac#add('junegunn/fzf', { 'do': 'packloadall! | call fzf#install()' })  " as a filter for bqf
   call minpac#add('mhinz/vim-grepper')
@@ -508,7 +509,6 @@ function! PackInit() abort
   call minpac#add('kevinhwang91/nvim-hlslens')
   call minpac#add('tommcdo/vim-exchange') " cx{motion}, cxx (line), X (visual), cxc (clear), `.` is supported
   call minpac#add('kyazdani42/nvim-tree.lua')
-  call minpac#add('nanozuki/tabby.nvim')
   call minpac#add('t9md/vim-choosewin')
   call minpac#add('lewis6991/foldsigns.nvim')
   call minpac#add('gelguy/wilder.nvim', { 'do': 'let &rtp=&rtp | UpdateRemotePlugins' })
@@ -927,6 +927,7 @@ call wilder#set_option('renderer', wilder#renderer_mux({
 
 lua require('plugin_config.aerial')
 lua require('plugin_config.bqf')
+lua require('plugin_config.bufferline')
 lua require('plugin_config.fidget')
 lua require('foldsigns').setup()
 lua require('plugin_config.gitsigns')
@@ -941,7 +942,6 @@ lua require('plugin_config.nvim-tree')
 lua require('plugin_config.treesitter')
 lua require('plugin_config.nvim-gps')
 lua require('plugin_config.telescope.telescope-config')
-lua require('plugin_config.tabby')
 lua require('plugin_config.toggleterm')
 
 " }}}

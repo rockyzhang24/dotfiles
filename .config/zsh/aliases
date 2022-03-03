@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 # GNU version
-alias ls="gls -hFN --color=auto --group-directories-first --hyperlink=auto" # use GNU ls (brew install coreutils)
 alias diff="diff --color=auto" # GNU diffutils required (brew install diffutils)
 alias df="gdf -h"
 alias du="gdu -h"
@@ -18,6 +17,7 @@ alias c="clear"
 alias ka="killall"
 
 # ls
+alias ls=myls # myls is a function to setup ls color, definded at ~/.config/zsh/functions/myls
 alias la="ls -A"
 alias ll="ls -l"
 alias l="ll -A"

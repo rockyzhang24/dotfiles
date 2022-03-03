@@ -1,0 +1,10 @@
+# vim: filetype=zsh
+
+# Color setup for ls
+
+# Avoid calling dircolors when stdout is not a terminal
+if [ -t 1 ]; then
+  eval $(gdircolors -b ~/.config/zsh/dircolors)
+fi
+# Use GNU ls (brew install coreutils)
+gls -hFN --color=auto --group-directories-first --hyperlink=auto "$@"

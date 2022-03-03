@@ -1,0 +1,11 @@
+#!/bin/sh
+
+# Hyperlinked grep
+
+# Reference: https://sw.kovidgoyal.net/kitty/kittens/hyperlinked_grep/
+
+# Search using ripgrep and open the result in the designated application
+# (definded in ~/.config/kitty/open-actions.conf) by clicking it or using the
+# hpyerlink hint
+
+kitty +kitten hyperlinked_grep --smart-case "$@"

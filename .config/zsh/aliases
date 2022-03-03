@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # GNU version
-alias ls="gls -hFN --color=auto --group-directories-first" # use GNU ls (brew install coreutils)
+alias ls="gls -hFN --color=auto --group-directories-first --hyperlink=auto" # use GNU ls (brew install coreutils)
 alias diff="diff --color=auto" # GNU diffutils required (brew install diffutils)
 alias df="gdf -h"
 alias du="gdu -h"
@@ -41,6 +41,7 @@ alias brL="brew link"
 alias t="trash" # trash is ~/.config/zsh/functions/trash
 alias sc="shellcheck"
 alias iina="open -a 'IINA'"
+alias imgcat="kitty +kitten icat"
 
 # Download
 alias wget="wget --continue --progress=bar --timestamping"

@@ -1,16 +1,5 @@
 vim.cmd([[
 let g:nvim_tree_indent_markers = 1
-let g:nvim_tree_window_picker_exclude = {
-    \   'filetype': [
-    \     'notify',
-    \     'packer',
-    \     'qf',
-    \     'aerial'
-    \   ],
-    \   'buftype': [
-    \     'terminal'
-    \   ]
-    \ }
 let g:nvim_tree_icons = {
     \ 'default': '',
     \ 'symlink': '',
@@ -61,6 +50,17 @@ require'nvim-tree'.setup {
     ignore = true,
     timeout = 400,
   },
+  actions = {
+    open_file = {
+      window_picker = {
+        enable = true,
+        exclude = {
+          filetype = { "notify", "packer", "qf", "diff", "fugitive", "fugitiveblame", "aerial"},
+          buftype  = { "nofile", "terminal", "help", },
+        },
+      },
+    },
+  },
   view = {
     mappings = {
       custom_only = true,
@@ -106,8 +106,8 @@ require'nvim-tree'.setup {
   },
 }
 
--- Toggle the tree, and when open it, do not focus the tree.
-vim.keymap.set('n', '\\t', function() require('nvim-tree').toggle(false, true) end, {silent = true})
+-- Toggle the tree, and when open it, and focus the tree.
+vim.keymap.set('n', '\\t', function() require('nvim-tree').toggle(false, false) end, {silent = true})
 
 vim.keymap.set('n', '<Leader>tt', '<Cmd>NvimTreeFocus<CR>', {silent = true})
 vim.keymap.set('n', '<Leader>tf', '<Cmd>NvimTreeFindFile<CR>', {silent = true})

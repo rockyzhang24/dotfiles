@@ -35,9 +35,6 @@
 	process = git-lfs filter-process
 	required = true
 
-[commit]
-	template = /Users/rockyzhang/.stCommitMsg
-
 [credential]
 	helper = osxkeychain
 

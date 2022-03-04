@@ -1,8 +1,10 @@
 -- Dress up quickfix window
 -- Ref: https://github.com/kevinhwang91/nvim-bqf#customize-quickfix-window-easter-egg
+
+local M = {}
 local fn = vim.fn
 
-function _G.qftf(info)
+function M.qftf(info)
   local items
   local ret = {}
   if info.quickfix == 1 then
@@ -44,4 +46,6 @@ function _G.qftf(info)
   return ret
 end
 
-vim.o.quickfixtextfunc = '{info -> v:lua._G.qftf(info)}'
+vim.o.quickfixtextfunc = [[{info -> v:lua.require('qf').qftf(info)}]]
+
+return M

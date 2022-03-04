@@ -17,9 +17,9 @@ hi def link qfFileName Directory
 hi def link qfSeparatorLeft Delimiter
 hi def link qfSeparatorRight Delimiter
 hi def link qfLineNr LineNr
-hi def link qfError CocErrorSign
-hi def link qfWarning CocWarningSign
-hi def link qfInfo CocInfoSign
-hi def link qfNote CocHintSign
+hi def link qfError DiagnosticSignError
+hi def link qfWarning DiagnosticSignWarn
+hi def link qfInfo DiagnosticSignInfo
+hi def link qfNote DiagnosticSignHint
 
 let b:current_syntax = 'qf'

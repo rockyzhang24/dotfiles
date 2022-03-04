@@ -750,7 +750,7 @@ let g:grepper.rg = {
 nmap gs <Plug>(GrepperOperator)
 xmap gs <Plug>(GrepperOperator)
 
-nnoremap \g :Grepper<CR>
+nnoremap <Leader>G :Grepper<CR>
 
 " }}}
 

@@ -7,7 +7,7 @@ My dotfiles files for `macOS` and `Linux`. Just cherry pick the piece of code yo
 ![platform](https://img.shields.io/badge/platform-macOS%2FLinux-blue)
 ![last commit](https://img.shields.io/github/last-commit/rockyzhang24/dotfiles)
 
-<img width="1672" alt="image" src="https://user-images.githubusercontent.com/11582667/155833559-28dce007-218f-4ab5-87d5-a8d3bfa6252b.png">
+<img width="1728" alt="image" src="https://user-images.githubusercontent.com/11582667/156706194-0762c4d8-b6e3-403c-929d-b49de198e30d.png">
 
 </div>
   

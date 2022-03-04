@@ -2,9 +2,9 @@ source ~/.config/zsh/prompt # Powerlevel10k, should be at the top of zshrc
 
 # zsh
 source ~/.config/zsh/general
-source ~/.config/zsh/completion
 source ~/.config/zsh/vi
 source ~/.config/zsh/plugins
+source ~/.config/zsh/completion
 source ~/.config/zsh/aliases
 source ~/.config/zsh/keybindings
 

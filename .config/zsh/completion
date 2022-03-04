@@ -4,11 +4,14 @@
 zstyle ':completion:*' menu select
 zmodload zsh/complist
 
-autoload -Uz compinit
-compinit
-
 # Include hidden files in autocomplete
 _comp_options+=(globdots)
+
+# Completion for other programs
+fpath=($HOME/.config/zsh/completions $fpath)
+
+autoload -Uz compinit
+compinit
 
 # Completion for kitty
 kitty + complete setup zsh | source /dev/stdin
@@ -16,6 +19,3 @@ kitty + complete setup zsh | source /dev/stdin
 # For kitty kitten: hyperlinked grep (defined in ~/.config/zsh/functions/hg)
 # Delegate its completion to rg
 compdef _rg hg
-
-# Completion for other programs
-fpath=($HOME/.config/zsh/completions $fpath)

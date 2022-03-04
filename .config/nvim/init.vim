@@ -531,6 +531,7 @@ function! PackInit() abort
   call minpac#add('neovim/nvim-lspconfig')
   call minpac#add('j-hui/fidget.nvim')
   call minpac#add('stevearc/aerial.nvim')
+  call minpac#add('kosayoda/nvim-lightbulb')
 
   " Autocomplete
   call minpac#add('hrsh7th/nvim-cmp')
@@ -934,6 +935,7 @@ lua require('plugin_config.gitsigns')
 lua require('plugin_config.hop')
 lua require('plugin_config.lualine')
 lua require('plugin_config.luasnip.luasnip-config')
+lua require('plugin_config.lightbulb')
 lua require('plugin_config.hlslens')
 lua require('plugin_config.cmp')
 lua require('plugin_config.lsp.lsp-config')

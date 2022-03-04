@@ -17,5 +17,8 @@ source ~/.cargo/env
 # lf
 source $HOME/.config/lf/icons
 
+# Setup ls colors
+source $HOME/.config/zsh/lscolors.sh
+
 # iTerm2 Shell Integration
 test -e "${ZDOTDIR}/.iterm2_shell_integration.zsh" && source "${ZDOTDIR}/.iterm2_shell_integration.zsh"

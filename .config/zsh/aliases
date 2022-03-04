@@ -17,7 +17,7 @@ alias c="clear"
 alias ka="killall"
 
 # ls
-alias ls=myls # myls is a function to setup ls color, definded at ~/.config/zsh/functions/myls
+alias ls="gls -hFN --color=auto --group-directories-first --hyperlink=auto" # Use GNU ls (brew install coreutils)
 alias la="ls -A"
 alias ll="ls -l"
 alias l="ll -A"

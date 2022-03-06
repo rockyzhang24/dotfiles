@@ -1,15 +1,10 @@
 require'nvim-lightbulb'.setup {
   sign = {
-    enable = false,
+    enable = true,
   },
-  float = {
-        enabled = true,
-        text = "💡",
-        -- Available options see :h nvim_open_win()
-        win_opts = {
-          border = 'none',
-        },
-    },
 }
+
+-- Modify the lightbulb sign (see :h sign-define)
+vim.fn.sign_define('LightBulbSign', { text = "💡", texthl = "SignColumn", linehl="", numhl="" })
 
 vim.cmd [[autocmd CursorHold,CursorHoldI * lua require'nvim-lightbulb'.update_lightbulb()]]

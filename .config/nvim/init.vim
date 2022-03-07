@@ -172,9 +172,6 @@ augroup END
 
 " ---------- [ Commands ] ---------- {{{
 
-" Delete all the other unmodifed buffers
-command BufClean call utils#CleanBufs()
-
 " Change indentation for the current buffer
 " `:Reindent cur_indent new_indent`, E.g., `:Reindent 2 4` for changing the
 " indentation from 2 to 4
@@ -347,6 +344,9 @@ nnoremap <Backspace> <C-^>
 
 " Delete the current buffer and switch back to the previous one
 nnoremap <silent> <Leader>bd :<C-u>bprevious <Bar> bdelete #<CR>
+
+" Delete all the other unmodified buffers
+nnoremap <silent> <Leader>bD :call utils#BufsDel()<CR>
 
 " }}}
 

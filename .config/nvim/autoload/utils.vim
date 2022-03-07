@@ -53,7 +53,7 @@ function! utils#TelescopeGrepOperator(type) abort
 endfunction
 
 " Delete all the other unmodified buffers
-function! utils#CleanBufs() abort
+function! utils#BufsDel() abort
   for buf in getbufinfo({'buflisted':1})
     if (buf.hidden && !buf.changed)
       execute buf.bufnr . 'bdelete'

@@ -48,8 +48,7 @@ tele.setup {
     buffers = {
       mappings = {
         i = {
-          -- c for clean, i.e., buffer clean
-          ["<C-c>"] = "delete_buffer",
+          ["<M-d>"] = "delete_buffer",
         },
       },
     },

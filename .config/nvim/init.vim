@@ -852,9 +852,14 @@ let g:registers_window_border = "rounded"
 
 " wilder {{{
 
+" - Disable by default until pressing Tab, otherwise / and ? conflict with
+" vim-visual-multi
+" - Keymappings are consitent with nvim-cmp
 call wilder#setup({
       \ 'modes': [':', '/', '?'],
       \ 'enable_cmdline_enter': 0,
+      \ 'accept_key': '<C-y>',
+      \ 'reject_key': '<C-e>',
       \ })
 
 " A helper function

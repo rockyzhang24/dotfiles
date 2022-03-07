@@ -187,7 +187,10 @@ fileviewer *.[1-8] man ./%c | col -b
 
 " Image
 filetype *.bmp,*.jpg,*.jpeg,*.png,*.gif,*.xpm open -a Preview.app,
-fileviewer *.bmp,*.jpg,*.jpeg,*.png,*.gif,*.xpm identify %f
+fileviewer *.bmp,*.jpg,*.jpeg,*.png,*.gif,*.xpm
+\ kitty +icat --silent --transfer-mode=stream --place %pwx%ph@%pxx%py %c %N
+\ %pc
+\ kitty icat --clear --silent %pd
 
 " MD5
 filetype *.md5 md5sum -c %f %S

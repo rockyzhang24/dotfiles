@@ -78,7 +78,7 @@ set wildignore+=*/node_modules/*,*/nginx_runtime/*,*/build/*,*/logs/*,*/dist/*,*
 set confirm
 set undofile " presistent undo (use set undodir=... to change the undodir, default is ~/.local/share/nvim/undo)
 set nrformats=octal,bin,hex,unsigned,alpha
-set sessionoptions+=terminal
+set sessionoptions+=terminal sessionoptions+=globals
 
 " Avoid highlighting the last search when sourcing vimrc
 exec "nohlsearch"

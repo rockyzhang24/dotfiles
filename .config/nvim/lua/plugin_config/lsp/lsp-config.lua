@@ -1,5 +1,6 @@
 local nvim_lsp = require("lspconfig")
 local aerial = require("aerial")
+local lsp = vim.lsp
 
 -- Config diagnostic options globally
 vim.diagnostic.config({
@@ -9,6 +10,7 @@ vim.diagnostic.config({
   },
   float = {
     source = 'if_many',
+    border = 'rounded',
   },
   signs = true,
   underline = true,
@@ -80,6 +82,11 @@ end
 -- Update the capabilities (nvim-cmp supports) sent to the server
 local capabilities = vim.lsp.protocol.make_client_capabilities()
 capabilities = require('cmp_nvim_lsp').update_capabilities(capabilities)
+
+-- Border for hover window
+lsp.handlers["textDocument/hover"] = lsp.with(vim.lsp.handlers.hover, {
+  border = "rounded",
+})
 
 -- Vimscript
 nvim_lsp.vimls.setup {

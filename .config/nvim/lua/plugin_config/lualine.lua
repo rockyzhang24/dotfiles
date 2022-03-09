@@ -21,17 +21,21 @@ require'lualine'.setup {
     lualine_a = {'mode'},
     lualine_b = {
       'branch',
-      'diff',
+      {
+        'diff',
+        symbols = {added= '+', modified = '~', removed = '-'},
+      },
       {
         'diagnostics',
         sources = {"nvim_diagnostic"},
-        -- Same as the sign colors of diagnostics
+        -- Same as the fg color of the highlight group DiagnosticSignXXX
         diagnostics_color = {
           error = { fg = '#fb4934' },
           warn = { fg = '#fabd2f' },
           info = { fg = '#83a598' },
           hint = { fg = '#8ec07c' },
         },
+        symbols = {error = ' ', warn = ' ', info = ' ', hint = ' '},
       }
     },
     lualine_c = {'filename'},
@@ -58,4 +62,3 @@ require'lualine'.setup {
   tabline = {},
   extensions = {'quickfix', 'fugitive', 'nvim-tree', 'aerial', 'toggleterm'}
 }
-

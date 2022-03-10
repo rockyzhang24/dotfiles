@@ -105,6 +105,12 @@ let g:gruvbox_material_diagnostic_virtual_text = 'colored'
 let g:gruvbox_material_statusline_style = 'original'
 let g:gruvbox_material_better_performance = 1
 
+augroup GruvboxMaterialCustom
+  autocmd!
+  " Remove the background color for the text in floating window
+  autocmd ColorScheme gruvbox-material highlight! link NormalFloat Normal
+augroup END
+
 colorscheme gruvbox-material
 
 " }}}
@@ -532,6 +538,7 @@ function! PackInit() abort
   call minpac#add('j-hui/fidget.nvim')
   call minpac#add('stevearc/aerial.nvim')
   call minpac#add('kosayoda/nvim-lightbulb')
+  call minpac#add('ray-x/lsp_signature.nvim')
 
   " Autocomplete
   call minpac#add('hrsh7th/nvim-cmp')
@@ -941,6 +948,7 @@ lua require('plugin_config.hop')
 lua require('plugin_config.lualine')
 lua require('plugin_config.luasnip.luasnip-config')
 lua require('plugin_config.lightbulb')
+lua require('plugin_config.lsp-signature')
 lua require('plugin_config.hlslens')
 lua require('plugin_config.cmp')
 lua require('plugin_config.lsp.lsp-config')

@@ -2,7 +2,7 @@
   
 # .dotfiles
 
-My dotfiles files for `macOS` and `Linux`. Just cherry pick the piece of code you totally understand.
+My dotfiles for `macOS` and `Linux`. Just cherry pick the piece of code you totally understand.
 
 ![platform](https://img.shields.io/badge/platform-macOS%2FLinux-blue)
 ![last commit](https://img.shields.io/github/last-commit/rockyzhang24/dotfiles)

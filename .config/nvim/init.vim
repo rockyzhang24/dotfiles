@@ -79,6 +79,7 @@ set confirm
 set undofile " presistent undo (use set undodir=... to change the undodir, default is ~/.local/share/nvim/undo)
 set nrformats=octal,bin,hex,unsigned,alpha
 set sessionoptions+=terminal sessionoptions+=globals
+set isfname-==
 
 " Avoid highlighting the last search when sourcing vimrc
 exec "nohlsearch"
@@ -105,10 +106,14 @@ let g:gruvbox_material_diagnostic_virtual_text = 'colored'
 let g:gruvbox_material_statusline_style = 'original'
 let g:gruvbox_material_better_performance = 1
 
+function! s:gruvbox_material_custom() abort
+  " Remove the background color for the text in floating window
+  highlight! link NormalFloat Normal
+endfunction
+
 augroup GruvboxMaterialCustom
   autocmd!
-  " Remove the background color for the text in floating window
-  autocmd ColorScheme gruvbox-material highlight! link NormalFloat Normal
+  autocmd ColorScheme gruvbox-material call s:gruvbox_material_custom()
 augroup END
 
 colorscheme gruvbox-material
@@ -144,6 +149,19 @@ augroup nvim_terminal
         \ setlocal nonumber norelativenumber signcolumn=no |
         \ IndentBlanklineDisable
   autocmd BufWinEnter,WinEnter term://* startinsert
+augroup END
+
+" Automatic toggling relative number
+augroup numbertoggle
+  autocmd!
+  autocmd BufEnter,FocusGained,InsertLeave,WinEnter * if &nu | set rnu   | endif
+  autocmd BufLeave,FocusLost,InsertEnter,WinLeave   * if &nu | set nornu | endif
+augroup END
+
+" Disable syntax highlighting for some filetypes if they are too long
+augroup syntax_off
+  autocmd!
+  autocmd FileType yaml if line('$') > 500 | setlocal syntax=OFF | endif
 augroup END
 
 " I manage my dotfiles using a bare repository. To make Vim recognize them and git related plugins
@@ -317,6 +335,10 @@ nnoremap <expr> ]<Space> 'm`' . v:count . 'o<Esc>``'
 " Open a line above or below the current line
 inoremap <C-CR> <C-o>O
 inoremap <S-CR> <C-o>o
+
+" Move the view horizontally when nowrap is set
+nnoremap zl 10zl
+nnoremap zh 10zh
 
 " }}}
 

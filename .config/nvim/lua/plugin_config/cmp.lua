@@ -31,7 +31,7 @@ cmp.setup({
   formatting = {
     -- Icons
     format = lspkind.cmp_format({
-      with_text = true,
+      mode = "symbol_text",
       menu = ({
         buffer = "[buf]",
         nvim_lsp = "[LSP]",

@@ -24,7 +24,7 @@ set textwidth=80
 set colorcolumn=80
 set list
 set listchars=tab:›\ ,trail:▫,extends:#,nbsp:.,precedes:❮,extends:❯
-set fillchars=fold:\ ,eob:\ ,msgsep:‾,vert:\|
+set fillchars=fold:\ ,eob:\ ,msgsep:‾,vert:⏐
 set foldenable
 set foldmethod=indent
 set foldlevel=99
@@ -316,7 +316,7 @@ nnoremap <silent> [T :<C-u>tabfirst<CR>
 nnoremap <silent> ]T :<C-u>tablast<CR>
 
 " Toggle spell checking
-nnoremap <silent> \s :setlocal spell! spelllang=en_us<CR>:set spell?<CR>
+nnoremap <silent> \S :setlocal spell! spelllang=en_us<CR>:set spell?<CR>
 
 " Toggle wrap
 nnoremap <silent> \w :set wrap!<CR>:set wrap?<CR>

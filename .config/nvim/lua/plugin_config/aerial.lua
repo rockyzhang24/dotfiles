@@ -14,12 +14,11 @@ require("aerial").setup {
     vim.api.nvim_buf_set_keymap(bufnr, 'n', '<Leader>fs', '<cmd>Telescope aerial<CR>', {})
   end,
 
-  -- Priority list of preferred backends (can be a filetype map)
   backends = { "lsp", "treesitter", "markdown" },
-
-  -- Fixed width
+  close_behavior = "auto",
   min_width = 40,
   max_width = 40,
+  show_guides = true,
 
   -- Symbols to display (can be a filetype map)
   -- filter_kind = {
@@ -52,7 +51,4 @@ require("aerial").setup {
   -- },
   -- Set it to false to display all symbols
   filter_kind = false,
-
-  -- Use character to show tree hierarchy
-  show_guides = true,
 }

@@ -219,6 +219,7 @@ call s:SetupCommandAbbrs('T', 'tabedit')
 
 let mapleader=" "
 nnoremap <Space> <NOP>
+nnoremap s <NOP>
 
 " The normal `,` is used as a leader key for lsp mappings
 nnoremap <Leader>, ,

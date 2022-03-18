@@ -1,17 +1,11 @@
 require("bufferline").setup{
   options = {
     numbers = function(opts)
-      return string.format('%s|%s', opts.id, opts.raise(opts.ordinal))  -- 8|²
+      return string.format('%s', opts.ordinal)
     end,
     diagnostics = 'nvim_lsp',
     diagnostics_indicator = function(count, level, diagnostics_dict, context)
-      local s = " "
-      for err_level, num in pairs(diagnostics_dict) do
-        local symbol = err_level == "error" and " "
-        or (err_level == "warning" and " " or " " )
-        s = s .. num .. symbol
-      end
-      return s
+      return "(" .. count .. ")"
     end,
     show_buffer_close_icons = false,
     show_close_icon = false,

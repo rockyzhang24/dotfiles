@@ -21,6 +21,10 @@ require("bufferline").setup{
         highlight = "Directory",
       },
     },
+    -- Filter out the buffers that shouldn't be shown
+    custom_filter = function(buf, buf_nums)
+      return vim.bo[buf].filetype ~= "fugitive"
+    end
   },
 }
 

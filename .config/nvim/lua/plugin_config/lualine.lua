@@ -15,7 +15,7 @@ require'lualine'.setup {
     section_separators = { left = '', right = ''},
     disabled_filetypes = {},
     always_divide_middle = true,
-    globalstatus = true,  -- requires neovim 0.7 or highter
+    globalstatus = false,  -- requires neovim 0.7 or highter
   },
   sections = {
     -- Left

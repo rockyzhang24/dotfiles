@@ -36,7 +36,8 @@ require'lualine'.setup {
           info = { fg = '#83a598' },
           hint = { fg = '#8ec07c' },
         },
-        symbols = {error = ' ', warn = ' ', info = ' ', hint = ' '},
+        -- symbols = {error = ' ', warn = ' ', info = ' ', hint = ' '},
+        symbols = {error = ' ', warn = ' ', info = ' ', hint = ' '},
       }
     },
     lualine_c = {'filename'},

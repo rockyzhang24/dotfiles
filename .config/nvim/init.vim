@@ -24,7 +24,7 @@ set textwidth=80
 set colorcolumn=80
 set list
 set listchars=tab:›\ ,trail:▫,extends:#,nbsp:.,precedes:❮,extends:❯
-set fillchars=fold:\ ,eob:\ ,msgsep:‾,vert:⏐
+set fillchars=fold:\ ,eob:\ ,msgsep:‾,
 set foldenable
 set foldmethod=indent
 set foldlevel=99

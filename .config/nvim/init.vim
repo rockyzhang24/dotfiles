@@ -106,15 +106,13 @@ let g:gruvbox_material_diagnostic_virtual_text = 'colored'
 let g:gruvbox_material_statusline_style = 'original'
 let g:gruvbox_material_better_performance = 1
 
-function! s:gruvbox_material_custom() abort
-  " Remove the background color for the text in floating window
-  highlight! link NormalFloat Normal
-endfunction
+" function! s:gruvbox_material_custom() abort
+" endfunction
 
-augroup GruvboxMaterialCustom
-  autocmd!
-  autocmd ColorScheme gruvbox-material call s:gruvbox_material_custom()
-augroup END
+" augroup GruvboxMaterialCustom
+"   autocmd!
+"   autocmd ColorScheme gruvbox-material call s:gruvbox_material_custom()
+" augroup END
 
 colorscheme gruvbox-material
 
@@ -581,6 +579,7 @@ function! PackInit() abort
   call minpac#add('JoosepAlviste/nvim-ts-context-commentstring')
   call minpac#add('mizlan/iswap.nvim')
   call minpac#add('p00f/nvim-ts-rainbow')
+  call minpac#add('romgrk/nvim-treesitter-context')
 
   " Tags
   call minpac#add('ludovicchabant/vim-gutentags')
@@ -977,6 +976,7 @@ lua require('plugin_config.lsp.lsp-config')
 lua require('plugin_config.nvim-ts-rainbow')
 lua require('plugin_config.nvim-tree')
 lua require('plugin_config.treesitter')
+lua require('plugin_config.treesitter-context')
 lua require('plugin_config.nvim-gps')
 lua require('plugin_config.telescope.telescope-config')
 lua require('plugin_config.toggleterm')

@@ -27,12 +27,14 @@ require'nvim-treesitter.configs'.setup {
       set_jumps = true,
       goto_next_start = {
         ["]f"] = "@function.outer",
+        ["]a"] = "@parameter.inner",
       },
       goto_next_end = {
         ["]F"] = "@function.outer",
       },
       goto_previous_start = {
         ["[f"] = "@function.outer",
+        ["[a"] = "@parameter.inner",
       },
       goto_previous_end = {
         ["[F"] = "@function.outer",
@@ -41,5 +43,14 @@ require'nvim-treesitter.configs'.setup {
   },
   context_commentstring = {
     enable = true,
+  },
+  incremental_selection = {
+    enable = true,
+    keymaps = {
+      init_selection = "<M-w>",
+      node_incremental = "<M-w>",
+      node_decremental = "<M-C-w>",
+      scope_incremental = "<M-e>",
+    },
   },
 }

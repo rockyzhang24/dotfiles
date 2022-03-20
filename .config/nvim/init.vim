@@ -421,7 +421,7 @@ nnoremap <Leader>= <C-w>=
 
 " }}}
 
-" tab {{{
+" Tab {{{
 
 " Open a new tab with an empty window
 nnoremap <silent> <Leader>tn :$tabnew<CR>
@@ -433,8 +433,8 @@ nnoremap <silent> <Leader>tc :tabclose<CR>
 nnoremap <silent> <Leader>to :tabonly<CR>
 
 " Move the current tab to the left or right
-nnoremap <silent> <Leader>t[ :-tabmove<CR>
-nnoremap <silent> <Leader>t] :+tabmove<CR>
+nnoremap <silent> <Leader>t, :-tabmove<CR>
+nnoremap <silent> <Leader>t. :+tabmove<CR>
 
 " }}}
 
@@ -867,6 +867,7 @@ augroup END
 let g:undotree_WindowLayout = 2
 let g:undotree_ShortIndicators = 1
 let g:undotree_SetFocusWhenToggle = 1
+let g:undotree_SplitWidth = 30
 
 " Toggle undotree
 nnoremap \u :UndotreeToggle<CR>

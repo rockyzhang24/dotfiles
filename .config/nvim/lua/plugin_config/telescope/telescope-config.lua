@@ -23,6 +23,8 @@ tele.setup {
         ["<S-Down>"] = "preview_scrolling_down",
         ["<C-n>"] = "cycle_history_next",
         ["<C-p>"] = "cycle_history_prev",
+        ["<C-a>"] = "toggle_all",
+        ["<C-Enter>"] = "toggle_selection",
         ["<Esc>"] = "close",
         ["<M-Esc>"] = { "<Esc>", type = "command" },
         -- To disable builtin mappings

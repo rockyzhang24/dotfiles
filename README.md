@@ -88,3 +88,17 @@ git --git-dir=$HOME/dotfiles/ --work-tree=$HOME checkout
 ```
 
 Done!
+
+## Notes
+
+If using [vim-fugitive](https://github.com/tpope/vim-fugitive) in Neovim, to make it work with this bare repo correctly, we should modify `~/dotfiles/config` as below
+
+```
+...
+
+[core]
+  bare = false
+  worktree = /Users/rockyzhang/
+
+...
+```

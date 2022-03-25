@@ -109,6 +109,9 @@ nvim_lsp.sumneko_lua.setup {
     debounce_text_changes = 150,
   },
   capabilities = capabilities,
+  -- Support formatter since 2.6.6 (ref:
+  -- https://github.com/sumneko/lua-language-server/issues/960)
+  cmd = { "lua-language-server", "--preview" },
   settings = {
     Lua = {
       runtime = {
@@ -143,6 +146,17 @@ nvim_lsp.sumneko_lua.setup {
           'conds',
           'parse',
           'ai',
+        },
+        neededFileStatus = {
+          ["codestyle-check"] = "Any",
+        },
+      },
+      -- Config the format style options (ref:
+      -- https://github.com/CppCXY/EmmyLuaCodeStyle/blob/master/docs/format_config.md)
+      format = {
+        enable = true,
+        defaultConfig = {
+          -- quote_style = "double",
         },
       },
       workspace = {

@@ -681,18 +681,6 @@ nnoremap <silent> <Leader>4 :lua require("harpoon.ui").nav_file(4)<CR>
 
 " }}}
 
-" indent-blankline {{{
-
-let g:indent_blankline_filetype_exclude = ['startify', 'help', 'markdown', 'json', 'jsonc', 'WhichKey', 'man', 'aerial', 'NvimTree']
-let g:indent_blankline_buftype_exclude = ['terminal']
-let g:indent_blankline_use_treesitter = v:true
-let g:indent_blankline_show_current_context = v:true
-
-" Toggle indent line
-nnoremap \i :IndentBlanklineToggle<CR>
-
-" }}}
-
 " iswap {{{
 
 " Use cx to be consistent with vim-exchange
@@ -968,6 +956,7 @@ lua require('plugin_config.fidget')
 lua require('foldsigns').setup()
 lua require('plugin_config.gitsigns')
 lua require('plugin_config.hop')
+lua require('plugin_config.indent')
 lua require('plugin_config.lualine')
 lua require('plugin_config.luasnip.luasnip-config')
 lua require('plugin_config.lightbulb')

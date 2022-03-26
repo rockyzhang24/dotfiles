@@ -4,7 +4,9 @@ require "lsp_signature".setup {
     border = "rounded",
   },
   floating_window = true,
-  hint_enable = false,  -- disable virtual text hint
-  hi_parameter = "IncSearch", -- highlight group used to highlight the current parameter
-  toggle_key = "<M-x>", -- toggle signature on and off in insert mode
+  hint_enable = true,
+  -- highlight group used to highlight the current parameter
+  hi_parameter = "IncSearch",
+  -- toggle signature on and off in insert mode
+  toggle_key = "<M-x>",
 }

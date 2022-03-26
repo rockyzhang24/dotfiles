@@ -17,11 +17,11 @@ require('gitsigns').setup {
   },
 
   signs = {
-    add          = {show_count = false, text = '┃' },
-    change       = {show_count = false, text = '┃' },
-    delete       = {show_count = true },
-    topdelete    = {show_count = true },
-    changedelete = {show_count = true},
+    add          = { show_count = false, text = '┃' },
+    change       = { show_count = false, text = '┃' },
+    delete       = { show_count = true },
+    topdelete    = { show_count = true },
+    changedelete = { show_count = true },
   },
 
   -- Keymaps (vim.keymap API requires Neovim 0.7)
@@ -36,11 +36,11 @@ require('gitsigns').setup {
     end
 
     -- Navigation
-    map('n', '[h', "&diff ? '[c' : '<cmd>Gitsigns prev_hunk<CR>'", {expr=true})
-    map('n', ']h', "&diff ? ']c' : '<cmd>Gitsigns next_hunk<CR>'", {expr=true})
+    map('n', '[h', "&diff ? '[c' : '<cmd>Gitsigns prev_hunk<CR>'", { expr = true })
+    map('n', ']h', "&diff ? ']c' : '<cmd>Gitsigns next_hunk<CR>'", { expr = true })
 
     -- Stage hunk or buffer
-    map({'n', 'v'}, '<Leader>hs', ':Gitsigns stage_hunk<CR>')
+    map({ 'n', 'v' }, '<Leader>hs', ':Gitsigns stage_hunk<CR>')
     map('n', '<Leader>hS', gs.stage_buffer)
 
     -- Unstage hunk or buffer
@@ -48,14 +48,14 @@ require('gitsigns').setup {
     map('n', '<Leader>hU', gs.reset_buffer_index) -- git reset HEAD
 
     -- Discard changes
-    map({'n', 'v'}, '<Leader>hr', ':Gitsigns reset_hunk<CR>')
+    map({ 'n', 'v' }, '<Leader>hr', ':Gitsigns reset_hunk<CR>')
     map('n', '<Leader>hR', gs.reset_buffer)
 
     map('n', '<Leader>hp', gs.preview_hunk)
-    map('n', '<Leader>hb', function() gs.blame_line{full=true} end)
+    map('n', '<Leader>hb', function() gs.blame_line { full = true } end)
     map('n', '\\c', gs.toggle_deleted) -- toggle showing deleted/changed lines via virtual lines
 
     -- Text object
-    map({'o', 'x'}, 'ih', ':<C-U>Gitsigns select_hunk<CR>')
+    map({ 'o', 'x' }, 'ih', ':<C-U>Gitsigns select_hunk<CR>')
   end
 }

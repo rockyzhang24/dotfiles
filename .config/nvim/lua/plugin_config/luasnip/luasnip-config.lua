@@ -15,7 +15,7 @@ ls.config.setup({
   ext_opts = {
     [types.choiceNode] = {
       active = {
-        virt_text = {{"●", "Orange"}}
+        virt_text = { { "●", "Orange" } }
       }
     },
   },
@@ -64,11 +64,12 @@ end)
 -- Split up snippets by filetype, load on demand and reload after change
 -- Snippets for each filetype are saved as modules in ~/.config/nvim/lua/snippets/<filetype>.lua
 
--- Ref: https://github.com/L3MON4D3/LuaSnip/wiki/Nice-Configs#split-up-snippets-by-filetype-load-on-demand-and-reload-after-change-first-iteration
+-- Ref:
+-- https://github.com/L3MON4D3/LuaSnip/wiki/Nice-Configs#split-up-snippets-by-filetype-load-on-demand-and-reload-after-change-first-iteration
 
 function _G.snippets_clear()
   for m, _ in pairs(ls.snippets) do
-    package.loaded["snippets."..m] = nil
+    package.loaded["snippets." .. m] = nil
   end
   ls.snippets = setmetatable({}, {
     __index = function(t, k)
@@ -79,9 +80,9 @@ function _G.snippets_clear()
       t[k] = ok and m or {}
 
       -- optionally load snippets from vscode- or snipmate-library:
-			--
-			-- require("luasnip.loaders.from_vscode").load({include={k}})
-			-- require("luasnip.loaders.from_snipmate").load({include={k}})
+      --
+      -- require("luasnip.loaders.from_vscode").load({include={k}})
+      -- require("luasnip.loaders.from_snipmate").load({include={k}})
 
       return t[k]
     end
@@ -106,7 +107,7 @@ function _G.edit_ft()
   }, function(item, idx)
     -- selection aborted -> idx == nil
     if idx then
-      vim.cmd("edit ~/.config/nvim/lua/snippets/"..item..".lua")
+      vim.cmd("edit ~/.config/nvim/lua/snippets/" .. item .. ".lua")
     end
   end)
 end

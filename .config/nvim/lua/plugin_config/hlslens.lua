@@ -19,10 +19,10 @@ require('hlslens').setup({
       else
         text = ('[%d/%d]'):format(idx, cnt)
       end
-      chunks = {{' ', 'Ignore'}, {text, 'HlSearchLensNear'}}
+      chunks = { { ' ', 'Ignore' }, { text, 'HlSearchLensNear' } }
     else
       text = ('[%s %d]'):format(indicator, idx)
-      chunks = {{' ', 'Ignore'}, {text, 'HlSearchLens'}}
+      chunks = { { ' ', 'Ignore' }, { text, 'HlSearchLens' } }
     end
     render.set_virt(0, lnum - 1, col - 1, chunks, nearest)
   end

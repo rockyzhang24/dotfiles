@@ -28,7 +28,7 @@ local shorthands = {
 }
 
 function M.setup_shorthands()
-	setfenv(2, vim.tbl_extend("force", _G, shorthands))
+  setfenv(2, vim.tbl_extend("force", _G, shorthands))
 end
 
 return M

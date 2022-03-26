@@ -8,7 +8,7 @@ end
 -- For mode, only show the first char (or first two chars to distinguish
 -- different VISUALs)
 local function simplifiedMode(str)
-  return str == "V-LINE" and "VL" or (str == "V-BLOCK" and "VB" or str:sub(1,1))
+  return str == "V-LINE" and "VL" or (str == "V-BLOCK" and "VB" or str:sub(1, 1))
 end
 
 -- For location, show total lines
@@ -22,11 +22,11 @@ require'lualine'.setup {
     theme = 'auto',
     -- component_separators = { left = '', right = ''},
     -- section_separators = { left = '', right = ''},
-    component_separators = { left = '', right = ''},
-    section_separators = { left = '', right = ''},
+    component_separators = { left = '', right = '' },
+    section_separators = { left = '', right = '' },
     disabled_filetypes = {},
     always_divide_middle = true,
-    globalstatus = false,  -- requires neovim 0.7 or highter
+    globalstatus = false, -- requires neovim 0.7 or highter
   },
   sections = {
     -- Left
@@ -40,11 +40,11 @@ require'lualine'.setup {
       'branch',
       {
         'diff',
-        symbols = {added= '+', modified = '~', removed = '-'},
+        symbols = { added = '+', modified = '~', removed = '-' },
       },
       {
         'diagnostics',
-        sources = {"nvim_diagnostic"},
+        sources = { "nvim_diagnostic" },
         -- Same as the fg color of the highlight group DiagnosticSignXXX
         diagnostics_color = {
           error = { fg = '#fb4934' },
@@ -53,7 +53,7 @@ require'lualine'.setup {
           hint = { fg = '#8ec07c' },
         },
         -- symbols = {error = ' ', warn = ' ', info = ' ', hint = ' '},
-        symbols = {error = ' ', warn = ' ', info = ' ', hint = ' '},
+        symbols = { error = ' ', warn = ' ', info = ' ', hint = ' ' },
       }
     },
     lualine_c = {
@@ -85,16 +85,16 @@ require'lualine'.setup {
         fmt = customLocation,
       },
     },
-    lualine_z = {'progress'},
+    lualine_z = { 'progress' },
   },
   inactive_sections = {
     lualine_a = {},
     lualine_b = {},
-    lualine_c = {'filename'},
-    lualine_x = {'location'},
+    lualine_c = { 'filename' },
+    lualine_x = { 'location' },
     lualine_y = {},
     lualine_z = {}
   },
   tabline = {},
-  extensions = {'quickfix', 'fugitive', 'nvim-tree', 'aerial', 'toggleterm'}
+  extensions = { 'quickfix', 'fugitive', 'nvim-tree', 'aerial', 'toggleterm' }
 }

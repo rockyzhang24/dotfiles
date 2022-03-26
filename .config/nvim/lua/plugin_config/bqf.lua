@@ -10,7 +10,7 @@ cmd(([[
 require('bqf').setup {
   filter = {
     fzf = {
-      extra_opts = {'--delimiter', '│'}
+      extra_opts = { '--delimiter', '│' }
     }
   }
 }

@@ -1,4 +1,5 @@
--- Examples can be found here: https://github.com/tjdevries/config_manager/blob/master/xdg_config/nvim/lua/tj/telescope/init.lua
+-- Examples can be found here:
+-- https://github.com/tjdevries/config_manager/blob/master/xdg_config/nvim/lua/tj/telescope/init.lua
 
 local M = {}
 local builtin = require("telescope.builtin")
@@ -8,7 +9,7 @@ function M.dotfiles()
   builtin.find_files {
     cwd = "~",
     hidden = true,
-    find_command = {"git", "--git-dir=/Users/rockyzhang/dotfiles/", "--work-tree=/Users/rockyzhang/", "ls-files"},
+    find_command = { "git", "--git-dir=/Users/rockyzhang/dotfiles/", "--work-tree=/Users/rockyzhang/", "ls-files" },
     prompt_title = "< Find dotfiles >",
   }
 end
@@ -28,7 +29,7 @@ function M.grep_nvim_config()
       "--line-number",
       "--column",
       "--smart-case",
-      "--trim",  -- Remove indentation for grep
+      "--trim", -- Remove indentation for grep
       "--glob=!minpac", -- exclude directories
     },
   }

@@ -25,11 +25,11 @@ let g:nvim_tree_icons = {
     \ }
 ]])
 
-require'nvim-tree'.setup {
+require 'nvim-tree'.setup {
   auto_close = true,
   hijack_cursor = true,
   filters = {
-    custom = {'.DS_Store'},
+    custom = { '.DS_Store' },
   },
   trash = {
     cmd = 'trash -F', -- for macOS https://hasseg.org/trash/
@@ -55,7 +55,7 @@ require'nvim-tree'.setup {
       window_picker = {
         enable = true,
         exclude = {
-          filetype = { "notify", "packer", "qf", "diff", "fugitive", "fugitiveblame", "aerial"},
+          filetype = { "notify", "packer", "qf", "diff", "fugitive", "fugitiveblame", "aerial" },
           buftype  = { "nofile", "terminal", "help", },
         },
       },
@@ -81,7 +81,7 @@ require'nvim-tree'.setup {
         { key = "R", action = "refresh" },
         { key = "h", action = "dir_up" },
         { key = "l", action = "cd" },
-        { key = "zi", action = "toggle_ignored" },  -- toggle visibility of files or directories in filters.custom list
+        { key = "zi", action = "toggle_ignored" }, -- toggle visibility of files or directories in filters.custom list
         { key = "zh", action = "toggle_dotfiles" },
         { key = "T", action = "trash" },
         { key = "D", action = "remove" },
@@ -107,8 +107,8 @@ require'nvim-tree'.setup {
 }
 
 -- Toggle the tree, and when open it, and focus the tree.
-vim.keymap.set('n', '\\t', function() require('nvim-tree').toggle(false, false) end, {silent = true})
+vim.keymap.set('n', '\\t', function() require('nvim-tree').toggle(false, false) end, { silent = true })
 
-vim.keymap.set('n', '<Leader>tt', '<Cmd>NvimTreeFocus<CR>', {silent = true})
-vim.keymap.set('n', '<Leader>tf', '<Cmd>NvimTreeFindFile<CR>', {silent = true})
-vim.keymap.set('n', '<Leader>tr', '<Cmd>NvimTreeRefresh<CR>', {silent = true})
+vim.keymap.set('n', '<Leader>tt', '<Cmd>NvimTreeFocus<CR>', { silent = true })
+vim.keymap.set('n', '<Leader>tf', '<Cmd>NvimTreeFindFile<CR>', { silent = true })
+vim.keymap.set('n', '<Leader>tr', '<Cmd>NvimTreeRefresh<CR>', { silent = true })

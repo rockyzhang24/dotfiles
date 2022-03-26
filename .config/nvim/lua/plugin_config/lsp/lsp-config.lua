@@ -20,7 +20,7 @@ vim.diagnostic.config({
 
 -- Diagnostic symbols in the sign column
 -- local signs = { Error = " ", Warn = " ", Hint = " ", Info = " " }
-local signs = { Error = ' ', Warn = ' ', Info = ' ', Hint = ' '}
+local signs = { Error = ' ', Warn = ' ', Info = ' ', Hint = ' ' }
 for type, icon in pairs(signs) do
   local hl = "DiagnosticSign" .. type
   vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = hl })
@@ -34,43 +34,71 @@ local on_attach = function(client, bufnr)
 
   -- Mappings
   -- Comma (,) key acts as a leader key for the lsp mappings
-  local opts = { noremap=true, silent=true }
+  local opts = { noremap = true, silent = true }
 
+  -- Declarations
   buf_set_keymap('n', 'gD', '<cmd>lua vim.lsp.buf.declaration()<CR>', opts)
-  buf_set_keymap('n', 'gd', '<cmd>lua require("telescope.builtin").lsp_definitions(require("telescope.themes").get_dropdown({}))<CR>', opts)  -- definitions
-  buf_set_keymap('n', 'gt', '<cmd>lua require("telescope.builtin").lsp_type_definitions(require("telescope.themes").get_dropdown({}))<CR>', opts) -- type definitions
-  buf_set_keymap('n', 'gi', '<cmd>lua require("telescope.builtin").lsp_implementations(require("telescope.themes").get_dropdown({}))<CR>', opts)  -- implementations
-  buf_set_keymap('n', 'gr', '<cmd>lua require("telescope.builtin").lsp_references(require("telescope.themes").get_dropdown({}))<CR>', opts) -- references
-
+  -- Definitions
+  buf_set_keymap('n', 'gd',
+    '<cmd>lua require("telescope.builtin").lsp_definitions(require("telescope.themes").get_dropdown({}))<CR>',
+    opts)
+  -- Type definitions
+  buf_set_keymap('n', 'gt',
+    '<cmd>lua require("telescope.builtin").lsp_type_definitions(require("telescope.themes").get_dropdown({}))<CR>',
+    opts)
+  -- Implementations
+  buf_set_keymap('n', 'gi',
+    '<cmd>lua require("telescope.builtin").lsp_implementations(require("telescope.themes").get_dropdown({}))<CR>',
+    opts)
+  -- References
+  buf_set_keymap('n', 'gr',
+    '<cmd>lua require("telescope.builtin").lsp_references(require("telescope.themes").get_dropdown({}))<CR>',
+    opts)
+  -- Rename
   buf_set_keymap('n', ',r', '<cmd>lua vim.lsp.buf.rename()<CR>', opts)
-  buf_set_keymap('n', ',a', '<cmd>lua require("telescope.builtin").lsp_code_actions(require("telescope.themes").get_cursor({}))<CR>', opts)
-
+  -- Code actions
+  buf_set_keymap('n', ',a',
+    '<cmd>lua require("telescope.builtin").lsp_code_actions(require("telescope.themes").get_cursor({}))<CR>',
+    opts)
+  -- Show documentation
   buf_set_keymap('n', 'K', '<cmd>lua vim.lsp.buf.hover()<CR>', opts)
+  -- Show signature hint
   buf_set_keymap('n', ',k', '<cmd>lua vim.lsp.buf.signature_help()<CR>', opts)
 
   -- Symbols (<C-l> for filtering by type of symbol)
-  buf_set_keymap('n', ',s', '<cmd>lua require("telescope.builtin").lsp_document_symbols()<CR>', opts) -- current buffer
-  buf_set_keymap('n', ',S', '<cmd>lua require("telescope.builtin").lsp_dynamic_workspace_symbols()<CR>', opts) -- all workspace symbols
+  -- For current buffer
+  buf_set_keymap('n', ',s', '<cmd>lua require("telescope.builtin").lsp_document_symbols()<CR>', opts)
+  -- For all workspace
+  buf_set_keymap('n', ',S', '<cmd>lua require("telescope.builtin").lsp_dynamic_workspace_symbols()<CR>', opts)
 
-  -- Workspace
+  -- Workspace operations for creating a folder, deleting a folder, or listing
+  -- folders
   buf_set_keymap('n', ',wa', '<cmd>lua vim.lsp.buf.add_workspace_folder()<CR>', opts)
   buf_set_keymap('n', ',wr', '<cmd>lua vim.lsp.buf.remove_workspace_folder()<CR>', opts)
   buf_set_keymap('n', ',wl', '<cmd>lua print(vim.inspect(vim.lsp.buf.list_workspace_folders()))<CR>', opts)
 
   -- Diagnostics
+  -- Open a float window to show the complete diagnostic info
   buf_set_keymap('n', ',e', '<cmd>lua vim.diagnostic.open_float()<CR>', opts)
+  -- Navigate to the next/prev diagnostic
   buf_set_keymap('n', '[d', '<cmd>lua vim.diagnostic.goto_prev()<CR>', opts)
   buf_set_keymap('n', ']d', '<cmd>lua vim.diagnostic.goto_next()<CR>', opts)
+  -- Add buffer diagnostics to the location list
   buf_set_keymap('n', ',q', '<cmd>lua vim.diagnostic.setloclist()<CR>', opts)
 
   -- List diagnostics (<C-l> to filter by type of diagnostic)
-  buf_set_keymap('n', ',d', '<cmd>lua require("telescope.builtin").diagnostics({bufnr = 0})<CR>', opts)  -- current buffer
-  buf_set_keymap('n', ',D', '<cmd>lua require("telescope.builtin").diagnostics()<CR>', opts)  -- all opened buffers
+  -- For current buffer
+  buf_set_keymap('n', ',d', '<cmd>lua require("telescope.builtin").diagnostics({bufnr = 0})<CR>', opts)
+  -- For all opened buffers
+  buf_set_keymap('n', ',D', '<cmd>lua require("telescope.builtin").diagnostics()<CR>', opts)
 
   -- Format
-  buf_set_keymap('n', ',F', '<cmd>lua vim.lsp.buf.formatting()<CR>', opts)  -- whole buffer
-  buf_set_keymap('n', ',f', '<cmd>lua require("plugin_config.lsp.lsp-utils").format_range_operator()<CR>', opts)  -- range format with a motion
-  buf_set_keymap('x', ',f', '<cmd>lua require("plugin_config.lsp.lsp-utils").format_range_operator()<CR>', opts)  -- format a given range
+  -- For the whole buffer
+  buf_set_keymap('n', ',F', '<cmd>lua vim.lsp.buf.formatting()<CR>', opts)
+  -- Range format with a motion
+  buf_set_keymap('n', ',f', '<cmd>lua require("plugin_config.lsp.lsp-utils").format_range_operator()<CR>', opts)
+  -- For a range
+  buf_set_keymap('x', ',f', '<cmd>lua require("plugin_config.lsp.lsp-utils").format_range_operator()<CR>', opts)
 
   -- Toggle diagnostics
   buf_set_keymap('n', '\\d', '<cmd>lua require("plugin_config.lsp.lsp-utils").toggle_diagnostics()<CR>', opts)
@@ -151,11 +179,14 @@ nvim_lsp.sumneko_lua.setup {
           ["codestyle-check"] = "Any",
         },
       },
-      -- Config the format style options (ref:
-      -- https://github.com/CppCXY/EmmyLuaCodeStyle/blob/master/docs/format_config.md)
+      -- Config the format style options. Or use a file .editorconfig under the
+      -- project root directory. Ref:
+      -- https://github.com/sumneko/lua-language-server/wiki/Code-Formatter
       format = {
         enable = true,
         defaultConfig = {
+          indent_style = "space",
+          indent_size = "2",
           -- quote_style = "double",
         },
       },

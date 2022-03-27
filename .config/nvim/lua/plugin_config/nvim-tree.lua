@@ -26,7 +26,6 @@ let g:nvim_tree_icons = {
 ]])
 
 require 'nvim-tree'.setup {
-  auto_close = true,
   hijack_cursor = true,
   filters = {
     custom = { '.DS_Store' },
@@ -106,8 +105,10 @@ require 'nvim-tree'.setup {
   },
 }
 
--- Toggle the tree, and when open it, and focus the tree.
-vim.keymap.set('n', '\\t', function() require('nvim-tree').toggle(false, false) end, { silent = true })
+-- Toggle the tree
+-- Two arguments in toggle() control whether the current file will be revealed,
+-- and whether the tree is focused.
+vim.keymap.set('n', '\\t', function() require('nvim-tree').toggle(false, true) end, { silent = true })
 
 vim.keymap.set('n', '<Leader>tt', '<Cmd>NvimTreeFocus<CR>', { silent = true })
 vim.keymap.set('n', '<Leader>tf', '<Cmd>NvimTreeFindFile<CR>', { silent = true })

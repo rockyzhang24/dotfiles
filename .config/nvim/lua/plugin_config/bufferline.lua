@@ -29,7 +29,7 @@ require("bufferline").setup {
 }
 
 -- Buffer picker
-vim.keymap.set('n', 'gb', '<Cmd>BufferLinePick<CR>')
+vim.keymap.set('n', '<Leader>bb', '<Cmd>BufferLinePick<CR>')
 
 -- Move buffer backwards or forwards (consistent with kitty tab movement)
 vim.keymap.set('n', '<Leader>b,', '<Cmd>BufferLineMovePrev<CR>')

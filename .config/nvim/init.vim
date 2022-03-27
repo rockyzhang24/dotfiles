@@ -23,7 +23,7 @@ set wildmode=longest:full,full
 set textwidth=80
 set colorcolumn=80
 set list
-set listchars=tab:›\ ,trail:▫,extends:#,nbsp:.,precedes:❮,extends:❯
+set listchars=tab:›\ ,trail:▫,extends:#,nbsp:.,precedes:❮,extends:❯,eol:↲
 set fillchars=fold:\ ,eob:\ ,msgsep:‾,
 set foldenable
 set foldmethod=indent
@@ -517,7 +517,7 @@ function! PackInit() abort
 
   call minpac#add('nvim-lua/plenary.nvim')  " lua library used by other lua plugins
   call minpac#add('tami5/sqlite.lua')
-  call minpac#add('tpope/vim-commentary')
+  call minpac#add('numToStr/Comment.nvim')
   call minpac#add('tpope/vim-surround')
   call minpac#add('RRethy/vim-illuminate')
   call minpac#add('RRethy/vim-hexokinase', { 'do': 'make hexokinase' })
@@ -631,6 +631,10 @@ augroup fugitiveautocmd
   autocmd BufReadPost fugitive://* set bufhidden=delete
 
 augroup END
+
+" Mappings
+" Use , as the leader key for git related stuff
+nnoremap <silent> ,gs :Git<CR>
 
 " }}}
 
@@ -952,6 +956,7 @@ call wilder#set_option('renderer', wilder#renderer_mux({
 lua require('plugin_config.aerial')
 lua require('plugin_config.bqf')
 lua require('plugin_config.bufferline')
+lua require('plugin_config.comment')
 lua require('plugin_config.fidget')
 lua require('foldsigns').setup()
 lua require('plugin_config.gitsigns')

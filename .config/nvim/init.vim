@@ -760,7 +760,7 @@ let g:grepper.dir = 'repo,file'
 let g:grepper.repo = ['.git', '.hg', '.svn']
 let g:grepper.tools = ['rg', 'git']
 let g:grepper.searchreg = 1
-let g:grepper.prompt_mapping_tool = '\g'
+let g:grepper.prompt_mapping_tool = '<Leader>G'
 let g:grepper.rg = {
       \ 'grepprg': 'rg -H --no-heading --vimgrep --smart-case',
       \ 'grepformat': '%f:%l:%c:%m,%f',

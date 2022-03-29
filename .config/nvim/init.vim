@@ -162,6 +162,33 @@ augroup syntax_off
   autocmd FileType yaml if line('$') > 500 | setlocal syntax=OFF | endif
 augroup END
 
+" Quit vim (or close the tab) automatically if all buffers left are auxiliary
+function! s:AutoQuit() abort
+  let l:filetypes = ['aerial', 'NvimTree']
+  let l:tabwins = nvim_tabpage_list_wins(0)
+  for w in l:tabwins
+    let l:buf = nvim_win_get_buf(w)
+    let l:buf_ft = getbufvar(l:buf, '&filetype')
+    if index(l:filetypes, buf_ft) == -1
+      return
+    endif
+  endfor
+  call s:Quit()
+endfunction
+
+function! s:Quit() abort
+  if tabpagenr('$') > 1
+    tabclose
+  else
+    qall
+  endif
+endfunction
+
+augroup auto_quit
+  autocmd!
+  autocmd BufEnter * call s:AutoQuit()
+augroup END
+
 " I manage my dotfiles using a bare repository. To make Vim recognize them and git related plugins
 " work on them, the environment variables should be set to indicate the locations of git-dir and
 " work-tree when we enter the dotfile buffer. Don't forget to reset them when we enter other buffers,

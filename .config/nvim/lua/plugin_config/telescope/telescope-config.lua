@@ -72,6 +72,9 @@ tele.load_extension('fzf')
 -- Aerial.nvim
 tele.load_extension('aerial')
 
+-- harpoon
+tele.load_extension('harpoon')
+
 -- Mappings
 local map_options = {
   noremap = true,

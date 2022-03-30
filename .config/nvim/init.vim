@@ -51,7 +51,8 @@ set incsearch
 set ignorecase
 set smartcase
 set title
-set titlestring=%(%m%)\ %(%{expand(\"%:~\")}%)
+set titlestring=%t%(\ %M%)%<%(\ (%{expand(\"%:~:.:h\")})%)%(\ %a%)
+set titlelen=15
 set diffopt+=vertical diffopt+=algorithm:patience
 set noswapfile
 set signcolumn=yes:2
@@ -100,19 +101,10 @@ set background=dark
 let g:gruvbox_material_palette = 'original'
 let g:gruvbox_material_enable_bold = 1
 let g:gruvbox_material_enable_italic = 1
-" let g:gruvbox_material_transparent_background = 1
 let g:gruvbox_material_visual = 'blue background'
 let g:gruvbox_material_diagnostic_virtual_text = 'colored'
 let g:gruvbox_material_statusline_style = 'original'
 let g:gruvbox_material_better_performance = 1
-
-" function! s:gruvbox_material_custom() abort
-" endfunction
-
-" augroup GruvboxMaterialCustom
-"   autocmd!
-"   autocmd ColorScheme gruvbox-material call s:gruvbox_material_custom()
-" augroup END
 
 colorscheme gruvbox-material
 
@@ -747,8 +739,6 @@ nnoremap \c :HexokinaseToggle<CR>
 " }}}
 
 " vim-illuminate {{{
-
-" TODO: LSP configuration (https://github.com/RRethy/vim-illuminate#lsp-configuration)
 
 let g:Illuminate_delay = 300
 

@@ -98,15 +98,17 @@ lua require('qf')
 set termguicolors
 set background=dark
 
-let g:gruvbox_material_palette = 'original'
-let g:gruvbox_material_enable_bold = 1
-let g:gruvbox_material_enable_italic = 1
-let g:gruvbox_material_visual = 'blue background'
-let g:gruvbox_material_diagnostic_virtual_text = 'colored'
-let g:gruvbox_material_statusline_style = 'original'
-let g:gruvbox_material_better_performance = 1
+" let g:gruvbox_material_palette = 'original'
+" let g:gruvbox_material_enable_bold = 1
+" let g:gruvbox_material_enable_italic = 1
+" let g:gruvbox_material_visual = 'blue background'
+" let g:gruvbox_material_diagnostic_virtual_text = 'colored'
+" let g:gruvbox_material_statusline_style = 'original'
+" let g:gruvbox_material_better_performance = 1
 
-colorscheme gruvbox-material
+" colorscheme gruvbox-material
+
+lua require('plugin_config.nightfox')
 
 " }}}
 
@@ -619,6 +621,7 @@ function! PackInit() abort
   call minpac#add('folke/tokyonight.nvim')
   call minpac#add('dracula/vim')
   call minpac#add('sainnhe/gruvbox-material')
+  call minpac#add('EdenEast/nightfox.nvim')
 
 endfunction
 
@@ -742,14 +745,7 @@ nnoremap \c :HexokinaseToggle<CR>
 
 let g:Illuminate_delay = 300
 
-let g:Illuminate_ftblacklist = ['startify', 'qf', 'NvimTree']
-
-highlight selectionHighlightBackground ctermbg=94 guibg=#6E552F
-
-augroup illuminate_augroup
-    autocmd!
-    autocmd VimEnter * highlight link illuminatedWord selectionHighlightBackground
-augroup END
+let g:Illuminate_ftblacklist = ['startify', 'qf', 'NvimTree', 'aerial']
 
 " }}}
 

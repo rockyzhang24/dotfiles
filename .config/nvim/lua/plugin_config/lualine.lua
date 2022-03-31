@@ -16,7 +16,7 @@ local function customLocation(str)
   return string.gsub(str, "%w+", "%1" .. "/%%L", 1)
 end
 
-require'lualine'.setup {
+require 'lualine'.setup {
   options = {
     icons_enabled = true,
     theme = 'auto',
@@ -45,13 +45,6 @@ require'lualine'.setup {
       {
         'diagnostics',
         sources = { "nvim_diagnostic" },
-        -- Same as the fg color of the highlight group DiagnosticSignXXX
-        diagnostics_color = {
-          error = { fg = '#fb4934' },
-          warn = { fg = '#fabd2f' },
-          info = { fg = '#83a598' },
-          hint = { fg = '#8ec07c' },
-        },
         -- symbols = {error = ' ', warn = ' ', info = ' ', hint = ' '},
         symbols = { error = ' ', warn = ' ', info = ' ', hint = ' ' },
       }

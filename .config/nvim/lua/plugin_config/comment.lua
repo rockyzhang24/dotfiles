@@ -1,4 +1,6 @@
 require('Comment').setup {
+  -- Ignore empty lines
+  ignore = '^$',
   -- Toggle mappings in NORMAL + VISUAL mode
   toggler = {
     ---Line-comment toggle keymap

@@ -1,5 +1,4 @@
 local nvim_lsp = require("lspconfig")
-local aerial = require("aerial")
 local lsp = vim.lsp
 
 -- Config diagnostic options globally
@@ -104,7 +103,10 @@ local on_attach = function(client, bufnr)
   buf_set_keymap('n', '\\d', '<cmd>lua require("plugin_config.lsp.lsp-utils").toggle_diagnostics()<CR>', opts)
 
   -- For Aerial.nvim to display symbols outline
-  aerial.on_attach(client, bufnr)
+  require("aerial").on_attach(client, bufnr)
+
+  -- For vim-illuminate to highlight all the references of the current word
+  require("illuminate").on_attach(client)
 
 end
 

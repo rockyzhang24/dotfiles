@@ -5,7 +5,7 @@ tele.setup {
   defaults = {
     prompt_prefix = "❯ ",
     selection_caret = "❯ ",
-    winblend = 10,
+    winblend = 5,
     layout_strategy = "flex",
     layout_config = {
       width = 0.95,
@@ -95,6 +95,7 @@ keymap('n', '<Leader>fb', '<Cmd>lua require("telescope.builtin").buffers()<CR>',
 keymap('n', '<Leader>ft', '<Cmd>lua require("telescope.builtin").tags()<CR>', map_options)
 keymap('n', '<Leader>f?', '<Cmd>lua require("telescope.builtin").help_tags()<CR>', map_options)
 keymap('n', '<Leader>fr', '<Cmd>lua require("telescope.builtin").resume()<CR>', map_options)
+keymap('n', '<Leader>fh', '<Cmd>lua require("telescope.builtin").highlights()<CR>', map_options)
 
 -- Grep
 keymap('n', '<Leader>g/', '<Cmd>lua require("telescope.builtin").live_grep()<CR>', map_options)

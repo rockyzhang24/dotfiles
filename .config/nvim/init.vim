@@ -23,7 +23,7 @@ set wildmode=longest:full,full
 set textwidth=80
 set colorcolumn=80
 set list
-set listchars=tab:›\ ,trail:▫,extends:#,nbsp:.,precedes:❮,extends:❯,eol:↲
+set listchars=tab:›\ ,trail:•,extends:#,nbsp:.,precedes:❮,extends:❯
 set fillchars=fold:\ ,eob:\ ,msgsep:‾,
 set foldenable
 set foldmethod=indent
@@ -57,9 +57,9 @@ set diffopt+=vertical diffopt+=algorithm:patience
 set noswapfile
 set signcolumn=yes:2
 set spelllang=en_us
-set pumblend=10
+set pumblend=5
 set pumheight=20
-set winblend=10
+set winblend=5
 set winminwidth=10
 set grepprg=rg\ --vimgrep\ --smart-case\ $*
 set grepformat=%f:%l:%c:%m
@@ -622,6 +622,8 @@ function! PackInit() abort
   call minpac#add('dracula/vim')
   call minpac#add('sainnhe/gruvbox-material')
   call minpac#add('EdenEast/nightfox.nvim')
+  call minpac#add('rebelot/kanagawa.nvim')
+  call minpac#add('bluz71/vim-nightfly-guicolors')
 
 endfunction
 
@@ -820,16 +822,15 @@ endfunction
 
 " Header
 let g:ascii = [
-      \ '          ▀████▀▄▄              ▄█ ',
-      \ '            █▀    ▀▀▄▄▄▄▄    ▄▄▀▀█ ',
-      \ '    ▄        █          ▀▀▀▀▄  ▄▀  ',
-      \ '   ▄▀ ▀▄      ▀▄              ▀▄▀  ',
-      \ '  ▄▀    █     █▀   ▄█▀▄      ▄█    ',
-      \ '  ▀▄     ▀▄  █     ▀██▀     ██▄█   ',
-      \ '   ▀▄    ▄▀ █   ▄██▄   ▄  ▄  ▀▀ █  ',
-      \ '    █  ▄▀  █    ▀██▀    ▀▀ ▀▀  ▄▀  ',
-      \ '   █   █  █      ▄▄           ▄▀   ',
+      \ ' _____  ___    _______    ______  ___      ___  __     ___      ___ ',
+      \ '(\"   \|"  \  /"     "|  /    " \|"  \    /"  ||" \   |"  \    /"  |',
+      \ '|.\\   \    |(: ______) // ____  \\   \  //  / ||  |   \   \  //   |',
+      \ '|: \.   \\  | \/    |  /  /    ) :)\\  \/. ./  |:  |   /\\  \/.    |',
+      \ '|.  \    \. | // ___)_(: (____/ //  \.    //   |.  |  |: \.        |',
+      \ '|    \    \ |(:      "|\        /    \\   /    /\  |\ |.  \    /:  |',
+      \ ' \___|\____\) \_______) \"_____/      \__/    (__\_|_)|___|\__/|___|',
       \ ]
+
 
 let g:startify_custom_header = 'startify#pad(g:ascii + startify#fortune#boxed())'
 
@@ -837,6 +838,9 @@ let g:startify_custom_header = 'startify#pad(g:ascii + startify#fortune#boxed())
 augroup starity
   autocmd User Startified setlocal cursorline
 augroup END
+
+" Go to the Startify buffer
+nnoremap <silent> <Leader>sh :Startify<CR>
 
 " Session management
 nnoremap <silent> <Leader>ss :SSave<CR>

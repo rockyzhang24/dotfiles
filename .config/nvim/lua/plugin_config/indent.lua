@@ -10,13 +10,15 @@ require("indent_blankline").setup {
     'man',
     'aerial',
     'NvimTree',
+    'minpac',
+    'minpacprgs',
   },
   buftype_exclude = {
     'terminal',
   },
   use_treesitter = true,
   show_current_context = true,
-  context_char = '┃',
+  -- context_char = '┃',
   show_current_context_start = true,
   context_patterns = {
     'class',

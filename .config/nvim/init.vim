@@ -565,6 +565,7 @@ function! PackInit() abort
   call minpac#add('ThePrimeagen/harpoon')
   call minpac#add('akinsho/toggleterm.nvim')
   call minpac#add('mg979/vim-visual-multi')
+  call minpac#add('dstein64/nvim-scrollview')
 
   " Telescope
   call minpac#add('nvim-telescope/telescope-fzf-native.nvim', { 'do': 'make' })  " sorter for telescope
@@ -988,6 +989,7 @@ lua require('plugin_config.cmp')
 lua require('plugin_config.lsp.lsp-config')
 lua require('plugin_config.nvim-ts-rainbow')
 lua require('plugin_config.nvim-tree')
+lua require('plugin_config.scrollbar')
 lua require('plugin_config.treesitter')
 lua require('plugin_config.treesitter-context')
 lua require('plugin_config.nvim-gps')

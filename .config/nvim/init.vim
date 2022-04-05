@@ -362,7 +362,7 @@ nnoremap zh 10zh
 
 " }}}
 
-" Copy and past {{{
+" Copy and paste {{{
 
 " Copy
 nnoremap Y y$
@@ -736,7 +736,7 @@ call s:SetupCommandAbbrs('pd', 'PluginDelete')
 
 " vim-hexokinase {{{
 
-let g:Hexokinase_highlighters = ['backgroundfull']
+let g:Hexokinase_highlighters = ['virtual']
 let g:Hexokinase_optInPatterns = 'full_hex,rgb,rgba,hsl,hsla'
 
 " Toggle
@@ -802,11 +802,24 @@ let g:VM_maps["Redo"] = '<C-r>'
 
 " startify {{{
 
+let g:startify_lists = [
+      \ { 'type': 'files',     'header': ['   MRU']            },
+      \ { 'type': 'dir',       'header': ['   MRU '. getcwd()] },
+      \ { 'type': 'sessions',  'header': ['   Sessions']       },
+      \ { 'type': 'bookmarks', 'header': ['   Bookmarks']      },
+      \ { 'type': 'commands',  'header': ['   Commands']       },
+      \ ]
+
 " Make vim-rooter works when a file is opened from startify
 let g:startify_change_to_dir = 0
 
 " Filter MRU files
-let g:startify_skiplist = ['tmp\..*']
+let g:startify_skiplist = [
+      \ 'tmp\..*',
+      \ 'COMMIT_EDITMSG',
+      \ ]
+
+let g:startify_update_oldfiles = 1
 
 " Devicons
 lua << EOF
@@ -831,7 +844,6 @@ let g:ascii = [
       \ '|    \    \ |(:      "|\        /    \\   /    /\  |\ |.  \    /:  |',
       \ ' \___|\____\) \_______) \"_____/      \__/    (__\_|_)|___|\__/|___|',
       \ ]
-
 
 let g:startify_custom_header = 'startify#pad(g:ascii + startify#fortune#boxed())'
 

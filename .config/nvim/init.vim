@@ -143,11 +143,11 @@ augroup nvim_terminal
   autocmd BufWinEnter,WinEnter term://* startinsert
 augroup END
 
-" Automatic toggling relative number
+" Automatic toggling between 'hybrid' and absolute line numbers
 augroup numbertoggle
   autocmd!
-  autocmd BufEnter,FocusGained,InsertLeave,WinEnter * if &nu | set rnu   | endif
-  autocmd BufLeave,FocusLost,InsertEnter,WinLeave   * if &nu | set nornu | endif
+  autocmd BufEnter,FocusGained,InsertLeave,WinEnter * if &nu && mode() != "i" | set rnu   | endif
+  autocmd BufLeave,FocusLost,InsertEnter,WinLeave   * if &nu                  | set nornu | endif
 augroup END
 
 " Disable syntax highlighting for some filetypes if they are too long

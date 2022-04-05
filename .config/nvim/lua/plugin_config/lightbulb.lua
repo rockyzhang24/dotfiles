@@ -1,10 +1,10 @@
-require'nvim-lightbulb'.setup {
+require 'nvim-lightbulb'.setup {
   sign = {
-    enabled = false,
-    priority = 99,
+    enabled = true,
+    priority = 10,
   },
   float = {
-    enabled = true,
+    enabled = false,
     text = "💡",
     win_opts = {
       border = 'none',

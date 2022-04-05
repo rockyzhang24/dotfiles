@@ -5,7 +5,7 @@ require('gitsigns').setup {
   linehl = false,
   word_diff = false,
 
-  sign_priority = 1,
+  sign_priority = 6,
 
   preview_config = {
     -- Options passed to nvim_open_win

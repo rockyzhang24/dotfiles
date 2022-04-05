@@ -36,7 +36,7 @@ require('nightfox').setup {
     LspReferenceText = { bg = lsp_references },
     LspReferenceWrite = { bg = lsp_references },
     IndentBlanklineChar = { fg = indentline },
-    Visual = { bg = "#364a82" },
+    Visual = { bg = "#264F78" },
     IncSearch = { fg = "palette.black.dim", bg = "palette.red" },
     Search = { fg = "palette.black.dim", bg = "palette.green" },
     HlSearchLens = { fg = "palette.fg0", bg = "palette.sel1" },

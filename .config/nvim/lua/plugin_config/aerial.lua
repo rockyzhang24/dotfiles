@@ -14,7 +14,12 @@ require("aerial").setup {
     vim.api.nvim_buf_set_keymap(bufnr, 'n', 'sf', '<cmd>Telescope aerial<CR>', {})
   end,
 
-  backends = { "lsp", "treesitter", "markdown" },
+  -- There is an issue to set multiple backends for vim
+  -- See https://github.com/stevearc/aerial.nvim/issues/68
+  backends = {
+    ['_'] = { 'lsp', 'treesitter', 'markdown' },
+    vim = { 'lsp' },
+  },
   close_behavior = "auto",
   min_width = 40,
   max_width = 40,

@@ -539,6 +539,7 @@ function! PackInit() abort
   call minpac#add('tami5/sqlite.lua')
   call minpac#add('numToStr/Comment.nvim')
   call minpac#add('tpope/vim-surround')
+  call minpac#add('tpope/vim-repeat')
   call minpac#add('RRethy/vim-illuminate')
   call minpac#add('RRethy/vim-hexokinase', { 'do': 'make hexokinase' })
   call minpac#add('AndrewRadev/splitjoin.vim')  " gS and gJ for split and join

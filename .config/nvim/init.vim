@@ -240,7 +240,6 @@ call s:SetupCommandAbbrs('T', 'tabedit')
 
 let mapleader=" "
 nnoremap <Space> <NOP>
-nnoremap s <NOP>
 
 " The normal `,` is used as a leader key for lsp mappings
 nnoremap <Leader>, ,
@@ -302,8 +301,8 @@ nnoremap ]c ]czz
 nnoremap [c [czz
 nnoremap [j <C-o>zz
 nnoremap ]j <C-i>zz
-nnoremap ]s ]szz
-nnoremap [s [szz
+nnoremap ]x ]szz
+nnoremap [x [szz
 
 " Navigation in the argument list
 nnoremap <silent> [a :<C-u>previous<CR>
@@ -416,8 +415,8 @@ inoremap <M-u> <Esc><C-w>w<C-u><C-w>wa
 nnoremap <C-p> <C-w>p
 
 " Create a split window
-nnoremap <silent> s- :split<CR>
-nnoremap <silent> s\ :vsplit<CR>
+nnoremap <silent> <Leader>- :split<CR>
+nnoremap <silent> <Leader>\ :vsplit<CR>
 
 " Change vertical to horizontal
 nnoremap <Leader>w- <C-w>t<C-w>K
@@ -553,7 +552,6 @@ function! PackInit() abort
   call minpac#add('kevinhwang91/nvim-bqf')
   call minpac#add('junegunn/fzf', { 'do': 'packloadall! | call fzf#install()' })  " as a filter for bqf
   call minpac#add('mhinz/vim-grepper')
-  call minpac#add('phaazon/hop.nvim')
   call minpac#add('kevinhwang91/nvim-hlslens')
   call minpac#add('tommcdo/vim-exchange') " cx{motion}, cxx (line), X (visual), cxc (clear), `.` is supported
   call minpac#add('kyazdani42/nvim-tree.lua')
@@ -566,6 +564,7 @@ function! PackInit() abort
   call minpac#add('akinsho/toggleterm.nvim')
   call minpac#add('mg979/vim-visual-multi')
   call minpac#add('dstein64/nvim-scrollview')
+  call minpac#add('ggandor/lightspeed.nvim')
 
   " Telescope
   call minpac#add('nvim-telescope/telescope-fzf-native.nvim', { 'do': 'make' })  " sorter for telescope
@@ -990,12 +989,12 @@ lua require('plugin_config.comment')
 lua require('plugin_config.fidget')
 lua require('foldsigns').setup()
 lua require('plugin_config.gitsigns')
-lua require('plugin_config.hop')
 lua require('plugin_config.indent')
 lua require('plugin_config.lualine')
 lua require('plugin_config.luasnip.luasnip-config')
 lua require('plugin_config.lightbulb')
 lua require('plugin_config.lsp-signature')
+lua require('plugin_config.lightspeed')
 lua require('plugin_config.hlslens')
 lua require('plugin_config.cmp')
 lua require('plugin_config.lsp.lsp-config')

@@ -565,7 +565,7 @@ function! PackInit() abort
   call minpac#add('akinsho/toggleterm.nvim')
   call minpac#add('mg979/vim-visual-multi')
   call minpac#add('dstein64/nvim-scrollview')
-  call minpac#add('ggandor/lightspeed.nvim')
+  call minpac#add('phaazon/hop.nvim')
 
   " Telescope
   call minpac#add('nvim-telescope/telescope-fzf-native.nvim', { 'do': 'make' })  " sorter for telescope
@@ -990,12 +990,12 @@ lua require('plugin_config.comment')
 lua require('plugin_config.fidget')
 lua require('foldsigns').setup()
 lua require('plugin_config.gitsigns')
+lua require('plugin_config.hop')
 lua require('plugin_config.indent')
 lua require('plugin_config.lualine')
 lua require('plugin_config.luasnip.luasnip-config')
 lua require('plugin_config.lightbulb')
 lua require('plugin_config.lsp-signature')
-lua require('plugin_config.lightspeed')
 lua require('plugin_config.hlslens')
 lua require('plugin_config.cmp')
 lua require('plugin_config.lsp.lsp-config')

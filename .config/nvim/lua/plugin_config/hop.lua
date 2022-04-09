@@ -5,4 +5,4 @@ hop.setup {
   char2_fallback_key = '<CR>',
 }
 
-vim.keymap.set('n', '<Leader>j', hop.hint_char2)
+vim.keymap.set({ 'n', 'o' }, 's', hop.hint_char2)

@@ -150,6 +150,12 @@ nvim_lsp.sumneko_lua.setup {
         -- Setup your lua path
         path = runtime_path,
       },
+      completion = {
+        callSnippet = "Replace",
+        displayContext = 50,
+        keywordSnippet = "Disable",
+        postfix = ".",
+      },
       diagnostics = {
         -- Get the language server to recognize global
         globals = {

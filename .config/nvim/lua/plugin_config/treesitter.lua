@@ -2,7 +2,30 @@ require 'nvim-treesitter.configs'.setup {
 
   -- nvim-treesitter config
 
-  ensure_installed = "maintained",
+  ensure_installed = {
+    "bash",
+    "c",
+    "cpp",
+    "cmake",
+    "css",
+    "comment",
+    "go",
+    "html",
+    "java",
+    "javascript",
+    "json",
+    "jsonc",
+    "lua",
+    "markdown",
+    "make",
+    "python",
+    "rust",
+    "regex",
+    "tsx",
+    "typescript",
+    "vim",
+  },
+
   ignore_install = {}, -- List of parsers to ignore installing
 
   -- Modules

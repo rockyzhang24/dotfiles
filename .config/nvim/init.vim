@@ -566,6 +566,7 @@ function! PackInit() abort
   call minpac#add('mg979/vim-visual-multi')
   call minpac#add('dstein64/nvim-scrollview')
   call minpac#add('phaazon/hop.nvim')
+  call minpac#add('kevinhwang91/nvim-fFHighlight')
 
   " Telescope
   call minpac#add('nvim-telescope/telescope-fzf-native.nvim', { 'do': 'make' })  " sorter for telescope
@@ -904,12 +905,16 @@ let g:registers_window_border = "rounded"
 
 " wilder {{{
 
-" - Disable by default until pressing Tab, otherwise / and ? conflict with
-" vim-visual-multi
-" - Keymappings are consitent with nvim-cmp
+" Wilder is activated by default but / and ? conflict with vm-regex-search (\\/) in
+" vim-visual-multi. 
+" - Set enable_cmdline_enter = 0 to make wilder not activate automatically, and
+"   then press <Tab> will actvate it. 
+" - Or actually I don't need wilder to take over / and ?, so I removed them from
+"   modes.
+" Set keymaps to be consitent with nvim-cmp
 call wilder#setup({
-      \ 'modes': [':', '/', '?'],
-      \ 'enable_cmdline_enter': 0,
+      \ 'modes': [':'],
+      \ 'enable_cmdline_enter': 1,
       \ 'accept_key': '<C-y>',
       \ 'reject_key': '<C-e>',
       \ })
@@ -986,8 +991,10 @@ call wilder#set_option('renderer', wilder#renderer_mux({
 lua require('plugin_config.aerial')
 lua require('plugin_config.bqf')
 lua require('plugin_config.bufferline')
+lua require('plugin_config.cmp')
 lua require('plugin_config.comment')
 lua require('plugin_config.fidget')
+lua require('plugin_config.ffhighlight')
 lua require('foldsigns').setup()
 lua require('plugin_config.gitsigns')
 lua require('plugin_config.hop')
@@ -997,7 +1004,6 @@ lua require('plugin_config.luasnip.luasnip-config')
 lua require('plugin_config.lightbulb')
 lua require('plugin_config.lsp-signature')
 lua require('plugin_config.hlslens')
-lua require('plugin_config.cmp')
 lua require('plugin_config.lsp.lsp-config')
 lua require('plugin_config.nvim-ts-rainbow')
 lua require('plugin_config.nvim-tree')

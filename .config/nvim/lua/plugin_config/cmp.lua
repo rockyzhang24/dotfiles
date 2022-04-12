@@ -42,6 +42,12 @@ cmp.setup({
         path = "[path]",
       })
     }),
+    -- Adjust the order of completion menu fields
+    -- fields = {
+    --   'abbr',
+    --   'kind',
+    --   'menu',
+    -- },
   },
 
   experimental = {

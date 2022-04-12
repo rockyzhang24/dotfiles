@@ -1,7 +1,7 @@
 require 'nvim-lightbulb'.setup {
   sign = {
     enabled = true,
-    priority = 10,
+    priority = 20,
   },
   float = {
     enabled = false,

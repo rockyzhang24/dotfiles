@@ -5,6 +5,10 @@ require('gitsigns').setup {
   linehl = false,
   word_diff = false,
 
+  -- Boost efficiency for the internal sign related operations
+  -- Ref: https://github.com/lewis6991/gitsigns.nvim/pull/438
+  _extmark_signs = true,
+
   sign_priority = 6,
 
   preview_config = {

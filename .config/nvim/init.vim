@@ -244,6 +244,11 @@ nnoremap <Space> <NOP>
 " The normal `,` is used as a leader key for lsp mappings
 nnoremap <Leader>, ,
 
+" Save and quit
+nnoremap <silent> <Leader>ww :<C-u>update<CR>
+nnoremap <silent> <Leader>q :<C-u>x<CR>
+nnoremap <silent> <Leader>Q :<C-u>qa!<CR>
+
 " Smarter j and k navigation
 nnoremap <expr> j v:count ? (v:count > 5 ? "m'" . v:count : '') . 'j' : 'gj'
 nnoremap <expr> k v:count ? (v:count > 5 ? "m'" . v:count : '') . 'k' : 'gk'
@@ -382,6 +387,10 @@ xnoremap p "_c<Esc>p
 " Select the last changed (or pasted) text
 nnoremap <expr> gp '`[' . strpart(getregtype(), 0, 1) . '`]'
 
+" " Paste non-linewise text above or below current cursor
+nnoremap <Leader>p m`o<Esc>p``
+nnoremap <Leader>P m`O<Esc>p``
+
 " }}}
 
 " Buffer {{{
@@ -423,9 +432,6 @@ nnoremap <Leader>w- <C-w>t<C-w>K
 
 " Change horizontal to vertical
 nnoremap <Leader>w\ <C-w>t<C-w>H
-
-" Close all windows except the current (o for only)
-nnoremap <Leader>wo <C-w>o
 
 " Move current window to new tab
 nnoremap <Leader>wt <C-w>T

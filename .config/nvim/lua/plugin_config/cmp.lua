@@ -9,26 +9,30 @@ cmp.setup({
     end,
   },
 
-  mapping = {
-    ['<C-b>'] = cmp.mapping(cmp.mapping.scroll_docs(-4), { 'i', 'c' }),
-    ['<C-f>'] = cmp.mapping(cmp.mapping.scroll_docs(4), { 'i', 'c' }),
-    ['<C-d>'] = cmp.mapping(cmp.mapping.complete(), { 'i', 'c' }),
-    ['<C-e>'] = cmp.mapping(cmp.mapping.abort(), { 'i', 'c' }),
-    ['<C-y>'] = cmp.mapping(cmp.mapping.confirm({ select = true }), { 'i', 'c' }),
-    ['<Tab>'] = cmp.config.disable,
-    ['<S-Tab>'] = cmp.config.disable,
+  -- Border
+  -- window = {
+  --   completion = cmp.config.window.bordered(),
+  --   documentation = cmp.config.window.bordered(),
+  -- },
 
+  -- Insert mode mappings
+  mapping = cmp.mapping.preset.insert({
+    ['<C-b>'] = cmp.mapping.scroll_docs(-4),
+    ['<C-f>'] = cmp.mapping.scroll_docs(4),
+    ['<C-Space>'] = cmp.mapping.complete(),
+    ['<C-e>'] = cmp.mapping.abort(),
+    ['<C-y>'] = cmp.mapping.confirm({ select = true }),
     -- Then the default <C-n> and <C-p> for selecting the next/previous item
-  },
+  }),
 
-  sources = {
+  sources = cmp.config.sources({
     -- The order of the sources gives them priority, or use priority = xxx to specify it.
     { name = 'nvim_lsp' },
     { name = 'luasnip' },
-    { name = 'buffer', keyword_length = 5 },
+    { name = 'buffer', keyword_length = 4 },
     { name = 'path' },
     { name = 'nvim_lua' }, -- nvim_lua make it only be enabled for Lua filetype
-  },
+  }),
 
   formatting = {
     -- Icons
@@ -55,25 +59,3 @@ cmp.setup({
   },
 
 })
-
--- Buffer-specific setting
--- NOTE: This will OVERRIDE the global setup for that buffer
--- vim.cmd [[
---   augroup DadbodSql
---     au!
---     autocmd FileType sql,mysql,plsql lua require('cmp').setup.buffer { sources = { { name = 'vim-dadbod-completion' } } }
---   augroup END
--- ]]
-
--- Disable nvim-cmp for a buffer
--- vim.cmd [[
---   augroup Disable-cmp
---     au!
---     autocmd Filetype xxx lua require('cmp').setup.buffer { enabled = false }
---   augroup END
--- ]]
-
--- Helpful resources:
--- 1) How to create your own cmp source?
--- https://github.com/tjdevries/config_manager/blob/master/xdg_config/nvim/after/plugin/cmp_gh_source.lua
--- https://youtu.be/_DnmphIwnjo?t=1411

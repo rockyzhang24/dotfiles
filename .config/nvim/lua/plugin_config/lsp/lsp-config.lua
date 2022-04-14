@@ -33,6 +33,7 @@ local on_attach = function(client, bufnr)
 
   -- Mappings
   -- Comma (,) key acts as a leader key for the lsp mappings
+
   local opts = { noremap = true, silent = true }
 
   -- Declarations

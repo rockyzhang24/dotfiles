@@ -1,5 +1,4 @@
 vim.cmd([[
-let g:nvim_tree_indent_markers = 1
 let g:nvim_tree_icons = {
     \ 'default': '',
     \ 'symlink': '',
@@ -100,6 +99,16 @@ require 'nvim-tree'.setup {
         { key = "S", action = "search_node" },
         { key = "q", action = "close" },
         { key = "?", action = "toggle_help" },
+      },
+    },
+  },
+  renderer = {
+    indent_markers = {
+      enable = true,
+      icons = {
+        corner = "└ ",
+        edge = "│ ",
+        none = "  ",
       },
     },
   },

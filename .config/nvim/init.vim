@@ -158,7 +158,7 @@ augroup END
 
 " Quit vim (or close the tab) automatically if all buffers left are auxiliary
 function! s:AutoQuit() abort
-  let l:filetypes = ['aerial', 'NvimTree']
+  let l:filetypes = ['aerial', 'NvimTree', 'tsplayground', 'query']
   let l:tabwins = nvim_tabpage_list_wins(0)
   for w in l:tabwins
     let l:buf = nvim_win_get_buf(w)
@@ -605,6 +605,7 @@ function! PackInit() abort
 
   " Tree-sitter
   call minpac#add('nvim-treesitter/nvim-treesitter', {'do': 'TSUpdate'})
+  call minpac#add('nvim-treesitter/playground')
   call minpac#add('nvim-treesitter/nvim-treesitter-textobjects')
   call minpac#add('JoosepAlviste/nvim-ts-context-commentstring')
   call minpac#add('mizlan/iswap.nvim')

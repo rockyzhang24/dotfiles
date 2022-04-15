@@ -14,6 +14,9 @@ require 'treesitter-context'.setup {
       'switch',
       'case',
     },
+    lua = {
+      'table',
+    },
     -- rust = {
     --   'impl_item',
     -- },

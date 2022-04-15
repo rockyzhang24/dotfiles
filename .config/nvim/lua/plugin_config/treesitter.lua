@@ -19,6 +19,7 @@ require 'nvim-treesitter.configs'.setup {
     "markdown",
     "make",
     "python",
+    "query",
     "rust",
     "regex",
     "tsx",
@@ -75,5 +76,8 @@ require 'nvim-treesitter.configs'.setup {
       node_decremental = "<M-C-w>",
       scope_incremental = "<M-e>",
     },
+  },
+  playground = {
+    enable = true,
   },
 }

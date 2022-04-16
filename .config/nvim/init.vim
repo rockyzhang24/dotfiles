@@ -1,5 +1,5 @@
 " Author: Rocky Zhang <yanzhang0219@gmail.com>
-" GitHub: https://github.com/yanzhang0219
+" GitHub: https://github.com/rockyzhang24
 
 " ---------- [ General ] ---------- {{{
 
@@ -610,7 +610,7 @@ function! PackInit() abort
   call minpac#add('JoosepAlviste/nvim-ts-context-commentstring')
   call minpac#add('mizlan/iswap.nvim')
   call minpac#add('p00f/nvim-ts-rainbow')
-  call minpac#add('romgrk/nvim-treesitter-context')
+  call minpac#add('lewis6991/nvim-treesitter-context')
 
   " Tags
   call minpac#add('ludovicchabant/vim-gutentags')

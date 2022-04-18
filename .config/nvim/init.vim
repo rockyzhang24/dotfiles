@@ -611,6 +611,7 @@ function! PackInit() abort
   call minpac#add('mizlan/iswap.nvim')
   call minpac#add('p00f/nvim-ts-rainbow')
   call minpac#add('lewis6991/nvim-treesitter-context')
+  call minpac#add('lewis6991/spellsitter.nvim')
 
   " Tags
   call minpac#add('ludovicchabant/vim-gutentags')
@@ -1019,6 +1020,7 @@ lua require('plugin_config.treesitter')
 lua require('plugin_config.treesitter-context')
 lua require('plugin_config.nvim-gps')
 lua require('plugin_config.telescope.telescope-config')
+lua require('plugin_config.spellsitter')
 lua require('plugin_config.toggleterm')
 
 " }}}

@@ -4,11 +4,14 @@ local lsp = vim.lsp
 -- Config diagnostic options globally
 vim.diagnostic.config({
   virtual_text = {
-    source = 'if_many',
+    source = 'always',
     prefix = '■',
+    severity = {
+      min = vim.diagnostic.severity.ERROR,
+    },
   },
   float = {
-    source = 'if_many',
+    source = 'always',
     border = 'rounded',
   },
   signs = true,
@@ -99,6 +102,24 @@ local on_attach = function(client, bufnr)
   -- Toggle diagnostics
   vim.keymap.set('n', '\\d', function() require("plugin_config.lsp.lsp-utils").toggle_diagnostics() end, map_opts)
 
+  -- Show diagnostics in float window when CursorHold
+  vim.api.nvim_create_augroup("ShowDiagnosticInHover", { clear = true })
+  vim.api.nvim_create_autocmd("CursorHold", {
+    group = "ShowDiagnosticInHover",
+    buffer = bufnr,
+    callback = function()
+      local opts = {
+        focusable = false,
+        close_events = { "BufLeave", "CursorMoved", "InsertEnter", "FocusLost" },
+        border = 'rounded',
+        source = 'always',
+        prefix = ' ',
+        scope = 'cursor',
+      }
+      vim.diagnostic.open_float(nil, opts)
+    end
+  })
+
   -- For Aerial.nvim to display symbols outline
   require("aerial").on_attach(client, bufnr)
 
@@ -111,8 +132,11 @@ end
 local capabilities = vim.lsp.protocol.make_client_capabilities()
 capabilities = require('cmp_nvim_lsp').update_capabilities(capabilities)
 
--- Border for hover window
-lsp.handlers["textDocument/hover"] = lsp.with(vim.lsp.handlers.hover, {
+-- Border
+lsp.handlers["textDocument/hover"] = lsp.with(lsp.handlers.hover, {
+  border = "rounded",
+})
+lsp.handlers["textDocument/signatureHelp"] = lsp.with(lsp.handlers.signature_help, {
   border = "rounded",
 })
 

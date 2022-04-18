@@ -22,8 +22,14 @@ require("bufferline").setup {
       },
     },
     -- Filter out the buffers that shouldn't be shown
-    custom_filter = function(buf, buf_nums)
-      return vim.bo[buf].filetype ~= "fugitive"
+    custom_filter = function(buf_number, buf_numbers)
+      local excluded_ft = { "fugitive", "qf" }
+      for _, ft in ipairs(excluded_ft) do
+        if vim.bo[buf_number].filetype == ft then
+          return false
+        end
+      end
+      return true
     end
   },
 }

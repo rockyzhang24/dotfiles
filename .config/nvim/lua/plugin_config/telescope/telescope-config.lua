@@ -76,36 +76,34 @@ tele.load_extension('aerial')
 tele.load_extension('harpoon')
 
 -- Mappings
-local map_options = {
-  noremap = true,
+local map_opts = {
   silent = true,
 }
 
-local keymap = vim.api.nvim_set_keymap
-
 -- Files
-keymap('n', '<Leader>ff', '<Cmd>lua require("telescope.builtin").find_files()<CR>', map_options)
+vim.keymap.set('n', '<Leader>ff', function() require("telescope.builtin").find_files() end, map_opts)
 -- find_files in dotfiles
-keymap('n', '<Leader>f.', '<Cmd>lua require("plugin_config.telescope.my_picker").dotfiles()<CR>', map_options)
-keymap('n', '<Leader>fo', '<Cmd>lua require("telescope.builtin").oldfiles()<CR>', map_options)
-keymap('n', '<Leader>fg', '<Cmd>lua require("telescope.builtin").git_files()<CR>', map_options)
+vim.keymap.set('n', '<Leader>f.', function() require("plugin_config.telescope.my_picker").dotfiles() end, map_opts)
+vim.keymap.set('n', '<Leader>fo', function() require("telescope.builtin").oldfiles() end, map_opts)
+vim.keymap.set('n', '<Leader>fg', function() require("telescope.builtin").git_files() end, map_opts)
 
 -- Misc
-keymap('n', '<Leader>fb', '<Cmd>lua require("telescope.builtin").buffers()<CR>', map_options)
-keymap('n', '<Leader>ft', '<Cmd>lua require("telescope.builtin").tags()<CR>', map_options)
-keymap('n', '<Leader>f?', '<Cmd>lua require("telescope.builtin").help_tags()<CR>', map_options)
-keymap('n', '<Leader>fr', '<Cmd>lua require("telescope.builtin").resume()<CR>', map_options)
-keymap('n', '<Leader>fh', '<Cmd>lua require("telescope.builtin").highlights()<CR>', map_options)
+vim.keymap.set('n', '<Leader>fb', function() require("telescope.builtin").buffers() end, map_opts)
+vim.keymap.set('n', '<Leader>ft', function() require("telescope.builtin").tags() end, map_opts)
+vim.keymap.set('n', '<Leader>f?', function() require("telescope.builtin").help_tags() end, map_opts)
+vim.keymap.set('n', '<Leader>fr', function() require("telescope.builtin").resume() end, map_opts)
+vim.keymap.set('n', '<Leader>fh', function() require("telescope.builtin").highlights() end, map_opts)
 
 -- Grep
-keymap('n', '<Leader>g/', '<Cmd>lua require("telescope.builtin").live_grep()<CR>', map_options)
+vim.keymap.set('n', '<Leader>g/', function() require("telescope.builtin").live_grep() end, map_opts)
 -- live_grep in nvim config files
-keymap('n', '<Leader>gv', '<Cmd>lua require("plugin_config.telescope.my_picker").grep_nvim_config()<CR>', map_options)
+vim.keymap.set('n', '<Leader>gv', function() require("plugin_config.telescope.my_picker").grep_nvim_config() end, map_opts)
 -- grep by giving a query string
-keymap('n', '<Leader>gs', '<Cmd>lua require("plugin_config.telescope.my_picker").grep_prompt()<CR>', map_options)
+vim.keymap.set('n', '<Leader>gs', function() require("plugin_config.telescope.my_picker").grep_prompt() end, map_opts)
+
 
 -- grep_string operator
-keymap('n', '<Leader>g', '<Cmd>set operatorfunc=utils#TelescopeGrepOperator<CR>g@', map_options)
-keymap('x', '<Leader>g', ':call utils#TelescopeGrepOperator(visualmode())<CR>', map_options)
+vim.keymap.set('n', '<Leader>g', '<Cmd>set operatorfunc=utils#TelescopeGrepOperator<CR>g@', map_opts)
+vim.keymap.set('x', '<Leader>g', ':call utils#TelescopeGrepOperator(visualmode())<CR>', map_opts)
 
 -- Other mappings regarding LSP picker are set in the nvim-lspconfig setup ../lsp/lsp-config.lua

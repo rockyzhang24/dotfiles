@@ -2,16 +2,17 @@ require("aerial").setup {
 
   -- Mappings
   on_attach = function(bufnr)
+    local map_opts = { buffer = bufnr, silent = true }
     -- Toggle aerial window
-    vim.api.nvim_buf_set_keymap(bufnr, 'n', '\\s', '<Cmd>AerialToggle!<CR>', {}) -- "s" for symbols
+    vim.keymap.set('n', '\\s', '<Cmd>AerialToggle!<CR>', map_opts)
     -- Jump forwards/backwards
-    vim.api.nvim_buf_set_keymap(bufnr, 'n', '[s', '<cmd>AerialPrev<CR>', {})
-    vim.api.nvim_buf_set_keymap(bufnr, 'n', ']s', '<cmd>AerialNext<CR>', {})
+    vim.keymap.set('n', '[s', '<cmd>AerialPrev<CR>', map_opts)
+    vim.keymap.set('n', ']s', '<cmd>AerialNext<CR>', map_opts)
     -- Jump up the tree
-    vim.api.nvim_buf_set_keymap(bufnr, 'n', '[S', '<cmd>AerialPrevUp<CR>', {})
-    vim.api.nvim_buf_set_keymap(bufnr, 'n', ']S', '<cmd>AerialNextUp<CR>', {})
+    vim.keymap.set('n', '[S', '<cmd>AerialPrevUp<CR>', map_opts)
+    vim.keymap.set('n', ']S', '<cmd>AerialNextUp<CR>', map_opts)
     -- Fuzzy finding symbols (it respects backends and filter_kind)
-    vim.api.nvim_buf_set_keymap(bufnr, 'n', '<Leader>fs', '<cmd>Telescope aerial<CR>', {})
+    vim.keymap.set('n', '<Leader>fs', '<cmd>Telescope aerial<CR>', map_opts)
   end,
 
   -- There is an issue to set multiple backends for vim

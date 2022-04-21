@@ -81,11 +81,11 @@ local map_opts = {
 }
 
 -- Files
+vim.keymap.set('n', '<C-f>', function() require("telescope.builtin").git_files() end, map_opts)
 vim.keymap.set('n', '<Leader>ff', function() require("telescope.builtin").find_files() end, map_opts)
 -- find_files in dotfiles
 vim.keymap.set('n', '<Leader>f.', function() require("plugin_config.telescope.my_picker").dotfiles() end, map_opts)
 vim.keymap.set('n', '<Leader>fo', function() require("telescope.builtin").oldfiles() end, map_opts)
-vim.keymap.set('n', '<Leader>fg', function() require("telescope.builtin").git_files() end, map_opts)
 
 -- Misc
 vim.keymap.set('n', '<Leader>fb', function() require("telescope.builtin").buffers() end, map_opts)

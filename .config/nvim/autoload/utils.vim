@@ -1,13 +1,23 @@
 " Do something and preserve the state (i.e., not change the search history and
 " cursor position)
-" Reference: http://vimcasts.org/episodes/tidying-whitespace/
-function! utils#Preserve(command) abort
-  " Preparation: save last search, and cursor position.
+" Ref: http://vimcasts.org/episodes/tidying-whitespace/
+" @Param: command - the cmdline command to be executed
+" @Param: ... - visual mode type, i.e., the return of visualmode()
+function! utils#Preserve(command, ...) abort
+  " Pre-processing: save last search, and cursor position.
   let _s=@/
   let l = line(".")
   let c = col(".")
   " Do the business:
-  execute a:command
+  if a:0 == 2
+    if a:1 ==# 'V'
+      execute "normal! `<V`>:" . a:command . "\<CR>"
+    elseif a:1 ==# 'v'
+      execute "normal! `<v`>:" . a:command . "\<CR>"
+    endif
+  else
+    execute a:command
+  endif
   " Clean up: restore previous search history, and cursor position
   let @/=_s
   call cursor(l, c)

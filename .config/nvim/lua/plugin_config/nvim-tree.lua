@@ -60,6 +60,7 @@ require 'nvim-tree'.setup {
     },
   },
   view = {
+    width = 40,
     mappings = {
       custom_only = true,
       list = {

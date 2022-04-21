@@ -1,6 +1,16 @@
 local cmp = require('cmp')
 local lspkind = require('lspkind')
 
+local get_bufnrs = function()
+  local buf = vim.api.nvim_get_current_buf()
+  local byte_size = vim.api.nvim_buf_get_offset(buf, vim.api.nvim_buf_line_count(buf))
+  -- Disable buffer source for large file (1MB)
+  if byte_size > 1024 * 1024 then
+    return {}
+  end
+  return { buf }
+end
+
 cmp.setup({
 
   snippet = {
@@ -29,7 +39,13 @@ cmp.setup({
     -- The order of the sources gives them priority, or use priority = xxx to specify it.
     { name = 'nvim_lsp' },
     { name = 'luasnip' },
-    { name = 'buffer', keyword_length = 4 },
+    {
+      name = 'buffer',
+      keyword_length = 4,
+      option = {
+        get_bufnrs = get_bufnrs,
+      },
+    },
     { name = 'path' },
     { name = 'nvim_lua' }, -- nvim_lua make it only be enabled for Lua filetype
   }),
@@ -39,23 +55,39 @@ cmp.setup({
     format = lspkind.cmp_format({
       mode = "symbol_text",
       menu = ({
-        buffer = "[buf]",
+        buffer = "[Buf]",
         nvim_lsp = "[LSP]",
-        luasnip = "[snip]",
-        nvim_lua = "[lua]",
-        path = "[path]",
+        luasnip = "[Snip]",
+        nvim_lua = "[Lua]",
+        path = "[Path]",
       })
     }),
     -- Adjust the order of completion menu fields
-    -- fields = {
-    --   'abbr',
-    --   'kind',
-    --   'menu',
-    -- },
+    fields = {
+      'abbr',
+      'kind',
+      'menu',
+    },
   },
 
   experimental = {
     ghost_text = true,
   },
 
+})
+
+-- Use buffer source for `/`
+cmp.setup.cmdline('/', {
+  mapping = cmp.mapping.preset.cmdline(),
+  sources = {
+    {
+      name = 'buffer',
+      option = {
+        get_bufnrs = get_bufnrs,
+      },
+    },
+  },
+  view = {
+    entries = { name = 'wildmenu', separator = ' · ' }
+  },
 })

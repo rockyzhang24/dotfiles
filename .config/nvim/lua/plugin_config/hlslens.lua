@@ -27,3 +27,10 @@ require('hlslens').setup({
     render.set_virt(0, lnum - 1, col - 1, chunks, nearest)
   end
 })
+
+-- Mappings
+local map_opts = { silent = true }
+vim.keymap.set('n', '*', [[*<Cmd>lua require('hlslens').start()<CR>]], map_opts)
+vim.keymap.set('n', '#', [[#<Cmd>lua require('hlslens').start()<CR>]], map_opts)
+vim.keymap.set('n', 'g*', [[g*<Cmd>lua require('hlslens').start()<CR>]], map_opts)
+vim.keymap.set('n', 'g#', [[g#<Cmd>lua require('hlslens').start()<CR>]], map_opts)

@@ -64,7 +64,7 @@ local on_attach = function(client, bufnr)
   -- Show signature hint
   vim.keymap.set('n', ',k', vim.lsp.buf.signature_help, map_opts)
 
-  -- Symbols (<C-l> for filtering by type of symbol)
+  -- List symbols via telescope (<C-l> for filtering by type of symbol)
   -- For current buffer
   vim.keymap.set('n', ',s', function() require("telescope.builtin").lsp_document_symbols() end, map_opts)
   -- For all workspace
@@ -78,14 +78,14 @@ local on_attach = function(client, bufnr)
 
   -- Diagnostics
   -- Open a float window to show the complete diagnostic info
-  vim.keymap.set('n', ',e', vim.diagnostic.open_float, map_opts)
+  vim.keymap.set('n', 'go', vim.diagnostic.open_float, map_opts)
   -- Navigate to the next/prev diagnostic
   vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, map_opts)
   vim.keymap.set('n', ']d', vim.diagnostic.goto_next, map_opts)
   -- Add buffer diagnostics to the location list
   vim.keymap.set('n', ',l', vim.diagnostic.setloclist, map_opts)
 
-  -- List diagnostics (<C-l> to filter by type of diagnostic)
+  -- List diagnostics via telescope (<C-l> to filter by type of diagnostic)
   -- For current buffer
   vim.keymap.set('n', ',d', function() require("telescope.builtin").diagnostics({ bufnr = 0 }) end, map_opts)
   -- For all opened buffers

@@ -1,4 +1,6 @@
-require('gitsigns').setup {
+local gitsigns = require('gitsigns')
+
+gitsigns.setup {
 
   signcolumn = true,
   numhl = true,
@@ -7,7 +9,7 @@ require('gitsigns').setup {
 
   -- Boost efficiency for the internal sign related operations
   -- Ref: https://github.com/lewis6991/gitsigns.nvim/pull/438
-  _extmark_signs = true,
+  -- _extmark_signs = true,
 
   sign_priority = 6,
 
@@ -40,8 +42,17 @@ require('gitsigns').setup {
     end
 
     -- Navigation
-    map('n', '[h', "&diff ? '[c' : '<cmd>Gitsigns prev_hunk<CR>'", { expr = true })
-    map('n', ']h', "&diff ? ']c' : '<cmd>Gitsigns next_hunk<CR>'", { expr = true })
+    map('n', ']h', function()
+      if vim.wo.diff then return ']c' end
+      vim.schedule(function() gs.next_hunk() end)
+      return '<Ignore>'
+    end, { expr = true })
+
+    map('n', '[h', function()
+      if vim.wo.diff then return '[c' end
+      vim.schedule(function() gs.prev_hunk() end)
+      return '<Ignore>'
+    end, { expr = true })
 
     -- Stage hunk or buffer
     map({ 'n', 'v' }, '<Leader>hs', ':Gitsigns stage_hunk<CR>')
@@ -61,5 +72,9 @@ require('gitsigns').setup {
 
     -- Text object
     map({ 'o', 'x' }, 'ih', ':<C-U>Gitsigns select_hunk<CR>')
+
+    -- Put hunks into quickfix list
+    map('n', '<leader>hQ', function() gitsigns.setqflist('all') end) -- all modified files for git dir
+    map('n', '<leader>hq', gitsigns.setqflist)
   end
 }

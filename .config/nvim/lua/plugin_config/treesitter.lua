@@ -68,15 +68,6 @@ require 'nvim-treesitter.configs'.setup {
   context_commentstring = {
     enable = true,
   },
-  incremental_selection = {
-    enable = true,
-    keymaps = {
-      init_selection = "<M-w>",
-      node_incremental = "<M-w>",
-      node_decremental = "<M-C-w>",
-      scope_incremental = "<M-e>",
-    },
-  },
   playground = {
     enable = true,
   },

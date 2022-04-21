@@ -55,7 +55,7 @@ set titlestring=%t%(\ %M%)%<%(\ (%{expand(\"%:~:.:h\")})%)%(\ %a%)
 set titlelen=15
 set diffopt+=vertical diffopt+=algorithm:patience
 set noswapfile
-set signcolumn=yes:2
+set signcolumn=yes:3
 set spelllang=en_us
 set pumblend=5
 set pumheight=20
@@ -247,7 +247,7 @@ nnoremap <Leader>, ,
 " Save and quit
 nnoremap <silent> <Leader>ww :<C-u>update<CR>
 nnoremap <silent> <Leader>q :<C-u>x<CR>
-nnoremap <silent> <Leader>Q :<C-u>qa!<CR>
+nnoremap <silent> <Leader>Q :<C-u>q!<CR>
 
 " Smarter j and k navigation
 nnoremap <expr> j v:count ? (v:count > 5 ? "m'" . v:count : '') . 'j' : 'gj'
@@ -293,11 +293,12 @@ xnoremap Q :'<,'>:normal @q<CR>
 " Clone current paragraph
 nnoremap cp yap<S-}>p
 
-" Remove all the trailing whitespaces
-nnoremap <silent> _$ :call utils#Preserve("%s/\\s\\+$//e")<CR>;
+" Remove the trailing whitespaces in the whole buffer or just the selected lines
+nnoremap <silent> _$ :<C-u>call utils#Preserve("%s/\\s\\+$//e")<CR>;
+xnoremap <silent> _$ :<C-u>call utils#Preserve("s/\\s\\+$//e", visualmode())<CR>;
 
 " Format the whole file
-nnoremap <silent> _= :call utils#Preserve("normal gg=G")<CR>;
+nnoremap <silent> _= :<C-u>call utils#Preserve("normal gg=G")<CR>;
 
 " When navigating, center the cursor
 nnoremap {  {zz
@@ -436,6 +437,9 @@ nnoremap <Leader>w\ <C-w>t<C-w>H
 " Move current window to new tab
 nnoremap <Leader>wt <C-w>T
 
+" Close all other windows (not including float windows)
+nnoremap <expr> <Leader>wo len(filter(nvim_tabpage_list_wins(0), { k,v -> nvim_win_get_config(v).relative == "" })) > 1 ? '<C-w>o' : ''
+
 " Sizing
 nnoremap <Leader><Down> <C-w>5-
 nnoremap <Leader><Up> <C-w>5+
@@ -467,7 +471,7 @@ nnoremap <silent> <Leader>t. :+tabmove<CR>
 " Searching {{{
 
 " Clean search highlighting
-nnoremap <silent> <Leader>/ :<C-U>nohlsearch<C-R>=has('diff')?'<Bar>diffupdate':''<CR><CR><C-L>
+nnoremap <silent> <Enter> :<C-U>nohlsearch<C-R>=has('diff')?'<Bar>diffupdate':''<CR><CR><C-L>
 
 " n for searching forward and N for searching backward regardless of / or ?
 nnoremap <expr> n (v:searchforward ? 'nzzzv' : 'Nzzzv')
@@ -597,7 +601,7 @@ function! PackInit() abort
   call minpac#add('hrsh7th/cmp-path')
   call minpac#add('hrsh7th/cmp-cmdline')
   call minpac#add('hrsh7th/cmp-nvim-lua')
-  call minpac#add('onsails/lspkind-nvim')
+  call minpac#add('onsails/lspkind.nvim')
 
   " Snippets
   call minpac#add('L3MON4D3/LuaSnip')
@@ -639,7 +643,7 @@ endfunction
 
 " }}}
 
-" ---------- [ Plugin config - viml ] ---------- {{{
+" ---------- [ Plugins config ] ---------- {{{
 
 " choosewin {{{
 
@@ -914,9 +918,9 @@ let g:registers_window_border = "rounded"
 " wilder {{{
 
 " Wilder is activated by default but / and ? conflict with vm-regex-search (\\/) in
-" vim-visual-multi. 
+" vim-visual-multi. The optional workarounds are
 " - Set enable_cmdline_enter = 0 to make wilder not activate automatically, and
-"   then press <Tab> will actvate it. 
+"   then press <Tab> will actvate it.
 " - Or actually I don't need wilder to take over / and ?, so I removed them from
 "   modes.
 " Set keymaps to be consitent with nvim-cmp
@@ -992,35 +996,10 @@ call wilder#set_option('renderer', wilder#renderer_mux({
 
 " }}}
 
+" lua plugins {{{
+
+lua require('plugin_config')
+
 " }}}
-
-" ---------- [ Plugin config - lua ] ---------- {{{
-
-lua require('plugin_config.aerial')
-lua require('plugin_config.bqf')
-lua require('plugin_config.bufferline')
-lua require('plugin_config.cmp')
-lua require('plugin_config.comment')
-lua require('plugin_config.fidget')
-lua require('plugin_config.ffhighlight')
-lua require('foldsigns').setup()
-lua require('plugin_config.gitsigns')
-lua require('plugin_config.hop')
-lua require('plugin_config.indent')
-lua require('plugin_config.lualine')
-lua require('plugin_config.luasnip.luasnip-config')
-lua require('plugin_config.lightbulb')
-lua require('plugin_config.lsp-signature')
-lua require('plugin_config.hlslens')
-lua require('plugin_config.lsp.lsp-config')
-lua require('plugin_config.nvim-ts-rainbow')
-lua require('plugin_config.nvim-tree')
-lua require('plugin_config.scrollbar')
-lua require('plugin_config.treesitter')
-lua require('plugin_config.treesitter-context')
-lua require('plugin_config.nvim-gps')
-lua require('plugin_config.telescope.telescope-config')
-lua require('plugin_config.spellsitter')
-lua require('plugin_config.toggleterm')
 
 " }}}

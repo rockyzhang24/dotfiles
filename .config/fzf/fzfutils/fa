@@ -6,7 +6,7 @@
 
 home="/Users/rockyzhang"
 prefix="git --git-dir=/Users/rockyzhang/dotfiles/ --work-tree=/Users/rockyzhang/"
-files=($(eval "$prefix diff --name-only" | sed "s~^~$home/~" | fzf --exit-0 --preview "$prefix diff --color=always {} | diff-so-fancy"))
+files=($(eval "$prefix diff --name-only" | sed "s~^~$home/~" | fzf --exit-0 --height 100% --preview "$prefix diff --color=always {} | diff-so-fancy" --preview-window right,60%))
 if [[ -n $files ]]; then
   eval "$prefix add ${files[@]}"
 fi

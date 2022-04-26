@@ -79,7 +79,7 @@ set wildignore+=*/node_modules/*,*/nginx_runtime/*,*/build/*,*/logs/*,*/dist/*,*
 set confirm
 set undofile " presistent undo (use set undodir=... to change the undodir, default is ~/.local/share/nvim/undo)
 set nrformats=octal,bin,hex,unsigned,alpha
-set sessionoptions+=terminal sessionoptions+=globals
+set sessionoptions+=terminal,globals,winpos
 set isfname-==
 
 " Avoid highlighting the last search when sourcing vimrc
@@ -218,7 +218,7 @@ augroup END
 " Change indentation for the current buffer
 " `:Reindent cur_indent new_indent`, E.g., `:Reindent 2 4` for changing the
 " indentation from 2 to 4
-command -nargs=+ Reindent call utils#reindent(<f-args>)
+command -nargs=+ Reindent call utils#Reindent(<f-args>)
 
 " }}}
 
@@ -569,14 +569,14 @@ function! PackInit() abort
   call minpac#add('t9md/vim-choosewin')
   call minpac#add('lewis6991/foldsigns.nvim')
   call minpac#add('gelguy/wilder.nvim', { 'do': 'let &rtp=&rtp | UpdateRemotePlugins' })
-  call minpac#add('SmiteshP/nvim-gps')
   call minpac#add('tversteeg/registers.nvim')
   call minpac#add('ThePrimeagen/harpoon')
   call minpac#add('akinsho/toggleterm.nvim')
   call minpac#add('mg979/vim-visual-multi')
   call minpac#add('dstein64/nvim-scrollview')
   call minpac#add('phaazon/hop.nvim')
-  call minpac#add('kevinhwang91/nvim-fFHighlight')
+  call minpac#add('rhysd/clever-f.vim')
+  call minpac#add('ahmedkhalf/project.nvim')
 
   " Telescope
   call minpac#add('nvim-telescope/telescope-fzf-native.nvim', { 'do': 'make' })  " sorter for telescope
@@ -589,7 +589,6 @@ function! PackInit() abort
 
   " LSP
   call minpac#add('neovim/nvim-lspconfig')
-  call minpac#add('j-hui/fidget.nvim')
   call minpac#add('stevearc/aerial.nvim')
   call minpac#add('kosayoda/nvim-lightbulb')
   call minpac#add('ray-x/lsp_signature.nvim')
@@ -616,6 +615,7 @@ function! PackInit() abort
   call minpac#add('p00f/nvim-ts-rainbow')
   call minpac#add('lewis6991/nvim-treesitter-context')
   call minpac#add('lewis6991/spellsitter.nvim')
+  call minpac#add('SmiteshP/nvim-gps')
 
   " Tags
   call minpac#add('ludovicchabant/vim-gutentags')
@@ -644,6 +644,14 @@ endfunction
 " }}}
 
 " ---------- [ Plugins config ] ---------- {{{
+
+" clever-f {{{
+
+let g:clever_f_across_no_line = 1
+map ; <Plug>(clever-f-repeat-forward)
+map <Leader>, <Plug>(clever-f-repeat-back)
+
+" }}}
 
 " choosewin {{{
 
@@ -869,7 +877,7 @@ augroup END
 nnoremap <silent> <Leader>sh :Startify<CR>
 
 " Session management
-nnoremap <silent> <Leader>ss :SSave<CR>
+nnoremap <silent> <Leader>ss :call utils#SaveSession()<CR>
 nnoremap <silent> <Leader>sl :SLoad<CR>
 nnoremap <silent> <Leader>sc :SClose<CR>
 nnoremap <silent> <Leader>sd :SDelete<CR>

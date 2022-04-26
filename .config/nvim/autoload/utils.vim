@@ -74,7 +74,7 @@ endfunction
 " Change indentation for the current buffer
 " It needs two arguments, one is the curren indentation and the other is the new
 " indentation
-function utils#reindent(...)
+function utils#Reindent(...)
   if a:0 != 2
     echoerr "Two arguments are required"
   endif
@@ -92,4 +92,18 @@ function utils#reindent(...)
     let &et = save_et
     let &ts = save_ts
   endtry
+endfunction
+
+" Save session
+" When we save a session with some floating windows open, this windows will be
+" also recorded in the session file. Later when we load the session, we will
+" have a weird window layout (disordered size and position). To avoid this, we
+" should close all floating windows before saving a session. Because some
+" floating windows belongs to some plugins, thus after saving, we should
+" reenable such plugins.
+function utils#SaveSession() abort
+  lua require('utils').close_all_floating_wins()
+  call startify#session_save(0)
+  TSContextEnable
+  ScrollViewEnable
 endfunction

@@ -15,12 +15,7 @@ require("aerial").setup {
     vim.keymap.set('n', '<Leader>fs', '<cmd>Telescope aerial<CR>', map_opts)
   end,
 
-  -- There is an issue to set multiple backends for vim
-  -- See https://github.com/stevearc/aerial.nvim/issues/68
-  backends = {
-    ['_'] = { 'lsp', 'treesitter', 'markdown' },
-    vim = { 'lsp' },
-  },
+  backends = { 'lsp', 'treesitter', 'markdown' },
   close_behavior = "auto",
   min_width = 40,
   max_width = 40,

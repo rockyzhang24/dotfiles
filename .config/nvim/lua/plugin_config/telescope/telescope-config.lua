@@ -66,14 +66,12 @@ tele.setup {
   }
 }
 
--- FZF as the sorter
+
+-- Extensions
 tele.load_extension('fzf')
-
--- Aerial.nvim
 tele.load_extension('aerial')
-
--- harpoon
 tele.load_extension('harpoon')
+tele.load_extension('projects')
 
 -- Mappings
 local map_opts = {

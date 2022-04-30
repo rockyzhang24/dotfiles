@@ -1,17 +1,18 @@
 require("indent_blankline").setup {
   char = '│',
   filetype_exclude = {
-    'startify',
+    'aerial',
     'help',
-    'markdown',
     'json',
     'jsonc',
-    'WhichKey',
     'man',
-    'aerial',
-    'NvimTree',
     'minpac',
     'minpacprgs',
+    'markdown',
+    'NvimTree',
+    'neo-tree',
+    'startify',
+    'WhichKey',
   },
   buftype_exclude = {
     'terminal',

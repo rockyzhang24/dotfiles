@@ -1,52 +1,12 @@
-vim.cmd([[
-let g:nvim_tree_icons = {
-    \ 'default': '',
-    \ 'symlink': '',
-    \ 'git': {
-    \   'unstaged': "✗",
-    \   'staged': "✓",
-    \   'unmerged': "",
-    \   'renamed': "➜",
-    \   'untracked': "★",
-    \   'deleted': "",
-    \   'ignored': "◌"
-    \   },
-    \ 'folder': {
-    \   'arrow_open': "",
-    \   'arrow_closed': "",
-    \   'default': "",
-    \   'open': "",
-    \   'empty': "",
-    \   'empty_open': "",
-    \   'symlink': "",
-    \   'symlink_open': "",
-    \   }
-    \ }
-]])
-
 require 'nvim-tree'.setup {
   hijack_cursor = true,
+  update_cwd = true,
   filters = {
     custom = { '.DS_Store' },
   },
   trash = {
     cmd = 'trash -F', -- for macOS https://hasseg.org/trash/
     require_confirm = true,
-  },
-  diagnostics = {
-    enable = true,
-    show_on_dirs = true,
-    icons = {
-      hint = " ",
-      info = " ",
-      warning = " ",
-      error = " ",
-    }
-  },
-  git = {
-    enable = true,
-    ignore = true,
-    timeout = 400,
   },
   actions = {
     open_file = {
@@ -79,7 +39,7 @@ require 'nvim-tree'.setup {
         { key = "J", action = "last_sibling" },
         { key = "R", action = "refresh" },
         { key = "h", action = "dir_up" },
-        { key = "l", action = "cd" },
+        { key = "<C-]>", action = "cd" },
         { key = "zi", action = "toggle_ignored" }, -- toggle visibility of files or directories in filters.custom list
         { key = "zh", action = "toggle_dotfiles" },
         { key = "T", action = "trash" },
@@ -106,20 +66,22 @@ require 'nvim-tree'.setup {
   renderer = {
     indent_markers = {
       enable = true,
-      icons = {
-        corner = "└ ",
-        edge = "│ ",
-        none = "  ",
-      },
     },
   },
 }
 
+-- Mappings
+
+local function find_file_no_focus()
+  require "nvim-tree".find_file(true)
+  vim.cmd "noautocmd wincmd p"
+end
+
 -- Toggle the tree
 -- Two arguments in toggle() control whether the current file will be revealed,
--- and whether the tree is focused.
-vim.keymap.set('n', '\\t', function() require('nvim-tree').toggle(false, true) end, { silent = true })
+-- and whether the tree is not focused.
+vim.keymap.set('n', '\\t', function() require('nvim-tree').toggle(true, true) end, { silent = true })
 
 vim.keymap.set('n', '<Leader>tt', '<Cmd>NvimTreeFocus<CR>', { silent = true })
-vim.keymap.set('n', '<Leader>tf', '<Cmd>NvimTreeFindFile<CR>', { silent = true })
+vim.keymap.set('n', '<Leader>tf', find_file_no_focus, { silent = true })
 vim.keymap.set('n', '<Leader>tr', '<Cmd>NvimTreeRefresh<CR>', { silent = true })

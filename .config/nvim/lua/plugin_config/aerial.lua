@@ -20,6 +20,7 @@ require("aerial").setup {
   min_width = 40,
   max_width = 40,
   show_guides = true,
+  default_direction = "right",
 
   -- Symbols to display (can be a filetype map)
   -- filter_kind = {

@@ -21,7 +21,7 @@ vim.diagnostic.config({
 })
 
 -- Diagnostic symbols in the sign column
--- local signs = { Error = " ", Warn = " ", Hint = " ", Info = " " }
+-- local signs = { Error = " ", Warn = " ", Hint = "", Info = " " }
 local signs = { Error = ' ', Warn = ' ', Info = ' ', Hint = ' ' }
 for type, icon in pairs(signs) do
   local hl = "DiagnosticSign" .. type
@@ -216,6 +216,7 @@ nvim_lsp.sumneko_lua.setup {
         defaultConfig = {
           indent_style = "space",
           indent_size = "2",
+          max_line_length = "unset",
           -- quote_style = "double",
         },
       },

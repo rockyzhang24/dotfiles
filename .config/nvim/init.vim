@@ -570,6 +570,10 @@ function! PackInit() abort
   call minpac#add('phaazon/hop.nvim')
   call minpac#add('kevinhwang91/nvim-fFHighlight')
   call minpac#add('ahmedkhalf/project.nvim')
+  call minpac#add('nvim-neo-tree/neo-tree.nvim', { 'branch': 'main' })
+  call minpac#add('MunifTanjim/nui.nvim') " required by neo-tree.nvim
+  call minpac#add('s1n7ax/nvim-window-picker') " required by neo-tree.nvim
+
 
   " Telescope
   call minpac#add('nvim-telescope/telescope-fzf-native.nvim', { 'do': 'make' })  " sorter for telescope

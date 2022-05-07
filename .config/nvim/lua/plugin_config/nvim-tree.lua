@@ -1,4 +1,4 @@
-require 'nvim-tree'.setup {
+require('nvim-tree').setup {
   hijack_cursor = true,
   update_cwd = true,
   filters = {
@@ -38,12 +38,12 @@ require 'nvim-tree'.setup {
         { key = "K", action = "first_sibling" },
         { key = "J", action = "last_sibling" },
         { key = "R", action = "refresh" },
-        { key = "h", action = "dir_up" },
-        { key = "<C-]>", action = "cd" },
+        { key = "<BS>", action = "dir_up" },
+        { key = ".", action = "cd" },
         { key = "zi", action = "toggle_ignored" }, -- toggle visibility of files or directories in filters.custom list
         { key = "zh", action = "toggle_dotfiles" },
         { key = "T", action = "trash" },
-        { key = "D", action = "remove" },
+        { key = "d", action = "remove" },
         { key = "yy", action = "copy" },
         { key = "x", action = "cut" },
         { key = "p", action = "paste" },
@@ -56,7 +56,7 @@ require 'nvim-tree'.setup {
         { key = "yn", action = "copy_name" },
         { key = "yp", action = "copy_path" },
         { key = "yP", action = "copy_absolute_path" },
-        { key = "W", action = "collapse_all" },
+        { key = "zM", action = "collapse_all" },
         { key = "S", action = "search_node" },
         { key = "q", action = "close" },
         { key = "?", action = "toggle_help" },
@@ -67,6 +67,9 @@ require 'nvim-tree'.setup {
     indent_markers = {
       enable = true,
     },
+  },
+  diagnostics = {
+    enable = true,
   },
 }
 
@@ -80,7 +83,7 @@ end
 -- Toggle the tree
 -- Two arguments in toggle() control whether the current file will be revealed,
 -- and whether the tree is not focused.
-vim.keymap.set('n', '\\t', function() require('nvim-tree').toggle(true, true) end, { silent = true })
+vim.keymap.set('n', '\\t', function() require('nvim-tree').toggle(false, true) end, { silent = true })
 
 vim.keymap.set('n', '<Leader>tt', '<Cmd>NvimTreeFocus<CR>', { silent = true })
 vim.keymap.set('n', '<Leader>tf', find_file_no_focus, { silent = true })

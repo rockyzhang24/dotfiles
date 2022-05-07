@@ -16,6 +16,11 @@ require("bufferline").setup {
         highlight = "Directory",
       },
       {
+        filetype = "neo-tree",
+        text = "File Explorer",
+        highlight = "Directory",
+      },
+      {
         filetype = "aerial",
         text = "Symbols",
         highlight = "Directory",

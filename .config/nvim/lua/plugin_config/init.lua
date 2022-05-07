@@ -19,6 +19,7 @@ local modules = {
   "lsp.lsp-config",
   "nvim-ts-rainbow",
   -- "nvim-tree",
+  "neo-tree",
   "nvim-gps",
   "project",
   "scrollbar",

@@ -34,91 +34,44 @@ local on_attach = function(client, bufnr)
   -- Comma (,) key acts as a leader key for the lsp mappings
 
   local map_opts = { silent = true, buffer = bufnr }
+  local telescope_theme = require("telescope.themes").get_dropdown({})
+  local tele = "telescope.builtin"
 
-  -- Declarations
   vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, map_opts)
-  -- Definitions
-  vim.keymap.set('n', 'gd',
-      function() require("telescope.builtin").lsp_definitions(require("telescope.themes").get_dropdown({})) end,
-      map_opts)
-  -- Type definitions
-  vim.keymap.set('n', 'gt',
-      function() require("telescope.builtin").lsp_type_definitions(require("telescope.themes").get_dropdown({})) end,
-      map_opts)
-  -- Implementations
-  vim.keymap.set('n', 'gi',
-      function() require("telescope.builtin").lsp_implementations(require("telescope.themes").get_dropdown({})) end,
-      map_opts)
-  -- References
-  vim.keymap.set('n', 'gr',
-      function() require("telescope.builtin").lsp_references(require("telescope.themes").get_dropdown({})) end,
-      map_opts)
-  -- Rename
+  vim.keymap.set('n', 'gd', function() require(tele).lsp_definitions(telescope_theme) end, map_opts)
+  vim.keymap.set('n', 'gt', function() require(tele).lsp_type_definitions(telescope_theme) end, map_opts)
+  vim.keymap.set('n', 'gi', function() require(tele).lsp_implementations(telescope_theme) end, map_opts)
+  vim.keymap.set('n', 'gr', function() require(tele).lsp_references(telescope_theme) end, map_opts)
   vim.keymap.set('n', ',r', vim.lsp.buf.rename, map_opts)
-  -- Code actions
-  vim.keymap.set('n', ',a',
-      function() require("telescope.builtin").lsp_code_actions(require("telescope.themes").get_cursor({})) end,
-      map_opts)
-  -- Show documentation
+  vim.keymap.set('n', ',a', vim.lsp.buf.code_action, map_opts)
   vim.keymap.set('n', 'K', vim.lsp.buf.hover, map_opts)
-  -- Show signature hint
   vim.keymap.set('n', ',k', vim.lsp.buf.signature_help, map_opts)
 
   -- List symbols via telescope (<C-l> for filtering by type of symbol)
-  -- For current buffer
-  vim.keymap.set('n', ',s', function() require("telescope.builtin").lsp_document_symbols() end, map_opts)
-  -- For all workspace
-  vim.keymap.set('n', ',S', function() require("telescope.builtin").lsp_dynamic_workspace_symbols() end, map_opts)
+  vim.keymap.set('n', ',s', function() require(tele).lsp_document_symbols() end, map_opts)
+  vim.keymap.set('n', ',S', function() require(tele).lsp_dynamic_workspace_symbols() end, map_opts)
 
-  -- Workspace operations for creating a folder, deleting a folder, or listing
-  -- folders
+  -- Workspace operations (creat/delete a folder and list folders)
   vim.keymap.set('n', ',wa', vim.lsp.buf.add_workspace_folder, map_opts)
   vim.keymap.set('n', ',wr', vim.lsp.buf.remove_workspace_folder, map_opts)
   vim.keymap.set('n', ',wl', function() print(vim.inspect(vim.lsp.buf.list_workspace_folders())) end, map_opts)
 
   -- Diagnostics
-  -- Open a float window to show the complete diagnostic info
   vim.keymap.set('n', 'go', vim.diagnostic.open_float, map_opts)
-  -- Navigate to the next/prev diagnostic
   vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, map_opts)
   vim.keymap.set('n', ']d', vim.diagnostic.goto_next, map_opts)
-  -- Add buffer diagnostics to the location list
   vim.keymap.set('n', ',l', vim.diagnostic.setloclist, map_opts)
 
   -- List diagnostics via telescope (<C-l> to filter by type of diagnostic)
-  -- For current buffer
-  vim.keymap.set('n', ',d', function() require("telescope.builtin").diagnostics({ bufnr = 0 }) end, map_opts)
-  -- For all opened buffers
-  vim.keymap.set('n', ',D', function() require("telescope.builtin").diagnostics() end, map_opts)
+  vim.keymap.set('n', ',d', function() require(tele).diagnostics({ bufnr = 0 }) end, map_opts) -- current buffer
+  vim.keymap.set('n', ',D', function() require(tele).diagnostics() end, map_opts) -- all opened buffers
 
   -- Format
-  -- For the whole buffer
-  vim.keymap.set('n', ',F', vim.lsp.buf.formatting, map_opts)
-  -- Range format with a motion
-  vim.keymap.set('n', ',f', function() require("plugin_config.lsp.lsp-utils").format_range_operator() end, map_opts)
-  -- For a range
-  vim.keymap.set('x', ',f', function() require("plugin_config.lsp.lsp-utils").format_range_operator() end, map_opts)
+  vim.keymap.set('n', ',F', vim.lsp.buf.formatting, map_opts) -- whole buffer
+  vim.keymap.set({ 'n', 'x' }, ',f', function() require("plugin_config.lsp.lsp-utils").format_range_operator() end, map_opts) -- range
 
   -- Toggle diagnostics
   vim.keymap.set('n', '\\d', function() require("plugin_config.lsp.lsp-utils").toggle_diagnostics() end, map_opts)
-
-  -- Show diagnostics in float window when CursorHold
-  vim.api.nvim_create_augroup("ShowDiagnosticInHover", { clear = true })
-  vim.api.nvim_create_autocmd("CursorHold", {
-    group = "ShowDiagnosticInHover",
-    buffer = bufnr,
-    callback = function()
-      local opts = {
-        focusable = false,
-        close_events = { "BufLeave", "CursorMoved", "InsertEnter", "FocusLost" },
-        border = 'rounded',
-        source = 'always',
-        prefix = ' ',
-        scope = 'cursor',
-      }
-      vim.diagnostic.open_float(nil, opts)
-    end
-  })
 
   -- For Aerial.nvim to display symbols outline
   require("aerial").on_attach(client, bufnr)

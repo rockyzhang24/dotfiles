@@ -4,16 +4,6 @@
 local M = {}
 local builtin = require("telescope.builtin")
 
--- find_files for dotfiles
-function M.dotfiles()
-  builtin.find_files {
-    cwd = "~",
-    hidden = true,
-    find_command = { "git", "--git-dir=/Users/rockyzhang/dotfiles/", "--work-tree=/Users/rockyzhang/", "ls-files" },
-    prompt_title = "< Find dotfiles >",
-  }
-end
-
 -- live_grep in neovim config files
 function M.grep_nvim_config()
   builtin.live_grep {
@@ -42,6 +32,16 @@ function M.grep_prompt()
     search = vim.fn.input "Grep String > ",
     use_regex = true,
   }
+end
+
+-- git_files with my dotfiles bare repo support
+function M.git_files()
+  local opts = {}
+  if (vim.env.GIT_DIR == "/Users/rockyzhang/dotfiles" and vim.env.GIT_WORK_TREE == "/Users/rockyzhang") then
+    opts.show_untracked = false
+    opts.prompt_title = "< Find dotfiles >"
+  end
+  builtin.git_files(opts)
 end
 
 return M

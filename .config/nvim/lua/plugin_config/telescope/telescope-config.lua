@@ -79,10 +79,8 @@ local map_opts = {
 }
 
 -- Files
-vim.keymap.set('n', '<C-f>', function() require("telescope.builtin").git_files() end, map_opts)
+vim.keymap.set('n', '<C-f>', function() require("plugin_config.telescope.my_picker").git_files() end, map_opts)
 vim.keymap.set('n', '<Leader>ff', function() require("telescope.builtin").find_files() end, map_opts)
--- find_files in dotfiles
-vim.keymap.set('n', '<Leader>f.', function() require("plugin_config.telescope.my_picker").dotfiles() end, map_opts)
 vim.keymap.set('n', '<Leader>fo', function() require("telescope.builtin").oldfiles() end, map_opts)
 
 -- Misc
@@ -98,7 +96,6 @@ vim.keymap.set('n', '<Leader>g/', function() require("telescope.builtin").live_g
 vim.keymap.set('n', '<Leader>gv', function() require("plugin_config.telescope.my_picker").grep_nvim_config() end, map_opts)
 -- grep by giving a query string
 vim.keymap.set('n', '<Leader>gs', function() require("plugin_config.telescope.my_picker").grep_prompt() end, map_opts)
-
 
 -- grep_string operator
 vim.keymap.set('n', '<Leader>g', '<Cmd>set operatorfunc=utils#TelescopeGrepOperator<CR>g@', map_opts)

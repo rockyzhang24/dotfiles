@@ -91,6 +91,10 @@ let g:neoterm_autoscroll = '1'
 " Dress up quickfix window
 lua require('qf')
 
+" Use filetype.lua instead of filetype.vim
+let g:do_filetype_lua = 1
+let g:did_load_filetypes = 0
+
 " }}}
 
 " ---------- [ Colors ] ---------- {{{

@@ -151,7 +151,7 @@ map yn copy-filename
 # copy the absolute paths of the selections
 map yP copy-absolute-path
 map <enter> shell
-map D delete
+map d delete
 map T trash
 # list the size of each item in the current directory
 map U !printf "\n";du -csh *

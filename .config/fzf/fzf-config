@@ -52,14 +52,35 @@ export FZF_ALT_C_COMMAND="fd --type d --hidden --follow --exclude .git"
 export FZF_ALT_C_OPTS="--preview 'tree -C {} | head -200' \
                        --header 'cd into the selected directory'"
 
-# Utility commands (defined under ../fzfutils/)
-#   - f [DIR] [FZF ARGS]:  fzf with an optional directory argument
-#   - fo [DIR] [QUERY]:    fzf to open a file via vim (ctrl-v), or via difault application (ctrl-o)
-#   - fcd [DIR]:           fzf to cd into a directory under DIR
-#   - frg [RG ARGS]:       fzf for rg results and open it via vim
-#   - fk:                  fzf to kill a process
-#   - fgi:                 fzf to create gitignore files
-#   - bf:                  fzf to open a bookmark file via vim
-#   - bd:                  fzf to cd into a bookmark directory
+# Utility commands (autoload functions defined under ~/.config/fzf/fzfutils/)
 fpath+=${0:h}/fzfutils
 autoload -Uz ${0:h}/fzfutils/*(.:t)
+
+# fzf + git
+# Ref:
+#   - https://junegunn.kr/2016/07/fzf-git
+#   - https://gist.github.com/junegunn/8b572b8d4b5eddd8b85e5f4d40f17236
+# CTRL-G CTRL-F for files
+# CTRL-G CTRL-B for branches
+# CTRL-G CTRL-T for tags
+# CTRL-G CTRL-R for remotes
+# CTRL-G CTRL-H for commit hashes
+# CTRL-G CTRL-S for stash entries
+source ~/.config/fzf/fzf-git.sh
+
+join-lines() {
+  local item
+  while read item; do
+    echo -n "${(q)item} "
+  done
+}
+
+() {
+  bindkey -r '^g'
+  local c
+  for c in $@; do
+    eval "fzf-g$c-widget() { local result=\$(_g$c | join-lines); zle reset-prompt; LBUFFER+=\$result }"
+    eval "zle -N fzf-g$c-widget"
+    eval "bindkey '^g^$c' fzf-g$c-widget"
+  done
+} f b t r h s

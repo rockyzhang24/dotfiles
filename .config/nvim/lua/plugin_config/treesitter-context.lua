@@ -1,6 +1,5 @@
 require 'treesitter-context'.setup {
   enable = true,
-  throttle = true,
   max_lines = 0,
   -- Match patterns for TS nodes.
   patterns = {

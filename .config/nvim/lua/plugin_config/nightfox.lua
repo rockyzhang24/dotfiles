@@ -30,16 +30,18 @@ require('nightfox').setup {
     },
   },
   groups = {
-    Whitespace = { fg = whitespace },
-    CursorLine = { bg = "palette.bg2" },
-    LspReferenceRead = { bg = lsp_references },
-    LspReferenceText = { bg = lsp_references },
-    LspReferenceWrite = { bg = lsp_references },
-    IndentBlanklineChar = { fg = indentline },
-    Visual = { bg = "#264F78" },
-    IncSearch = { fg = "palette.black.dim", bg = "palette.red" },
-    Search = { fg = "palette.black.dim", bg = "palette.green" },
-    HlSearchLens = { fg = "palette.fg0", bg = "palette.sel1" },
+    nightfox = {
+      Whitespace = { fg = whitespace },
+      CursorLine = { bg = "palette.bg2" },
+      LspReferenceRead = { bg = lsp_references },
+      LspReferenceText = { bg = lsp_references },
+      LspReferenceWrite = { bg = lsp_references },
+      IndentBlanklineChar = { fg = indentline },
+      Visual = { bg = "#264F78" },
+      IncSearch = { fg = "palette.black.dim", bg = "palette.red" },
+      Search = { fg = "palette.black.dim", bg = "palette.green" },
+      HlSearchLens = { fg = "palette.fg0", bg = "palette.sel1" },
+    },
   },
 }
 

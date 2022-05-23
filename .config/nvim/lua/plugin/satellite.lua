@@ -1,0 +1,2 @@
+require('satellite').setup {
+}

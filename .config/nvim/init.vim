@@ -35,8 +35,8 @@ set ttimeoutlen=50
 set timeoutlen=500
 set shortmess+=a shortmess+=c shortmess+=I
 set inccommand=split
-set updatetime=250
-set laststatus=2
+set updatetime=200
+set laststatus=3
 set showtabline=2
 set matchpairs+=<:>
 set splitbelow
@@ -91,6 +91,9 @@ let g:neoterm_autoscroll = '1'
 " Dress up quickfix window
 lua require('qf')
 
+" Set winbar
+lua require('winbar')
+
 " Use filetype.lua instead of filetype.vim
 let g:do_filetype_lua = 1
 let g:did_load_filetypes = 0
@@ -112,7 +115,7 @@ set background=dark
 
 " colorscheme gruvbox-material
 
-lua require('plugin_config.nightfox')
+lua require('plugin.nightfox')
 
 " }}}
 
@@ -162,7 +165,7 @@ augroup END
 
 " Quit vim (or close the tab) automatically if all buffers left are auxiliary
 function! s:AutoQuit() abort
-  let l:filetypes = ['aerial', 'NvimTree', 'tsplayground', 'query']
+  let l:filetypes = ['aerial', 'NvimTree', 'neo-tree', 'tsplayground', 'query']
   let l:tabwins = nvim_tabpage_list_wins(0)
   for w in l:tabwins
     let l:buf = nvim_win_get_buf(w)
@@ -264,7 +267,8 @@ inoremap <M-k> <Esc>:m .-2<CR>==a
 " Fast insert a place holder
 inoremap ,p <++>
 
-" Jump to the next '<++>' and edit it
+" Placeholder
+inoremap ,, <++> 
 nnoremap <silent> <Leader><Leader> <Esc>/<++><CR>:nohlsearch<CR>c4l
 inoremap <silent> ,f <Esc>/<++><CR>:nohlsearch<CR>"_c4l
 
@@ -563,7 +567,6 @@ function! PackInit() abort
   call minpac#add('mhinz/vim-grepper')
   call minpac#add('kevinhwang91/nvim-hlslens')
   call minpac#add('tommcdo/vim-exchange') " cx{motion}, cxx (line), X (visual), cxc (clear), `.` is supported
-  call minpac#add('t9md/vim-choosewin')
   call minpac#add('lewis6991/foldsigns.nvim')
   call minpac#add('gelguy/wilder.nvim', { 'do': 'let &rtp=&rtp | UpdateRemotePlugins' })
   call minpac#add('tversteeg/registers.nvim')
@@ -593,6 +596,7 @@ function! PackInit() abort
   call minpac#add('stevearc/aerial.nvim')
   call minpac#add('kosayoda/nvim-lightbulb')
   call minpac#add('ray-x/lsp_signature.nvim')
+  call minpac#add('j-hui/fidget.nvim')
 
   " Autocomplete
   call minpac#add('hrsh7th/nvim-cmp')
@@ -614,13 +618,12 @@ function! PackInit() abort
   call minpac#add('JoosepAlviste/nvim-ts-context-commentstring')
   call minpac#add('mizlan/iswap.nvim')
   call minpac#add('p00f/nvim-ts-rainbow')
-  call minpac#add('lewis6991/nvim-treesitter-context')
+  call minpac#add('nvim-treesitter/nvim-treesitter-context')
   call minpac#add('lewis6991/spellsitter.nvim')
-  call minpac#add('SmiteshP/nvim-gps')
 
   " Tags
-  call minpac#add('ludovicchabant/vim-gutentags')
-  call minpac#add('skywind3000/gutentags_plus')
+  " call minpac#add('ludovicchabant/vim-gutentags')
+  " call minpac#add('skywind3000/gutentags_plus')
 
   " Git
   call minpac#add('tpope/vim-fugitive')
@@ -643,6 +646,6 @@ function! PackInit() abort
 endfunction
 
 " Load lua plugin configs
-lua require('plugin_config')
+lua require('plugin')
 
 " }}}

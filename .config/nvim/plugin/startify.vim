@@ -52,7 +52,7 @@ augroup END
 nnoremap <silent> <Leader>sh :Startify<CR>
 
 " Session management
-nnoremap <silent> <Leader>ss :call utils#SaveSession()<CR>
-nnoremap <silent> <Leader>sl :SLoad<CR>
-nnoremap <silent> <Leader>sc :SClose<CR>
-nnoremap <silent> <Leader>sd :SDelete<CR>
+nnoremap <silent> <Leader>Ss :SSave<CR>
+nnoremap <silent> <Leader>Sl :SLoad<CR>
+nnoremap <silent> <Leader>Sc :SClose<CR>
+nnoremap <silent> <Leader>Sd :SDelete<CR>

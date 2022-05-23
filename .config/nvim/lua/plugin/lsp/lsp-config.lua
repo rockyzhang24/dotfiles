@@ -21,7 +21,7 @@ vim.diagnostic.config({
 })
 
 -- Diagnostic symbols in the sign column
--- local signs = { Error = " ", Warn = " ", Hint = "", Info = " " }
+-- local signs = { Error = " ", Warn = " ", Info = " ", Hint = "" }
 local signs = { Error = ' ', Warn = ' ', Info = ' ', Hint = ' ' }
 for type, icon in pairs(signs) do
   local hl = "DiagnosticSign" .. type
@@ -68,10 +68,10 @@ local on_attach = function(client, bufnr)
 
   -- Format
   vim.keymap.set('n', ',F', vim.lsp.buf.formatting, map_opts) -- whole buffer
-  vim.keymap.set({ 'n', 'x' }, ',f', function() require("plugin_config.lsp.lsp-utils").format_range_operator() end, map_opts) -- range
+  vim.keymap.set({ 'n', 'x' }, ',f', function() require("plugin.lsp.lsp-utils").format_range_operator() end, map_opts) -- range
 
   -- Toggle diagnostics
-  vim.keymap.set('n', '\\d', function() require("plugin_config.lsp.lsp-utils").toggle_diagnostics() end, map_opts)
+  vim.keymap.set('n', '\\d', function() require("plugin.lsp.lsp-utils").toggle_diagnostics() end, map_opts)
 
   -- For Aerial.nvim to display symbols outline
   require("aerial").on_attach(client, bufnr)

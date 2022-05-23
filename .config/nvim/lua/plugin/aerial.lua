@@ -5,6 +5,8 @@ require("aerial").setup {
     local map_opts = { buffer = bufnr, silent = true }
     -- Toggle aerial window
     vim.keymap.set('n', '\\s', '<Cmd>AerialToggle!<CR>', map_opts)
+    -- Focus aerial window
+    vim.keymap.set('n', '<Leader>ss', '<Cmd>AerialOpen<CR>', map_opts)
     -- Jump forwards/backwards
     vim.keymap.set('n', '[s', '<cmd>AerialPrev<CR>', map_opts)
     vim.keymap.set('n', ']s', '<cmd>AerialNext<CR>', map_opts)

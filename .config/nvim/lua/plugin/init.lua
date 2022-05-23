@@ -5,13 +5,13 @@ local modules = {
   "bufferline",
   "cmp",
   "comment",
-  -- "fidget",
+  "fidget",
   "ffhighlight",
   "foldsigns",
   "gitsigns",
   "hop",
   "hlslens",
-  "indent",
+  "indentline",
   "lualine",
   "luasnip",
   "lightbulb",
@@ -20,7 +20,7 @@ local modules = {
   "nvim-ts-rainbow",
   -- "nvim-tree",
   "neo-tree",
-  "nvim-gps",
+  -- "nvim-gps",
   "project",
   "scrollbar",
   "spellsitter",
@@ -31,5 +31,5 @@ local modules = {
 }
 
 for _, module in ipairs(modules) do
-  require("plugin_config." .. module)
+  require("plugin." .. module)
 end

@@ -12,6 +12,7 @@ require("indent_blankline").setup {
     'NvimTree',
     'neo-tree',
     'startify',
+    'TelescopePrompt',
     'WhichKey',
   },
   buftype_exclude = {
@@ -20,7 +21,7 @@ require("indent_blankline").setup {
   use_treesitter = true,
   show_current_context = true,
   -- context_char = '┃',
-  show_current_context_start = true,
+  show_current_context_start = false,
   context_patterns = {
     'class',
     '^func',

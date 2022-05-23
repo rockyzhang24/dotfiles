@@ -3,6 +3,7 @@
 
 local M = {}
 local builtin = require("telescope.builtin")
+local themes = require("telescope.themes")
 
 -- live_grep in neovim config files
 function M.grep_nvim_config()
@@ -36,12 +37,27 @@ end
 
 -- git_files with my dotfiles bare repo support
 function M.git_files()
-  local opts = {}
+  local opts = themes.get_dropdown {
+    previewer = false,
+    layout_config = {
+      height = 20,
+    },
+  }
   if (vim.env.GIT_DIR == "/Users/rockyzhang/dotfiles" and vim.env.GIT_WORK_TREE == "/Users/rockyzhang") then
     opts.show_untracked = false
     opts.prompt_title = "< Find dotfiles >"
   end
   builtin.git_files(opts)
+end
+
+function M.oldfiles()
+  local opts = themes.get_dropdown {
+    previewer = false,
+    layout_config = {
+      height = 20,
+    },
+  }
+  builtin.oldfiles(opts)
 end
 
 return M

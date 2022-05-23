@@ -51,7 +51,6 @@ gitsigns.setup {
     map('n', '[h', function()
       if vim.wo.diff then return '[c' end
       vim.schedule(function() gs.prev_hunk() end)
-      return '<Ignore>'
     end, { expr = true })
 
     -- Stage hunk or buffer

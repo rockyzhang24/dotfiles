@@ -54,6 +54,7 @@ cmp.setup({
     -- Icons
     format = lspkind.cmp_format({
       mode = "symbol_text",
+      preset = "codicons",
       menu = ({
         buffer = "[Buf]",
         nvim_lsp = "[LSP]",
@@ -86,8 +87,5 @@ cmp.setup.cmdline('/', {
         get_bufnrs = get_bufnrs,
       },
     },
-  },
-  view = {
-    entries = { name = 'wildmenu', separator = ' · ' }
   },
 })

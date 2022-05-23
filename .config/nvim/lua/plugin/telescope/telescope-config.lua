@@ -7,10 +7,6 @@ tele.setup {
     selection_caret = "❯ ",
     winblend = 5,
     layout_strategy = "flex",
-    layout_config = {
-      width = 0.95,
-      height = 0.85,
-    },
     file_ignore_patterns = { '%.jpg', '%.jpeg', '%.png', '%.avi', '%.mp4' },
     mappings = {
       i = {
@@ -78,10 +74,14 @@ local map_opts = {
   silent = true,
 }
 
+local function my_picker(picker)
+  require("plugin.telescope.my_picker")[picker]()
+end
+
 -- Files
-vim.keymap.set('n', '<C-f>', function() require("plugin_config.telescope.my_picker").git_files() end, map_opts)
+vim.keymap.set('n', '<C-f>', function() my_picker("git_files") end, map_opts)
 vim.keymap.set('n', '<Leader>ff', function() require("telescope.builtin").find_files() end, map_opts)
-vim.keymap.set('n', '<Leader>fo', function() require("telescope.builtin").oldfiles() end, map_opts)
+vim.keymap.set('n', '<Leader>fo', function() my_picker("oldfiles") end, map_opts)
 
 -- Misc
 vim.keymap.set('n', '<Leader>fb', function() require("telescope.builtin").buffers() end, map_opts)
@@ -93,12 +93,12 @@ vim.keymap.set('n', '<Leader>fh', function() require("telescope.builtin").highli
 -- Grep
 vim.keymap.set('n', '<Leader>g/', function() require("telescope.builtin").live_grep() end, map_opts)
 -- live_grep in nvim config files
-vim.keymap.set('n', '<Leader>gv', function() require("plugin_config.telescope.my_picker").grep_nvim_config() end, map_opts)
+vim.keymap.set('n', '<Leader>gv', function() my_picker("grep_nvim_config") end, map_opts)
 -- grep by giving a query string
-vim.keymap.set('n', '<Leader>gs', function() require("plugin_config.telescope.my_picker").grep_prompt() end, map_opts)
+vim.keymap.set('n', '<Leader>gs', function() my_picker("grep_prompt") end, map_opts)
 
 -- grep_string operator
 vim.keymap.set('n', '<Leader>g', '<Cmd>set operatorfunc=utils#TelescopeGrepOperator<CR>g@', map_opts)
 vim.keymap.set('x', '<Leader>g', ':call utils#TelescopeGrepOperator(visualmode())<CR>', map_opts)
 
--- Other mappings regarding LSP picker are set in the nvim-lspconfig setup ../lsp/lsp-config.lua
+-- Other mappings regarding LSP picker are set in the nvim-lspconfig setup ~/.config/nvim/lua/plugin/lsp/lsp-config.lua

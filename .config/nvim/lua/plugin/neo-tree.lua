@@ -43,7 +43,7 @@ require("neo-tree").setup {
   },
   window = {
     mappings = {
-      ["<Space>"] = "toggle_node",
+      ["\\"] = "toggle_node",
       ["<CR>"] = "open",
       ["<C-x>"] = "open_split",
       ["<C-v>"] = "open_vsplit",

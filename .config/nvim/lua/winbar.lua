@@ -27,6 +27,7 @@ end
 
 local disabled_filetypes = {
   'aerial',
+  'minpacprgs',
   'neo-tree',
   'NvimTree',
   'qf',
@@ -52,8 +53,16 @@ M.winbar = function()
   local symbols = aerial.get_location(true)
   local symbol_path = format_symbols(symbols, nil, ' > ', true)
 
-  return '[' .. win_num .. '] ' .. '%F > ' .. (symbol_path == '' and '...' or symbol_path)
+  local modified = vim.api.nvim_eval_statusline('%m', {}).str
+
+  return '[' .. win_num .. '] '
+      .. '%F'
+      .. (modified == '' and '' or ' ' .. modified)
+      .. ' > '
+      .. (symbol_path == '' and '...' or symbol_path)
 end
+
+vim.api.nvim_set_hl(0, 'WinBar', { cterm = { bold = false }, bold = false })
 
 vim.o.winbar = "%{%v:lua.require('winbar').winbar()%}"
 

@@ -411,11 +411,18 @@ nnoremap <silent> <Leader>bD :call utils#BufsDel()<CR>
 
 " Window {{{
 
-" Focus movement around windows
+" Move cursor to one of the windows in four directions
 nnoremap <C-h> <C-w>h
 nnoremap <C-j> <C-w>j
 nnoremap <C-k> <C-w>k
 nnoremap <C-l> <C-w>l
+
+" Move cursor to the window 1 to 9
+let i = 1
+while i <= 9
+  execute 'nnoremap <silent> <Leader>' . i . ' :' . i . 'wincmd w<CR>'
+  let i = i + 1
+endwhile
 
 " Scroll the other window
 nnoremap <M-d> <C-w>w<C-d><C-w>w

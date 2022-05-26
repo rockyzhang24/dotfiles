@@ -13,8 +13,17 @@ require("aerial").setup {
     -- Jump up the tree
     vim.keymap.set('n', '[S', '<cmd>AerialPrevUp<CR>', map_opts)
     vim.keymap.set('n', ']S', '<cmd>AerialNextUp<CR>', map_opts)
+
     -- Fuzzy finding symbols (it respects backends and filter_kind)
-    vim.keymap.set('n', '<Leader>fs', '<cmd>Telescope aerial<CR>', map_opts)
+    local opts = {
+      layout_strategy = "vertical",
+      layout_config = {
+        prompt_position = "top",
+      },
+      sorting_strategy = "ascending",
+      ignore_filename = false,
+    }
+    vim.keymap.set('n', '<Leader>fs', function() require("telescope").extensions.aerial.aerial(opts) end, map_opts)
   end,
 
   backends = { 'lsp', 'treesitter', 'markdown' },

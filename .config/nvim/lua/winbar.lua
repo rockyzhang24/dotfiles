@@ -62,7 +62,16 @@ M.winbar = function()
       .. (symbol_path == '' and '...' or symbol_path)
 end
 
-vim.api.nvim_set_hl(0, 'WinBar', { cterm = { bold = false }, bold = false })
+-- Set highlight group for winbar
+vim.api.nvim_create_augroup('winbar', {})
+vim.api.nvim_create_autocmd({ 'ColorScheme' }, {
+  group = 'winbar',
+  pattern = '*',
+  callback = function()
+    vim.api.nvim_set_hl(0, 'WinBar', { cterm = { bold = false }, bold = false })
+    vim.api.nvim_set_hl(0, 'WinBarNC', { cterm = { bold = false }, bold = false })
+  end,
+})
 
 vim.o.winbar = "%{%v:lua.require('winbar').winbar()%}"
 

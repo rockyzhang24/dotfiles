@@ -34,22 +34,36 @@ local on_attach = function(client, bufnr)
   -- Comma (,) key acts as a leader key for the lsp mappings
 
   local map_opts = { silent = true, buffer = bufnr }
-  local telescope_theme = require("telescope.themes").get_dropdown({})
-  local tele = "telescope.builtin"
+
+  -- Wrapper function to call telescope LSP picker
+  local function telescope_lsp_picker(picker, picker_opts)
+    local opts = {
+      layout_strategy = "vertical",
+      layout_config = {
+        prompt_position = "top",
+      },
+      sorting_strategy = "ascending",
+      ignore_filename = false,
+    }
+    for k, v in pairs(picker_opts) do
+      opts[k] = v
+    end
+    require("telescope.builtin")[picker](opts)
+  end
 
   vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, map_opts)
-  vim.keymap.set('n', 'gd', function() require(tele).lsp_definitions(telescope_theme) end, map_opts)
-  vim.keymap.set('n', 'gt', function() require(tele).lsp_type_definitions(telescope_theme) end, map_opts)
-  vim.keymap.set('n', 'gi', function() require(tele).lsp_implementations(telescope_theme) end, map_opts)
-  vim.keymap.set('n', 'gr', function() require(tele).lsp_references(telescope_theme) end, map_opts)
+  vim.keymap.set('n', 'gd', function() telescope_lsp_picker("lsp_definitions", {}) end, map_opts)
+  vim.keymap.set('n', 'gt', function() telescope_lsp_picker("lsp_type_definitions", {}) end, map_opts)
+  vim.keymap.set('n', 'gi', function() telescope_lsp_picker("lsp_implementations", {}) end, map_opts)
+  vim.keymap.set('n', 'gr', function() telescope_lsp_picker("lsp_references", {}) end, map_opts)
   vim.keymap.set('n', ',r', vim.lsp.buf.rename, map_opts)
   vim.keymap.set('n', ',a', vim.lsp.buf.code_action, map_opts)
   vim.keymap.set('n', 'K', vim.lsp.buf.hover, map_opts)
   vim.keymap.set('n', ',k', vim.lsp.buf.signature_help, map_opts)
 
   -- List symbols via telescope (<C-l> for filtering by type of symbol)
-  vim.keymap.set('n', ',s', function() require(tele).lsp_document_symbols() end, map_opts)
-  vim.keymap.set('n', ',S', function() require(tele).lsp_dynamic_workspace_symbols() end, map_opts)
+  vim.keymap.set('n', ',s', function() telescope_lsp_picker("lsp_document_symbols", {}) end, map_opts)
+  vim.keymap.set('n', ',S', function() telescope_lsp_picker("lsp_dynamic_workspace_symbols", {}) end, map_opts)
 
   -- Workspace operations (creat/delete a folder and list folders)
   vim.keymap.set('n', ',wa', vim.lsp.buf.add_workspace_folder, map_opts)
@@ -63,8 +77,8 @@ local on_attach = function(client, bufnr)
   vim.keymap.set('n', ',l', vim.diagnostic.setloclist, map_opts)
 
   -- List diagnostics via telescope (<C-l> to filter by type of diagnostic)
-  vim.keymap.set('n', ',d', function() require(tele).diagnostics({ bufnr = 0 }) end, map_opts) -- current buffer
-  vim.keymap.set('n', ',D', function() require(tele).diagnostics() end, map_opts) -- all opened buffers
+  vim.keymap.set('n', ',d', function() telescope_lsp_picker("diagnostics", { bufnr = 0 }) end, map_opts) -- current buffer
+  vim.keymap.set('n', ',D', function() telescope_lsp_picker("diagnostics", {}) end, map_opts) -- all opened buffers
 
   -- Format
   vim.keymap.set('n', ',F', vim.lsp.buf.formatting, map_opts) -- whole buffer
@@ -127,7 +141,7 @@ nvim_lsp.sumneko_lua.setup {
       completion = {
         callSnippet = "Replace",
         displayContext = 50,
-        keywordSnippet = "Disable",
+        keywordSnippet = "Replace",
         postfix = ".",
       },
       diagnostics = {
@@ -170,6 +184,7 @@ nvim_lsp.sumneko_lua.setup {
           indent_style = "space",
           indent_size = "2",
           max_line_length = "unset",
+          -- statement_inline_comment_space = "2",
           -- quote_style = "double",
         },
       },

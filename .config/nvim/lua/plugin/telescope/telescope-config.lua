@@ -91,7 +91,7 @@ vim.keymap.set('n', '<Leader>fr', function() require("telescope.builtin").resume
 vim.keymap.set('n', '<Leader>fh', function() require("telescope.builtin").highlights() end, map_opts)
 
 -- Grep
-vim.keymap.set('n', '<Leader>g/', function() require("telescope.builtin").live_grep() end, map_opts)
+vim.keymap.set('n', '<Leader>gl', function() my_picker("live_grep") end, map_opts)
 -- live_grep in nvim config files
 vim.keymap.set('n', '<Leader>gv', function() my_picker("grep_nvim_config") end, map_opts)
 -- grep by giving a query string

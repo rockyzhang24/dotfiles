@@ -588,7 +588,6 @@ function! PackInit() abort
   call minpac#add('MunifTanjim/nui.nvim') " required by neo-tree.nvim
   call minpac#add('s1n7ax/nvim-window-picker') " required by neo-tree.nvim
 
-
   " Telescope
   call minpac#add('nvim-telescope/telescope-fzf-native.nvim', { 'do': 'make' })  " sorter for telescope
   call minpac#add('nvim-telescope/telescope.nvim')

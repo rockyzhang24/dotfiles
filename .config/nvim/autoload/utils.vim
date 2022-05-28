@@ -58,7 +58,13 @@ function! utils#TelescopeGrepOperator(type) abort
   else
     return
   endif
-  silent execute "lua require('telescope.builtin').grep_string({search = " . shellescape(@@) . "})"
+  silent execute "lua require('telescope.builtin').grep_string({
+        \ layout_strategy = 'vertical',
+        \ layout_config = {
+          \ prompt_position = 'top',
+        \ },
+        \ sorting_strategy = 'ascending',
+        \ search = " . shellescape(@@) . "})"
   let @@ = saved_unnamed_register
 endfunction
 

@@ -5,9 +5,25 @@ local M = {}
 local builtin = require("telescope.builtin")
 local themes = require("telescope.themes")
 
+function M.live_grep()
+  local opts = {
+    layout_strategy = "vertical",
+    layout_config = {
+      prompt_position = "top",
+    },
+    sorting_strategy = "ascending",
+  }
+  builtin.live_grep(opts)
+end
+
 -- live_grep in neovim config files
 function M.grep_nvim_config()
-  builtin.live_grep {
+  local opts = {
+    layout_strategy = "vertical",
+    layout_config = {
+      prompt_position = "top",
+    },
+    sorting_strategy = "ascending",
     prompt_title = "< Live Grep in Neovim Config Files >",
     search_dirs = {
       "~/.config/nvim/"
@@ -24,15 +40,22 @@ function M.grep_nvim_config()
       "--glob=!minpac", -- exclude directories
     },
   }
+  builtin.live_grep(opts)
 end
 
 -- grep by giving a query string
 function M.grep_prompt()
-  builtin.grep_string {
+  local opts = {
+    layout_strategy = "vertical",
+    layout_config = {
+      prompt_position = "top",
+    },
+    sorting_strategy = "ascending",
     -- path_display = { "shorten" },
     search = vim.fn.input "Grep String > ",
     use_regex = true,
   }
+  builtin.grep_string(opts)
 end
 
 -- git_files with my dotfiles bare repo support

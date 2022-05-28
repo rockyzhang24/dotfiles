@@ -8,7 +8,7 @@ Cherry pick the lines you need and totally understand.
   
 Always a WIP 🏗
   
-<img width="1728" alt="Screen Shot 2022-03-18 at 22 30 06" src="https://user-images.githubusercontent.com/11582667/159108482-c02407c0-9861-47c1-adf6-08bd8a952c1f.png">
+<img width="1726" alt="Screen Shot 2022-05-28 at 15 26 48" src="https://user-images.githubusercontent.com/11582667/170844670-8a56f819-af7f-45de-86ba-061f425165d4.png">
 
 </div>
 
@@ -39,7 +39,7 @@ I assign the key mappings rationally aiming to make them efficient and easy to r
 
 * Multiple leader keys
 
-  Other than `<Space>` that is set as the general leader key, `\` and `,` act as the leader keys for toggling and LSP respectively.
+  In addition to `<Space>` that is the general leader key, `\` and `,` are set as the leader keys for toggling and LSP respectively.
   
 * Mnemonic
 

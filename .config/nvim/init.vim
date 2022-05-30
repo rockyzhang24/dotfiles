@@ -480,7 +480,7 @@ nnoremap <silent> <Leader>t. :+tabmove<CR>
 " Searching {{{
 
 " Clean search highlighting
-nnoremap <silent> <Enter> :<C-U>nohlsearch<C-R>=has('diff')?'<Bar>diffupdate':''<CR><CR><C-L>
+nnoremap <silent> <C-/> :<C-U>nohlsearch<C-R>=has('diff')?'<Bar>diffupdate':''<CR><CR><C-L>
 
 " n for searching forward and N for searching backward regardless of / or ?
 nnoremap <expr> n (v:searchforward ? 'nzzzv' : 'Nzzzv')
@@ -633,7 +633,10 @@ function! PackInit() abort
 
   " Git
   call minpac#add('tpope/vim-fugitive')
+  call minpac#add('tpope/vim-rhubarb')  " vim-fugitive's companion for :GBrowse
   call minpac#add('lewis6991/gitsigns.nvim')
+  call minpac#add('rbong/vim-flog')
+  call minpac#add('ruanyl/vim-gh-line')
 
   " Markdown
   call minpac#add('instant-markdown/vim-instant-markdown')
@@ -643,11 +646,12 @@ function! PackInit() abort
 
   " Color schemes
   call minpac#add('folke/tokyonight.nvim')
-  call minpac#add('dracula/vim')
+  call minpac#add('dracula/vim', { 'name': 'dracula' })
   call minpac#add('sainnhe/gruvbox-material')
   call minpac#add('EdenEast/nightfox.nvim')
   call minpac#add('rebelot/kanagawa.nvim')
   call minpac#add('bluz71/vim-nightfly-guicolors')
+  call minpac#add('catppuccin/nvim', { 'name': 'catppuccin' })
 
 endfunction
 

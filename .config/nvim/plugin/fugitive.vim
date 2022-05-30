@@ -14,5 +14,12 @@ augroup fugitiveautocmd
 augroup END
 
 " Mappings
-" Use , as the leader key for git related stuff
 nnoremap <silent> ,gs :Git<CR>
+nnoremap <silent> ,gd :Gdiffsplit<CR>
+nnoremap <silent> ,gc :Git commit<CR>
+nnoremap <silent> ,ge :Gedit<CR>
+nnoremap <silent> ,gr :Gread<CR>
+nnoremap <silent> ,gw :Gwrite<CR>
+nnoremap <silent> ,gb :Git blame<CR>
+nnoremap <silent> ,g, :diffget //2<CR>
+nnoremap <silent> ,g. :diffget //3<CR>

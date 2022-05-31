@@ -639,7 +639,7 @@ function! PackInit() abort
   call minpac#add('ruanyl/vim-gh-line')
 
   " Markdown
-  call minpac#add('instant-markdown/vim-instant-markdown')
+  call minpac#add('iamcco/markdown-preview.nvim', {'type': 'opt', 'do': 'packadd markdown-preview.nvim | call mkdp#util#install()'})
 
   " Icons
   call minpac#add('kyazdani42/nvim-web-devicons')

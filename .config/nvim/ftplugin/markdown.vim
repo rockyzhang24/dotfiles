@@ -1,4 +1,4 @@
-" --- [ Snippets ] ---
+" ===== Snippets =====
 
 " Move to the next placeholder
 inoremap <buffer> ,f <Esc>/<++><CR>:nohlsearch<CR>"_c4l
@@ -27,13 +27,15 @@ inoremap <buffer> ,c ```<Enter><++><Enter>```<Enter><Enter><++><Esc>4kA
 " Task
 inoremap <buffer> ,t - [] <++><Esc>F[a
 
-" --- [ Plugin config ] ---
+" ===== markdown-preview.nvim =====
 
-" vim-instant-markdown
+packadd markdown-preview.nvim
 
-let g:instant_markdown_autostart = 0
-let g:instant_markdown_mathjax = 1
-let g:instant_markdown_mermaid = 1
-let g:instant_markdown_browser = "safari"
+" Open preview in a new Safari window
+" safari is executable defined in ~/.config/bin/safari
+function OpenMarkdownPreview (url)
+  execute "silent ! safari " . a:url
+endfunction
+let g:mkdp_browserfunc = 'OpenMarkdownPreview'
 
-nnoremap <silent> \m :call markdown#TogglePreview()<CR>
+nmap \m <Plug>MarkdownPreviewToggle

@@ -22,11 +22,12 @@ set cleaner ~/.config/lf/cleaner
 
 # ========== Commands ==========
 
+# Override the default open for file opening (binded to 'l' by default)
 cmd open ${{
-    case $(file --mime-type "$(readlink -f $f)" -b) in
-        text/*|application/json|application/octet-stream) $EDITOR $fx;;
-        *) for f in $fx; do open $f > /dev/null 2> /dev/null & done;;
-    esac
+  case $(file --mime-type "$(readlink -f $f)" -b) in
+    text/*|application/json|application/octet-stream) $EDITOR $fx;;
+    *) for f in $fx; do open $f > /dev/null 2> /dev/null & done;;
+  esac
 }}
 
 cmd mkdir $mkdir -p "$(echo $* | tr ' ' '\ ')"
@@ -92,8 +93,7 @@ cmd delete ${{
 
 cmd trash ${{
   set -f
-  printf "\n$fx\n"
-  printf "trash?[y/N]"
+  printf "Trash $fx ? [y/N]"
   read ans
   if [[ $ans == "y" ]]; then
     trash -Fv $fx
@@ -180,6 +180,8 @@ map <c-r> bulk-rename
 map \\c push :zip<space>
 # extract
 map \\x extract
+# Open the directory in Finder on macOS
+map \\f &if [[ -d $f ]]; then open $f; fi
 
 # Fast navigation
 map Jh cd ~

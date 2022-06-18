@@ -12,9 +12,8 @@ set cursorlineopt=number,screenline
 set hidden  " Allow buffer switch without saving
 set wrap
 set autoindent
-" set clipboard+=unnamedplus
-set scrolloff=5
-set sidescrolloff=5
+" set scrolloff=5
+" set sidescrolloff=5
 set autoread
 set noshowmode
 set showcmd
@@ -26,7 +25,7 @@ set list
 set listchars=tab:›\ ,trail:•,extends:#,nbsp:.,precedes:❮,extends:❯
 set fillchars=fold:\ ,eob:\ ,msgsep:‾,
 set foldenable
-set foldmethod=indent
+set foldmethod=manual
 set foldlevel=99
 " set foldmethod=expr
 " set foldexpr=nvim_treesitter#foldexpr() " treesitter based folding
@@ -34,10 +33,9 @@ set completeopt=menu,menuone,noselect
 set ttimeoutlen=50
 set timeoutlen=500
 set shortmess+=a shortmess+=c shortmess+=I
-set inccommand=split
+set inccommand=nosplit
 set updatetime=200
 set laststatus=3
-set showtabline=2
 set matchpairs+=<:>
 set splitbelow
 set splitright
@@ -55,7 +53,7 @@ set titlestring=%t%(\ %M%)%<%(\ (%{expand(\"%:~:.:h\")})%)%(\ %a%)
 set titlelen=15
 set diffopt+=vertical diffopt+=algorithm:patience
 set noswapfile
-set signcolumn=yes:3
+set signcolumn=yes
 set spelllang=en_us
 set pumblend=5
 set pumheight=20
@@ -81,22 +79,20 @@ set undofile " presistent undo (use set undodir=... to change the undodir, defau
 set nrformats=octal,bin,hex,unsigned,alpha
 set sessionoptions+=terminal,globals,winpos
 set isfname-==
+set foldcolumn=1
 
 " Avoid highlighting the last search when sourcing vimrc
 exec "nohlsearch"
 
-" Terminal
-let g:neoterm_autoscroll = '1'
-
-" Dress up quickfix window
-lua require('qf')
-
-" Set winbar
-lua require('winbar')
-
 " Use filetype.lua instead of filetype.vim
 let g:do_filetype_lua = 1
 let g:did_load_filetypes = 0
+
+" Dress up quickfix window
+lua require('rockyz.qf')
+
+" Set winbar
+lua require('rockyz.winbar')
 
 " }}}
 
@@ -105,17 +101,8 @@ let g:did_load_filetypes = 0
 set termguicolors
 set background=dark
 
-" let g:gruvbox_material_palette = 'original'
-" let g:gruvbox_material_enable_bold = 1
-" let g:gruvbox_material_enable_italic = 1
-" let g:gruvbox_material_visual = 'blue background'
-" let g:gruvbox_material_diagnostic_virtual_text = 'colored'
-" let g:gruvbox_material_statusline_style = 'original'
-" let g:gruvbox_material_better_performance = 1
-
-" colorscheme gruvbox-material
-
-lua require('plugin.nightfox')
+let g:colorscheme = "tokyonight"
+source ~/.config/nvim/init/color.vim
 
 " }}}
 
@@ -148,13 +135,6 @@ augroup nvim_terminal
         \ setlocal nonumber norelativenumber signcolumn=no |
         \ IndentBlanklineDisable
   autocmd BufWinEnter,WinEnter term://* startinsert
-augroup END
-
-" Automatic toggling between 'hybrid' and absolute line numbers
-augroup numbertoggle
-  autocmd!
-  autocmd BufEnter,FocusGained,InsertLeave,WinEnter * if &nu && mode() != "i" | set rnu   | endif
-  autocmd BufLeave,FocusLost,InsertEnter,WinLeave   * if &nu                  | set nornu | endif
 augroup END
 
 " Disable syntax highlighting for some filetypes if they are too long
@@ -227,6 +207,9 @@ augroup END
 " indentation from 2 to 4
 command -nargs=+ Reindent call utils#Reindent(<f-args>)
 
+" Commands defined in lua
+lua require('rockyz.commands')
+
 " }}}
 
 " ---------- [ Abbreviation ] ---------- {{{
@@ -240,19 +223,15 @@ call abbr#SetupCommandAbbrs('T', 'tabedit')
 " Misc {{{
 
 let mapleader=" "
-nnoremap <Space> <NOP>
 
 " The normal `,` is used as a leader key for lsp mappings
 nnoremap <Leader>, ,
 
-" Save and quit
-nnoremap <silent> <Leader>ww :<C-u>update<CR>
-nnoremap <silent> <Leader>q :<C-u>x<CR>
-nnoremap <silent> <Leader>Q :<C-u>q!<CR>
-
 " Smarter j and k navigation
-nnoremap <expr> j v:count ? (v:count > 5 ? "m'" . v:count : '') . 'j' : 'gj'
-nnoremap <expr> k v:count ? (v:count > 5 ? "m'" . v:count : '') . 'k' : 'gk'
+" nnoremap <expr> j v:count ? (v:count > 5 ? "m'" . v:count : '') . 'j' : 'gj'
+" nnoremap <expr> k v:count ? (v:count > 5 ? "m'" . v:count : '') . 'k' : 'gk'
+nnoremap j gj
+nnoremap k gk
 
 " Go to the start and end of the line easier
 noremap H ^
@@ -263,14 +242,6 @@ xnoremap J :m '>+1<CR>gv=gv
 xnoremap K :m '<-2<CR>gv=gv
 inoremap <M-j> <Esc>:m .+1<CR>==a
 inoremap <M-k> <Esc>:m .-2<CR>==a
-
-" Fast insert a place holder
-inoremap ,p <++>
-
-" Placeholder
-inoremap ,, <++> 
-nnoremap <silent> <Leader><Leader> <Esc>/<++><CR>:nohlsearch<CR>c4l
-inoremap <silent> ,f <Esc>/<++><CR>:nohlsearch<CR>"_c4l
 
 " Indent
 xnoremap < <gv
@@ -302,15 +273,9 @@ xnoremap <silent> _$ :<C-u>call utils#Preserve("s/\\s\\+$//e", visualmode())<CR>
 " Format the whole file
 nnoremap <silent> _= :<C-u>call utils#Preserve("normal gg=G")<CR>;
 
-" When navigating, center the cursor
-nnoremap {  {zz
-nnoremap }  }zz
-nnoremap ]c ]czz
-nnoremap [c [czz
-nnoremap [j <C-o>zz
-nnoremap ]j <C-i>zz
-nnoremap ]x ]szz
-nnoremap [x [szz
+" s has been used for navigating among symbols
+nnoremap ]x ]s
+nnoremap [x [s
 
 " Navigation in the argument list
 nnoremap <silent> [a :<C-u>previous<CR>
@@ -367,6 +332,8 @@ inoremap <S-CR> <C-o>o
 nnoremap zl 10zl
 nnoremap zh 10zh
 
+nnoremap <Leader>cm :silent !chmod +x %<CR>
+
 " }}}
 
 " Copy and paste {{{
@@ -406,6 +373,9 @@ nnoremap <silent> <Leader>bd :<C-u>bprevious <Bar> bdelete #<CR>
 
 " Delete all the other unmodified buffers
 nnoremap <silent> <Leader>bD :call utils#BufsDel()<CR>
+
+" Search the current WORD in the current buffer
+nnoremap <Leader>bs /<C-R>=escape(expand("<cWORD>"), "/")<CR><CR>
 
 " }}}
 
@@ -458,6 +428,9 @@ nnoremap <Leader><Right> <C-w>5>
 " Balance size
 nnoremap <Leader>= <C-w>=
 
+" Close windows by giving the window numbers
+nnoremap <Leader>wc :CloseWin<Space>
+
 " }}}
 
 " Tab {{{
@@ -477,14 +450,14 @@ nnoremap <silent> <Leader>t. :+tabmove<CR>
 
 " }}}
 
-" Searching {{{
+" Search {{{
 
 " Clean search highlighting
 nnoremap <silent> <C-/> :<C-U>nohlsearch<C-R>=has('diff')?'<Bar>diffupdate':''<CR><CR><C-L>
 
 " n for searching forward and N for searching backward regardless of / or ?
-nnoremap <expr> n (v:searchforward ? 'nzzzv' : 'Nzzzv')
-nnoremap <expr> N (v:searchforward ? 'Nzzzv' : 'nzzzv')
+nnoremap <expr> n (v:searchforward ? 'nzv' : 'Nzv')
+nnoremap <expr> N (v:searchforward ? 'Nzv' : 'nzv')
 
 " Make * and # search for the current selection
 xnoremap * :<C-u>call utils#VSetSearch('/')<CR>/<C-R>=@/<CR><CR>
@@ -532,10 +505,10 @@ tnoremap <M-d> <C-\><C-n>:bdelete!<CR>
 tnoremap <Esc> <C-\><C-n>
 
 " Switching between split windows
-tnoremap <M-h> <C-\><C-n><C-w>h
-tnoremap <M-j> <C-\><C-n><C-w>j
-tnoremap <M-k> <C-\><C-n><C-w>k
-tnoremap <M-l> <C-\><C-n><C-w>l
+tnoremap <C-h> <C-\><C-n><C-w>h
+tnoremap <C-j> <C-\><C-n><C-w>j
+tnoremap <C-k> <C-\><C-n><C-w>k
+tnoremap <C-l> <C-\><C-n><C-w>l
 
 " In terminal mode, use <M-r> to simulate <C-r> in insert mode for inserting the content of a register
 " Reference: http://vimcasts.org/episodes/neovim-terminal-paste/
@@ -555,7 +528,7 @@ function! PackInit() abort
   call minpac#add('k-takata/minpac', {'type': 'opt'})
 
   call minpac#add('nvim-lua/plenary.nvim')  " lua library used by other lua plugins
-  call minpac#add('tami5/sqlite.lua')
+  call minpac#add('antoinemadec/FixCursorHold.nvim') " workaround for this issue https://github.com/neovim/neovim/issues/12587
   call minpac#add('numToStr/Comment.nvim')
   call minpac#add('tpope/vim-surround')
   call minpac#add('tpope/vim-repeat')
@@ -568,25 +541,22 @@ function! PackInit() abort
   call minpac#add('mhinz/vim-startify')
   call minpac#add('tyru/open-browser.vim')
   call minpac#add('yanzhang0219/lualine.nvim')
-  call minpac#add('akinsho/bufferline.nvim')
   call minpac#add('kevinhwang91/nvim-bqf')
   call minpac#add('junegunn/fzf', { 'do': 'packloadall! | call fzf#install()' })  " as a filter for bqf
   call minpac#add('mhinz/vim-grepper')
   call minpac#add('kevinhwang91/nvim-hlslens')
   call minpac#add('tommcdo/vim-exchange') " cx{motion}, cxx (line), X (visual), cxc (clear), `.` is supported
   call minpac#add('lewis6991/foldsigns.nvim')
-  call minpac#add('gelguy/wilder.nvim', { 'do': 'let &rtp=&rtp | UpdateRemotePlugins' })
   call minpac#add('tversteeg/registers.nvim')
   call minpac#add('ThePrimeagen/harpoon')
-  call minpac#add('akinsho/toggleterm.nvim')
   call minpac#add('mg979/vim-visual-multi')
-  call minpac#add('dstein64/nvim-scrollview')
   call minpac#add('phaazon/hop.nvim')
   call minpac#add('kevinhwang91/nvim-fFHighlight')
   call minpac#add('ahmedkhalf/project.nvim')
   call minpac#add('nvim-neo-tree/neo-tree.nvim', { 'branch': 'main' })
   call minpac#add('MunifTanjim/nui.nvim') " required by neo-tree.nvim
   call minpac#add('s1n7ax/nvim-window-picker') " required by neo-tree.nvim
+  call minpac#add('rockyzhang24/maximize.nvim')
 
   " Telescope
   call minpac#add('nvim-telescope/telescope-fzf-native.nvim', { 'do': 'make' })  " sorter for telescope
@@ -600,9 +570,7 @@ function! PackInit() abort
   " LSP
   call minpac#add('neovim/nvim-lspconfig')
   call minpac#add('stevearc/aerial.nvim')
-  call minpac#add('kosayoda/nvim-lightbulb')
-  call minpac#add('ray-x/lsp_signature.nvim')
-  call minpac#add('j-hui/fidget.nvim')
+  call minpac#add('rockyzhang24/fidget.nvim')
 
   " Autocomplete
   call minpac#add('hrsh7th/nvim-cmp')
@@ -624,18 +592,15 @@ function! PackInit() abort
   call minpac#add('JoosepAlviste/nvim-ts-context-commentstring')
   call minpac#add('mizlan/iswap.nvim')
   call minpac#add('p00f/nvim-ts-rainbow')
-  call minpac#add('nvim-treesitter/nvim-treesitter-context')
-  call minpac#add('lewis6991/spellsitter.nvim')
 
   " Tags
   " call minpac#add('ludovicchabant/vim-gutentags')
   " call minpac#add('skywind3000/gutentags_plus')
 
   " Git
+  call minpac#add('lewis6991/gitsigns.nvim')
   call minpac#add('tpope/vim-fugitive')
   call minpac#add('tpope/vim-rhubarb')  " vim-fugitive's companion for :GBrowse
-  call minpac#add('lewis6991/gitsigns.nvim')
-  call minpac#add('rbong/vim-flog')
   call minpac#add('ruanyl/vim-gh-line')
 
   " Markdown
@@ -645,17 +610,20 @@ function! PackInit() abort
   call minpac#add('kyazdani42/nvim-web-devicons')
 
   " Color schemes
+  call minpac#add('sainnhe/gruvbox-material')
+  call minpac#add('sainnhe/sonokai')
   call minpac#add('folke/tokyonight.nvim')
   call minpac#add('dracula/vim', { 'name': 'dracula' })
-  call minpac#add('sainnhe/gruvbox-material')
   call minpac#add('EdenEast/nightfox.nvim')
   call minpac#add('rebelot/kanagawa.nvim')
   call minpac#add('bluz71/vim-nightfly-guicolors')
-  call minpac#add('catppuccin/nvim', { 'name': 'catppuccin' })
+
+  " Test
 
 endfunction
 
-" Load lua plugin configs
-lua require('plugin')
+" Load plugin configurations
+source ~/.config/nvim/init/plugin-config/init.vim
+lua require('rockyz.plugin-config')
 
 " }}}

@@ -47,7 +47,7 @@ export FZF_CTRL_R_OPTS="--preview 'echo {}' \
                         --header 'Press CTRL-Y to copy command into clipboard'"
 
 # CTRL-z for cd into the selected dir
-bindkey '^z' fzf-cd-widget
+bindkey '^j' fzf-cd-widget
 export FZF_ALT_C_COMMAND="fd --type d --hidden --follow --exclude .git"
 export FZF_ALT_C_OPTS="--preview 'tree -C {} | head -200' \
                        --header 'cd into the selected directory'"

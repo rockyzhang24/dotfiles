@@ -9,7 +9,7 @@ function! utils#Preserve(command, ...) abort
   let l = line(".")
   let c = col(".")
   " Do the business:
-  if a:0 == 2
+  if a:0 == 1
     if a:1 ==# 'V'
       execute "normal! `<V`>:" . a:command . "\<CR>"
     elseif a:1 ==# 'v'

@@ -8,11 +8,20 @@
 [core]
 	excludesfile = /Users/rockyzhang/.gitignore_global
   pager = delta
+[interactive]
+  diffFilter = delta --color-only
 [delta]
-  features = side-by-side line-numbers decorations
-  syntax-theme = Dracula
+  navigate = true
+  hyperlinks = true
+  features = side-by-side line-numbers decorations zebra-dark
+  syntax-theme = Monokai Extended Origin
   plus-style = syntax "#003800"
   minus-style = syntax "#3f0001"
+  map-styles = \
+    bold purple => syntax "#330f29", \
+    bold blue => syntax "#271344", \
+    bold cyan => syntax "#0d3531", \
+    bold yellow => syntax "#222f14"
 [delta "decorations"]
   commit-decoration-style = bold yellow box ul
   file-style = bold yellow ul
@@ -34,12 +43,14 @@
 ; Use neovim as git diff and merge tool
 [diff]
   tool = nvimdiff
+  colorMoved = default
 [difftool]
   prompt = false
 [difftool "nvimdiff"]
   cmd = "nvim -d \"$LOCAL\" \"$REMOTE\""
 [merge]
   tool = nvimdiff
+  conflictstyle = diff3
 [mergetool]
   prompt = true
 [mergetool "nvimdiff"]

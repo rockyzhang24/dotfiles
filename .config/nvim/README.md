@@ -15,19 +15,12 @@ Always a WIP 🏗
 # Features
 
 * Nvim builtin LSP client ([nvim-lspconfig](https://github.com/neovim/nvim-lspconfig))
-
-  Function signature hint, symbols outline, LSP progress indicator, etc
-  
 * Powerful completion backed by [nvim-cmp](https://github.com/hrsh7th/nvim-cmp)
-* Extended wildmenu with autocomplete ([wilder.nvim](https://github.com/gelguy/wilder.nvim))
 * Fuzzy finder for everything via [telescope](https://github.com/nvim-telescope/telescope.nvim)
 * Enhanced quickfix ([nvim-bqf](https://github.com/kevinhwang91/nvim-bqf))
+* Modern fold ([nvim-ufo](https://github.com/kevinhwang91/nvim-ufo))
 * Comprehensive text objects
 * Treesitter support
-
-  Modern syntax highlighting, commenting, showing context, elements swap, etc
-  
-* Smart tag management. 
 * Well organized key mappings (see next section below)
 * Snippet support powered by [LuaSnip](https://github.com/L3MON4D3/LuaSnip)
 * Fully Git integration

@@ -81,7 +81,7 @@ local on_attach = function(client, bufnr)
   vim.keymap.set('n', ',D', function() telescope_lsp_picker("diagnostics", {}) end, map_opts) -- all opened buffers
 
   -- Format
-  vim.keymap.set('n', ',F', vim.lsp.buf.formatting, map_opts) -- whole buffer
+  vim.keymap.set('n', ',F', function() vim.lsp.buf.format { async = true } end, map_opts) -- whole buffer
   vim.keymap.set({ 'n', 'x' }, ',f', function() require("rockyz.plugin-config.lsp.lsp-utils").format_range_operator() end, map_opts) -- range
 
   -- Toggle diagnostics
@@ -98,6 +98,10 @@ end
 -- Update the capabilities (nvim-cmp supports) sent to the server
 local capabilities = vim.lsp.protocol.make_client_capabilities()
 capabilities = require('cmp_nvim_lsp').update_capabilities(capabilities)
+capabilities.textDocument.foldingRange = { -- for nvim-ufo
+    dynamicRegistration = false,
+    lineFoldingOnly = true
+}
 
 -- Border
 lsp.handlers["textDocument/hover"] = lsp.with(lsp.handlers.hover, {

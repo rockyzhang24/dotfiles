@@ -13,6 +13,8 @@ local get_bufnrs = function()
   return { buf }
 end
 
+local winhighlight = 'Normal:Pmenu,FloatBorder:SuggestWidgetBorder,CursorLine:SuggestWidgetSelect,Search:None'
+
 cmp.setup({
 
   snippet = {
@@ -21,10 +23,13 @@ cmp.setup({
     end,
   },
 
-  -- Border
   window = {
-    completion = cmp.config.window.bordered(),
-    documentation = cmp.config.window.bordered(),
+    completion = {
+      winhighlight = winhighlight,
+    },
+    documentation = {
+      winhighlight = winhighlight,
+    },
   },
 
   -- Mappings
@@ -151,9 +156,4 @@ cmp.setup.cmdline(':', {
   }, {
     { name = 'cmdline' }
   }),
-  -- Border
-  -- window = {
-  --   completion = cmp.config.window.bordered(),
-  --   documentation = cmp.config.window.bordered(),
-  -- },
 })

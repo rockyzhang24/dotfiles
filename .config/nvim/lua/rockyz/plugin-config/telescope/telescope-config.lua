@@ -82,6 +82,7 @@ end
 vim.keymap.set('n', '<C-f>', function() my_picker("git_files") end, map_opts)
 vim.keymap.set('n', '<Leader>ff', function() require("telescope.builtin").find_files() end, map_opts)
 vim.keymap.set('n', '<Leader>fo', function() my_picker("oldfiles") end, map_opts)
+vim.keymap.set('n', '<Leader>f.', function() my_picker("find_dotfiles") end, map_opts)
 
 -- Misc
 vim.keymap.set('n', '<Leader>fb', function() require("telescope.builtin").buffers() end, map_opts)
@@ -96,9 +97,8 @@ vim.keymap.set('n', '<Leader>gl', function() my_picker("live_grep") end, map_opt
 vim.keymap.set('n', '<Leader>gv', function() my_picker("grep_nvim_config") end, map_opts)
 -- grep by giving a query string
 vim.keymap.set('n', '<Leader>gs', function() my_picker("grep_prompt") end, map_opts)
-
--- grep_string operator
-vim.keymap.set('n', '<Leader>g', '<Cmd>set operatorfunc=utils#TelescopeGrepOperator<CR>g@', map_opts)
-vim.keymap.set('x', '<Leader>g', ':call utils#TelescopeGrepOperator(visualmode())<CR>', map_opts)
+-- grep word under cursor or selected texts
+vim.keymap.set('n', '<Leader>gw', function() my_picker("grep_word") end, map_opts)
+vim.keymap.set('x', '<Leader>gw', function() my_picker("grep_selection") end, map_opts)
 
 -- Other mappings regarding LSP picker are set in the nvim-lspconfig setup ~/.config/nvim/lua/plugin-config/lsp/lsp-config.lua

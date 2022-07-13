@@ -49,7 +49,7 @@ augroup starity
 augroup END
 
 " Go to the Startify buffer
-nnoremap <silent> <Leader>sh :Startify<CR>
+nnoremap <silent> <Leader>bh :Startify<CR>
 
 " Session management
 nnoremap <silent> <Leader>Ss :SSave<CR>

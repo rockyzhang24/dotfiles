@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+# List the dotfiles (absolute path) that are managed by git bare repository
+git --git-dir=$HOME/dotfiles/ --work-tree=$HOME ls-files $HOME --full-name | sed "s#^#~/#"

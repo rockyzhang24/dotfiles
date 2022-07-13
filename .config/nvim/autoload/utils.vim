@@ -1,5 +1,4 @@
-" Do something and preserve the state (i.e., not change the search history and
-" cursor position)
+" Do something and preserve the state (i.e., not change the search history and cursor position)
 " Ref: http://vimcasts.org/episodes/tidying-whitespace/
 " @Param: command - the cmdline command to be executed
 " @Param: ... - visual mode type, i.e., the return of visualmode()
@@ -24,7 +23,7 @@ function! utils#Preserve(command, ...) abort
 endfunction
 
 " Search for the current selection
-" Reference: http://vimcasts.org/episodes/search-for-the-selected-text/
+" Ref: http://vimcasts.org/episodes/search-for-the-selected-text/
 function! utils#VSetSearch(cmdtype) abort
   let temp = @s
   norm! gv"sy
@@ -33,7 +32,7 @@ function! utils#VSetSearch(cmdtype) abort
 endfunction
 
 " Grep operator
-" Reference: https://learnvimscriptthehardway.stevelosh.com/chapters/32.html
+" Ref: https://learnvimscriptthehardway.stevelosh.com/chapters/32.html
 " function! utils#GrepOperator(type) abort
 "   let saved_unnamed_register = @@
 "   if a:type ==# 'v'
@@ -49,24 +48,24 @@ endfunction
 " endfunction
 
 " Operator for grep_string of Telescope
-function! utils#TelescopeGrepOperator(type) abort
-  let saved_unnamed_register = @@
-  if a:type ==# 'v'
-    normal! `<v`>y
-  elseif a:type ==# 'char'
-    normal! `[v`]y
-  else
-    return
-  endif
-  silent execute "lua require('telescope.builtin').grep_string({
-        \ layout_strategy = 'vertical',
-        \ layout_config = {
-          \ prompt_position = 'top',
-        \ },
-        \ sorting_strategy = 'ascending',
-        \ search = " . shellescape(@@) . "})"
-  let @@ = saved_unnamed_register
-endfunction
+" function! utils#TelescopeGrepOperator(type) abort
+"   let saved_unnamed_register = @@
+"   if a:type ==# 'v'
+"     normal! `<v`>y
+"   elseif a:type ==# 'char'
+"     normal! `[v`]y
+"   else
+"     return
+"   endif
+"   silent execute "lua require('telescope.builtin').grep_string({
+"         \ layout_strategy = 'vertical',
+"         \ layout_config = {
+"           \ prompt_position = 'top',
+"         \ },
+"         \ sorting_strategy = 'ascending',
+"         \ search = " . shellescape(@@) . "})"
+"   let @@ = saved_unnamed_register
+" endfunction
 
 " Delete all the other unmodified buffers
 function! utils#BufsDel() abort

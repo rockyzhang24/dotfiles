@@ -92,15 +92,15 @@ M.winbar = function()
 end
 
 -- Set highlight group for winbar
-vim.api.nvim_create_augroup('winbar', {})
-vim.api.nvim_create_autocmd({ 'ColorScheme' }, {
-  group = 'winbar',
-  pattern = '*',
-  callback = function()
-    vim.api.nvim_set_hl(0, 'WinBar', { link = 'CursorLineNr' })
-    vim.api.nvim_set_hl(0, 'WinBarNC', { link = 'CursorLineNr' })
-  end,
-})
+-- vim.api.nvim_create_augroup('winbar', {})
+-- vim.api.nvim_create_autocmd({ 'ColorScheme' }, {
+--   group = 'winbar',
+--   pattern = '*',
+--   callback = function()
+--     vim.api.nvim_set_hl(0, 'WinBar', { link = 'CursorLineNr' })
+--     vim.api.nvim_set_hl(0, 'WinBarNC', { link = 'CursorLineNr' })
+--   end,
+-- })
 
 vim.o.winbar = "%{%v:lua.require('rockyz.winbar').winbar()%}"
 

@@ -7,4 +7,4 @@ let g:Hexokinase_ftOptInPatterns = {
 let g:Hexokinase_ftDisabled = ['minpac']
 
 " Toggle
-nnoremap \c :HexokinaseToggle<CR>
+nnoremap \C :HexokinaseToggle<CR>

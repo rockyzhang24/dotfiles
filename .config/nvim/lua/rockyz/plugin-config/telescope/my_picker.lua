@@ -5,7 +5,8 @@ local M = {}
 local builtin = require("telescope.builtin")
 local themes = require("telescope.themes")
 
-function M.live_grep()
+-- live_grep
+M.live_grep = function()
   local opts = {
     layout_strategy = "vertical",
     layout_config = {
@@ -17,7 +18,7 @@ function M.live_grep()
 end
 
 -- live_grep in neovim config files
-function M.grep_nvim_config()
+M.grep_nvim_config = function()
   local opts = {
     layout_strategy = "vertical",
     layout_config = {
@@ -43,23 +44,52 @@ function M.grep_nvim_config()
   builtin.live_grep(opts)
 end
 
--- grep by giving a query string
-function M.grep_prompt()
+-- Helper function for executing telescope grep_string by a given query
+local function grep_string_by_query(query)
   local opts = {
     layout_strategy = "vertical",
     layout_config = {
       prompt_position = "top",
     },
     sorting_strategy = "ascending",
-    -- path_display = { "shorten" },
-    search = vim.fn.input "Grep String > ",
+    search = query,
     use_regex = true,
   }
   builtin.grep_string(opts)
 end
 
+-- grep by giving a query string
+M.grep_prompt = function()
+  grep_string_by_query(vim.fn.input "Grep String > ")
+end
+
+-- grep the word under cursor
+M.grep_word = function()
+  grep_string_by_query(vim.fn.expand("<cword>"))
+end
+
+-- Helper function for getting the selected texts
+local function getVisualSelection()
+  local saved_unnamed_reg = vim.fn.getreg('@')
+  vim.cmd('noau normal! y')
+  local text = vim.fn.getreg('@')
+  vim.fn.setreg('@', saved_unnamed_reg)
+
+  text = string.gsub(text, "\n", "")
+  if #text > 0 then
+    return text
+  else
+    return ''
+  end
+end
+
+-- grep the selections
+M.grep_selection = function()
+  grep_string_by_query(getVisualSelection())
+end
+
 -- git_files with my dotfiles bare repo support
-function M.git_files()
+M.git_files = function()
   local opts = themes.get_dropdown {
     previewer = false,
     layout_config = {
@@ -73,7 +103,20 @@ function M.git_files()
   builtin.git_files(opts)
 end
 
-function M.oldfiles()
+-- find_files for my dotfiles
+M.find_dotfiles = function()
+  local opts = themes.get_dropdown {
+    previewer = false,
+    layout_config = {
+      height = 20,
+    },
+    find_command = { "ls-dotfiles" },
+  }
+  builtin.find_files(opts)
+end
+
+-- oldfiles
+M.oldfiles = function()
   local opts = themes.get_dropdown {
     previewer = false,
     layout_config = {

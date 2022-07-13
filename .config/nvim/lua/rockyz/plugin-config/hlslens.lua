@@ -1,3 +1,6 @@
+-- Do not show search count message when searching
+vim.opt.shortmess:append('S')
+
 -- Customize virtual text
 require('hlslens').setup({
   override_lens = function(render, plist, nearest, idx, r_idx)
@@ -30,7 +33,8 @@ require('hlslens').setup({
 
 -- Mappings
 local map_opts = { silent = true }
-vim.keymap.set('n', '*', [[*<Cmd>lua require('hlslens').start()<CR>]], map_opts)
-vim.keymap.set('n', '#', [[#<Cmd>lua require('hlslens').start()<CR>]], map_opts)
-vim.keymap.set('n', 'g*', [[g*<Cmd>lua require('hlslens').start()<CR>]], map_opts)
-vim.keymap.set('n', 'g#', [[g#<Cmd>lua require('hlslens').start()<CR>]], map_opts)
+-- Integrated with vim-asterisk
+vim.keymap.set({ 'n', 'x' }, '*', [[<Plug>(asterisk-z*)<Cmd>lua require('hlslens').start()<CR>]], map_opts)
+vim.keymap.set({ 'n', 'x' }, '#', [[<Plug>(asterisk-z#)<Cmd>lua require('hlslens').start()<CR>]], map_opts)
+vim.keymap.set({ 'n', 'x' }, 'g*', [[<Plug>(asterisk-gz*)<Cmd>lua require('hlslens').start()<CR>]], map_opts)
+vim.keymap.set({ 'n', 'x' }, 'g#', [[<Plug>(asterisk-gz#)<Cmd>lua require('hlslens').start()<CR>]], map_opts)

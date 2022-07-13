@@ -1,7 +1,7 @@
 # Setup fzf
 # ---------
 if [[ ! "$PATH" == */Users/rockyzhang/gitrepos/fzf/bin* ]]; then
-  export PATH="${PATH:+${PATH}:}/Users/rockyzhang/gitrepos/fzf/bin"
+  PATH="${PATH:+${PATH}:}/Users/rockyzhang/gitrepos/fzf/bin"
 fi
 
 # Auto-completion

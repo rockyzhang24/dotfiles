@@ -10,6 +10,7 @@ conf_path=$HOME/.config/lf
 
 kitty_icat() {
   kitty +icat --silent --transfer-mode file --place "${w}x${h}@${x}x${y}" "${1}"
+  exit 1
 }
 
 text_preview() {
@@ -41,11 +42,11 @@ case "$file" in
   *.xlsx) xlsx2csv "$file";;
   *.csv) cat "$file" | sed s/,/\\n/g ;;
   *.pdf) pdftotext -l 10 -nopgbrk -q "$file" -;;
-  *.bmp|*.jpg|*.jpeg|*.png|*.xpm) kitty_icat "$file" && exit 1;;
+  *.bmp|*.jpg|*.jpeg|*.png|*.xpm) kitty_icat "$file";;
   *.wav|*.mp3|*.flac|*.m4a|*.wma|*.ape|*.ac3|*.og[agx]|*.spx|*.opus|*.as[fx]|*.flac) mediainfo "$file";;
   *.avi|*.mp4|*.wmv|*.dat|*.3gp|*.ogv|*.mkv|*.mpg|*.mpeg|*.vob|*.fl[icv]|*.m2v|*.mov|*.webm|*.mts|*.m4v|*.r[am]|*.qt|*.divx)
-    kitty_icat "$($conf_path/vidthumb "$file")" && exit 1 || mediainfo "$file";;
-  *.ts) [[ $(get_mime_type "$file") == text/* ]] && text_preview "$file" || kitty_icat "$($conf_path/vidthumb "$file")" && exit 1 || mediainfo "$file";;
+    kitty_icat "$($conf_path/vidthumb "$file")" || mediainfo "$file";;
+  *.ts) [[ $(get_mime_type "$file") == text/* ]] && text_preview "$file" || kitty_icat "$($conf_path/vidthumb "$file")" || mediainfo "$file";;
   *.json) jq --color-output . "$file" || bat --color=always --style=numbers,changes --line-range=:"$3" "$file";;
   *) text_preview "$file";;
 esac

@@ -1,39 +1,11 @@
 require 'nvim-treesitter.configs'.setup {
 
-  -- nvim-treesitter config
-
-  ensure_installed = {
-    "bash",
-    "c",
-    "cpp",
-    "cmake",
-    "css",
-    "comment",
-    "go",
-    "html",
-    "java",
-    "javascript",
-    "json",
-    "jsonc",
-    "lua",
-    "markdown",
-    "make",
-    "python",
-    "query",
-    "rust",
-    "regex",
-    "tsx",
-    "typescript",
-    "vim",
-  },
-
-  ignore_install = {}, -- List of parsers to ignore installing
-
-  -- Modules
+  ensure_installed = 'all',
+  ignore_install = { 'phpdoc' },
 
   highlight = {
     enable = true,
-    disable = { 'vim' } -- List of language that will be disabled
+    disable = { 'vim' },
   },
   textobjects = {
     select = {
@@ -73,4 +45,11 @@ require 'nvim-treesitter.configs'.setup {
   playground = {
     enable = true,
   },
+  -- nvim-ts-rainbow
+  rainbow = {
+    enable = true,
+    extended_mode = true,
+    max_file_lines = 1000,
+  }
+
 }

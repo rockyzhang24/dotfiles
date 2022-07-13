@@ -5,7 +5,8 @@ alias diff="diff --color=auto" # GNU diffutils required (brew install diffutils)
 alias df="gdf -h"
 alias du="gdu -h"
 alias grep="ggrep --color=auto"
-alias chmod="gchmod -v"
+alias chmod="gchmod --preserve-root -v"
+alias chown="gchown --preserve-root -v"
 alias find="gfind"
 
 # General
@@ -19,13 +20,13 @@ alias ka="killall"
 # ls
 alias ls="gls -hFN --color=auto --group-directories-first --hyperlink=auto" # Use GNU ls (brew install coreutils)
 alias la="ls -A"
-alias ll="ls -l"
-alias l="ll -A"
-alias lr="ll -R"  # recursive
-alias lk="ll -Sr" # sort by size, largest last
-alias lm="ll -tr" # sort by modification time, i.e., mtime, newest last
+alias l="ls -l"
+alias ll="l -A"
+alias lr="l -R"  # recursive
+alias lk="l -Sr" # sort by size, largest last
+alias lm="l -tr" # sort by modification time, i.e., mtime, newest last
 alias lc="lm -c"  # sort by change (status) time, i.e., ctime, newest last
-alias lx="ll -X"  # sort by extension
+alias lx="l -X"  # sort by extension
 
 # brew
 alias bru="brew update"
@@ -35,7 +36,9 @@ alias brU="brew upgrade"
 alias t="trash" # trash is ~/.config/zsh/functions/trash
 alias sc="shellcheck"
 alias iina="open -a 'IINA'"
-alias imgcat="kitty +kitten icat"
+alias icat="kitty +kitten icat"
+alias highlight="highlight --out-format=truecolor"
+alias ncdu="ncdu --color dark -rr -x --exclude .git --exclude node_modules"
 
 # Download
 alias wget="wget --continue --progress=bar --timestamping"
@@ -51,10 +54,6 @@ alias zb="z -b"
 alias zi="z -i"
 alias zf="z -I"
 
-# Improved
-alias idu="ncdu --color dark -rr -x --exclude .git --exclude node_modules"
-alias icat="highlight --out-format=truecolor"
-
 # Use neovim for vim if present
 command -v nvim >/dev/null && alias vim="nvim" vi="nvim" v="nvim" vimdiff="nvim -d"
 
@@ -69,21 +68,11 @@ alias vtg='function video_to_gif(){ ffmpeg -i $1 -pix_fmt rgb8 -r 10 -vf scale=2
 # When quitting ranger using Z, change the shell pwd to the last visited directory
 alias ra="ranger"
 
-# Quick navigation (Jump)
-alias Jg="cd ~/gitrepos"
+# Quick navigation (J for Jump)
 alias Jd="cd ~/Documents"
 alias JD="cd ~/Downloads"
-alias JB="cd ~/Library/CloudStorage/Dropbox/"
+alias Jb="cd ~/Library/CloudStorage/Dropbox/"
+alias Jg="cd ~/gitrepos"
 alias Jp="cd ~/projects"
 alias Jc="cd ~/.config"
-alias Jb="cd ~/.config/bin"
-alias Jz="cd ~/.config/zsh"
 alias Jv="cd ~/.config/nvim"
-
-# Quick edit (Config)
-alias Cv="$EDITOR ~/.config/nvim/init.vim"
-alias Cz="$EDITOR ~/.config/zsh/.zshrc"
-alias Ca="$EDITOR ~/.config/zsh/aliases"
-alias Ce="$EDITOR ~/.config/zsh/env"
-alias Cl="$EDITOR ~/.config/lf/lfrc"
-alias Cm="$EDITOR ~/.config/bin/cmdmemo"

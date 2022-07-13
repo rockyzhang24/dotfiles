@@ -49,6 +49,11 @@ export RANGER_LOAD_DEFAULT_RC=FALSE
 # CA certificate for SSL
 export SSL_CERT_FILE=$HOME/.config/misc/cacert.pem
 
+# ls colors
+source $HOME/.config/zsh/lscolors.sh # GNU ls
+# BSD (vanilla ls in macOS)
+export CLICOLOR=1
+export LSCOLORS='ExfxcxdxbxGxDxabagacad'
 
 #
 # Below configs are taken from zimfw utility: https://github.com/zimfw/utility/blob/master/init.zsh
@@ -59,11 +64,6 @@ if (( terminfo[colors] >= 8 )); then
   # grep colours
   if (( ! ${+GREP_COLOR} )) export GREP_COLOR='37;45'               #BSD
   if (( ! ${+GREP_COLORS} )) export GREP_COLORS="mt=${GREP_COLOR}"  #GNU
-  if [[ ${OSTYPE} == openbsd* ]]; then
-    if (( ${+commands[ggrep]} )) alias grep='ggrep --color=auto'
-  else
-    alias grep='grep --color=auto'
-  fi
 
   # less colours
   if (( ${+commands[less]} )); then
@@ -78,35 +78,4 @@ if (( terminfo[colors] >= 8 )); then
 else
   # See https://no-color.org
   export NO_COLOR=1
-fi
-
-# GNU vs. BSD
-if (( ${+commands[dircolors]} )) && ls --version &>/dev/null; then
-  # GNU
-
-  if (( ! ${+NO_COLOR} )); then
-    # ls colours
-    if [[ -s ${HOME}/.dir_colors ]]; then
-      eval "$(dircolors --sh ${HOME}/.dir_colors)"
-    elif (( ! ${+LS_COLORS} )); then
-      export LS_COLORS='di=1;34:ln=35:so=32:pi=33:ex=31:bd=1;36:cd=1;33:su=30;41:sg=30;46:tw=30;42:ow=30;43'
-    fi
-    alias ls='ls --group-directories-first --color=auto'
-  fi
-
-  # Always wear a condom
-  alias chmod='chmod --preserve-root -v'
-  alias chown='chown --preserve-root -v'
-else
-  # BSD
-
-  if (( ! ${+NO_COLOR} )); then
-    # ls colours
-    if (( ! ${+CLICOLOR} )) export CLICOLOR=1
-    if (( ! ${+LSCOLORS} )) export LSCOLORS='ExfxcxdxbxGxDxabagacad'
-    # Stock OpenBSD ls does not support colors at all, but colorls does.
-    if [[ ${OSTYPE} == openbsd* && ${+commands[colorls]} -ne 0 ]]; then
-      alias ls='colorls'
-    fi
-  fi
 fi

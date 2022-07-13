@@ -2,6 +2,7 @@ let s:loaded_plugins = [
       \ 'fugitive',
       \ 'hexokinase',
       \ 'minpac',
+      \ 'netrw',
       \ 'registers',
       \ 'startify',
       \ 'tabular',
@@ -11,8 +12,10 @@ let s:loaded_plugins = [
       \ 'vim-after-object',
       \ 'vim-illuminate',
       \ 'vim-gh-line',
+      \ 'vim-flog',
       \ 'vim-visual-multi',
       \ 'vim-openbrowser',
+      \ 'vim-asterisk',
       \ ]
 
 for s:plugin in s:loaded_plugins

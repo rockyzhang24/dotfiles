@@ -22,7 +22,7 @@ My dotfiles for `macOS` and `Linux`. Just cherry pick the piece of code you tota
 * [fzf](./.config/fzf): Fuzzy finder I use widely in my daily workflow. I created some fzf-based [scripts](./.config/fzf/fzfutils/) to boost productivity
 * [bin](./.config/bin): Very useful scripts
 
-[kitty](./.config/kitty/)/[alacritty](./.config/alacritty/): Terminal
+[wezterm](./.config/wezterm/)/[kitty](./.config/kitty/)/[alacritty](./.config/alacritty/): Terminal
 
 [yabai](./.config/yabai/) and [skhd](./.config/skhd/): Tiling window manager
 

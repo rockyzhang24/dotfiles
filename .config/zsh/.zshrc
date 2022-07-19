@@ -18,4 +18,8 @@ source ~/.cargo/env
 source $HOME/.config/lf/icons
 
 # iTerm2 Shell Integration
-test -e "${ZDOTDIR}/.iterm2_shell_integration.zsh" && source "${ZDOTDIR}/.iterm2_shell_integration.zsh"
+export ITERM2_SQUELCH_MARK=1
+test -e "${ZDOTDIR}/iterm2_shell_integration.zsh" && source "${ZDOTDIR}/iterm2_shell_integration.zsh"
+
+# Wezterm Shell Integration
+[[ -n $WEZTERM_CONFIG_DIR ]] && test -e "${ZDOTDIR}/wezterm_shell_integration.sh" && source "${ZDOTDIR}/wezterm_shell_integration.sh"

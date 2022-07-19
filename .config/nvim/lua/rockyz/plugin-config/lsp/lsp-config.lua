@@ -114,9 +114,6 @@ lsp.handlers["textDocument/signatureHelp"] = lsp.with(lsp.handlers.signature_hel
 -- Vimscript
 nvim_lsp.vimls.setup {
   on_attach = on_attach,
-  flags = {
-    debounce_text_changes = 150,
-  },
   capabilities = capabilities,
 }
 
@@ -127,9 +124,6 @@ table.insert(runtime_path, "lua/?/init.lua")
 
 nvim_lsp.sumneko_lua.setup {
   on_attach = on_attach,
-  flags = {
-    debounce_text_changes = 150,
-  },
   capabilities = capabilities,
   -- Support formatter since 2.6.6 (ref:
   -- https://github.com/sumneko/lua-language-server/issues/960)
@@ -207,18 +201,12 @@ nvim_lsp.sumneko_lua.setup {
 -- Golang
 nvim_lsp.gopls.setup {
   on_attach = on_attach,
-  flags = {
-    debounce_text_changes = 150,
-  },
   capabilities = capabilities,
 }
 
 -- Python
 nvim_lsp.pylsp.setup {
   on_attach = on_attach,
-  flags = {
-    debounce_text_changes = 150,
-  },
   capabilities = capabilities,
 
   -- For further configuration: https://github.com/python-lsp/python-lsp-server/blob/develop/CONFIGURATION.md
@@ -242,17 +230,11 @@ nvim_lsp.pylsp.setup {
 -- Rust
 nvim_lsp.rust_analyzer.setup {
   on_attach = on_attach,
-  flags = {
-    debounce_text_changes = 150,
-  },
   capabilities = capabilities,
 }
 
 -- TypeScript/JavaScript
 nvim_lsp.tsserver.setup {
   on_attach = on_attach,
-  flags = {
-    debounce_text_changes = 150,
-  },
   capabilities = capabilities,
 }

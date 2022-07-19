@@ -79,7 +79,7 @@ local function my_picker(picker)
 end
 
 -- Files
-vim.keymap.set('n', '<C-f>', function() my_picker("git_files") end, map_opts)
+vim.keymap.set('n', '<C-p>', function() my_picker("git_files") end, map_opts)
 vim.keymap.set('n', '<Leader>ff', function() require("telescope.builtin").find_files() end, map_opts)
 vim.keymap.set('n', '<Leader>fo', function() my_picker("oldfiles") end, map_opts)
 vim.keymap.set('n', '<Leader>f.', function() my_picker("find_dotfiles") end, map_opts)

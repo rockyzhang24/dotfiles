@@ -38,8 +38,7 @@ set shiftround
 set ignorecase
 set smartcase
 set title
-set titlestring=%t%(\ %M%)%<%(\ (%{expand(\"%:~:.:h\")})%)%(\ %a%)
-set titlelen=15
+set titlestring=%t%(\ %m%)\ %<%(\ (%{expand(\"%:~:.:h\")})%)%(\ %a%)
 set diffopt+=vertical diffopt+=algorithm:patience
 set noswapfile
 set nobackup
@@ -53,7 +52,7 @@ set grepprg=rg\ --vimgrep\ --smart-case\ $*
 set grepformat=%f:%l:%c:%m
 set breakindent
 set breakindentopt=shift:2
-set showbreak=↳
+let &showbreak = '↳ '
 set wildignore=*.o,*.obj,*~,*.exe,*.a,*.pdb,*.lib
 set wildignore+=*.so,*.dll,*.swp,*.egg,*.jar,*.class,*.pyc,*.pyo,*.bin,*.dex
 set wildignore+=*.log,*.pyc,*.sqlite,*.sqlite3,*.min.js,*.min.css,*.tags
@@ -71,6 +70,7 @@ set sessionoptions+=terminal,globals,winpos
 set isfname-==
 set shada=!,'1000,<50,s10,h
 set lazyredraw
+set mouse=a
 
 " Avoid highlighting the last search when sourcing vimrc
 exec "nohlsearch"
@@ -92,7 +92,7 @@ set termguicolors
 set background=dark
 
 let g:colorscheme = "arctic"
-source ~/.config/nvim/init/color.vim
+source ~/.config/nvim/viml/color.vim
 
 " }}}
 
@@ -385,7 +385,7 @@ inoremap <M-d> <Esc><C-w>w<C-d><C-w>wa
 inoremap <M-u> <Esc><C-w>w<C-u><C-w>wa
 
 " Go to the previous window
-nnoremap <C-p> <C-w>p
+nnoremap <Leader>wp <C-w>p
 
 " Create a split window
 nnoremap <silent> <Leader>- :split<CR>
@@ -484,16 +484,19 @@ cnoremap %% <C-R>=fnameescape(expand('%:h')).'/'<cr>
 tnoremap <Esc> <C-\><C-n>
 
 " Switching between split windows
-tnoremap <M-h> <C-\><C-n><C-w>h
-tnoremap <M-j> <C-\><C-n><C-w>j
-tnoremap <M-k> <C-\><C-n><C-w>k
-tnoremap <M-l> <C-\><C-n><C-w>l
+tnoremap <C-h> <C-\><C-n><C-w>h
+tnoremap <C-j> <C-\><C-n><C-w>j
+tnoremap <C-k> <C-\><C-n><C-w>k
+tnoremap <C-l> <C-\><C-n><C-w>l
 
 " In terminal mode, use <M-r> to simulate <C-r> in insert mode for inserting the content of a register
 " Reference: http://vimcasts.org/episodes/neovim-terminal-paste/
 tnoremap <expr> <M-r> '<C-\><C-n>"' . nr2char(getchar()) . 'pi'
 
 " }}}
+
+" Load mappings defined in lua
+lua require('rockyz.mappings')
 
 " }}}
 
@@ -517,7 +520,6 @@ function! PackInit() abort
   call minpac#add('godlygeek/tabular')
   call minpac#add('mbbill/undotree')
   call minpac#add('mhinz/vim-startify')
-  call minpac#add('tyru/open-browser.vim')
   call minpac#add('yanzhang0219/lualine.nvim')
   call minpac#add('mkitt/tabline.vim')
   call minpac#add('kevinhwang91/nvim-bqf')
@@ -597,7 +599,6 @@ function! PackInit() abort
 endfunction
 
 " Load plugin configurations
-source ~/.config/nvim/init/plugin-config/init.vim
-lua require('rockyz.plugin-config')
+lua require('rockyz.plugin_config_loader')
 
 " }}}

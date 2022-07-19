@@ -1,0 +1,31 @@
+[colors]
+foreground = '#d4d4d4'
+background = '#1e1e1e'
+ansi = [
+    '#1e1e1e',
+    '#f44747',
+    '#6a9955',
+    '#d7ba7d',
+    '#569cd6',
+    '#c586c0',
+    '#4dc9b0',
+    '#dddddd',
+]
+brights = [
+    '#808080',
+    '#f55757',
+    '#80ad6b',
+    '#e1cb9e',
+    '#6fabdc',
+    '#d6a9d2',
+    '#70d3bf',
+    '#ffffff',
+]
+selection_fg = 'none'
+selection_bg = '#094771'
+scrollbar_thumb = '#424242'
+
+[colors.indexed]
+
+[metadata]
+name = 'arctic'

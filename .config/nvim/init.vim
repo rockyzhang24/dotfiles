@@ -84,6 +84,9 @@ lua require('rockyz.qf')
 " Set winbar
 lua require('rockyz.winbar')
 
+" Set tabline
+source ~/.config/nvim/viml/tabline.vim
+
 " }}}
 
 " ---------- [ Colors ] ---------- {{{
@@ -240,6 +243,10 @@ nnoremap c "_c
 xnoremap c "_c
 nnoremap C "_C
 nnoremap cc "_cc
+
+" Increment/Decrement
+nnoremap + <C-a>
+nnoremap - <C-x>
 
 " Make dot work over visual line selections
 xnoremap . :norm.<CR>
@@ -519,9 +526,7 @@ function! PackInit() abort
   call minpac#add('AndrewRadev/splitjoin.vim')  " gS and gJ for split and join
   call minpac#add('godlygeek/tabular')
   call minpac#add('mbbill/undotree')
-  call minpac#add('mhinz/vim-startify')
   call minpac#add('yanzhang0219/lualine.nvim')
-  call minpac#add('mkitt/tabline.vim')
   call minpac#add('kevinhwang91/nvim-bqf')
   call minpac#add('junegunn/fzf', { 'do': 'packloadall! | call fzf#install()' })  " as a filter for bqf
   call minpac#add('mhinz/vim-grepper')
@@ -535,7 +540,6 @@ function! PackInit() abort
   call minpac#add('phaazon/hop.nvim')
   call minpac#add('kevinhwang91/nvim-fFHighlight')
   call minpac#add('ahmedkhalf/project.nvim')
-  call minpac#add('rockyzhang24/maximize.nvim')
   call minpac#add('kevinhwang91/nvim-ufo')
   call minpac#add('kevinhwang91/promise-async') " required by nvim-ufo
   call minpac#add('lukas-reineke/indent-blankline.nvim')

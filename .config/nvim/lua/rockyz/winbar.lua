@@ -48,7 +48,7 @@ local function get_file_icon_and_name()
   local filename = vim.fn.expand('%:t')
   local file_icon, file_icon_color = devicon.get_icon_color_by_filetype(vim.bo.filetype, { default = true })
   vim.api.nvim_set_hl(0, 'WinbarFileIcon', { fg = file_icon_color })
-  return '%#WinbarFileIcon#' .. file_icon .. '%* ' .. filename
+  return '%#WinbarFileIcon#' .. file_icon .. '%* ' .. (filename == '' and '[No Name]' or filename)
 end
 
 local function get_modified()
@@ -68,27 +68,29 @@ local disabled_filetypes = {
 
 M.winbar = function()
 
-  local win_num = get_win_num()
+  local delimiter = ' > '
+  local contents = get_win_num()
 
   for _, ft in pairs(disabled_filetypes) do
     if (vim.bo.filetype == ft) then
-      return win_num
+      return contents
     end
   end
 
+  contents = contents .. ' %<'
+
   local path = vim.fn.expand('%:~:.:h')
-  local symbol_path = get_symbol_path()
   local file_icon_and_name = get_file_icon_and_name()
   local modified = get_modified()
+  local symbol_path = get_symbol_path()
 
-  return win_num
-      .. ' %<'
-      .. path
-      .. ' > '
-      .. file_icon_and_name
-      .. modified
-      .. ' > '
-      .. symbol_path
+  if path ~= '' and path ~= '.' then
+    contents = contents .. path .. delimiter
+  end
+
+  contents = contents .. file_icon_and_name .. modified .. delimiter .. symbol_path
+
+  return contents
 end
 
 -- Set highlight group for winbar

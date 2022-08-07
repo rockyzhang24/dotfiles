@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+
+# DESCRIPTION: Tmux session management. Create a new session or switch to the
+# existing session by giving a session name and/or a start directory, or
+# selecting a start directory via fzf.
+# SYNOPSIS: tmux-sessionizer [SESSION_NAME/DIR] [DIR/SESSION_NAME]
+
+if [[ $# -eq 1 ]]; then
+  if [[ -d $1 ]]; then
+    directory=$1
+  else
+    session_name=$1
+    directory=$(pwd)
+  fi
+elif [[ $# -eq 2 ]]; then
+  if [[ -d $1 ]]; then
+    directory=$1
+    session_name=$2
+  else
+    directory=$2
+    session_name=$1
+  fi
+else
+  directory=$(fd . ~/oj --exact-depth 1 --type d | fzf --no-multi)
+  [[ -z $directory ]] && exit 0
+fi
+
+([[ -z $directory ]] || [[ $directory = . ]]) && directory=$(pwd)
+[[ -z $session_name ]] && session_name=$(basename "$directory" | tr . _)
+
+if ! tmux has-session -t=$session_name 2> /dev/null; then
+  if [[ -z $TMUX ]]; then
+    tmux new-session -s $session_name -c $directory
+  else
+    tmux new-session -ds $session_name -c $directory
+    tmux switch-client -t $session_name
+  fi
+else
+  if [[ -z $TMUX ]]; then
+    tmux attach-session -t $session_name
+  else
+    tmux switch-client -t $session_name
+  fi
+fi

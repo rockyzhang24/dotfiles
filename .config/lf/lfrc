@@ -156,8 +156,10 @@ map d delete
 map T trash
 # list the size of each item in the current directory
 map U !printf "\n";du -csh *
-# search a file or directory and then make lf select it
+# select the file or directory via fzf
 map <c-f> $lf -remote "send $id select '$(fd --hidden --follow --exclude .git --exclude .DS_Store | fzf)'"
+# cd into the selected dir via fzf
+map <c-z> $lf -remote "send $id cd '$(fd --type d --hidden --follow --exclude .git | fzf)'"
 # give a name and then make a directory
 map <c-n> push :mkdir<space>
 # Create a new folder with the selected items

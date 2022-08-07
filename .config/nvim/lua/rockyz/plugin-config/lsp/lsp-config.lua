@@ -1,4 +1,5 @@
 local nvim_lsp = require("lspconfig")
+local util = require("lspconfig.util")
 local lsp = vim.lsp
 
 -- Config diagnostic options globally
@@ -118,23 +119,17 @@ nvim_lsp.vimls.setup {
 }
 
 -- Lua
-local runtime_path = vim.split(package.path, ';')
-table.insert(runtime_path, "lua/?.lua")
-table.insert(runtime_path, "lua/?/init.lua")
-
 nvim_lsp.sumneko_lua.setup {
   on_attach = on_attach,
   capabilities = capabilities,
   -- Support formatter since 2.6.6 (ref:
   -- https://github.com/sumneko/lua-language-server/issues/960)
   cmd = { "lua-language-server", "--preview" },
+  root_dir = util.root_pattern(".luarc.json", ".luarc.jsonc", ".luacheckrc", ".stylua.toml", "stylua.toml", "selene.toml", ".git"),
   settings = {
     Lua = {
       runtime = {
-        -- Tell the language server which version of Lua you're using (most likely LuaJIT in the case of Neovim)
         version = 'LuaJIT',
-        -- Setup your lua path
-        path = runtime_path,
       },
       completion = {
         callSnippet = "Replace",
@@ -143,32 +138,8 @@ nvim_lsp.sumneko_lua.setup {
         postfix = ".",
       },
       diagnostics = {
-        -- Get the language server to recognize global
-        globals = {
-          -- For vim
-          'vim',
-          -- For luasnip
-          's',
-          'sn',
-          'isn',
-          't',
-          'i',
-          'f',
-          'c',
-          'd',
-          'r',
-          'l',
-          'rep',
-          'p',
-          'm',
-          'n',
-          'dl',
-          'fmt',
-          'fmta',
-          'conds',
-          'parse',
-          'ai',
-        },
+        -- globals = {
+        -- },
         neededFileStatus = {
           ["codestyle-check"] = "Any",
         },
@@ -186,10 +157,8 @@ nvim_lsp.sumneko_lua.setup {
           -- quote_style = "double",
         },
       },
-      workspace = {
-        -- Make the server aware of Neovim runtime files
-        library = vim.api.nvim_get_runtime_file("", true),
-      },
+      -- workspace = {
+      -- },
       -- Do not send telemetry data containing a randomized but unique identifier
       telemetry = {
         enable = false,
@@ -235,6 +204,12 @@ nvim_lsp.rust_analyzer.setup {
 
 -- TypeScript/JavaScript
 nvim_lsp.tsserver.setup {
+  on_attach = on_attach,
+  capabilities = capabilities,
+}
+
+-- Json/Jsonc
+nvim_lsp.jsonls.setup {
   on_attach = on_attach,
   capabilities = capabilities,
 }

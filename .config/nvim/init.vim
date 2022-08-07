@@ -68,7 +68,7 @@ set undofile
 set nrformats=octal,bin,hex,unsigned,alpha
 set sessionoptions+=terminal,globals,winpos
 set isfname-==
-set shada=!,'1000,<50,s10,h
+set shada=!,'500,<50,s10,h
 set lazyredraw
 set mouse=a
 
@@ -95,6 +95,7 @@ set termguicolors
 set background=dark
 
 let g:colorscheme = "arctic"
+let g:transparent = 1
 source ~/.config/nvim/viml/color.vim
 
 " }}}
@@ -199,6 +200,7 @@ lua require('rockyz.commands')
 
 call abbr#SetupCommandAbbrs('T', 'tabedit')
 call abbr#SetupCommandAbbrs('dot', '!git --git-dir=/Users/rockyzhang/dotfiles/ --work-tree=/Users/rockyzhang')
+call abbr#SetupCommandAbbrs('tm', 'silent !tmux neww tmux-sessionizer')
 
 " }}}
 
@@ -247,6 +249,8 @@ nnoremap cc "_cc
 " Increment/Decrement
 nnoremap + <C-a>
 nnoremap - <C-x>
+vnoremap g+ g<C-a>
+vnoremap g- g<C-x>
 
 " Make dot work over visual line selections
 xnoremap . :norm.<CR>
@@ -325,6 +329,9 @@ nnoremap zh 10zh
 
 " chmod
 nnoremap <Leader>x :silent !chmod +x %<CR>
+
+" Tmux
+nnoremap <C-s> <Cmd>silent !tmux neww tmux-sessionizer<CR>
 
 " }}}
 

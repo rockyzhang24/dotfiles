@@ -28,6 +28,9 @@ alias lm="l -tr" # sort by modification time, i.e., mtime, newest last
 alias lc="lm -c"  # sort by change (status) time, i.e., ctime, newest last
 alias lx="l -X"  # sort by extension
 
+# Tmux
+alias tm="tmux-sessionizer"
+
 # brew
 alias bru="brew update"
 alias brU="brew upgrade"

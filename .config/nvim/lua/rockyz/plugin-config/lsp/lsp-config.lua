@@ -13,7 +13,7 @@ vim.diagnostic.config({
   },
   float = {
     source = 'always',
-    border = 'rounded',
+    border = 'none',
   },
   signs = true,
   underline = true,
@@ -59,7 +59,7 @@ local on_attach = function(client, bufnr)
   vim.keymap.set('n', 'gr', function() telescope_lsp_picker("lsp_references", {}) end, map_opts)
   vim.keymap.set('n', ',r', vim.lsp.buf.rename, map_opts)
   vim.keymap.set('n', ',a', vim.lsp.buf.code_action, map_opts)
-  vim.keymap.set('n', 'K', vim.lsp.buf.hover, map_opts)
+  -- vim.keymap.set('n', 'K', vim.lsp.buf.hover, map_opts)
   vim.keymap.set('n', ',k', vim.lsp.buf.signature_help, map_opts)
 
   -- List symbols via telescope (<C-l> for filtering by type of symbol)
@@ -104,13 +104,13 @@ capabilities.textDocument.foldingRange = { -- for nvim-ufo
     lineFoldingOnly = true
 }
 
--- Border
-lsp.handlers["textDocument/hover"] = lsp.with(lsp.handlers.hover, {
-  border = "rounded",
-})
-lsp.handlers["textDocument/signatureHelp"] = lsp.with(lsp.handlers.signature_help, {
-  border = "rounded",
-})
+-- Border for the documentation window
+-- lsp.handlers["textDocument/hover"] = lsp.with(lsp.handlers.hover, {
+--   border = "rounded",
+-- })
+-- lsp.handlers["textDocument/signatureHelp"] = lsp.with(lsp.handlers.signature_help, {
+--   border = "rounded",
+-- })
 
 -- Vimscript
 nvim_lsp.vimls.setup {

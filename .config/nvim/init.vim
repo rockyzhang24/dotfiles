@@ -20,6 +20,7 @@ set fillchars=fold:\ ,foldopen:,foldclose:,foldsep:\ ,eob:\ ,msgsep:‾,
 set foldcolumn=1
 set foldmethod=manual
 set foldlevel=99
+set foldlevelstart=99
 " set foldmethod=expr
 " set foldexpr=nvim_treesitter#foldexpr() " treesitter based folding
 set completeopt=menu,menuone,noselect

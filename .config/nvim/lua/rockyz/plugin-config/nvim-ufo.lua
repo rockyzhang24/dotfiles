@@ -29,4 +29,27 @@ end
 
 require('ufo').setup({
   fold_virt_text_handler = handler,
+  preview = {
+    win_config = {
+      border = { '', '─', '', '', '', '─', '', '' },
+      winblend = 5,
+      winhighlight = 'Normal:UFOPreviewNormal,FloatBorder:UFOPreviewBorder,CursorLine:UFOPreviewCursorLine',
+    },
+    mappings = {
+      scrollU = '<C-u>',
+      scrollD = '<C-d>'
+    },
+  },
 })
+
+-- Using ufo provider need remap `zR` and `zM`
+vim.keymap.set('n', 'zR', require('ufo').openAllFolds)
+vim.keymap.set('n', 'zM', require('ufo').closeAllFolds)
+
+-- `K` to open the preview window, or show the documentation
+vim.keymap.set('n', 'K', function()
+  local winid = require('ufo').peekFoldedLinesUnderCursor()
+  if not winid then
+    vim.lsp.buf.hover()
+  end
+end)

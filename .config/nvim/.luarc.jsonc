@@ -39,5 +39,8 @@
   ],
   "runtime.version": "LuaJIT",
   "type.castNumberToInteger": true,
-  "type.weakUnionCheck": true
+  "type.weakUnionCheck": true,
+  "workspace.library": [
+    "$XDG_CONFIG_HOME/nvim/pack/minpac/start/emmylua-nvim"
+  ]
 }

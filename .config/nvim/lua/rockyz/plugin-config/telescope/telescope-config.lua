@@ -100,5 +100,3 @@ vim.keymap.set('n', '<Leader>gs', function() my_picker("grep_prompt") end, map_o
 -- grep word under cursor or selected texts
 vim.keymap.set('n', '<Leader>gw', function() my_picker("grep_word") end, map_opts)
 vim.keymap.set('x', '<Leader>gw', function() my_picker("grep_selection") end, map_opts)
-
--- Other mappings regarding LSP picker are set in the nvim-lspconfig setup ~/.config/nvim/lua/plugin-config/lsp/lsp-config.lua

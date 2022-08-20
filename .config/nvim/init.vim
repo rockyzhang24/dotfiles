@@ -564,6 +564,7 @@ function! PackInit() abort
   " LSP
   call minpac#add('neovim/nvim-lspconfig')
   call minpac#add('stevearc/aerial.nvim')
+  call minpac#add('ii14/emmylua-nvim')
 
   " Autocomplete
   call minpac#add('hrsh7th/nvim-cmp')

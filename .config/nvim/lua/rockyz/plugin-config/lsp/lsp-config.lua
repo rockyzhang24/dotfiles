@@ -91,9 +91,6 @@ local on_attach = function(client, bufnr)
   -- For Aerial.nvim to display symbols outline
   require("aerial").on_attach(client, bufnr)
 
-  -- For vim-illuminate to highlight all the references of the current word
-  require("illuminate").on_attach(client)
-
 end
 
 -- Update the capabilities (nvim-cmp supports) sent to the server

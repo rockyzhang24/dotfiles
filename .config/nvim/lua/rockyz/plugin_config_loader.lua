@@ -19,6 +19,7 @@ local modules = {
   "project",
   "treesitter",
   "telescope.telescope-config",
+  "vim-illuminate",
 }
 for _, module in ipairs(modules) do
   require("rockyz.plugin-config." .. module)
@@ -36,7 +37,6 @@ local viml_plugins = {
   "undotree",
   "vim-grepper",
   "vim-after-object",
-  "vim-illuminate",
   "vim-gh-line",
   "vim-flog",
   "vim-visual-multi",

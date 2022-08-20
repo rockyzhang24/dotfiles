@@ -301,6 +301,8 @@
 			</dict>
 			<key>Background Image Location</key>
 			<string></string>
+			<key>Blink Allowed</key>
+			<true/>
 			<key>Blinking Cursor</key>
 			<false/>
 			<key>Blur</key>

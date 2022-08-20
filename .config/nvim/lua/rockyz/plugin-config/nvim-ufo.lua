@@ -42,11 +42,12 @@ require('ufo').setup({
   },
 })
 
--- Using ufo provider need remap `zR` and `zM`
 vim.keymap.set('n', 'zR', require('ufo').openAllFolds)
 vim.keymap.set('n', 'zM', require('ufo').closeAllFolds)
+vim.keymap.set('n', 'zr', require('ufo').openFoldsExceptKinds)
+vim.keymap.set('n', 'zm', require('ufo').closeFoldsWith)
 
--- `K` to open the preview window, or show the documentation
+-- `K` to open the preview window, or show the documentation by LSP
 vim.keymap.set('n', 'K', function()
   local winid = require('ufo').peekFoldedLinesUnderCursor()
   if not winid then

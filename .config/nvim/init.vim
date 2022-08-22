@@ -183,6 +183,9 @@ augroup personal
   autocmd BufNewFile,BufRead,BufEnter * call s:SetGitEnv()
 augroup END
 
+" Load autocmds defined in Lua
+lua require('rockyz.autocmds')
+
 " }}}
 
 " ---------- [ Commands ] ---------- {{{

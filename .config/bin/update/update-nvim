@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-cd ~/gitrepos/fzf
+cd ~/gitrepos/neovim-fold-nodigit/
+rm -rf build
 
 # Fetch
 echo -e "\nFetching...\n"
@@ -18,12 +19,14 @@ if [[ -n $(git --no-pager log HEAD..origin/master) ]]; then
   echo -e "\nMerging...\n"
   git merge
 
-  # Build
-  echo -e "\nBuilding...\n"
-  ./install --xdg
+  # Build and install
+  echo -e "\nBuilding and installing...\n"
+  make CMAKE_BUILD_TYPE=Release
+  sudo make install
 
-  echo -e "\nFZF update finished.\n"
+  echo -e "\nNeovim update finished.\n"
 
 else
-  echo "FZF is already update to date."
+  echo "Neovim is already update to date."
 fi
+

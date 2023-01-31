@@ -1,13 +1,13 @@
 <div align="center">
-  
+
 # Neovim Config
 
-Simple but featured. Focused on ergonomics, mnemonics and consistency. 
-  
-Cherry pick the lines you need and totally understand. 
-  
+Simple but featured. Focused on ergonomics, mnemonics and consistency.
+
+Cherry pick the lines you need and totally understand.
+
 Always a WIP 🏗
-  
+
 <img width="1774" alt="image" src="https://user-images.githubusercontent.com/11582667/178826407-5dbc50eb-46a5-4fd5-9dfb-40ebfa6ba0fd.png">
 
 </div>
@@ -28,16 +28,16 @@ Always a WIP 🏗
 
 # Key mappings
 
-I assign the key mappings rationally aiming to make them efficient and easy to remember. 
+I assign the key mappings rationally aiming to make them efficient and easy to remember.
 
 * Multiple leader keys
 
   In addition to `<Space>` that is the general leader key, `\` and `,` are set as the leader keys for toggling and LSP respectively.
-  
+
 * Mnemonic
 
   Key bindings are organized using mnemonic prefixes like `<Leader>b` for buffer, `<Leader>f` for fuzzy finder, `<Leader>w` for window, etc.
-  
+
 * Consistent
 
   Similar functionalities have the same key binding throughout my dotfiles. For example, `,` and `.` for moving tabs in both kitty and Neovim.

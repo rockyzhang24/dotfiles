@@ -39,4 +39,4 @@ require("indent_blankline").setup {
 }
 
 -- Toggle indent line
-vim.keymap.set('n', '\\i', '<Cmd>IndentBlanklineToggle<CR>')
+vim.keymap.set('n', '<BS>i', '<Cmd>IndentBlanklineToggle<CR>')

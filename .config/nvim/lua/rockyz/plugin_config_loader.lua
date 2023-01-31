@@ -1,13 +1,10 @@
 -- Load lua configs
 local modules = {
-  "aerial",
   "bqf",
   "cmp",
   "comment",
   "ffhighlight",
-  "foldsigns",
   "gitsigns",
-  "hop",
   "hlslens",
   "harpoon",
   "iswap",
@@ -16,9 +13,12 @@ local modules = {
   "luasnip",
   "lsp.lsp-config",
   "nvim-ufo",
+  "nvim-colorizer",
   "project",
+  "registers",
   "treesitter",
   "telescope.telescope-config",
+  "test",
   "vim-illuminate",
 }
 for _, module in ipairs(modules) do
@@ -28,18 +28,14 @@ end
 -- Load viml configs
 local viml_plugins = {
   "fugitive",
-  "hexokinase",
   "minpac",
   "netrw",
-  "registers",
   "tabular",
   "targets",
   "undotree",
   "vim-grepper",
   "vim-after-object",
   "vim-gh-line",
-  "vim-flog",
-  "vim-visual-multi",
   "vim-asterisk",
 }
 for _, plugin in ipairs(viml_plugins) do

@@ -23,7 +23,7 @@ if [[ -n $(git --no-pager log HEAD..origin/master) ]]; then
   ./scripts/fix-timestamps
   ./configure --without-gtk
   make
-  make install
+  sudo make install
 
   echo -e "\nVifm update finished.\n"
 

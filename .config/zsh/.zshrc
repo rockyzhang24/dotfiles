@@ -7,6 +7,7 @@ source ~/.config/zsh/plugins
 source ~/.config/zsh/completion
 source ~/.config/zsh/aliases
 source ~/.config/zsh/keybindings
+source ~/.config/zsh/env
 
 # fzf
 source ~/.config/fzf/fzf-config

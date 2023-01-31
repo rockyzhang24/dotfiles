@@ -26,7 +26,7 @@ video_preview() {
 
 text_preview() {
   bat --color=always --style=numbers,changes --line-range=:"${h}" "${1}" \
-      || highlight -O truecolor -s molokai --force -l --line-range=1-"${h}" "${1}" \
+      || highlight -O truecolor -s darkplus --force -l --line-range=1-"${h}" "${1}" \
       || cat "${1}"
 }
 

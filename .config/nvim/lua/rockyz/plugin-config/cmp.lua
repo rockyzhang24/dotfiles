@@ -2,6 +2,7 @@ local cmp = require('cmp')
 local lspkind = require('lspkind')
 local feedkeys = require('cmp.utils.feedkeys')
 local keymap = require('cmp.utils.keymap')
+local border_enabled = vim.g.border_enabled
 
 local get_bufnrs = function()
   local buf = vim.api.nvim_get_current_buf()
@@ -13,7 +14,12 @@ local get_bufnrs = function()
   return { buf }
 end
 
-local winhighlight = 'Normal:Pmenu,FloatBorder:SuggestWidgetBorder,CursorLine:SuggestWidgetSelect,Search:None'
+local winhighlight = 'FloatBorder:SuggestWidgetBorder,CursorLine:SuggestWidgetSelect,Search:None'
+if border_enabled then
+  winhighlight = 'Normal:Normal,' .. winhighlight
+else
+  winhighlight = 'Normal:Pmenu,' .. winhighlight
+end
 
 cmp.setup({
 
@@ -26,9 +32,12 @@ cmp.setup({
   window = {
     completion = {
       winhighlight = winhighlight,
+      border = border_enabled and 'single' or 'none',
     },
     documentation = {
       winhighlight = winhighlight,
+      border = border_enabled and 'single' or 'none',
+      focusable = true,
     },
   },
 
@@ -48,7 +57,7 @@ cmp.setup({
     ['<C-f>'] = {
       i = cmp.mapping.scroll_docs(4),
     },
-    ['<C-Space>'] = {
+    ['<C-Enter>'] = {
       i = cmp.mapping.complete(),
     },
     ['<C-e>'] = cmp.mapping({
@@ -95,7 +104,7 @@ cmp.setup({
   formatting = {
     -- Icons
     format = lspkind.cmp_format({
-      mode = "symbol_text",
+      mode = "symbol",
       preset = "codicons",
       menu = ({
         buffer = "[Buf]",
@@ -107,14 +116,16 @@ cmp.setup({
     }),
     -- Adjust the order of completion menu fields
     fields = {
-      'abbr',
       'kind',
+      'abbr',
       'menu',
     },
   },
 
   experimental = {
-    ghost_text = true,
+    ghost_text = {
+      hl_group = 'GhostText',
+    },
   },
 
 })

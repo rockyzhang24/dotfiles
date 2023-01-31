@@ -19,7 +19,7 @@ end)
 local config = {
   term = "xterm-wezterm",
   font = wezterm.font("JetBrainsMono Nerd Font"),
-  font_size = 14.5,
+  font_size = 14,
   adjust_window_size_when_changing_font_size = false,
   custom_block_glyphs = false,
   harfbuzz_features = { "calt=0", "clig=0", "liga=0" },
@@ -34,7 +34,7 @@ local config = {
     bottom = 0,
   },
   native_macos_fullscreen_mode = false,
-  window_background_opacity = 0.92,
+  -- window_background_opacity = 0.92,
   window_decorations = "RESIZE",
   enable_scroll_bar = true,
   hyperlink_rules = {
@@ -73,8 +73,8 @@ local config = {
     { key = "h", mods = "CMD", action = act.HideApplication },
     { key = "q", mods = "CMD", action = wezterm.action.QuitApplication },
     { key = "M", mods = "CTRL|SHIFT", action = wezterm.action.ToggleFullScreen },
-    { key = "c", mods = "CMD", action = act.Copy },
-    { key = "v", mods = "CMD", action = act.Paste },
+    { key = "c", mods = "CMD", action = act.CopyTo 'Clipboard' },
+    { key = "v", mods = "CMD", action = act.PasteFrom 'Clipboard' },
 
     -- Scroll
     { key = "B", mods = "CTRL|SHIFT", action = act.ScrollByPage(-1) },
@@ -125,18 +125,11 @@ local config = {
     { key = "f", mods = "CMD", action = act.Search { CaseSensitiveString = "" } },
     { key = " ", mods = "CTRL|SHIFT", action = act.QuickSelect },
     { key = "V", mods = "CTRL|SHIFT", action = act.ActivateCopyMode },
+    { key = " ", mods = "CMD|CTRL", action = act.CharSelect },
 
-    -- Make CTRL+digit work
-    { key = "1", mods = "CTRL", action = act.SendString("\x1b[27;5;49~") },
-    { key = "2", mods = "CTRL", action = act.SendString("\x1b[27;5;50~") },
-    { key = "3", mods = "CTRL", action = act.SendString("\x1b[27;5;51~") },
-    { key = "4", mods = "CTRL", action = act.SendString("\x1b[27;5;52~") },
-    { key = "5", mods = "CTRL", action = act.SendString("\x1b[27;5;53~") },
-    { key = "6", mods = "CTRL", action = act.SendString("\x1b[27;5;54~") },
-    { key = "7", mods = "CTRL", action = act.SendString("\x1b[27;5;55~") },
-    { key = "8", mods = "CTRL", action = act.SendString("\x1b[27;5;56~") },
-    { key = "9", mods = "CTRL", action = act.SendString("\x1b[27;5;57~") },
-    { key = "0", mods = "CTRL", action = act.SendString("\x1b[27;5;58~") },
+    -- Fix Ctrl-q on macOS
+    { key = "q", mods = "CTRL", action = wezterm.action.SendString '\x11' },
+    { key = "Enter", mods = "SHIFT", action = wezterm.action.SendString '\x1b[13;2u' },
   },
 }
 

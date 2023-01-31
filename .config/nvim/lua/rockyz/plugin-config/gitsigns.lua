@@ -1,35 +1,31 @@
 local gitsigns = require('gitsigns')
 
 gitsigns.setup {
+  -- Hidden features (probably not stable)
+  _signs_staged_enable = true,
+  _extmark_signs = true,
 
+  signs = {
+    add          = { show_count = false },
+    change       = { show_count = false },
+    delete       = { show_count = true },
+    topdelete    = { show_count = true },
+    changedelete = { show_count = true },
+    untracked    = { show_count = false },
+  },
   signcolumn = true,
-  numhl = true,
+  numhl = false,
   linehl = false,
   word_diff = false,
-
-  -- Boost efficiency for the internal sign related operations
-  -- Ref: https://github.com/lewis6991/gitsigns.nvim/pull/438
-  -- _extmark_signs = true,
-
   sign_priority = 6,
-
   preview_config = {
     -- Options passed to nvim_open_win
-    border = 'rounded',
+    border = 'single',
     style = 'minimal',
     relative = 'cursor',
     row = 0,
     col = 1
   },
-
-  signs = {
-    add          = { show_count = false, text = '┃' },
-    change       = { show_count = false, text = '┃' },
-    delete       = { show_count = true },
-    topdelete    = { show_count = true },
-    changedelete = { show_count = true },
-  },
-
   count_chars = {
     [1]   = '₁',
     [2]   = '₂',
@@ -43,7 +39,7 @@ gitsigns.setup {
     ['+'] = '₊',
   },
 
-  -- Keymaps (vim.keymap API requires Neovim 0.7)
+  -- Keymaps
   on_attach = function(bufnr)
     local gs = package.loaded.gitsigns
 
@@ -81,7 +77,8 @@ gitsigns.setup {
 
     map('n', '<Leader>hp', gs.preview_hunk)
     map('n', '<Leader>hb', function() gs.blame_line { full = true } end)
-    map('n', '\\c', gs.toggle_deleted) -- toggle showing deleted/changed lines via virtual lines
+    map('n', '<BS>c', gs.toggle_deleted) -- toggle showing deleted/changed lines via virtual lines
+    map('n', '<BS>w', gs.toggle_word_diff) -- toggle the word_diff in the buffer
 
     -- Text object
     map({ 'o', 'x' }, 'ih', ':<C-U>Gitsigns select_hunk<CR>')

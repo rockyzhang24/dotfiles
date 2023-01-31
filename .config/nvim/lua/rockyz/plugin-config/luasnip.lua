@@ -15,7 +15,7 @@ ls.config.setup({
   ext_opts = {
     [types.choiceNode] = {
       active = {
-        virt_text = { { "●", "Orange" } }
+        virt_text = { { "●", "Comment" } }
       }
     },
   },

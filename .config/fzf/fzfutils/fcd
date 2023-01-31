@@ -1,7 +1,0 @@
-# vim: filetype=zsh
-
-# MNEMONIC: [F]uzzy search [C]hange [D]irectory
-# SYNOPSIS: fcd [DIR]
-# DESCRIPTION: Fuzzy finder for a directory under DIR and cd into the selected directory
-
-local dir=$(fd --type d --hidden --follow --exclude .git '.*' ${1:-.} 2> /dev/null | fzf --no-multi) && cd $dir

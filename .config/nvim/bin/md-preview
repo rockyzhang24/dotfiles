@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+# For markdown preview
+
+# First, tile the terminal window, i.e., the frontmost window, to the left half
+# of the screen.
+# Second, open a new Safari window with the url of the preview page provided by
+# the markdown preview plugin, and tile it to the right half of the screen.
+
+# The shortcuts for tiling window are set in a Window Management App such as
+# Rectangle Pro.
+
+osascript <<EOD
+  tell application "System Events"
+    set theApp to ((path to frontmost application) as text)
+  end tell
+  tell application "Safari"
+    make new document with properties {URL:"$1"}
+    activate
+    tell application "System Events" to keystroke "d" using {command down, option down, control down, shift down}
+  end tell
+  delay 0.1
+  tell application theApp
+    activate
+    tell application "System Events" to keystroke "a" using {command down, option down, control down, shift down}
+  end tell
+EOD

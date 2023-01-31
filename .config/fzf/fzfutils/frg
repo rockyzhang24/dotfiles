@@ -1,0 +1,22 @@
+# vim: filetype=zsh
+
+# MNEMONIC: [F]uzzy search [R]ip[G]rep
+# SYNOPSIS: same with rg
+# DESCRIPTION: Fuzzy search for the results of rg
+#   - ENTER: open EDITOR by feeding the selections into quickfix list
+
+local errorfile_path=$HOME/.local/share/rg
+[[ ! -e $errorfile_path ]] && mkdir $errorfile_path
+
+local selection=$(rg --line-number --column --color=always --smart-case --vimgrep $RG_EXCLUDE $@ \
+    | fzf --height 100% \
+        --ansi \
+        --exit-0 \
+        --delimiter : \
+        --header 'Press ENTER to open vim and load all selections into quickfix list' \
+        --preview 'bat --color=always --style=numbers,changes,header --highlight-line {2} {1}' \
+        --preview-window 'down,nohidden,+{2}+3/3,~4')
+
+if [[ -n "$selection" ]]; then
+  echo $selection >| $errorfile_path/frg-errorfile && ${EDITOR:-vim} -q $errorfile_path/frg-errorfile +copen
+fi

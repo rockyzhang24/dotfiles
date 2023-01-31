@@ -1,12 +1,15 @@
 # vim: filetype=zsh
 
-# MNEMONIC: [F]uzzy search for dot [A]dd
+# MNEMONIC: [F]uzzy search for `dot [A]dd`
 # SYNOPSIS: fa
-# DESCRIPTION: Fuzzy finder for the unstaged files in the dotfiles bare repository
+# DESCRIPTION: Fuzzy finder for the unstaged files in my dotfile bare repository
+# and `dot add` the selections
 
 home="/Users/rockyzhang"
 prefix="git --git-dir=/Users/rockyzhang/dotfiles/ --work-tree=/Users/rockyzhang/"
-files=($(eval "$prefix diff --name-only" | sed "s~^~$home/~" | fzf --exit-0 --height 100% --preview "$prefix diff --color=always {} | diff-so-fancy" --preview-window right,60%))
+files=($(eval "$prefix diff --name-only" | sed "s~^~$home/~" \
+    | fzf --exit-0 --height 100% --preview "$prefix diff --color=always {} \
+        | diff-so-fancy" --preview-window right,60%))
 if [[ -n $files ]]; then
   eval "$prefix add ${files[@]}"
 fi

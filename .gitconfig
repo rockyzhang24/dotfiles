@@ -33,10 +33,10 @@
   line-numbers-minus-style = 124
   line-numbers-plus-style = 28
 [filter "lfs"]
-	clean = git-lfs clean -- %f
-	smudge = git-lfs smudge -- %f
-	process = git-lfs filter-process
-	required = true
+  clean = git-lfs clean -- %f
+  smudge = git-lfs smudge -- %f
+  process = git-lfs filter-process
+  required = true
 [credential]
   helper = osxkeychain
 

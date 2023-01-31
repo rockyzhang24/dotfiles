@@ -32,23 +32,26 @@ alias lx="l -X"  # sort by extension
 alias tm="tmux-sessionizer"
 
 # brew
-alias bru="brew update"
-alias brU="brew upgrade"
+alias bu="brew update"
+alias bU="brew upgrade"
+alias bls="brew list"
 
 # Misc
 alias t="trash" # trash is ~/.config/zsh/functions/trash
 alias sc="shellcheck"
 alias iina="open -a 'IINA'"
-alias icat="kitty +kitten icat"
-alias highlight="highlight --out-format=truecolor"
+alias highlight="highlight --out-format=truecolor --force -s darkplus"
 alias ncdu="ncdu --color dark -rr -x --exclude .git --exclude node_modules"
+
+# Kitty
+alias kcat="kitty +kitten icat"
 
 # Download
 alias wget="wget --continue --progress=bar --timestamping"
 alias curl="curl --continue-at - --location --progress-bar --remote-name --remote-time"
 alias aria="aria2c --max-connection-per-server=5 --continue"
-alias ydv="youtube-dl --add-metadata --restrict-filenames -i"
-alias yda="ydv -x -f bestaudio/best"
+alias yd="yt-dlp --paths ~/Downloads"
+alias yda="yt-dlp --extract-audio --audio-format best --paths ~/Downloads"
 
 # z.lua
 alias zl="z -l"

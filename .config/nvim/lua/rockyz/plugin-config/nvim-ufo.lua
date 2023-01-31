@@ -1,7 +1,7 @@
 -- Customize fold text
 local handler = function(virtText, lnum, endLnum, width, truncate)
   local newVirtText = {}
-  local suffix = ('  %d '):format(endLnum - lnum)
+  local suffix = ('  %d '):format(endLnum - lnum)
   local sufWidth = vim.fn.strdisplaywidth(suffix)
   local targetWidth = width - sufWidth
   local curWidth = 0
@@ -23,7 +23,7 @@ local handler = function(virtText, lnum, endLnum, width, truncate)
     end
     curWidth = curWidth + chunkWidth
   end
-  table.insert(newVirtText, { suffix, 'MoreMsg' })
+  table.insert(newVirtText, { suffix, 'UfoFoldedEllipsis' })
   return newVirtText
 end
 
@@ -32,8 +32,8 @@ require('ufo').setup({
   preview = {
     win_config = {
       border = { '', '─', '', '', '', '─', '', '' },
-      winblend = 5,
-      winhighlight = 'Normal:UFOPreviewNormal,FloatBorder:UFOPreviewBorder,CursorLine:UFOPreviewCursorLine',
+      winblend = 0,
+      winhighlight = 'Normal:UfoPreviewNormal,FloatBorder:UfoPreviewBorder,CursorLine:UfoPreviewCursorLine',
     },
     mappings = {
       scrollU = '<C-u>',

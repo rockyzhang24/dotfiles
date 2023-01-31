@@ -1,12 +1,13 @@
-local tele = require("telescope")
+local telescope = require("telescope")
+local my_picker = require("rockyz.plugin-config.telescope.my_picker")
 
-tele.setup {
-
+telescope.setup {
   defaults = {
-    prompt_prefix = "❯ ",
-    selection_caret = "❯ ",
-    winblend = 5,
-    layout_strategy = "flex",
+    prompt_prefix = " ",
+    selection_caret = " ",
+    multi_icon = ' ',
+    -- winblend = 5,
+    -- layout_strategy = "flex",
     file_ignore_patterns = { '%.jpg', '%.jpeg', '%.png', '%.avi', '%.mp4' },
     mappings = {
       i = {
@@ -15,20 +16,15 @@ tele.setup {
         ["<C-k>"] = "move_selection_previous",
         ["<C-u>"] = "results_scrolling_up",
         ["<C-d>"] = "results_scrolling_down",
-        ["<S-Up>"] = "preview_scrolling_up",
-        ["<S-Down>"] = "preview_scrolling_down",
+        ["<M-u>"] = "preview_scrolling_up",
+        ["<M-d>"] = "preview_scrolling_down",
         ["<C-n>"] = "cycle_history_next",
         ["<C-p>"] = "cycle_history_prev",
         ["<C-a>"] = "toggle_all",
         ["<C-Enter>"] = "toggle_selection",
+        ["<C-/>"] = require("telescope.actions.layout").toggle_preview,
         ["<Esc>"] = "close",
-        ["<M-Esc>"] = { "<Esc>", type = "command" },
-        -- To disable builtin mappings
-        ["<C-c>"] = false,
-        ["<Down>"] = false,
-        ["<Up>"] = false,
-        ["<PageDown>"] = false,
-        ["<PageUp>"] = false,
+        ["<C-c>"] = { "<Esc>", type = "command" },
       },
     },
     vimgrep_arguments = {
@@ -62,41 +58,36 @@ tele.setup {
   }
 }
 
-
 -- Extensions
-tele.load_extension('fzf')
-tele.load_extension('aerial')
-tele.load_extension('harpoon')
-tele.load_extension('projects')
+telescope.load_extension('fzf')
+telescope.load_extension('harpoon')
+telescope.load_extension('projects')
 
 -- Mappings
 local map_opts = {
   silent = true,
 }
 
-local function my_picker(picker)
-  require("rockyz.plugin-config.telescope.my_picker")[picker]()
-end
-
 -- Files
-vim.keymap.set('n', '<C-p>', function() my_picker("git_files") end, map_opts)
-vim.keymap.set('n', '<Leader>ff', function() require("telescope.builtin").find_files() end, map_opts)
-vim.keymap.set('n', '<Leader>fo', function() my_picker("oldfiles") end, map_opts)
-vim.keymap.set('n', '<Leader>f.', function() my_picker("find_dotfiles") end, map_opts)
+vim.keymap.set('n', '<C-p>', my_picker.git_files, map_opts)
+vim.keymap.set('n', '<Leader>ff', my_picker.find_files, map_opts)
+vim.keymap.set('n', '<Leader>fo', my_picker.oldfiles, map_opts)
+vim.keymap.set('n', '<Leader>f.', my_picker.find_dotfiles, map_opts)
 
 -- Misc
-vim.keymap.set('n', '<Leader>fb', function() require("telescope.builtin").buffers() end, map_opts)
-vim.keymap.set('n', '<Leader>ft', function() require("telescope.builtin").tags() end, map_opts)
-vim.keymap.set('n', '<Leader>f?', function() require("telescope.builtin").help_tags() end, map_opts)
-vim.keymap.set('n', '<Leader>fr', function() require("telescope.builtin").resume() end, map_opts)
-vim.keymap.set('n', '<Leader>fh', function() require("telescope.builtin").highlights() end, map_opts)
+vim.keymap.set('n', '<Leader>fb', my_picker.buffers, map_opts)
+vim.keymap.set('n', '<Leader>f?', my_picker.help_tags, map_opts)
+vim.keymap.set('n', '<Leader>fh', my_picker.highlights, map_opts)
+vim.keymap.set('n', '<Leader>fc', my_picker.commands, map_opts)
+vim.keymap.set('n', '<Leader>fm', my_picker.marks, map_opts)
+vim.keymap.set('n', '<Leader>fq', my_picker.quickfix, map_opts)
+vim.keymap.set('n', '<Leader>f:', my_picker.command_history, map_opts)
+vim.keymap.set('n', '<Leader>f/', my_picker.search_history, map_opts)
+vim.keymap.set('n', '<Leader>fr', require("telescope.builtin").resume, map_opts)
 
 -- Grep
-vim.keymap.set('n', '<Leader>gl', function() my_picker("live_grep") end, map_opts)
--- live_grep in nvim config files
-vim.keymap.set('n', '<Leader>gv', function() my_picker("grep_nvim_config") end, map_opts)
--- grep by giving a query string
-vim.keymap.set('n', '<Leader>gs', function() my_picker("grep_prompt") end, map_opts)
--- grep word under cursor or selected texts
-vim.keymap.set('n', '<Leader>gw', function() my_picker("grep_word") end, map_opts)
-vim.keymap.set('x', '<Leader>gw', function() my_picker("grep_selection") end, map_opts)
+vim.keymap.set('n', '<Leader>gl', my_picker.live_grep, map_opts)
+vim.keymap.set('n', '<Leader>gv', my_picker.grep_nvim_config, map_opts)
+vim.keymap.set('n', '<Leader>gs', my_picker.grep_string, map_opts)
+vim.keymap.set('n', '<Leader>gw', my_picker.grep_word, map_opts)
+vim.keymap.set('x', '<Leader>gw', my_picker.grep_selection, map_opts)

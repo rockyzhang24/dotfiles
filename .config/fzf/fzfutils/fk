@@ -4,9 +4,9 @@
 # SYNOPSIS: fk
 # DESCRIPTION: Fuzzy finder for a process of $UID to kill.
 
-opts="--multi --header=$'Press CTRL-R to reload\n\n' --header-lines=2 \
-      --preview='echo {}' --preview-window=down,3,wrap \
-      --layout=reverse --height=80%"
+opts="--multi --header=$'Press ENTER to kill; Press CTRL-R to reload\n\n' --header-lines=2 \
+    --preview='echo {}' --preview-window=down,3,wrap \
+    --layout=reverse --height=80%"
 
 local pid
 if [ "$UID" != "0" ]; then

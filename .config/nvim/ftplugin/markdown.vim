@@ -3,10 +3,9 @@
 packadd markdown-preview.nvim
 
 " Open preview in a new Safari window
-" safari is executable defined in ~/.config/bin/safari
 function OpenMarkdownPreview (url)
-  execute "silent ! safari " . a:url
+  execute "silent ! ~/.config/nvim/bin/md-preview " . a:url
 endfunction
 let g:mkdp_browserfunc = 'OpenMarkdownPreview'
 
-nmap \m <Plug>MarkdownPreviewToggle
+nmap <buffer> <BS>p <Plug>MarkdownPreviewToggle

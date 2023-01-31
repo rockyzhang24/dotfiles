@@ -1,5 +1,5 @@
 <div align="center">
-  
+
 # .dotfiles
 
 My dotfiles for `macOS` and `Linux`. Just cherry pick the piece of code you totally understand.
@@ -10,7 +10,7 @@ My dotfiles for `macOS` and `Linux`. Just cherry pick the piece of code you tota
 <img width="1728" alt="image" src="https://user-images.githubusercontent.com/11582667/156706194-0762c4d8-b6e3-403c-929d-b49de198e30d.png">
 
 </div>
-  
+
 # Features
 
 [Neovim](./.config/nvim/): The text editor I've been in love with
@@ -30,9 +30,9 @@ My dotfiles for `macOS` and `Linux`. Just cherry pick the piece of code you tota
 
 [karabiner-Elements](./.config/karabiner/): keyboard customizer
 
-* `Caps Lock` as `Esc` and `L-Ctrl`
-* `R-Command` as `HYPER` key
-* `L-Ctrl` as `MEH` key
+* `Right Command` as `HYPER` key,
+* `Control` as `MEH` key,
+* and etc...
 
 # How I am managing the dotfiles
 

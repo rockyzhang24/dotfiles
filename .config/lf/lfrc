@@ -24,9 +24,9 @@ set dircounts
 # ========== Commands ==========
 
 # Override the default open for file opening (binded to 'l' by default)
-cmd open ${{
+cmd open &{{
   case $(file --mime-type "$(readlink -f $f)" -b) in
-    text/*|application/json|application/octet-stream) $EDITOR $fx;;
+    text/*|application/json|application/octet-stream) lf -remote "send $id \$$EDITOR \$fx";;
     *) for f in $fx; do open $f > /dev/null 2> /dev/null & done;;
   esac
 }}
@@ -139,30 +139,45 @@ cmd copy-absolute-path ${{
   echo $fx | tr ' ' '\n' | pbcopy
 }}
 
+# Select the file or directory via fzf
+cmd fzf-select ${{
+  IFS=' '
+  exclude=$(cat $HOME/exclude | sed 's/^/--exclude /' | tr '\n' ' ')
+  select=$(fd --hidden --follow $exclude | fzf)
+  lf -remote "send $id select $select"
+}}
+
+# cd into the selected directory via fzf
+cmd fzf-cd ${{
+  IFS=' '
+  exclude=$(cat $HOME/exclude | sed 's/^/--exclude /' | tr '\n' ' ')
+  select=$(fd --type d --hidden --follow $exclude | fzf)
+  lf -remote "send $id cd $select"
+}}
+
 # ========== Mappings ==========
 
 # Remove some defaults
 map gh
 map d
 map y
+map <space>
+map zh
 
+map z. set hidden!
+map <tab> :toggle;down
 map yy copy
-# copy the file names of the selections
 map yn copy-filename
-# copy the absolute paths of the selections
 map yP copy-absolute-path
 map <enter> shell
 map d delete
 map T trash
 # list the size of each item in the current directory
 map U !printf "\n";du -csh *
-# select the file or directory via fzf
-map <c-f> $lf -remote "send $id select '$(fd --hidden --follow --exclude .git --exclude .DS_Store | fzf)'"
-# cd into the selected dir via fzf
-map <c-z> $lf -remote "send $id cd '$(fd --type d --hidden --follow --exclude .git | fzf)'"
+map <c-f> fzf-select
+map <c-j> fzf-cd
 # give a name and then make a directory
 map <c-n> push :mkdir<space>
-# Create a new folder with the selected items
 map <a-n> new-folder-with-selection
 map x cut
 # give a name and then use neovim to edit it
@@ -178,13 +193,13 @@ map I push A<c-a> # at the very beginning
 map r push A<c-u> # new rename
 map <c-r> bulk-rename
 
-# Use \ as the leader key
+# Use <space> as the leader key
 # compress (give a name like abc and it will compress the selected items to abc.zip)
-map \\c push :zip<space>
+map <space>c push :zip<space>
 # extract
-map \\x extract
+map <space>x extract
 # Open the directory in Finder on macOS
-map \\f &if [[ -d $f ]]; then open $f; fi
+map <space>f &if [[ -d $f ]]; then open $f; fi
 
 # Fast navigation
 map Jh cd ~

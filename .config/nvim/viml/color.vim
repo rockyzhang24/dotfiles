@@ -1,3 +1,9 @@
+let g:colorscheme = "arctic"
+let g:transparent = 1
+
+set termguicolors
+set background=dark
+
 if g:colorscheme ==# 'tokyonight'
   let g:tokyonight_style = 'night'
   augroup custom

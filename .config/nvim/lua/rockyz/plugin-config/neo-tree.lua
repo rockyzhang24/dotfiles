@@ -188,7 +188,7 @@ require("neo-tree").setup {
 
 local map_ops = { silent = true }
 
-vim.keymap.set('n', '\\t', ':Neotree toggle show<CR>', map_ops)
+vim.keymap.set('n', '<BS>t', ':Neotree toggle show<CR>', map_ops)
 vim.keymap.set('n', '<Leader>tt', ':Neotree focus<CR>', map_ops)
 vim.keymap.set('n', '<Leader>tf', ':Neotree reveal<CR>', map_ops)
 vim.keymap.set('n', '<Leader>tr', function() require("neo-tree.sources.manager").refresh("filesystem") end, map_ops) -- refresh

@@ -4,41 +4,59 @@
 [ -f "${XDG_CONFIG_HOME:-$HOME/.config}"/fzf/fzf.zsh ] && source "${XDG_CONFIG_HOME:-$HOME/.config}"/fzf/fzf.zsh
 
 # Use fd instead of default find
-export FZF_DEFAULT_COMMAND="fd --type f --hidden --follow --exclude .git --exclude .DS_Store"
+export FZF_DEFAULT_COMMAND="fd --type f --hidden --follow $FD_EXCLUDE"
 
 # Default options when running fzf
-# Default bindings:
-#   - ctrl-d     : move cursor half page down
-#   - ctrl-u     : move cursor halp page up
-#   - shift-down : move preview half page down
-#   - shift-up   : move preview half page up
-#   - ctrl-a     : select all
-#   - ctrl-x     : deselect all
-#   - ctrl-/     : toggle preview window
-#   - ctrl-o     : open the selections via default application
-#   - ctrl-y     : copy the selections to system clipboard
-#   - ctrl-v     : open the selections via $EDITOR
+# Colors are consistent with my neovim colorscheme (see
+# https://github.com/rockyzhang24/arctic.nvim inspired by VSCode Dark+)
+# Keybindings:
+#   - ctrl-d: move cursor half page down
+#   - ctrl-u: move cursor halp page up
+#   - alt-d : move preview half page down
+#   - alt-u : move preview half page up
+#   - ctrl-a: select all
+#   - ctrl-x: deselect all
+#   - ctrl-/: toggle preview window
+#   - ctrl-o: open the selections via default application
+#   - ctrl-y: copy the selections to system clipboard
+#   - ctrl-v: open the selections via $EDITOR
 export FZF_DEFAULT_OPTS=" \
     --multi \
     --reverse \
     --no-mouse \
-    --height 40%\
+    --height 40% \
+    --scrollbar '█' \
     --history /tmp/fzfhistory \
-    --bind 'ctrl-d:half-page-down,ctrl-u:half-page-up,shift-down:preview-half-page-down,shift-up:preview-half-page-up,ctrl-a:select-all,ctrl-x:deselect-all,ctrl-/:toggle-preview,ctrl-o:execute(open {+}),ctrl-y:execute-silent(echo -n {+} | pbcopy),ctrl-v:execute(\$EDITOR {+} < /dev/tty > /dev/tty 2>&1),change:top' \
-    --color=dark"
+    --bind 'ctrl-d:half-page-down,ctrl-u:half-page-up,alt-d:preview-half-page-down,`
+        `alt-u:preview-half-page-up,ctrl-a:select-all,ctrl-x:deselect-all,`
+        `ctrl-/:toggle-preview,ctrl-o:execute(open {+}),`
+        `ctrl-y:execute-silent(echo -n {+} | pbcopy),`
+        `ctrl-v:execute(\$EDITOR {+} < /dev/tty > /dev/tty 2>&1),change:top' \
+    --preview '([[ \$(file -b {}) == directory ]] && tree -C {} \
+        || ( MIME=\$(file --dereference --mime {}) && [[ \$MIME =~ binary ]] && echo \$MIME ) \
+        || ( bat --color=always --style=numbers,changes,header {} \
+            || highlight -O truecolor -s darkplus --force -l {} \
+            || cat {} ) \
+        || echo -e No preview for this selection:\"\n\n\" {} ) 2> /dev/null | head -200' \
+    --preview-window hidden,border-sharp \
+    --color=dark,fg:#d4d4d4,preview-fg:#d4d4d4,bg:#1e1e1e,preview-bg:#1e1e1e,`
+        `hl:#2aaaff,fg+:#ffffff,bg+:#04395e,gutter:#1e1e1e,hl+:#2aaaff,query:#d4d4d4,`
+        `disabled:#808080:strikethrough,info:#989898,border:#454545,separator:#454545,`
+        `scrollbar:#424242,label:#454545,preview-label:#454545,prompt:#c5c5c5,`
+        `pointer:#ffffff,marker:#4ec9b0,spinner:#0e70c0,header:#3794ff"
 
 # Use fd for FZF completion
 # 1). listing files and dirs ($1 is the base path to start search) such as "vim ~/.config/**<TAB>"
 _fzf_compgen_path() {
-  fd --hidden --follow --exclude ".git" . "$1"
+  fd --hidden --follow $FD_EXCLUDE . "$1"
 }
 # 2). listing dirs such as "cd **<TAB>"
 _fzf_compgen_dir() {
-  fd --type d --hidden --follow --exclude ".git" . "$1"
+  fd --type d --hidden --follow $FD_EXCLUDE . "$1"
 }
 
 # Use fd for CTRL-t (paste the selected files and directories onto the command-line)
-export FZF_CTRL_T_COMMAND="fd --hidden --follow --exclude .git --exclude .DS_Store"
+export FZF_CTRL_T_COMMAND="fd --hidden --follow $FD_EXCLUDE"
 export FZF_CTRL_T_OPTS="--header 'Paste the selected files and directories onto the command-line'"
 
 # Display the full command on the preview window (CTRL-r for command history search)
@@ -48,9 +66,9 @@ export FZF_CTRL_R_OPTS=" \
     --bind 'ctrl-y:execute-silent(echo -n {2..} | pbcopy)' \
     --header 'Press CTRL-Y to copy command into clipboard'"
 
-# CTRL-z for cd into the selected dir
-bindkey '^z' fzf-cd-widget
-export FZF_ALT_C_COMMAND="fd --type d --hidden --follow --exclude .git"
+# CTRL-j for cd into the selected dir
+bindkey '^j' fzf-cd-widget
+export FZF_ALT_C_COMMAND="fd --type d --hidden --follow $FD_EXCLUDE"
 export FZF_ALT_C_OPTS="--preview 'tree -C {} | head -200' --header 'cd into the selected directory'"
 
 # Utility commands (autoload functions defined under ~/.config/fzf/fzfutils/)

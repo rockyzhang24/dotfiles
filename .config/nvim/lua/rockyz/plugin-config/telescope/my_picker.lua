@@ -1,31 +1,86 @@
--- Examples can be found here:
--- https://github.com/tjdevries/config_manager/blob/master/xdg_config/nvim/lua/tj/telescope/init.lua
-
 local M = {}
 local builtin = require("telescope.builtin")
 local themes = require("telescope.themes")
 
--- live_grep
-M.live_grep = function()
-  local opts = {
-    layout_strategy = "vertical",
-    layout_config = {
-      prompt_position = "top",
-    },
-    sorting_strategy = "ascending",
+local no_preview = {
+  previewer = false,
+  layout_config = {
+    height = 15,
   }
-  builtin.live_grep(opts)
+}
+
+local theme_opts = themes.get_ivy {
+  results_title = false,
+  prompt_title = false,
+  preview_title = "Preview",
+  layout_config = {
+    height = 40,
+  },
+}
+
+local theme_opts_nopreview = vim.tbl_deep_extend("force", theme_opts, no_preview)
+
+M.git_files = function()
+  builtin.git_files(theme_opts_nopreview)
+end
+
+M.find_files = function()
+  builtin.find_files(theme_opts_nopreview)
+end
+
+M.oldfiles = function()
+  builtin.oldfiles(theme_opts_nopreview)
+end
+
+-- find_files for my dotfiles
+M.find_dotfiles = function()
+  local opts = {
+    find_command = {
+      "ls-dotfiles"
+    },
+  }
+  builtin.find_files(vim.tbl_deep_extend("force", theme_opts_nopreview, opts), false)
+end
+
+M.buffers = function()
+  builtin.buffers(theme_opts_nopreview)
+end
+
+M.help_tags = function()
+  builtin.help_tags(theme_opts)
+end
+
+M.highlights = function()
+  builtin.highlights(theme_opts)
+end
+
+M.commands = function()
+  builtin.commands(theme_opts_nopreview)
+end
+
+M.marks = function()
+  builtin.marks(theme_opts)
+end
+
+M.quickfix = function()
+  builtin.quickfix(theme_opts)
+end
+
+M.command_history = function()
+  builtin.command_history(theme_opts_nopreview)
+end
+
+M.search_history = function()
+  builtin.search_history(theme_opts_nopreview)
+end
+
+M.live_grep = function()
+  builtin.live_grep(theme_opts)
 end
 
 -- live_grep in neovim config files
 M.grep_nvim_config = function()
   local opts = {
-    layout_strategy = "vertical",
-    layout_config = {
-      prompt_position = "top",
-    },
-    sorting_strategy = "ascending",
-    prompt_title = "< Live Grep in Neovim Config Files >",
     search_dirs = {
       "~/.config/nvim/"
     },
@@ -41,31 +96,28 @@ M.grep_nvim_config = function()
       "--glob=!minpac", -- exclude directories
     },
   }
-  builtin.live_grep(opts)
+  builtin.live_grep(vim.tbl_deep_extend("force", theme_opts, opts))
 end
 
--- Helper function for executing telescope grep_string by a given query
-local function grep_string_by_query(query)
+-- Grep by giving a query string
+M.grep_string = function()
+  local input = vim.fn.input "Grep String > "
+  if input == "" then
+    return
+  end
   local opts = {
-    layout_strategy = "vertical",
-    layout_config = {
-      prompt_position = "top",
-    },
-    sorting_strategy = "ascending",
-    search = query,
+    search = input,
     use_regex = true,
   }
-  builtin.grep_string(opts)
+  builtin.grep_string(vim.tbl_deep_extend("force", theme_opts, opts))
 end
 
--- grep by giving a query string
-M.grep_prompt = function()
-  grep_string_by_query(vim.fn.input "Grep String > ")
-end
-
--- grep the word under cursor
+-- Grep by the word under cursor
 M.grep_word = function()
-  grep_string_by_query(vim.fn.expand("<cword>"))
+  local opts = {
+    search = vim.fn.expand("<cword>")
+  }
+  builtin.grep_string(vim.tbl_deep_extend("force", theme_opts, opts))
 end
 
 -- Helper function for getting the selected texts
@@ -83,47 +135,12 @@ local function getVisualSelection()
   end
 end
 
--- grep the selections
+-- Grep by the selection
 M.grep_selection = function()
-  grep_string_by_query(getVisualSelection())
-end
-
--- git_files with my dotfiles bare repo support
-M.git_files = function()
-  local opts = themes.get_dropdown {
-    previewer = false,
-    layout_config = {
-      height = 20,
-    },
+  local opts = {
+    search = getVisualSelection(),
   }
-  if (vim.env.GIT_DIR == "/Users/rockyzhang/dotfiles" and vim.env.GIT_WORK_TREE == "/Users/rockyzhang") then
-    opts.show_untracked = false
-    opts.prompt_title = "< Find dotfiles >"
-  end
-  builtin.git_files(opts)
-end
-
--- find_files for my dotfiles
-M.find_dotfiles = function()
-  local opts = themes.get_dropdown {
-    previewer = false,
-    layout_config = {
-      height = 20,
-    },
-    find_command = { "ls-dotfiles" },
-  }
-  builtin.find_files(opts)
-end
-
--- oldfiles
-M.oldfiles = function()
-  local opts = themes.get_dropdown {
-    previewer = false,
-    layout_config = {
-      height = 20,
-    },
-  }
-  builtin.oldfiles(opts)
+  builtin.grep_string(vim.tbl_deep_extend("force", theme_opts, opts))
 end
 
 return M

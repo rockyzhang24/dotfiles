@@ -3,6 +3,9 @@ local util = require("lspconfig/util")
 local my_util = require('rockyz.plugin-config.lsp.lsp-utils')
 local border_enabled = vim.g.border_enabled
 
+-- Enable border for LspInfo window
+require('lspconfig.ui.windows').default_options.border = 'single'
+
 -- Config diagnostic options globally
 vim.diagnostic.config({
   float = {

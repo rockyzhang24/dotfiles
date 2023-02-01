@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-cd ~/gitrepos/neovim-fold-nodigit/
+cd ~/gitrepos/neovim/
 rm -rf build
 
 # Fetch

@@ -6,35 +6,48 @@ My dotfiles for `macOS` and `Linux`. Just cherry pick the piece of code you tota
 
 ![platform](https://img.shields.io/badge/platform-macOS%2FLinux-blue)
 ![last commit](https://img.shields.io/github/last-commit/rockyzhang24/dotfiles)
-
-<img width="1728" alt="image" src="https://user-images.githubusercontent.com/11582667/156706194-0762c4d8-b6e3-403c-929d-b49de198e30d.png">
+  
+![config-demo](https://user-images.githubusercontent.com/11582667/220463312-8559aba9-e0d8-4bdc-8d02-3dc322204df4.png)
+  <sub>For the color theme, check [arctic](https://github.com/rockyzhang24/arctic.nvim)</sub>
 
 </div>
 
-# Features
+# ✨ Contents
 
-[Neovim](./.config/nvim/): The text editor I've been in love with
+### 🔥 Text Editor
 
-[Zsh](./.config/zsh/): Shell
+#### [Neovim](https://neovim.io): [⚙️Config](./.config/nvim/)
 
-* Use [Zim](https://github.com/zimfw/zimfw) to manage Zsh plugins
-* The prompt theme is [Powerlevel10k](https://github.com/romkatv/powerlevel10k[])
-* [fzf](./.config/fzf): Fuzzy finder I use widely in my daily workflow. I created some fzf-based [scripts](./.config/fzf/fzfutils/) to boost productivity
-* [bin](./.config/bin): Very useful scripts
+### 🐚 Shell
 
-[wezterm](./.config/wezterm/)/[kitty](./.config/kitty/)/[alacritty](./.config/alacritty/): Terminal
+#### [Zsh](https://www.zsh.org): [⚙️Config](./.config/zsh/)
 
-[yabai](./.config/yabai/) and [skhd](./.config/skhd/): Tiling window manager
+### 🛠️ Terminal Emulator
 
-[lf](./.config/lf/)/[vifm](./.config/vifm/)/[ranger](./.config/ranger/): Console file manager
+#### [Kitty](https://sw.kovidgoyal.net/kitty/): [⚙️Config](./.config/kitty/)
 
-[karabiner-Elements](./.config/karabiner/): keyboard customizer
+#### [Wezterm](https://wezfurlong.org/wezterm/): [⚙️Config](./.config/wezterm/)
 
-* `Right Command` as `HYPER` key,
-* `Control` as `MEH` key,
-* and etc...
+#### [Alacritty](https://alacritty.org): [⚙️Config](./.config/alacritty/)
 
-# How I am managing the dotfiles
+### 🪄 Tiling Window Manager
+
+#### [yabai](https://github.com/koekeishiya/yabai): [⚙️Config](./.config/yabai/)
+#### [skhd](https://github.com/koekeishiya/skhd): [⚙️Config](./.config/yabai/)
+
+### 🗃️ Console File Manager
+
+#### [lf](https://pkg.go.dev/github.com/gokcehan/lf): [⚙️Config](./.config/lf/)
+
+#### [vifm](https://vifm.info): [⚙️Config](./.config/vifm/)
+
+#### [ranger](https://ranger.github.io): [⚙️Config](./.config/ranger/)
+
+### ⌨️ Keyboard Customizer
+
+#### [Karabiner-Elements](https://karabiner-elements.pqrs.org): [⚙️Config](./.config/karabiner/)
+
+# 💡 How I am managing the dotfiles
 
 Using a bare repository. The dotfiles can reside where they are. No symlinks needed.
 

@@ -34,7 +34,7 @@ export WORDCHARS=${WORDCHARS//[\/]}
 
 # less
 export LESSOPEN="| highlight %s -O truecolor -s darkplus --force -l"
-export LESS="-R -M -i -j5 -J"
+export LESS="-R -M -i -j5"
 
 # Gtags
 export GTAGSLABEL='native-pygments'

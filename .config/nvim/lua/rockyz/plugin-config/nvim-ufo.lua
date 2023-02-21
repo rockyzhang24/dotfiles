@@ -37,7 +37,9 @@ require('ufo').setup({
     },
     mappings = {
       scrollU = '<C-u>',
-      scrollD = '<C-d>'
+      scrollD = '<C-d>',
+      jumpTop = '[',
+      jumpBot = ']',
     },
   },
 })

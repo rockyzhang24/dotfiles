@@ -16,7 +16,7 @@ syn match qfOtherText / [^EWINH]*$/ contained
 
 if g:colorscheme ==# 'arctic'
     hi def link qfFileName QfFileName
-    hi def link qfSeparatorLeft FloatBorder
+    hi def link qfSeparatorLeft WinSeparator
     hi def link qfLineNr QfText
     hi def link qfSeparatorRight FloatBorder
     hi def link qfError DiagnosticSignError

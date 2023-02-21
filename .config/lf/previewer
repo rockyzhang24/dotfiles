@@ -1,63 +1,90 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
-file=$1
-w=`expr $2 - 1`
-h=`expr $3 - 1`
-x=$4
-y=`expr $5 + 1`
+FILE_PATH="${1}"
+FILE_EXTENSION="${FILE_PATH##*.}"
+FILE_EXTENSION_LOWER="$(printf "%s" "${FILE_EXTENSION}" | tr '[:upper:]' '[:lower:]')"
+PV_WIDTH="${2}"
+PV_HEIGHT="${3}"
+HORIZONTAL_POS="${4}"
+VERTICAL_POS="${5}"
 
-conf_path=$HOME/.config/lf
-
-kitty_icat() {
-  kitty +icat --silent --transfer-mode file --place "${w}x${h}@${x}x${y}" "${1}"
+image_preview_by_kitty() {
+  kitten icat --transfer-mode memory --stdin no --place \
+      "${PV_WIDTH}x${PV_HEIGHT}@${HORIZONTAL_POS}x${VERTICAL_POS}" \
+      "${1}" < /dev/null > /dev/tty
 }
 
-image_preview() {
-  echo "Resolution:" $(identify -format "%w×%h\n" "${1}")
-  kitty_icat "${1}"
-  exit 1
+handle_extension() {
+  case "${FILE_EXTENSION_LOWER}" in
+    # Markdown
+    md)
+      glow -s dark -- "${FILE_PATH}" && exit 1;;
+    # Archive
+    bz2|gz|lz|tar|xz|zip)
+      atool --list -- "${FILE_PATH}" && exit 1;;
+    rar)
+      unrar l -p- -- "${FILE_PATH}" && exit 1;;
+    7z)
+      7z l -p -- "${FILE_PATH}" && exit 1;;
+    # PDF
+    pdf)
+      pdftotext -l 10 -nopgbrk -q -- "${FILE_PATH}" - | fmt -w "$((${PV_WIDTH} - 2))" && exit 1;;
+    # OpenDocument
+    odt|sxw|ods|odp)
+      odt2txt "${FILE_PATH}" && exit 1;;
+    # XLSX
+    xlsx)
+      xlsx2csv -- "${FILE_PATH}" && exit 1;;
+    # JSON
+    json)
+      jq --color-output . "${FILE_PATH}" && exit1 ;;
+    # BitTorrent
+    torrent)
+      transmission-show -- "${FILE_PATH}" && exit 1;;
+  esac
 }
 
-video_preview() {
-  thumbnail=$($conf_path/vidthumb "${1}")
-  kitty_icat "${thumbnail}"
-  exit 1
+handle_mime() {
+  local mimetype="${1}"
+  case "${mimetype}" in
+    # DOCX, ePub, FB2
+    *wordprocessingml.document|*/epub+zip|*/x-fictionbook+xml)
+      pandoc -s -t markdown -- "${FILE_PATH}" && exit 1;;
+    # Image
+    image/*)
+      if [[ $TERM == "xterm-kitty" ]]; then
+        image_preview_by_kitty "${FILE_PATH}"
+      else
+        exiftool "${FILE_PATH}"
+      fi
+      exit 1;;
+    # Video and audio
+    video/* | audio/*)
+      if [[ $TERM == "xterm-kitty" ]]; then
+        local thumbnail=$($HOME/.config/lf/vidthumb "${FILE_PATH}")
+        image_preview_by_kitty "${thumbnail}"
+      else
+        mediainfo "${FILE_PATH}"
+      fi
+      exit 1;;
+    # Text
+    text/* | */xml)
+      (bat --color=always --style=numbers,changes --line-range=:"${PV_HEIGHT}" \
+          --terminal-width "$((${PV_WIDTH} - 2))" -- "${FILE_PATH}" \
+      || highlight --out-format truecolor --style darkplus --force \
+          --line-numbers --line-range=1-"${PV_HEIGHT}" -- "${FILE_PATH}" \
+      || cat -- "${FILE_PATH}") && exit 1;;
+  esac
 }
 
-text_preview() {
-  bat --color=always --style=numbers,changes --line-range=:"${h}" "${1}" \
-      || highlight -O truecolor -s darkplus --force -l --line-range=1-"${h}" "${1}" \
-      || cat "${1}"
+handle_fallback() {
+    echo '----- File Type Classification -----' && file --dereference --brief -- "${FILE_PATH}" && exit 1
+    exit 1
 }
 
-get_mime_type() {
-  file --dereference --brief --mime-type "${1}"
-}
+MIMETYPE="$( file --dereference --brief --mime-type -- "${FILE_PATH}" )"
+handle_extension
+handle_mime "${MIMETYPE}"
+handle_fallback
 
-case "$file" in
-  *.md) glow -s dark "$file";;
-  *.tgz|*.tar.gz) tar tzf "$file";;
-  *.tar.bz2|*.tbz2) tar tjf "$file";;
-  *.tar.txz|*.txz) xz --list "$file";;
-  *.tar) tar tf "$file";;
-  *.zip|*.jar|*.war|*.ear|*.oxt) unzip -l "$file";;
-  *.rar) unrar l "$file";;
-  *.7z) 7z l "$file";;
-  *.[1-8]) man "$file" | col -b ;;
-  *.o) nm "$file" | less ;;
-  *.torrent) transmission-show "$file";;
-  *odt,*.ods,*.odp,*.sxw) odt2txt "$file";;
-  *.doc) antiword "$file" ;;
-  *.docx) docx2txt.pl "$file" - ;;
-  .xls) xls2csv "$file";;
-  *.xlsx) xlsx2csv "$file";;
-  *.csv) cat "$file" | sed s/,/\\n/g ;;
-  *.pdf) pdftotext -l 10 -nopgbrk -q "$file" -;;
-  *.bmp|*.jpg|*.jpeg|*.png|*.xpm) image_preview "$file";;
-  *.wav|*.mp3|*.flac|*.m4a|*.wma|*.ape|*.ac3|*.og[agx]|*.spx|*.opus|*.as[fx]|*.flac) mediainfo "$file";;
-  *.avi|*.mp4|*.wmv|*.dat|*.3gp|*.ogv|*.mkv|*.mpg|*.mpeg|*.vob|*.fl[icv]|*.m2v|*.mov|*.webm|*.mts|*.m4v|*.r[am]|*.qt|*.divx)
-    video_preview "$file" || mediainfo "$file";;
-  *.ts) [[ $(get_mime_type "$file") == text/* ]] && text_preview "$file" || kitty_icat "$($conf_path/vidthumb "$file")" || mediainfo "$file";;
-  *.json) jq --color-output . "$file" || bat --color=always --style=numbers,changes --line-range=:"$3" "$file";;
-  *) text_preview "$file";;
-esac
+exit 1

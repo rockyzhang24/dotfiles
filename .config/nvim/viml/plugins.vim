@@ -39,7 +39,6 @@ function! PackInit() abort
 
   " LSP
   call minpac#add('neovim/nvim-lspconfig')
-  call minpac#add('ii14/emmylua-nvim')
 
   " Autocomplete
   call minpac#add('hrsh7th/nvim-cmp')
@@ -55,7 +54,7 @@ function! PackInit() abort
   call minpac#add('saadparwaiz1/cmp_luasnip')
 
   " Treesitter
-  call minpac#add('kevinhwang91/nvim-treesitter', {'do': 'TSUpdate'})
+  call minpac#add('nvim-treesitter/nvim-treesitter', {'do': 'TSUpdate'})
   call minpac#add('nvim-treesitter/playground')
   call minpac#add('nvim-treesitter/nvim-treesitter-textobjects')
   call minpac#add('JoosepAlviste/nvim-ts-context-commentstring')

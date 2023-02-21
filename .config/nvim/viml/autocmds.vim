@@ -52,6 +52,15 @@ augroup auto_quit
   autocmd BufEnter * call s:AutoQuit()
 augroup END
 
+" Builtin terminal
+augroup terminal
+  autocmd!
+  autocmd TermOpen term://* startinsert |
+      \ setlocal nonumber norelativenumber signcolumn=no nobuflisted |
+      \ bufhidden=wipe
+  autocmd BufWinEnter,WinEnter term://* startinsert
+augroup END
+
 " I manage my dotfiles using a bare repository. To make Vim recognize them and git related plugins
 " work on them, the environment variables should be set to indicate the locations of git-dir and
 " work-tree when we enter the dotfile buffer. Don't forget to reset them when we enter other buffers,

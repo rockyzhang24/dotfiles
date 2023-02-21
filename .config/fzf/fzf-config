@@ -1,7 +1,7 @@
 #!/usr/bin/env zsh
 
 # FZF builtin key bindings and completion
-[ -f "${XDG_CONFIG_HOME:-$HOME/.config}"/fzf/fzf.zsh ] && source "${XDG_CONFIG_HOME:-$HOME/.config}"/fzf/fzf.zsh
+[ -f ~/.config/fzf/.fzf.zsh ] && source ~/.config/fzf/.fzf.zsh
 
 # Use fd instead of default find
 export FZF_DEFAULT_COMMAND="fd --type f --hidden --follow $FD_EXCLUDE"

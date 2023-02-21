@@ -97,8 +97,7 @@ nvim_lsp.vimls.setup {
 }
 
 -- Lua
--- Support formatter since 2.6.6 (ref: https://github.com/sumneko/lua-language-server/issues/960)
-nvim_lsp.sumneko_lua.setup {
+nvim_lsp.lua_ls.setup {
   on_attach = on_attach,
   capabilities = capabilities,
   settings = {
@@ -107,12 +106,15 @@ nvim_lsp.sumneko_lua.setup {
         version = 'LuaJIT',
       },
       -- diagnostics = {
-      --   globals = {
-      --   },
       -- },
-      -- workspace = {
-      -- },
-      -- Do not send telemetry data containing a randomized but unique identifier
+      completion = {
+        callSnippet = 'Replace',
+        displayContext = 50,
+        postfix = '.',
+      },
+      workspace = {
+        checkThirdParty = false,
+      },
       telemetry = {
         enable = false,
       },

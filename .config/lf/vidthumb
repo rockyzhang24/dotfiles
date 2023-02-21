@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 # Generate the thumbnail for video (ffmpegthumbnailer is required)
+# Grabbed from https://raw.githubusercontent.com/duganchen/kitty-pistol-previewer/main/vidthumb
 
 if ! [ -f "$1" ]; then
 	exit 1

@@ -8,7 +8,7 @@ set shellopts '-eu'
 set ifs "\n"
 set scrolloff 10
 set icons
-set drawbox
+# set drawbox
 set incsearch
 set smartcase
 set ignorecase
@@ -92,12 +92,16 @@ cmd delete ${{
   fi
 }}
 
-cmd trash ${{
+cmd trash !{{
   set -f
-  printf "Trash $fx ? [y/N]"
+  printf "Items to be trashed:\n$fx\n\nTrash? [y/N]"
   read ans
   if [[ $ans == "y" ]]; then
-    trash -Fv $fx
+    trash -F $fx && echo "Trash complete!"
+  elif [[ $ans == "n" ]]; then
+    echo "Canceled!"
+  else
+    echo "Failed! Use y to trash."
   fi
 }}
 

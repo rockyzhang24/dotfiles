@@ -292,7 +292,7 @@ nnoremap <Leader>wp <C-w>p
 
 " Create a split window
 nnoremap <silent> <Leader>- :split<CR>
-nnoremap <silent> <Leader>\ :vsplit<CR>
+nnoremap <silent> <Leader><BS> :vsplit<CR>
 
 " Change vertical to horizontal
 nnoremap <Leader>w- <C-w>t<C-w>K

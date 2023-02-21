@@ -1,9 +1,14 @@
 #!/usr/bin/env bash
 
 # DESCRIPTION: Tmux session management. Create a new session or switch to the
-# existing session by giving a session name and/or a start directory, or
-# selecting a start directory via fzf.
-# SYNOPSIS: tmux-sessionizer [SESSION_NAME/DIR] [DIR/SESSION_NAME]
+#              existing session by giving a session name and/or a start
+#              directory, or selecting a start directory via fzf.
+# SYNOPSIS:    tmux-sessionizer [SESSION_NAME/DIR] [DIR/SESSION_NAME]
+
+# Directory candidates in fzf
+read -r -d '' dirs << EOM
+$HOME/oj
+EOM
 
 if [[ $# -eq 1 ]]; then
   if [[ -d $1 ]]; then
@@ -21,7 +26,7 @@ elif [[ $# -eq 2 ]]; then
     session_name=$1
   fi
 else
-  directory=$(fd . ~/oj --exact-depth 1 --type d | fzf --no-multi)
+  directory=$(fd . $(echo $dirs | tr '\n' ' ') --exact-depth 1 --type d | fzf --no-multi)
   [[ -z $directory ]] && exit 0
 fi
 

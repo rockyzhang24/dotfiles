@@ -1,37 +1,44 @@
 [user]
-	name = Rocky Zhang
-	email = yzhang.rocky@gmail.com
+  name = Rocky Zhang
+  email = yzhang.rocky@gmail.com
 [alias]
-	cm = commit
-	st = status
-	br = branch
+  cm = commit
+  st = status
+  br = branch
 [core]
-	excludesfile = /Users/rockyzhang/.gitignore_global
+  excludesfile = /Users/rockyzhang/.gitignore_global
   pager = delta
 [interactive]
   diffFilter = delta --color-only
 [delta]
   navigate = true
   hyperlinks = true
-  features = side-by-side line-numbers decorations zebra-dark
-  syntax-theme = Monokai Extended Origin
-  plus-style = syntax "#003800"
-  minus-style = syntax "#3f0001"
+  features = side-by-side line-numbers decorations interactive
+  syntax-theme = Visual Studio Dark+
+  plus-style = syntax "#373d29"
+  plus-emph-style = syntax "#386229"
+  minus-style = syntax "#4b1818"
+  minus-emph-stype = syntax "#781212"
+  ; For git's "--color-moved" feature. Ref:
+  ; https://dandavison.github.io/delta/color-moved-support.html
   map-styles = \
-    bold purple => syntax "#330f29", \
-    bold blue => syntax "#271344", \
+    bold purple => syntax "#271344", \
     bold cyan => syntax "#0d3531", \
-    bold yellow => syntax "#222f14"
-[delta "decorations"]
-  commit-decoration-style = bold yellow box ul
-  file-style = bold yellow ul
-  file-decoration-style = none
-  hunk-header-decoration-style = cyan box ul
+    bold blue => syntax "#002f4e", \
+    bold yellow => syntax "#996214"
 [delta "line-numbers"]
-  line-numbers-left-style = cyan
-  line-numbers-right-style = cyan
-  line-numbers-minus-style = 124
-  line-numbers-plus-style = 28
+  line-numbers = true
+  line-numbers-zero-style = "#858585"
+  line-numbers-minus-style = "#f14c4c"
+  line-numbers-plus-style = "#487e02"
+  line-numbers-left-style = "#444444"
+  line-numbers-right-style = "#444444"
+[delta "decorations"]
+  file-style = "#ffffff" bold ul
+  file-decoration-style = none
+  hunk-header-decoration-style = "#444444" box ul
+[delta "interactive"]
+  keep-plus-minus-markers = false
 [filter "lfs"]
   clean = git-lfs clean -- %f
   smudge = git-lfs smudge -- %f
@@ -39,7 +46,6 @@
   required = true
 [credential]
   helper = osxkeychain
-
 ; Use neovim as git diff and merge tool
 [diff]
   tool = nvimdiff

@@ -13,9 +13,6 @@ fpath=($HOME/.config/zsh/completions $fpath)
 autoload -Uz compinit
 compinit
 
-# Completion for kitty
-kitty + complete setup zsh | source /dev/stdin
-
 # For kitty kitten: hyperlinked grep (defined in ~/.config/zsh/functions/hg)
 # Delegate its completion to rg
 compdef _rg hg

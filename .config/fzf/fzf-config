@@ -14,12 +14,12 @@ export FZF_DEFAULT_COMMAND="fd --type f --hidden --follow $FD_EXCLUDE"
 #   - ctrl-u: move cursor halp page up
 #   - alt-d : move preview half page down
 #   - alt-u : move preview half page up
-#   - ctrl-a: select all
-#   - ctrl-x: deselect all
-#   - ctrl-/: toggle preview window
-#   - ctrl-o: open the selections via default application
-#   - ctrl-y: copy the selections to system clipboard
-#   - ctrl-v: open the selections via $EDITOR
+#   - alt-a : select all
+#   - alt-A : deselect all
+#   - alt-p: toggle preview window
+#   - alt-o: open the selections via default application
+#   - alt-y: copy the selections to system clipboard
+#   - alt-v: open the selections via $EDITOR
 export FZF_DEFAULT_OPTS=" \
     --multi \
     --reverse \
@@ -27,11 +27,14 @@ export FZF_DEFAULT_OPTS=" \
     --height 40% \
     --scrollbar '█' \
     --history /tmp/fzfhistory \
+    --prompt ' ' \
+    --pointer '' \
+    --marker ' ' \
     --bind 'ctrl-d:half-page-down,ctrl-u:half-page-up,alt-d:preview-half-page-down,`
-        `alt-u:preview-half-page-up,ctrl-a:select-all,ctrl-x:deselect-all,`
-        `ctrl-/:toggle-preview,ctrl-o:execute(open {+}),`
-        `ctrl-y:execute-silent(echo -n {+} | pbcopy),`
-        `ctrl-v:execute(\$EDITOR {+} < /dev/tty > /dev/tty 2>&1),change:top' \
+        `alt-u:preview-half-page-up,alt-a:select-all,alt-A:deselect-all,`
+        `alt-p:toggle-preview,alt-o:execute(open {+}),`
+        `alt-y:execute-silent(echo -n {+} | pbcopy),`
+        `alt-v:execute(\$EDITOR {+} < /dev/tty > /dev/tty 2>&1),change:top' \
     --preview '([[ \$(file -b {}) == directory ]] && tree -C {} \
         || ( MIME=\$(file --dereference --mime {}) && [[ \$MIME =~ binary ]] && echo \$MIME ) \
         || ( bat --color=always --style=numbers,changes,header {} \

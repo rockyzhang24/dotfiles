@@ -11,7 +11,7 @@ telescope.setup {
     file_ignore_patterns = { '%.jpg', '%.jpeg', '%.png', '%.avi', '%.mp4' },
     mappings = {
       i = {
-        -- Consistent with fzf in terminal
+        -- Consistent with fzf key bindings in terminal
         ["<C-j>"] = "move_selection_next",
         ["<C-k>"] = "move_selection_previous",
         ["<C-u>"] = "results_scrolling_up",
@@ -20,9 +20,9 @@ telescope.setup {
         ["<M-d>"] = "preview_scrolling_down",
         ["<C-n>"] = "cycle_history_next",
         ["<C-p>"] = "cycle_history_prev",
-        ["<C-a>"] = "toggle_all",
+        ["<M-a>"] = "toggle_all",
         ["<C-Enter>"] = "toggle_selection",
-        ["<C-/>"] = require("telescope.actions.layout").toggle_preview,
+        ["<M-p>"] = require("telescope.actions.layout").toggle_preview,
         ["<Esc>"] = "close",
         ["<C-c>"] = { "<Esc>", type = "command" },
       },

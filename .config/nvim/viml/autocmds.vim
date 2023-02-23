@@ -55,9 +55,7 @@ augroup END
 " Builtin terminal
 augroup terminal
   autocmd!
-  autocmd TermOpen term://* startinsert |
-      \ setlocal nonumber norelativenumber signcolumn=no nobuflisted |
-      \ bufhidden=wipe
+  autocmd TermOpen term://* startinsert
   autocmd BufWinEnter,WinEnter term://* startinsert
 augroup END
 

@@ -22,6 +22,9 @@ My dotfiles for `macOS` and `Linux`. Just cherry pick the piece of code you tota
 
 #### [Zsh](https://www.zsh.org): [⚙️Config](./.config/zsh/)
 
+* Use [Zim](https://zimfw.sh) to manage Zsh plugins
+* The theme is [Powerlevel10k](https://github.com/romkatv/powerlevel10k)
+
 ### 🛠️ Terminal Emulator
 
 #### [Kitty](https://sw.kovidgoyal.net/kitty/): [⚙️Config](./.config/kitty/)
@@ -46,6 +49,12 @@ My dotfiles for `macOS` and `Linux`. Just cherry pick the piece of code you tota
 ### ⌨️ Keyboard Customizer
 
 #### [Karabiner-Elements](https://karabiner-elements.pqrs.org): [⚙️Config](./.config/karabiner/)
+
+### 🧶 Others
+
+#### [fzf](https://github.com/junegunn/fzf): [⚙️Config](./.config/fzf/)
+
+#### [bin](./.config/bin/): Useful scripts
 
 # 💡 How I am managing the dotfiles
 

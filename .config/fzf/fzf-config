@@ -46,7 +46,7 @@ export FZF_DEFAULT_OPTS=" \
         `hl:#2aaaff,fg+:#ffffff,bg+:#04395e,gutter:#1e1e1e,hl+:#2aaaff,query:#d4d4d4,`
         `disabled:#808080:strikethrough,info:#989898,border:#454545,separator:#454545,`
         `scrollbar:#424242,label:#454545,preview-label:#454545,prompt:#c5c5c5,`
-        `pointer:#ffffff,marker:#4ec9b0,spinner:#0e70c0,header:#3794ff"
+        `pointer:#ffffff,marker:#4ec9b0,spinner:#0e70c0,header:#3794ff:italic:underline"
 
 # Use fd for FZF completion
 # 1). listing files and dirs ($1 is the base path to start search) such as "vim ~/.config/**<TAB>"
@@ -79,30 +79,12 @@ fpath+=${0:h}/fzfutils
 autoload -Uz ${0:h}/fzfutils/*(.:t)
 
 # fzf + git
-# Ref:
-#   - https://junegunn.kr/2016/07/fzf-git
-#   - https://gist.github.com/junegunn/8b572b8d4b5eddd8b85e5f4d40f17236
-# CTRL-G CTRL-F for files
-# CTRL-G CTRL-B for branches
-# CTRL-G CTRL-T for tags
-# CTRL-G CTRL-R for remotes
-# CTRL-G CTRL-H for commit hashes
-# CTRL-G CTRL-S for stash entries
+# Reference: https://github.com/junegunn/fzf-git.sh
+# CTRL-G F for files
+# CTRL-G B for branches
+# CTRL-G T for tags
+# CTRL-G R for remotes
+# CTRL-G H for commit hashes
+# CTRL-G S for stashes
+# CTRL-G E for Each ref (git for-each-ref)
 source ~/.config/fzf/fzf-git.sh
-
-join-lines() {
-  local item
-  while read item; do
-    echo -n "${(q)item} "
-  done
-}
-
-() {
-  bindkey -r '^g'
-  local c
-  for c in $@; do
-    eval "fzf-g$c-widget() { local result=\$(_g$c | join-lines); zle reset-prompt; LBUFFER+=\$result }"
-    eval "zle -N fzf-g$c-widget"
-    eval "bindkey '^g^$c' fzf-g$c-widget"
-  done
-} f b t r h s

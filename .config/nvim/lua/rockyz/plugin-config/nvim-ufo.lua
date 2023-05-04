@@ -1,20 +1,63 @@
+local M = {}
+local ufo = require('ufo')
+local map = require('rockyz.keymap').map
+local api = vim.api
+local fn = vim.fn
+
+-- Provider for a buffer with git or diff filetype (e.g., press dd in vim-flog).
+-- It returns UfoFoldingRange (it is a table of { startLine = lineNum_1, endLine
+-- = lineNum_2 } that describes the range of a fold) that contains the ranges of
+-- all the folds we define.
+-- It creates folds for (1) input source (starts with +++ symbol), (2)
+-- diff chunks (starts with @@ symbol).
+function M.gitProvider(bufnr)
+  local res = {}
+  local fileStart, hunkStart
+  local lines = api.nvim_buf_get_lines(bufnr, 0, -1, true)
+  for i, line in ipairs(lines) do
+    if line:match('^diff %-%-') then
+      if hunkStart then
+        table.insert(res, {startLine = hunkStart - 1, endLine = i - 2})
+      end
+      if fileStart then
+        table.insert(res, {startLine = fileStart - 1, endLine = i - 2})
+      end
+      fileStart, hunkStart = nil, nil
+    elseif line:match('^@@ %-%d+,%d+ %+%d+,%d+') then
+      if hunkStart then
+        table.insert(res, {startLine = hunkStart - 1, endLine = i - 2})
+      end
+      hunkStart = i
+    elseif line:match('^%+%+%+ %S') then
+      fileStart = i
+    end
+  end
+  if hunkStart then
+    table.insert(res, {startLine = hunkStart - 1, endLine = #lines - 2})
+  end
+  if fileStart then
+    table.insert(res, {startLine = fileStart - 1, endLine = #lines - 2})
+  end
+  return res
+end
+
 -- Customize fold text
 local handler = function(virtText, lnum, endLnum, width, truncate)
   local newVirtText = {}
   local suffix = ('  %d '):format(endLnum - lnum)
-  local sufWidth = vim.fn.strdisplaywidth(suffix)
+  local sufWidth = fn.strdisplaywidth(suffix)
   local targetWidth = width - sufWidth
   local curWidth = 0
   for _, chunk in ipairs(virtText) do
     local chunkText = chunk[1]
-    local chunkWidth = vim.fn.strdisplaywidth(chunkText)
+    local chunkWidth = fn.strdisplaywidth(chunkText)
     if targetWidth > curWidth + chunkWidth then
       table.insert(newVirtText, chunk)
     else
       chunkText = truncate(chunkText, targetWidth - curWidth)
       local hlGroup = chunk[2]
       table.insert(newVirtText, { chunkText, hlGroup })
-      chunkWidth = vim.fn.strdisplaywidth(chunkText)
+      chunkWidth = fn.strdisplaywidth(chunkText)
       -- str width returned from truncate() may less than 2nd argument, need padding
       if curWidth + chunkWidth < targetWidth then
         suffix = suffix .. (' '):rep(targetWidth - curWidth - chunkWidth)
@@ -27,7 +70,16 @@ local handler = function(virtText, lnum, endLnum, width, truncate)
   return newVirtText
 end
 
-require('ufo').setup({
+local ftMap = {
+  git = M.gitProvider,
+  diff = M.gitProvider,
+  fugitive = ''
+}
+
+ufo.setup({
+  provider_selector = function(bufnr, filetype, buftype)
+    return ftMap[filetype]
+  end,
   fold_virt_text_handler = handler,
   preview = {
     win_config = {
@@ -44,15 +96,24 @@ require('ufo').setup({
   },
 })
 
-vim.keymap.set('n', 'zR', require('ufo').openAllFolds)
-vim.keymap.set('n', 'zM', require('ufo').closeAllFolds)
-vim.keymap.set('n', 'zr', require('ufo').openFoldsExceptKinds)
-vim.keymap.set('n', 'zm', require('ufo').closeFoldsWith)
-
--- `K` to open the preview window, or show the documentation by LSP
-vim.keymap.set('n', 'K', function()
-  local winid = require('ufo').peekFoldedLinesUnderCursor()
-  if not winid then
+-- Remap the builtin keymaps for keeping the foldlevel
+map('n', 'zR', ufo.openAllFolds)
+map('n', 'zM', ufo.closeAllFolds)
+map('n', 'zr', ufo.openFoldsExceptKinds)
+map('n', 'zm', ufo.closeFoldsWith)
+-- Preview the fold and create some convenient keymaps for the preview window
+-- for inserting text directly, or show the documentation via LSP
+map('n', 'K', function()
+  local winid = ufo.peekFoldedLinesUnderCursor()
+  if winid then
+    local bufnr = api.nvim_win_get_buf(winid)
+    local keys = {'a', 'i', 'o', 'A', 'I', 'O', 'c', 's'}
+    for _, k in ipairs(keys) do
+      map('n', k, '<CR>' .. k, { remap = true, buffer = bufnr, nowait = true })
+    end
+  else
     vim.lsp.buf.hover()
   end
 end)
+
+return M

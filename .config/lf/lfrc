@@ -26,7 +26,7 @@ set dircounts
 # Override the default open for file opening (binded to 'l' by default)
 cmd open &{{
   case $(file --mime-type "$(readlink -f $f)" -b) in
-    text/*|application/json|application/octet-stream) lf -remote "send $id \$$EDITOR \$fx";;
+    text/*|application/json|inode/x-empty|application/octet-stream) lf -remote "send $id \$$EDITOR \$fx";;
     *) for f in $fx; do open $f > /dev/null 2> /dev/null & done;;
   esac
 }}
@@ -192,9 +192,11 @@ map [ push hkl
 map ] push hjl
 
 # Rename
+map r
 map A rename # at the very end
 map I push A<c-a> # at the very beginning
-map r push A<c-u> # new rename
+map rn push A<c-u> # rename the filename
+map re push A<c-f><c-k> # rename the extension
 map <c-r> bulk-rename
 
 # Use <space> as the leader key
@@ -207,11 +209,10 @@ map <space>f &if [[ -d $f ]]; then open $f; fi
 
 # Fast navigation
 map Jh cd ~
-map Jd cd ~/Documents
-map JD cd ~/Downloads
+map Jo cd ~/Documents
+map Jl cd ~/Downloads
 map Jb cd ~/Library/CloudStorage/Dropbox/
 map Jg cd ~/gitrepos
 map Jp cd ~/projects
 map Jc cd ~/.config
 map Jv cd ~/.config/nvim
-map Jl cd ~/oj/leetcode

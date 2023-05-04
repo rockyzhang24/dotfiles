@@ -41,6 +41,26 @@
                     {
                         "manipulators": [
                             {
+                                "description": "Change right Shift to MEH key (Option + Shift + Control)",
+                                "from": {
+                                    "key_code": "right_shift"
+                                },
+                                "to": [
+                                    {
+                                        "key_code": "left_shift",
+                                        "modifiers": [
+                                            "left_option",
+                                            "left_control"
+                                        ]
+                                    }
+                                ],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "manipulators": [
+                            {
                                 "description": "Shift + ESC -> ~",
                                 "from": {
                                     "key_code": "escape",

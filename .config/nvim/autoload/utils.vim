@@ -22,50 +22,21 @@ function! utils#Preserve(command, ...) abort
   call cursor(l, c)
 endfunction
 
-" Search for the current selection
-" Ref: http://vimcasts.org/episodes/search-for-the-selected-text/
-function! utils#VSetSearch(cmdtype) abort
-  let temp = @s
-  norm! gv"sy
-  let @/ = '\V' . substitute(escape(@s, a:cmdtype.'\'), '\n', '\\n', 'g')
-  let @s = temp
-endfunction
-
 " Grep operator
 " Ref: https://learnvimscriptthehardway.stevelosh.com/chapters/32.html
-" function! utils#GrepOperator(type) abort
-"   let saved_unnamed_register = @@
-"   if a:type ==# 'v'
-"     normal! `<v`>y
-"   elseif a:type ==# 'char'
-"     normal! `[v`]y
-"   else
-"     return
-"   endif
-"   silent execute "grep! " . shellescape(@@) . " ."
-"   copen
-"   let @@ = saved_unnamed_register
-" endfunction
-
-" Operator for grep_string of Telescope
-" function! utils#TelescopeGrepOperator(type) abort
-"   let saved_unnamed_register = @@
-"   if a:type ==# 'v'
-"     normal! `<v`>y
-"   elseif a:type ==# 'char'
-"     normal! `[v`]y
-"   else
-"     return
-"   endif
-"   silent execute "lua require('telescope.builtin').grep_string({
-"         \ layout_strategy = 'vertical',
-"         \ layout_config = {
-"           \ prompt_position = 'top',
-"         \ },
-"         \ sorting_strategy = 'ascending',
-"         \ search = " . shellescape(@@) . "})"
-"   let @@ = saved_unnamed_register
-" endfunction
+function! utils#GrepOperator(type) abort
+  let saved_unnamed_register = @@
+  if a:type ==# 'v'
+    normal! `<v`>y
+  elseif a:type ==# 'char'
+    normal! `[v`]y
+  else
+    return
+  endif
+  silent execute "grep! " . shellescape(@@) . " ."
+  copen
+  let @@ = saved_unnamed_register
+endfunction
 
 " Delete all the other unmodified buffers
 function! utils#BufsDel() abort

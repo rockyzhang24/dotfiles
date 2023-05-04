@@ -1,35 +1,21 @@
 local M = {}
+local fn = vim.fn
 local builtin = require("telescope.builtin")
-local themes = require("telescope.themes")
+local theme = require("rockyz.plugin-config.telescope.theme")
 
-local no_preview = {
-  previewer = false,
-  layout_config = {
-    height = 15,
-  }
-}
-
-local theme_opts = themes.get_ivy {
-  results_title = false,
-  prompt_title = false,
-  preview_title = "Preview",
-  layout_config = {
-    height = 40,
-  },
-}
-
-local theme_opts_nopreview = vim.tbl_deep_extend("force", theme_opts, no_preview)
+local ivy = theme.get_ivy(true)
+local ivy_nopreview = theme.get_ivy(false)
 
 M.git_files = function()
-  builtin.git_files(theme_opts_nopreview)
+  builtin.git_files(ivy_nopreview)
 end
 
 M.find_files = function()
-  builtin.find_files(theme_opts_nopreview)
+  builtin.find_files(ivy_nopreview)
 end
 
 M.oldfiles = function()
-  builtin.oldfiles(theme_opts_nopreview)
+  builtin.oldfiles(ivy_nopreview)
 end
 
 -- find_files for my dotfiles
@@ -39,43 +25,43 @@ M.find_dotfiles = function()
       "ls-dotfiles"
     },
   }
-  builtin.find_files(vim.tbl_deep_extend("force", theme_opts_nopreview, opts), false)
+  builtin.find_files(vim.tbl_deep_extend("force", ivy_nopreview, opts), false)
 end
 
 M.buffers = function()
-  builtin.buffers(theme_opts_nopreview)
+  builtin.buffers(ivy_nopreview)
 end
 
 M.help_tags = function()
-  builtin.help_tags(theme_opts)
+  builtin.help_tags(ivy)
 end
 
 M.highlights = function()
-  builtin.highlights(theme_opts)
+  builtin.highlights(ivy)
 end
 
 M.commands = function()
-  builtin.commands(theme_opts_nopreview)
+  builtin.commands(ivy_nopreview)
 end
 
 M.marks = function()
-  builtin.marks(theme_opts)
+  builtin.marks(ivy)
 end
 
 M.quickfix = function()
-  builtin.quickfix(theme_opts)
+  builtin.quickfix(ivy)
 end
 
 M.command_history = function()
-  builtin.command_history(theme_opts_nopreview)
+  builtin.command_history(ivy_nopreview)
 end
 
 M.search_history = function()
-  builtin.search_history(theme_opts_nopreview)
+  builtin.search_history(ivy_nopreview)
 end
 
 M.live_grep = function()
-  builtin.live_grep(theme_opts)
+  builtin.live_grep(ivy)
 end
 
 -- live_grep in neovim config files
@@ -96,12 +82,12 @@ M.grep_nvim_config = function()
       "--glob=!minpac", -- exclude directories
     },
   }
-  builtin.live_grep(vim.tbl_deep_extend("force", theme_opts, opts))
+  builtin.live_grep(vim.tbl_deep_extend("force", ivy, opts))
 end
 
 -- Grep by giving a query string
 M.grep_string = function()
-  local input = vim.fn.input "Grep String > "
+  local input = fn.input "Grep String > "
   if input == "" then
     return
   end
@@ -109,23 +95,23 @@ M.grep_string = function()
     search = input,
     use_regex = true,
   }
-  builtin.grep_string(vim.tbl_deep_extend("force", theme_opts, opts))
+  builtin.grep_string(vim.tbl_deep_extend("force", ivy, opts))
 end
 
 -- Grep by the word under cursor
 M.grep_word = function()
   local opts = {
-    search = vim.fn.expand("<cword>")
+    search = fn.expand("<cword>")
   }
-  builtin.grep_string(vim.tbl_deep_extend("force", theme_opts, opts))
+  builtin.grep_string(vim.tbl_deep_extend("force", ivy, opts))
 end
 
 -- Helper function for getting the selected texts
 local function getVisualSelection()
-  local saved_unnamed_reg = vim.fn.getreg('@')
+  local saved_unnamed_reg = fn.getreg('@')
   vim.cmd('noau normal! y')
-  local text = vim.fn.getreg('@')
-  vim.fn.setreg('@', saved_unnamed_reg)
+  local text = fn.getreg('@')
+  fn.setreg('@', saved_unnamed_reg)
 
   text = string.gsub(text, "\n", "")
   if #text > 0 then
@@ -140,7 +126,7 @@ M.grep_selection = function()
   local opts = {
     search = getVisualSelection(),
   }
-  builtin.grep_string(vim.tbl_deep_extend("force", theme_opts, opts))
+  builtin.grep_string(vim.tbl_deep_extend("force", ivy, opts))
 end
 
 return M

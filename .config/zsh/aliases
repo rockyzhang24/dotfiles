@@ -75,8 +75,8 @@ alias vtg='function video_to_gif(){ ffmpeg -i $1 -pix_fmt rgb8 -r 10 -vf scale=2
 alias ra="ranger"
 
 # Quick navigation (J for Jump)
-alias Jd="cd ~/Documents"
-alias JD="cd ~/Downloads"
+alias Jo="cd ~/Documents"
+alias Jl="cd ~/Downloads"
 alias Jb="cd ~/Library/CloudStorage/Dropbox/"
 alias Jg="cd ~/gitrepos"
 alias Jp="cd ~/projects"

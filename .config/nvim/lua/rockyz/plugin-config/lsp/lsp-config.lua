@@ -1,6 +1,10 @@
-local nvim_lsp = require("lspconfig")
+local lspconfig = require("lspconfig")
 local util = require("lspconfig/util")
-local my_util = require('rockyz.plugin-config.lsp.lsp-utils')
+local my_lsp_utils = require('rockyz.plugin-config.lsp.lsp-utils')
+local map = require('rockyz.keymap').map
+local cmd = vim.cmd
+local lsp = vim.lsp
+local api = vim.api
 local border_enabled = vim.g.border_enabled
 
 -- Enable border for LspInfo window
@@ -22,36 +26,50 @@ vim.diagnostic.config({
 local on_attach = function(client, bufnr)
   -- float window border
   if border_enabled then
-    vim.lsp.handlers['textDocument/signatureHelp'] = vim.lsp.with(
-    vim.lsp.handlers.signature_help, {
-      border = 'single',
-    }
+    lsp.handlers['textDocument/signatureHelp'] = lsp.with(
+      lsp.handlers.signature_help, {
+        border = 'single',
+      }
     )
-
-    vim.lsp.handlers['textDocument/hover'] = vim.lsp.with(
-    vim.lsp.handlers.hover, {
-      border = 'single',
-    }
+    lsp.handlers['textDocument/hover'] = lsp.with(
+      lsp.handlers.hover, {
+        border = 'single',
+      }
     )
   end
 
   -- Mappings
-  local map_opts = { silent = true, buffer = bufnr }
+  local buf_map = function(mode, lhs, rhs)
+    map(mode, lhs, rhs, { buffer = bufnr })
+  end
 
-  vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, map_opts)
-  vim.keymap.set('n', 'gd', vim.lsp.buf.definition, map_opts)
-  vim.keymap.set('n', 'gt', vim.lsp.buf.type_definition, map_opts)
-  vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, map_opts)
-  vim.keymap.set('n', 'gr', vim.lsp.buf.references, map_opts)
-  vim.keymap.set('n', ',r', vim.lsp.buf.rename, map_opts)
-  vim.keymap.set('n', ',a', vim.lsp.buf.code_action, map_opts)
-  -- vim.keymap.set('n', 'K', vim.lsp.buf.hover, map_opts) -- Integrate this
-  -- with ufo preview, see ufo config for detail
-  vim.keymap.set('n', ',k', vim.lsp.buf.signature_help, map_opts)
+  -- Open a floating window with a prompt for users to select whether to dump
+  -- all diagnostics into quickfix list or just buffer diagnostics into loation
+  -- list
+  local dump_diagnostic_to_list = function()
+    local prompt = ' [q]uickfix, [l]ocation ? '
+    local actions = {
+      q = vim.diagnostic.setqflist,
+      l = vim.diagnostic.setloclist,
+    }
+    require('rockyz.utils').prompt_for_actions(prompt, actions)
+  end
+
+  buf_map('n', 'gd', lsp.buf.definition)
+  buf_map('n', 'gD', lsp.buf.declaration)
+  buf_map('n', 'gy', lsp.buf.type_definition)
+  buf_map('n', 'gi', lsp.buf.implementation)
+  buf_map('n', 'gr', lsp.buf.references)
+  buf_map('n', '<Leader>rn', lsp.buf.rename)
+  buf_map({ 'n', 'x' }, '<Leader>ca', my_lsp_utils.code_action_at_cursor)
+  -- The keymap for showing documentation is defined in nvim-ufo's config
+  -- together with fold preview
+  -- buf_map('n', 'K', vim.lsp.buf.hover)
+  buf_map('i', '<C-s>', lsp.buf.signature_help)
   -- List symbols via telescope
   local function telescope_lsp_picker(picker)
     local themes = require("telescope.themes")
-    local theme_opts = themes.get_ivy {
+    local ivy = themes.get_ivy {
       results_title = false,
       prompt_title = false,
       preview_title = "Preview",
@@ -59,45 +77,52 @@ local on_attach = function(client, bufnr)
         height = 40,
       },
     }
-    require("telescope.builtin")[picker](theme_opts)
+    require("telescope.builtin")[picker](ivy)
   end
-  vim.keymap.set('n', '<Leader>fs', function() telescope_lsp_picker("lsp_document_symbols") end, map_opts)
-  vim.keymap.set('n', '<Leader>fS', function() telescope_lsp_picker("lsp_workspace_symbols") end, map_opts)
+  buf_map('n', '<Leader>fs', function() telescope_lsp_picker("lsp_document_symbols") end)
+  buf_map('n', '<Leader>fS', function() telescope_lsp_picker("lsp_workspace_symbols") end)
   -- Diagnostics
-  vim.keymap.set('n', 'go', vim.diagnostic.open_float, map_opts)
-  vim.keymap.set('n', '[d', function()
-    vim.diagnostic.goto_prev({ float = true, })
-    vim.cmd('normal! zz')
-  end, map_opts)
-  vim.keymap.set('n', ']d', function()
-    vim.diagnostic.goto_next({ float = true, })
-    vim.cmd('normal! zz')
-  end, map_opts)
-  -- Feed buffer diagnostics to location list, or all diagnostics to quickfix
-  vim.keymap.set('n', '<Leader>qd', vim.diagnostic.setloclist, map_opts)
-  vim.keymap.set('n', '<Leader>qD', vim.diagnostic.setqflist, map_opts)
+  buf_map('n', 'go', vim.diagnostic.open_float)
+  buf_map('n', '[d', function()
+    vim.diagnostic.goto_prev({ float = { scope = 'cursor' }, })
+    cmd('normal! zz')
+  end)
+  buf_map('n', ']d', function()
+    vim.diagnostic.goto_next({ float = { scope = 'cursor' }, })
+    cmd('normal! zz')
+  end)
+  -- Feed all diagnostics to quickfix list, or buffer diagnostics to location
+  -- list
+  buf_map('n', '<Leader>qd', dump_diagnostic_to_list)
   -- Format
-  vim.keymap.set({ 'n', 'x' }, ',f', function() my_util.format_range_operator() end, map_opts) -- range
-  vim.keymap.set('n', ',F', function() vim.lsp.buf.format { async = true } end, map_opts) -- whole buffer
+  buf_map({ 'n', 'x' }, '<leader>gq', function() lsp.buf.format { async = true } end)
   -- Toggle diagnostics
-  vim.keymap.set('n', '<BS>d', function() my_util.toggle_diagnostics() end, map_opts)
+  buf_map('n', '<BS>d', my_lsp_utils.toggle_diagnostics)
+
+  -- Show a lightbulb when code actions are available
+  api.nvim_create_augroup('code_action', { clear = true })
+  api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI', 'WinScrolled' }, {
+    group = 'code_action',
+    pattern = '*',
+    callback = my_lsp_utils.show_lightbulb,
+  })
 end
 
 -- Update the capabilities (nvim-cmp supports) sent to the server
 local capabilities = require('cmp_nvim_lsp').default_capabilities()
 capabilities.textDocument.foldingRange = { -- for nvim-ufo
-    dynamicRegistration = false,
-    lineFoldingOnly = true
+  dynamicRegistration = false,
+  lineFoldingOnly = true
 }
 
 -- Vimscript
-nvim_lsp.vimls.setup {
+lspconfig.vimls.setup {
   on_attach = on_attach,
   capabilities = capabilities,
 }
 
 -- Lua
-nvim_lsp.lua_ls.setup {
+lspconfig.lua_ls.setup {
   on_attach = on_attach,
   capabilities = capabilities,
   settings = {
@@ -105,25 +130,38 @@ nvim_lsp.lua_ls.setup {
       runtime = {
         version = 'LuaJIT',
       },
-      -- diagnostics = {
-      -- },
+      diagnostics = {
+        -- neededFileStatus = {
+        --   ["codestyle-check"] = "Any",
+        -- },
+      },
       completion = {
         callSnippet = 'Replace',
         displayContext = 50,
         postfix = '.',
       },
       workspace = {
+        -- Make the server aware of Neovim runtime files
+        -- library = vim.api.nvim_get_runtime_file("", true),
         checkThirdParty = false,
       },
       telemetry = {
         enable = false,
+      },
+      format = {
+        enable = true,
+        defaultConfig = {
+          indent_size = "2",
+          max_line_length = "80",
+          continuation_indent = "4",
+        },
       },
     },
   },
 }
 
 -- Golang
-nvim_lsp.gopls.setup {
+lspconfig.gopls.setup {
   on_attach = on_attach,
   capabilities = capabilities,
   root_dir = util.root_pattern("go.work", "go.mod", ".git"),
@@ -138,7 +176,7 @@ nvim_lsp.gopls.setup {
 }
 
 -- Python
-nvim_lsp.pylsp.setup {
+lspconfig.pylsp.setup {
   on_attach = on_attach,
   capabilities = capabilities,
   -- For further configuration: https://github.com/python-lsp/python-lsp-server/blob/develop/CONFIGURATION.md
@@ -160,25 +198,25 @@ nvim_lsp.pylsp.setup {
 }
 
 -- Rust
-nvim_lsp.rust_analyzer.setup {
+lspconfig.rust_analyzer.setup {
   on_attach = on_attach,
   capabilities = capabilities,
 }
 
 -- TypeScript/JavaScript
-nvim_lsp.tsserver.setup {
+lspconfig.tsserver.setup {
   on_attach = on_attach,
   capabilities = capabilities,
 }
 
 -- Json/Jsonc
-nvim_lsp.jsonls.setup {
+lspconfig.jsonls.setup {
   on_attach = on_attach,
   capabilities = capabilities,
 }
 
 -- C++
-nvim_lsp.clangd.setup {
+lspconfig.clangd.setup {
   on_attach = on_attach,
   capabilities = capabilities,
 }

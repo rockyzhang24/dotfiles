@@ -43,12 +43,12 @@ I assign the key mappings rationally aiming to make them efficient and easy to r
 
 * Multiple leader keys
 
-  In addition to `<Space>` that is the general leader key, `<BS>` and `,` are set as the leader keys for toggling and LSP respectively.
+  In addition to `<Space>` that is the general leader key, `<BS>` and `,` are set as the leader keys for toggling and git respectively.
 
 * Mnemonic
 
   Key bindings are organized using mnemonic prefixes like `<Leader>b` for buffer, `<Leader>f` for fuzzy finder, `<Leader>w` for window, etc.
-  
+
 * Consistent
 
   Similar functionalities have the same key binding throughout my dotfiles. For example, `,` and `.` for moving tabs in both kitty and Neovim.

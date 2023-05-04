@@ -1,5 +1,4 @@
-local registers = require("registers")
-registers.setup({
+require("registers").setup({
   window = {
     border = "single",
     transparency = 0,

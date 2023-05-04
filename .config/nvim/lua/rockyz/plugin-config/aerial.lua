@@ -1,18 +1,19 @@
+local map = require('rockyz.keymap').map
+
 require("aerial").setup {
 
-  -- Mappings
+  -- Mappings (s for symbol)
   on_attach = function(bufnr)
-    local map_opts = { buffer = bufnr, silent = true }
+    local buf_map = function(mode, lhs, rhs)
+      map(mode, lhs, rhs, { buffer = bufnr })
+    end
     -- Toggle aerial window
-    vim.keymap.set('n', '<BS>s', '<Cmd>AerialToggle!<CR>', map_opts)
+    buf_map('n', '<BS>s', '<Cmd>AerialToggle!<CR>')
     -- Focus aerial window
-    vim.keymap.set('n', '<Leader>ss', '<Cmd>AerialOpen<CR>', map_opts)
+    buf_map('n', '<Leader>so', '<Cmd>AerialOpen<CR>')
     -- Jump forwards/backwards
-    vim.keymap.set('n', '[s', '<cmd>AerialPrev<CR>', map_opts)
-    vim.keymap.set('n', ']s', '<cmd>AerialNext<CR>', map_opts)
-    -- Jump up the tree
-    vim.keymap.set('n', '[S', '<cmd>AerialPrevUp<CR>', map_opts)
-    vim.keymap.set('n', ']S', '<cmd>AerialNextUp<CR>', map_opts)
+    buf_map('n', '[s', '<cmd>AerialPrev<CR>')
+    buf_map('n', ']s', '<cmd>AerialNext<CR>')
   end,
 
   backends = { 'lsp', 'treesitter', 'markdown' },

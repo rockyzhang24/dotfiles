@@ -5,10 +5,9 @@ set cursorlineopt=number,screenline
 " set scrolloff=5
 " set sidescrolloff=5
 set noshowmode
-set noshowcmd
 set wildmode=longest:full,full
 set textwidth=80
-set colorcolumn=80,120
+" set colorcolumn=80
 set list
 set listchars=tab:›\ ,trail:•,extends:#,nbsp:.,precedes:❮,extends:❯
 set fillchars=fold:\ ,foldopen:,foldclose:,foldsep:\ ,eob:\ ,msgsep:‾,
@@ -16,8 +15,6 @@ set foldcolumn=1
 set foldmethod=manual
 set foldlevel=99
 set foldlevelstart=99
-" set foldmethod=expr
-" set foldexpr=nvim_treesitter#foldexpr() " treesitter based folding
 set completeopt=menu,menuone,noselect
 set timeoutlen=500
 set shortmess+=a shortmess+=c shortmess+=I
@@ -35,12 +32,13 @@ set ignorecase
 set smartcase
 set title
 set titlestring=%t%(\ %m%)\ %<%(\ (%{expand(\"%:~:.:h\")})%)%(\ %a%)
-set diffopt+=vertical diffopt+=algorithm:patience
+set diffopt+=vertical diffopt+=algorithm:patience diffopt+=linematch:60
 set noswapfile
 set nobackup
 set signcolumn=yes
 set spelllang=en_us
-set pumheight=20
+set pumheight=15
+set pumwidth=20
 " set pumblend=5
 " set winblend=5
 set winminwidth=10
@@ -65,8 +63,10 @@ set nrformats=octal,bin,hex,unsigned,alpha
 set sessionoptions+=terminal,globals,winpos
 set isfname-==
 set shada=!,'500,<50,s10,h
-set lazyredraw
+set synmaxcol=300
+" set lazyredraw
 set mouse=a
+set mousemodel=extend
 " Avoid highlighting the last search when sourcing vimrc
 exec "nohlsearch"
 " Latex

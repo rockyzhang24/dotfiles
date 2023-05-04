@@ -1,7 +1,10 @@
+local map = require('rockyz.keymap').map
+local cmd = vim.cmd
+local api = vim.api
+local hlslens = require('hlslens')
+
 -- Do not show search count message when searching
 vim.opt.shortmess:append('S')
-
-local hlslens = require('hlslens')
 
 hlslens.setup({
   -- calm_down = true,
@@ -9,12 +12,11 @@ hlslens.setup({
 })
 
 -- Mappings
-local map_opts = { silent = true }
 -- Integrate with vim-asterisk
-vim.keymap.set({ 'n', 'x' }, '*', [[<Plug>(asterisk-z*)<Cmd>lua require('hlslens').start()<CR>]], map_opts)
-vim.keymap.set({ 'n', 'x' }, '#', [[<Plug>(asterisk-z#)<Cmd>lua require('hlslens').start()<CR>]], map_opts)
-vim.keymap.set({ 'n', 'x' }, 'g*', [[<Plug>(asterisk-gz*)<Cmd>lua require('hlslens').start()<CR>]], map_opts)
-vim.keymap.set({ 'n', 'x' }, 'g#', [[<Plug>(asterisk-gz#)<Cmd>lua require('hlslens').start()<CR>]], map_opts)
+map({ 'n', 'x' }, '*', [[<Plug>(asterisk-z*)<Cmd>lua require('hlslens').start()<CR>]])
+map({ 'n', 'x' }, '#', [[<Plug>(asterisk-z#)<Cmd>lua require('hlslens').start()<CR>]])
+map({ 'n', 'x' }, 'g*', [[<Plug>(asterisk-gz*)<Cmd>lua require('hlslens').start()<CR>]])
+map({ 'n', 'x' }, 'g#', [[<Plug>(asterisk-gz#)<Cmd>lua require('hlslens').start()<CR>]])
 -- Integrate with nvim-ufo
 local function nN(char)
   local ok, winid = hlslens.nNPeekWithUFO(char)
@@ -22,20 +24,20 @@ local function nN(char)
     -- Safe to override buffer scope keymaps remapped by ufo,
     -- ufo will restore previous buffer keymaps before closing preview window
     -- Type <CR> will switch to preview window and fire `trace` action
-    vim.keymap.set('n', '<CR>', function()
-      local keyCodes = vim.api.nvim_replace_termcodes('<Tab><CR>', true, false, true)
-      vim.api.nvim_feedkeys(keyCodes, 'im', false)
+    map('n', '<CR>', function()
+      local keyCodes = api.nvim_replace_termcodes('<Tab><CR>', true, false, true)
+      api.nvim_feedkeys(keyCodes, 'im', false)
     end, {buffer = true})
   end
-  vim.cmd('normal! zz')
+  cmd('normal! zz')
 end
-vim.keymap.set({'n', 'x'}, 'n', function() nN('n') end)
-vim.keymap.set({'n', 'x'}, 'N', function() nN('N') end)
+map({'n', 'x'}, 'n', function() nN('n') end)
+map({'n', 'x'}, 'N', function() nN('N') end)
 -- Dump the search results into quickfix list
-vim.keymap.set({'n', 'x'}, '<Leader>q/', function ()
+map({'n', 'x'}, '<Leader>q/', function ()
   vim.schedule(function()
     if require('hlslens').exportLastSearchToQuickfix() then
-      vim.cmd('cwindow')
+      cmd('cwindow')
     end
   end)
   return ':noh<CR>'

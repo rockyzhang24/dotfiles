@@ -1,11 +1,16 @@
 -- Some functions are highly inspired by LunarVim
 
+local fn = vim.fn
+local api = vim.api
 local lsp = vim.lsp
+local v = vim.v
+local tabline = require('tabline.setup')
 local colors = {
+  white = '#ffffff',
   yellow = '#E8AB53',
-  green = '#6a9955',
-  red = '#d16969',
-  gray ='#858585',
+  green = '#16825d',
+  red = '#c72e0f',
+  gray = '#858585',
 }
 
 -- Format for mode: only show the first char (or first two chars to distinguish
@@ -18,7 +23,7 @@ end
 local function fileNameAndSize(str)
   -- For doc, only show filename
   if (string.find(str, '.*/doc/.*%.txt')) then
-    str = vim.fn.expand('%:t')
+    str = fn.expand('%:t')
   end
   local size = require('lualine.components.filesize')()
   return size == '' and str or str .. ' [' .. size .. ']'
@@ -29,29 +34,28 @@ local function location()
   return '%3l/%-3L:%-2v [%3p%%]'
 end
 
--- LSP progress
-local function lsp_progress()
-  local messages = lsp.util.get_progress_messages()[1]
-  if not messages then
-    return ""
-  end
-  local name = messages.name or ""
-  local title = messages.title or ""
-  local msg = messages.message or ""
-  local percentage = messages.percentage or 0
-  return string.format(" %%<[%s] %s %s (%s%%%%)", name, title, msg, percentage)
-end
-
 -- LSP clients
+local index = 1
+local has_clients = false
 local function lsp_clients()
-  local bufnr = vim.api.nvim_get_current_buf()
+  local bufnr = api.nvim_get_current_buf()
   local clients = lsp.get_active_clients({ bufnr = bufnr })
   local client_names = {}
+  local spinner = { '🌖', '🌗', '🌘', '🌑', '🌒', '🌓', '🌔' }
+  local found_undone = false
 
-  -- Clients
+  -- Get LS clients the next spinner for showing the progress
   for _, client in pairs(clients) do
     if client.name ~= 'null-ls' then
       table.insert(client_names, client.name)
+    end
+    -- Get the next spinner for showing the progress
+    -- Reference: the source code of the function lsp.util.get_progress_messages()
+    for _, ctx in pairs(client.messages.progress) do
+      if not ctx.done and not found_undone then
+        index = index == #spinner and 1 or index + 1
+        found_undone = true
+      end
     end
   end
 
@@ -62,20 +66,21 @@ local function lsp_clients()
   if next(client_names) == nil then
     return 'LS Inactive'
   end
-  local language_servers = '[' .. table.concat(client_names, ', ') .. ']'
-  return language_servers
+  has_clients = true
+  local progress = found_undone and spinner[index] or '🌕'
+  return progress .. ' ' .. table.concat(client_names, ', ')
 end
 
 -- Indent type (tab or space) and number of spaces
 local function spaces()
-  local get_option = vim.api.nvim_buf_get_option
+  local get_option = api.nvim_buf_get_option
   local expandtab = get_option(0, 'expandtab')
   local spaces_cnt = expandtab and get_option(0, 'shiftwidth') or get_option(0, 'tabstop')
   return (expandtab and 'S:' or 'T:') .. spaces_cnt
 end
 
 local function hide_in_width()
-  return vim.fn.winwidth(0) > 100
+  return fn.winwidth(0) > 100
 end
 
 require 'lualine'.setup {
@@ -96,19 +101,27 @@ require 'lualine'.setup {
       },
     },
     lualine_b = {
+      -- Git branch (fetched from gitsigns.nvim)
       {
-        'branch',
+        'b:gitsigns_head',
         icon = { '', color = { fg = colors.yellow } },
       },
     },
     lualine_c = {
+      -- Git diff (use gitsigns.nvim as its source)
       {
         'diff',
         symbols = { added = ' ', modified = ' ', removed = ' ' },
-      },
-      {
-        lsp_progress,
-        padding = { left = 0, right = 1 },
+        source = function()
+          local status = vim.b.gitsigns_status_dict
+          if status then
+            return {
+              added = status.added,
+              modified = status.changed,
+              removed = status.removed,
+            }
+          end
+        end,
       },
     },
     lualine_x = {
@@ -116,22 +129,54 @@ require 'lualine'.setup {
         'diagnostics',
         sources = { "nvim_diagnostic" },
         symbols = { error = ' ', warn = ' ', info = ' ', hint = ' ' },
+        cond = function()
+          return not vim.diagnostic.is_disabled()
+        end,
+      },
+      -- Show a symbol when diagnostic is off
+      {
+        function()
+          return ' '
+        end,
+        color = { fg = colors.red },
+        cond = function()
+          return vim.diagnostic.is_disabled()
+        end,
+      },
+      -- Show a symbol when spell is on
+      {
+        function()
+          return vim.o.spell and ' ' or ''
+        end,
+        color = { fg = colors.green },
+      },
+      {
+        'searchcount',
       },
       {
         lsp_clients,
+        color = function()
+          return { fg = has_clients and colors.white or colors.gray }
+        end,
         padding = { left = 1, right = 0 },
         cond = hide_in_width,
       },
       {
         -- Treesitter status
+        -- Use different colors to denote whether it has a parser for the
+        -- current file and whether the highlight is enabled:
+        -- - gray  : no parser
+        -- - green : has parser and highlight is enabled
+        -- - red   : has parser but highlight is disabled
         function()
           return 'TS'
         end,
         color = function()
-          local buf = vim.api.nvim_get_current_buf()
+          local buf = api.nvim_get_current_buf()
           local hl_is_enabled = vim.treesitter.highlighter.active[buf]
           local has_parser = require('nvim-treesitter.parsers').has_parser()
-          return { fg = has_parser and (hl_is_enabled and colors.green or colors.red) or colors.gray }
+          return { fg = has_parser and
+              (hl_is_enabled and colors.green or colors.red) or colors.gray }
         end,
         padding = { left = 1, right = 0 },
         cond = hide_in_width,
@@ -139,6 +184,28 @@ require 'lualine'.setup {
       {
         spaces,
         icon = { '', color = { fg = colors.yellow } },
+        padding = { left = 1, right = 0 },
+        cond = hide_in_width,
+      },
+      {
+        -- Session indicator
+        -- It shows the current session name and use a color to indicate whether
+        -- the session persistance (brought by mg979/tabline.nvim) is enabled:
+        -- - green: session persistance is enabled
+        -- - white: session persistance is disabled
+        function()
+          local ss = v.this_session
+          if ss ~= '' then
+            return fn.fnamemodify(ss, ':t')
+          else
+            return 'None'
+          end
+        end,
+        color = function()
+          return { fg = v.this_session == '' and colors.gray or
+              (tabline.global.persist and colors.green or colors.white) }
+        end,
+        icon = { '', color = { fg = colors.yellow } },
         cond = hide_in_width,
       },
     },
@@ -146,13 +213,13 @@ require 'lualine'.setup {
       {
         'filetype',
       },
-      {
-        'filesize',
-        fmt = function(str)
-          return str == "" and str or "[" .. str .. "]"
-        end,
-        padding = { left = 0, right = 1 },
-      },
+      -- {
+      --   'filesize',
+      --   fmt = function(str)
+      --     return str == "" and str or "[" .. str .. "]"
+      --   end,
+      --   padding = { left = 0, right = 1 },
+      -- },
     },
     lualine_z = {
       {
@@ -178,3 +245,12 @@ require 'lualine'.setup {
     'symbols-outline',
   }
 }
+
+-- For indicating the progress, update the statusline when the progress notification
+-- is reported from the server
+api.nvim_create_autocmd({ 'User' }, {
+  pattern = { 'LspProgressUpdate' },
+  callback = function()
+    require('lualine').refresh()
+  end,
+})

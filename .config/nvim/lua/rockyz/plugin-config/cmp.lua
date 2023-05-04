@@ -16,19 +16,17 @@ end
 
 local winhighlight = 'FloatBorder:SuggestWidgetBorder,CursorLine:SuggestWidgetSelect,Search:None'
 if border_enabled then
-  winhighlight = 'Normal:Normal,' .. winhighlight
+  winhighlight = 'Normal:Normal,PmenuThumb:ScrollbarSlider,' .. winhighlight
 else
   winhighlight = 'Normal:Pmenu,' .. winhighlight
 end
 
 cmp.setup({
-
   snippet = {
     expand = function(args)
       require('luasnip').lsp_expand(args.body)
     end,
   },
-
   window = {
     completion = {
       winhighlight = winhighlight,
@@ -40,7 +38,6 @@ cmp.setup({
       focusable = true,
     },
   },
-
   -- Mappings
   -- Default mappings can be found here: https://github.com/hrsh7th/nvim-cmp/blob/main/lua/cmp/config/mapping.lua
   -- Ref: https://github.com/hrsh7th/nvim-cmp/issues/1027
@@ -85,7 +82,6 @@ cmp.setup({
       end,
     },
   },
-
   sources = cmp.config.sources({
     -- The order of the sources gives them priority, or use priority = xxx to specify it.
     { name = 'nvim_lsp' },
@@ -100,7 +96,6 @@ cmp.setup({
     { name = 'path' },
     { name = 'nvim_lua' }, -- nvim_lua make it only be enabled for Lua filetype
   }),
-
   formatting = {
     -- Icons
     format = lspkind.cmp_format({
@@ -121,13 +116,11 @@ cmp.setup({
       'menu',
     },
   },
-
   experimental = {
     ghost_text = {
       hl_group = 'GhostText',
     },
   },
-
 })
 
 -- For search forward

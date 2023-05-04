@@ -1,0 +1,17 @@
+# vim: filetype=zsh
+
+# MNEMONIC: [N]eovim [G]it [L]og
+# SYNOPSIS: ngl [Options of `git log`]
+# DESCRIPTION: Open neovim and use vim-flog to show the git logs. Any options
+# for git log can be accepted and they can be autocompleted by <Tab>.
+
+git rev-parse >/dev/null 2>&1
+
+if [[ $? -eq 0 ]]; then
+  nvim -c "Flog -raw-args=${*:+${(q)*}}" -c "bwipeout 1"
+else
+  # If not in a git repo, use my dotfiles git bare repo
+  nvim -c "let \$GIT_DIR = '$HOME/dotfiles'" \
+      -c "let \$GIT_WORK_TREE = '$HOME'" \
+      -c "Flog -raw-args=${*:+${(q)*}}" -c "bwipeout 1"
+fi

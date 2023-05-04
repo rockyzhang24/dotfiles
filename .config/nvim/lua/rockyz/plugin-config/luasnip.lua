@@ -3,6 +3,7 @@
 
 local ls = require("luasnip")
 local types = require("luasnip.util.types")
+local map = require('rockyz.keymap').map
 
 -- Configurations
 ls.config.setup({
@@ -25,12 +26,6 @@ ls.config.setup({
 })
 
 -- Mappings (vim.keymap requires Neovim 0.7)
-
-local function map(mode, l, r, opts)
-  opts = opts or {}
-  opts.silent = true
-  vim.keymap.set(mode, l, r, opts)
-end
 
 -- <C-j> is my expansion key
 -- This will expand the current item or jump to the next item within the snippet.

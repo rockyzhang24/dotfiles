@@ -1,5 +1,7 @@
+local map = require('rockyz.keymap').map
+
 require('maximize').setup {
   default_keymaps = false
 }
 
-vim.keymap.set('n', '<Leader>m', "<Cmd>lua require('maximize').toggle()<CR>")
+map('n', '<Leader>m', "<Cmd>lua require('maximize').toggle()<CR>")

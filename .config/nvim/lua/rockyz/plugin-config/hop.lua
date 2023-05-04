@@ -1,3 +1,4 @@
+local map = require('rockyz.keymap').map
 local hop = require('hop')
 
 hop.setup {
@@ -5,4 +6,4 @@ hop.setup {
   char2_fallback_key = '<CR>',
 }
 
-vim.keymap.set({ 'n', 'o', 'x' }, '<Leader>j', hop.hint_char2)
+map({ 'n', 'o', 'x' }, '<Leader>j', hop.hint_char2)

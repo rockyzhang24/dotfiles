@@ -1,11 +1,16 @@
+local map = require('rockyz.keymap').map
+local theme = require('rockyz.plugin-config.telescope.theme')
+
+local ivy = theme.get_ivy(false)
+
 require("project_nvim").setup {
   manual_mode = true,
   silent_chdir = false,
 }
 
-local map_opts = { silent = true }
-
 -- Change the current directory to the project directory
-vim.keymap.set('n', '<Leader>/', '<Cmd>ProjectRoot<CR>', map_opts)
+map('n', '<Leader>/', '<Cmd>ProjectRoot<CR>')
 -- Telescope integration
-vim.keymap.set('n', '<Leader>fp', '<Cmd>Telescope projects<CR>', map_opts)
+map('n', '<Leader>fp', function()
+  require('telescope').extensions.projects.projects(ivy)
+end)

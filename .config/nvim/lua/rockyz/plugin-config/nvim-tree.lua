@@ -1,3 +1,5 @@
+local map = require('rockyz.keymap').map
+
 require('nvim-tree').setup {
   hijack_cursor = true,
   update_cwd = true,
@@ -83,8 +85,8 @@ end
 -- Toggle the tree
 -- Two arguments in toggle() control whether the current file will be revealed,
 -- and whether the tree is not focused.
-vim.keymap.set('n', '<BS>t', function() require('nvim-tree').toggle(false, true) end, { silent = true })
+map('n', '<BS>t', function() require('nvim-tree').toggle(false, true) end)
 
-vim.keymap.set('n', '<Leader>tt', '<Cmd>NvimTreeFocus<CR>', { silent = true })
-vim.keymap.set('n', '<Leader>tf', find_file_no_focus, { silent = true })
-vim.keymap.set('n', '<Leader>tr', '<Cmd>NvimTreeRefresh<CR>', { silent = true })
+map('n', '<Leader>tt', '<Cmd>NvimTreeFocus<CR>')
+map('n', '<Leader>tf', find_file_no_focus)
+map('n', '<Leader>tr', '<Cmd>NvimTreeRefresh<CR>')

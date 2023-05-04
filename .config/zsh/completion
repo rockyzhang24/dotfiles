@@ -16,3 +16,17 @@ compinit
 # For kitty kitten: hyperlinked grep (defined in ~/.config/zsh/functions/hg)
 # Delegate its completion to rg
 compdef _rg hg
+
+# Make ngl (~/.config/zsh/functions/ngl) support autocomplete as `git log`
+compdef _ngl ngl
+_ngl() {
+  (( $+functions[_git-log] )) || _git
+  _git-log
+}
+
+# Make ngd (~/.config/zsh/functions/ngd) support autocomplete as `git difftool`
+compdef _ngd ngd
+_ngd() {
+  (( $+functions[_git-difftool] )) || _git
+  _git-difftool
+}

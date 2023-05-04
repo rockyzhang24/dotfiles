@@ -1,0 +1,11 @@
+# vim: filetype=zsh
+
+# MNEMONIC: [N]eovim [RG]
+# SYNOPSIS: nrg {QUERY}
+# DESCRIPTION: Open neovim and run vim-grepper's rg to search the input query
+
+if [[ $@ ]]; then
+  nvim -c "Grepper -noprompt -tool rg -query $@"
+else
+  echo "Query string is required!"
+fi

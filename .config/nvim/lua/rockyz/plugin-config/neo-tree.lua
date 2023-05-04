@@ -1,6 +1,8 @@
 local utils = require("neo-tree.utils")
 local inputs = require("neo-tree.ui.inputs")
 local cmds = require("neo-tree.sources.filesystem.commands")
+local map = require('rockyz.keymap').map
+local api = vim.api
 
 -----------------------------
 -- Some helper functions here
@@ -12,7 +14,7 @@ local cmds = require("neo-tree.sources.filesystem.commands")
 local function system_open(state)
   local node = state.tree:get_node()
   local path = node:get_id()
-  vim.api.nvim_command("silent !open -g " .. path)
+  api.nvim_command("silent !open -g " .. path)
 end
 
 -- Trash the target
@@ -28,7 +30,7 @@ local function trash(state)
     if not confirmed then
       return
     end
-    vim.api.nvim_command("silent !trash -F " .. node.path)
+    api.nvim_command("silent !trash -F " .. node.path)
     cmds.refresh(state)
   end)
 end
@@ -47,7 +49,7 @@ local function trash_visual(state, selected_nodes)
       return
     end
     for _, path in ipairs(paths_to_trash) do
-      vim.api.nvim_command("silent !trash -F " .. path)
+      api.nvim_command("silent !trash -F " .. path)
     end
     cmds.refresh(state)
   end)
@@ -186,17 +188,15 @@ require("neo-tree").setup {
 -- Mappings
 -----------
 
-local map_ops = { silent = true }
-
-vim.keymap.set('n', '<BS>t', ':Neotree toggle show<CR>', map_ops)
-vim.keymap.set('n', '<Leader>tt', ':Neotree focus<CR>', map_ops)
-vim.keymap.set('n', '<Leader>tf', ':Neotree reveal<CR>', map_ops)
-vim.keymap.set('n', '<Leader>tr', function() require("neo-tree.sources.manager").refresh("filesystem") end, map_ops) -- refresh
+map('n', '<BS>t', ':Neotree toggle show<CR>')
+map('n', '<Leader>tt', ':Neotree focus<CR>')
+map('n', '<Leader>tf', ':Neotree reveal<CR>')
+map('n', '<Leader>tr', function() require("neo-tree.sources.manager").refresh("filesystem") end) -- refresh
 
 ----------------------------
 -- nvim-window-picker config
 ----------------------------
-require 'window-picker'.setup {
+require('window-picker').setup {
   filter_rules = {
     bo = {
       filetype = { 'aerial', 'neo-tree', 'neo-tree-popup', 'notify', 'qf' },

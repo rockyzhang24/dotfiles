@@ -1,3 +1,5 @@
+local map = require('rockyz.keymap').map
+
 require("bufferline").setup {
   options = {
     numbers = function(opts)
@@ -40,8 +42,8 @@ require("bufferline").setup {
 }
 
 -- Buffer picker
-vim.keymap.set('n', '<Leader>bp', '<Cmd>BufferLinePick<CR>')
+map('n', '<Leader>bp', '<Cmd>BufferLinePick<CR>')
 
 -- Move buffer backwards or forwards (consistent with kitty tab movement)
-vim.keymap.set('n', '<Leader>b,', '<Cmd>BufferLineMovePrev<CR>')
-vim.keymap.set('n', '<Leader>b.', '<Cmd>BufferLineMoveNext<CR>')
+map('n', '<Leader>b,', '<Cmd>BufferLineMovePrev<CR>')
+map('n', '<Leader>b.', '<Cmd>BufferLineMoveNext<CR>')

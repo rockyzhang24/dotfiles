@@ -1,11 +1,9 @@
-local map_opts = {
-  silent = true,
-}
+local map = require('rockyz.keymap').map
 
-vim.keymap.set('n', '<Leader>ha', function() require("harpoon.mark").add_file() end, map_opts)
-vim.keymap.set('n', '<BS>h', function() require("harpoon.ui").toggle_quick_menu() end, map_opts)
+map('n', '<Leader>ha', require("harpoon.mark").add_file)
+map('n', '<BS>h', require("harpoon.ui").toggle_quick_menu)
 
-vim.keymap.set('n', ',1', function() require("harpoon.ui").nav_file(1) end, map_opts)
-vim.keymap.set('n', ',2', function() require("harpoon.ui").nav_file(2) end, map_opts)
-vim.keymap.set('n', ',3', function() require("harpoon.ui").nav_file(3) end, map_opts)
-vim.keymap.set('n', ',4', function() require("harpoon.ui").nav_file(4) end, map_opts)
+map('n', ',1', function() require("harpoon.ui").nav_file(1) end)
+map('n', ',2', function() require("harpoon.ui").nav_file(2) end)
+map('n', ',3', function() require("harpoon.ui").nav_file(3) end)
+map('n', ',4', function() require("harpoon.ui").nav_file(4) end)

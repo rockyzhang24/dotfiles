@@ -1,3 +1,5 @@
+local map = require('rockyz.keymap').map
+
 require('colorizer').setup({
   filetypes = { "*" },
   user_default_options = {
@@ -24,4 +26,4 @@ require('colorizer').setup({
 })
 
 -- Toggle highlighting of the current buffer
-vim.keymap.set('n', '<BS>C', '<Cmd>ColorizerToggle<CR>')
+map('n', '<BS>C', '<Cmd>ColorizerToggle<CR>')

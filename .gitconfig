@@ -1,13 +1,10 @@
 [user]
   name = Rocky Zhang
   email = yzhang.rocky@gmail.com
-[alias]
-  cm = commit
-  st = status
-  br = branch
 [core]
   excludesfile = /Users/rockyzhang/.gitignore_global
   pager = delta
+  commentchar = ";"
 [interactive]
   diffFilter = delta --color-only
 [delta]
@@ -15,28 +12,27 @@
   hyperlinks = true
   features = side-by-side line-numbers decorations interactive
   syntax-theme = Visual Studio Dark+
-  plus-style = syntax "#373d29"
-  plus-emph-style = syntax "#386229"
-  minus-style = syntax "#4b1818"
-  minus-emph-stype = syntax "#781212"
-  ; For git's "--color-moved" feature. Ref:
-  ; https://dandavison.github.io/delta/color-moved-support.html
+  plus-style = syntax "#203424" ; diff line added
+  plus-emph-style = syntax "#214d29" ; diff text added
+  minus-style = syntax "#442423" ; diff line deleted
+  minus-emph-stype = syntax "#712928" ; diff text deleted
+  ; For git's "--color-moved" feature. Ref: https://dandavison.github.io/delta/color-moved-support.html
   map-styles = \
     bold purple => syntax "#271344", \
     bold cyan => syntax "#0d3531", \
     bold blue => syntax "#002f4e", \
-    bold yellow => syntax "#996214"
+    bold yellow => syntax "#5d4616"
 [delta "line-numbers"]
   line-numbers = true
-  line-numbers-zero-style = "#858585"
-  line-numbers-minus-style = "#f14c4c"
-  line-numbers-plus-style = "#487e02"
-  line-numbers-left-style = "#444444"
-  line-numbers-right-style = "#444444"
+  line-numbers-zero-style = "#6e7681" ; line number
+  line-numbers-minus-style = "#f85149" ; gutter git added
+  line-numbers-plus-style = "#2ea043" ; gutter git deleted
+  line-numbers-left-style = "#333333" ; separator
+  line-numbers-right-style = "#333333" ; separator
 [delta "decorations"]
   file-style = "#ffffff" bold ul
   file-decoration-style = none
-  hunk-header-decoration-style = "#444444" box ul
+  hunk-header-decoration-style = "#333333" box ul ; separator
 [delta "interactive"]
   keep-plus-minus-markers = false
 [filter "lfs"]
@@ -46,6 +42,7 @@
   required = true
 [credential]
   helper = osxkeychain
+
 ; Use neovim as git diff and merge tool
 [diff]
   tool = nvimdiff
@@ -53,11 +50,11 @@
 [difftool]
   prompt = false
 [difftool "nvimdiff"]
-  cmd = "nvim -d \"$LOCAL\" \"$REMOTE\""
+  cmd = nvim -d $LOCAL $REMOTE
 [merge]
   tool = nvimdiff
   conflictstyle = diff3
 [mergetool]
   prompt = true
 [mergetool "nvimdiff"]
-  cmd = "nvim -d \"$LOCAL\" \"$REMOTE\" \"$MERGED\" -c 'wincmd w' -c 'wincmd J'"
+  cmd = nvim -c \"Gvdiffsplit!\" \"$MERGED\"

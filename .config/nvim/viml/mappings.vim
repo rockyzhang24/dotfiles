@@ -1,23 +1,42 @@
 " Misc {{{
 
 let mapleader=" "
+noremap <Space> <NOP>
 
-" The normal `,` is used as a leader key for lsp mappings
+" `,` is used as a leader key for git, so use `<Leader>,` instead.
 nnoremap <Leader>, ,
 
+" Quit and close
+noremap q <NOP>
+noremap Q <NOP>
+nnoremap <Leader>m q
+nnoremap qq <Cmd>q<CR>
+nnoremap qa <Cmd>qa<CR>
+nnoremap qt <Cmd>tabclose<CR>
+
+" Save
+nnoremap <C-s> <Cmd>update<CR>
+nnoremap <Leader><Leader>q <Cmd>wq<CR>
+
+" Black hole register
+nnoremap - "_
+xnoremap - "_
+
 " Smarter j and k navigation
-" nnoremap <expr> j v:count ? (v:count > 5 ? "m'" . v:count : '') . 'j' : 'gj'
-" nnoremap <expr> k v:count ? (v:count > 5 ? "m'" . v:count : '') . 'k' : 'gk'
+nnoremap <expr> j v:count ? (v:count > 5 ? "m'" . v:count : '') . 'j' : 'gj'
+nnoremap <expr> k v:count ? (v:count > 5 ? "m'" . v:count : '') . 'k' : 'gk'
 
 " Go to the start and end of the line easier
 noremap H ^
 noremap L $
 
-" Move the selections up and down with corresponding indentation
-xnoremap J :m '>+1<CR>gv=gv
-xnoremap K :m '<-2<CR>gv=gv
-inoremap <M-j> <Esc>:m .+1<CR>==a
-inoremap <M-k> <Esc>:m .-2<CR>==a
+" Move the current line or selections up and down with corresponding indentation
+nnoremap <silent> <M-j> :m .+1<CR>==
+nnoremap <silent> <M-k> :m .-2<CR>==
+inoremap <silent> <M-j> <Esc>:m .+1<CR>==a
+inoremap <silent> <M-k> <Esc>:m .-2<CR>==a
+xnoremap <silent> J :m '>+1<CR>gv=gv
+xnoremap <silent> K :m '<-2<CR>gv=gv
 
 " Join lines but retain the cursor position
 nnoremap J mzJ`z
@@ -26,27 +45,8 @@ nnoremap J mzJ`z
 xnoremap < <gv
 xnoremap > >gv
 
-" Delete but not save to a register
-nnoremap <Leader>d "_d
-xnoremap <Leader>d "_d
-nnoremap <Leader>D "_D
-nnoremap <Leader>dd "_dd
-nnoremap c "_c
-xnoremap c "_c
-nnoremap C "_C
-nnoremap cc "_cc
-
-" Increment/Decrement
-nnoremap + <C-a>
-nnoremap - <C-x>
-vnoremap g+ g<C-a>
-vnoremap g- g<C-x>
-
 " Make dot work over visual line selections
-xnoremap . :norm.<CR>
-
-" Execute a macro over visual line selections
-xnoremap Q :'<,'>:normal @q<CR>
+xnoremap <silent> . :norm.<CR>
 
 " Clone current paragraph
 nnoremap cp yap<S-}>p
@@ -66,29 +66,12 @@ nnoremap <expr> ]<Space> 'm`' . v:count . 'o<Esc>``'
 nnoremap zl 10zl
 nnoremap zh 10zh
 
-" chmod
-nnoremap <Leader>x :silent !chmod +x %<CR>
+nnoremap U <Cmd>execute 'earlier ' . v:count1 . 'f'<CR>
+nnoremap <M-r> <Cmd>execute 'later ' . v:count1 . 'f'<CR>
 
-" Tmux (only available for neovim in tmux)
-nnoremap <C-s> <Cmd>silent !tmux neww tmux-sessionizer<CR>
-
-" Simulate the multiple cursors feature
-" Ref: https://www.kevinli.co/posts/2017-01-19-multiple-cursors-in-500-bytes-of-vimscript/
-let g:mc = "y/\\V\<C-r>=escape(@\", '/')\<CR>\<CR>"
-" Changing a word
-nnoremap <Leader>cn *``cgn
-nnoremap <Leader>cN *``cgN
-" Changing a selection
-vnoremap <expr> <Leader>cn g:mc . "``cgn"
-vnoremap <expr> <Leader>cN g:mc . "``cgN"
-function! SetupCR()
-  nnoremap <Enter> :nnoremap <lt>Enter> n@z<CR>q:<C-u>let @z=strpart(@z,0,strlen(@z)-1)<CR>n@z
-endfunction
-" Playing a macro on searches
-nnoremap <Leader>cq :call SetupCR()<CR>*``qz
-nnoremap <Leader>cQ :call SetupCR()<CR>#``qz
-vnoremap <expr> <Leader>cq ":\<C-u>call SetupCR()\<CR>" . "gv" . g:mc . "``qz"
-vnoremap <expr> <Leader>cQ ":\<C-u>call SetupCR()\<CR>" . "gv" . substitute(g:mc, '/', '?', 'g') . "``qz"
+nnoremap <C-g> 2<C-g>
+nnoremap <M-a> VggoG
+nnoremap <Leader>i <Cmd>silent! normal! `^<CR>
 
 " }}}
 
@@ -99,9 +82,6 @@ nnoremap <silent> <Leader>bd :<C-u>bprevious <Bar> bdelete #<CR>
 
 " Delete all the other unmodified buffers
 nnoremap <silent> <Leader>bD :call utils#BufsDel()<CR>
-
-" Search the current WORD in the current buffer
-nnoremap <Leader>bs /<C-R>=escape(expand("<cWORD>"), "/")<CR><CR>
 
 " }}}
 
@@ -122,12 +102,9 @@ xnoremap p "_c<Esc>p
 " Select the last changed (or pasted) text
 nnoremap <expr> gp '`[' . strpart(getregtype(), 0, 1) . '`]'
 
-" Paste non-linewise text above or below current cursor
-nnoremap <Leader>p m`o<Esc>p``
-nnoremap <Leader>P m`O<Esc>p``
-
-" Paste text and replace the selection
-xnoremap <Leader>p "_dP
+" Paste non-linewise text above or below current cursor and format
+nnoremap <Leader>p m`o<Esc>p==``
+nnoremap <Leader>P m`O<Esc>p==``
 
 " }}}
 
@@ -142,6 +119,8 @@ cnoremap <C-a> <Home>
 cnoremap <C-e> <End>
 cnoremap ∫ <S-Left>
 cnoremap ƒ <S-Right>
+cnoremap <C-d> <Del>
+cnoremap <C-k> <C-\>egetcmdline()[:getcmdpos() - 2]<CR>
 
 " Ctrl-o to open command-line window
 set cedit=\<C-o>
@@ -153,9 +132,10 @@ cnoremap %% <C-R>=fnameescape(expand('%:h')).'/'<cr>
 
 " Navigation {{{
 
-" s has been used for navigating among symbols
-nnoremap ]x ]s
+" Use [x and ]x to move the the previous/next misspelled word
+" [s and ]s has been used for navigating among symbols
 nnoremap [x [s
+nnoremap ]x ]s
 
 " Navigation in the argument list
 nnoremap <silent> [a :<C-u>previous<CR>
@@ -187,7 +167,7 @@ nnoremap <silent> ]t :<C-u>tabnext<CR>
 nnoremap <silent> [T :<C-u>tabfirst<CR>
 nnoremap <silent> ]T :<C-u>tablast<CR>
 
-" Make section-jump work if '{' or '}' are not in the first column (ref :h [[)
+" Make section-jump work if '{' or '}' are not in the first column (see :h [[)
 map <silent> [[ :<C-u>eval search('{', 'b')<CR>w99[{
 map <silent> [] k$][%:<C-u>silent! eval search('}', 'b')<CR>
 map <silent> ]] j0[[%:<C-u>silent! eval search('{')<CR>
@@ -197,17 +177,13 @@ map <silent> ][ :<C-u>silent! eval search('}')<CR>b99]}
 
 " Search {{{
 
-" Clean search highlighting
-nnoremap <expr> <C-BS> {-> v:hlsearch ? ":<C-U>nohlsearch<C-R>=has('diff')?'<Bar>diffupdate':''<CR><CR><C-L>" : "\<CR>"}()
+" Clean search highlighting and update diff if needed
+nnoremap <expr> <Leader>l {-> v:hlsearch ? ":<C-U>nohlsearch<C-R>=has('diff')?'<Bar>diffupdate':''<CR><CR><C-L>" : "\<CR>"}()
 
-" Substitute (replace)
-nnoremap <Leader>r :%s/
-xnoremap <Leader>r :s/
-nnoremap <Leader>R :%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>
+" Substitute all the occurrance of the current word
+nnoremap <Leader>S :%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>
 
-" Make * and # search for the current selection (now using vim-asterisk instead)
-" xnoremap * :<C-u>call utils#VSetSearch('/')<CR>/<C-R>=@/<CR><CR>
-" xnoremap # :<C-u>call utils#VSetSearch('?')<CR>?<C-R>=@/<CR><CR>
+xnoremap / <Esc>/\%V
 
 " Grep operator (now using vim-grepper instead)
 " nnoremap <silent> \g :<C-u>set operatorfunc=utils#GrepOperator<CR>g@
@@ -219,9 +195,6 @@ nnoremap <Leader>R :%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>
 
 " Open a new tab with an empty window
 nnoremap <silent> <Leader>tn :$tabnew<CR>
-
-" Close the current tab
-nnoremap <silent> <Leader>tc :tabclose<CR>
 
 " Close all other tabs
 nnoremap <silent> <Leader>to :tabonly<CR>
@@ -243,22 +216,12 @@ nnoremap <silent> <BS>r :set wrap!<CR>:set wrap?<CR>
 " Toggle relativenumber
 nnoremap <silent> <BS>n :call toggle#ToggleRelativeNum()<CR>
 
-" Toggle quickfix window
-nnoremap <silent> <BS>q :call toggle#ToggleQuickFix()<CR>
-nnoremap <silent> <BS>l :call toggle#ToggleLocationList()<CR>
-
 " }}}
 
 " Terminal {{{
 
 " Back to normal mode in the terminal buffer
-tnoremap <Esc> <C-\><C-n>
-
-" Switching between split windows
-tnoremap <C-h> <C-\><C-n><C-w>h
-tnoremap <C-j> <C-\><C-n><C-w>j
-tnoremap <C-k> <C-\><C-n><C-w>k
-tnoremap <C-l> <C-\><C-n><C-w>l
+tnoremap <C-BS> <C-\><C-n>
 
 " In terminal mode, use <M-r> to simulate <C-r> in insert mode for inserting the content of a register
 " Reference: http://vimcasts.org/episodes/neovim-terminal-paste/
@@ -294,12 +257,6 @@ nnoremap <Leader>wp <C-w>p
 nnoremap <silent> <Leader>- :split<CR>
 nnoremap <silent> <Leader><BS> :vsplit<CR>
 
-" Change vertical to horizontal
-nnoremap <Leader>w- <C-w>t<C-w>K
-
-" Change horizontal to vertical
-nnoremap <Leader>w\ <C-w>t<C-w>H
-
 " Move current window to new tab
 nnoremap <Leader>wt <C-w>T
 
@@ -317,5 +274,8 @@ nnoremap <Leader>= <C-w>=
 
 " Close windows by giving the window numbers
 nnoremap <Leader>wc :CloseWin<Space>
+
+" Duplicate the current window in a new tab
+nnoremap <C-w><C-t> <Cmd>tab split<CR>
 
 " }}}

@@ -1,10 +1,13 @@
--- Load lua configs
+-- Plugins loaded
 local modules = {
   "bqf",
   "cmp",
   "comment",
+  "eregex",
   "ffhighlight",
+  "fugitive",
   "gitsigns",
+  "hlargs",
   "hlslens",
   "harpoon",
   "iswap",
@@ -12,32 +15,25 @@ local modules = {
   "lualine",
   "luasnip",
   "lsp.lsp-config",
+  "netrw",
+  "nvim-fundo",
   "nvim-ufo",
   "nvim-colorizer",
   "project",
   "registers",
+  "tabline",
+  "targets",
   "treesitter",
   "telescope.telescope-config",
   "test",
+  "undotree",
+  "vim-after-object",
+  "vim-asterisk",
+  "vim-flog",
+  "vim-gh-line",
+  "vim-grepper",
   "vim-illuminate",
 }
 for _, module in ipairs(modules) do
   require("rockyz.plugin-config." .. module)
-end
-
--- Load viml configs
-local viml_plugins = {
-  "fugitive",
-  "minpac",
-  "netrw",
-  "tabular",
-  "targets",
-  "undotree",
-  "vim-grepper",
-  "vim-after-object",
-  "vim-gh-line",
-  "vim-asterisk",
-}
-for _, plugin in ipairs(viml_plugins) do
-  vim.cmd("source ~/.config/nvim/viml/plugin-config/" .. plugin .. ".vim")
 end

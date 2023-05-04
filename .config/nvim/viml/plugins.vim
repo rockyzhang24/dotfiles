@@ -1,10 +1,9 @@
-" Minpac plugin manager
-function! PackInit() abort
+function! s:PackInit() abort
   packadd minpac
   call minpac#init({'progress_open': 'vertical', 'status_open': 'vertical', 'status_auto': 'TRUE'})
 
   call minpac#add('k-takata/minpac', {'type': 'opt'})
-  call minpac#add('nvim-lua/plenary.nvim')  " lua library used by other lua plugins
+  call minpac#add('nvim-lua/plenary.nvim')  " lua library required by other plugins
   call minpac#add('numToStr/Comment.nvim')
   call minpac#add('tpope/vim-surround')
   call minpac#add('tpope/vim-sleuth')
@@ -14,23 +13,26 @@ function! PackInit() abort
   call minpac#add('godlygeek/tabular')
   call minpac#add('mbbill/undotree')
   call minpac#add('yanzhang0219/lualine.nvim')
-  call minpac#add('junegunn/fzf', { 'do': 'packloadall! | call fzf#install()' })  " as a filter for bqf
+  call minpac#add('mg979/tabline.nvim')
+  call minpac#add('junegunn/fzf', { 'do': 'packloadall! | call fzf#install()' }) " used by nvim-bqf and tabline.nvim
   call minpac#add('mhinz/vim-grepper')
   call minpac#add('haya14busa/vim-asterisk')
-  call minpac#add('tommcdo/vim-exchange') " cx{motion}, cxx (line), X (visual), cxc (clear), `.` is supported
+  call minpac#add('tommcdo/vim-exchange') " cx{motion}, cxx (line), X (visual), cxc (clear), and `.` is supported
   call minpac#add('tversteeg/registers.nvim')
   call minpac#add('ThePrimeagen/harpoon')
-  call minpac#add('ahmedkhalf/project.nvim')
   call minpac#add('kevinhwang91/nvim-fFHighlight')
   call minpac#add('kevinhwang91/nvim-hlslens')
   call minpac#add('kevinhwang91/nvim-bqf')
   call minpac#add('kevinhwang91/nvim-ufo')
+  call minpac#add('kevinhwang91/nvim-fundo')
   call minpac#add('kevinhwang91/promise-async') " required by kevin's plugins
   call minpac#add('lukas-reineke/indent-blankline.nvim')
+  call minpac#add('othree/eregex.vim')
 
   " Telescope
   call minpac#add('nvim-telescope/telescope-fzf-native.nvim', { 'do': 'make' })  " sorter for telescope
   call minpac#add('nvim-telescope/telescope.nvim')
+  call minpac#add('ahmedkhalf/project.nvim')
 
   " Text object
   call minpac#add('junegunn/vim-after-object')
@@ -54,17 +56,20 @@ function! PackInit() abort
   call minpac#add('saadparwaiz1/cmp_luasnip')
 
   " Treesitter
-  call minpac#add('nvim-treesitter/nvim-treesitter', {'do': 'TSUpdate'})
+  " call minpac#add('nvim-treesitter/nvim-treesitter', {'do': 'TSUpdate'})
+  call minpac#add('kevinhwang91/nvim-treesitter', {'do': 'TSUpdate'})
   call minpac#add('nvim-treesitter/playground')
   call minpac#add('nvim-treesitter/nvim-treesitter-textobjects')
   call minpac#add('JoosepAlviste/nvim-ts-context-commentstring')
   call minpac#add('mizlan/iswap.nvim')
+  call minpac#add('m-demare/hlargs.nvim')
 
   " Git
   call minpac#add('lewis6991/gitsigns.nvim')
   call minpac#add('tpope/vim-fugitive')
   call minpac#add('tpope/vim-rhubarb')  " vim-fugitive's companion for :GBrowse
   call minpac#add('ruanyl/vim-gh-line')
+  call minpac#add('rbong/vim-flog')
 
   " Markdown
   call minpac#add('iamcco/markdown-preview.nvim', {'type': 'opt', 'do': 'packadd markdown-preview.nvim | call mkdp#util#install()'}) " config at ftplugin/markdown.vim
@@ -74,7 +79,7 @@ function! PackInit() abort
 
   " Color schemes
   call minpac#add('rktjmp/lush.nvim')
-  call minpac#add('rockyzhang24/arctic.nvim')
+  call minpac#add('rockyzhang24/arctic.nvim', {'branch': 'v2'})
   call minpac#add('folke/tokyonight.nvim')
   call minpac#add('dracula/vim', { 'name': 'dracula' })
   call minpac#add('EdenEast/nightfox.nvim')
@@ -82,3 +87,16 @@ function! PackInit() abort
   " Test
 
 endfunction
+
+" Config for minpac
+function! s:PluginUpdate() abort
+  unlet $GIT_DIR
+  unlet $GIT_WORK_TREE
+  call minpac#update()
+endfunction
+
+command! PluginUpdate source $MYVIMRC | call s:PackInit() | call s:PluginUpdate()
+command! PluginDelete source $MYVIMRC | call s:PackInit() | call minpac#clean()
+
+call abbr#SetupCommandAbbrs('pu', 'PluginUpdate')
+call abbr#SetupCommandAbbrs('pd', 'PluginDelete')

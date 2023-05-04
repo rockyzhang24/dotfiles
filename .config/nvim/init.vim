@@ -15,17 +15,15 @@ lua require('rockyz.qf')
 " Set winbar
 lua require('rockyz.winbar')
 
-" Set tabline
-source ~/.config/nvim/viml/tabline.vim
-
-" Color scheme
-source ~/.config/nvim/viml/color.vim
+" Colorscheme
+lua require('rockyz.color')
 
 " Autocmds
 source ~/.config/nvim/viml/autocmds.vim
 lua require('rockyz.autocmds')
 
 " Commands
+source ~/.config/nvim/viml/commands.vim
 lua require('rockyz.commands')
 
 " Abbreviations

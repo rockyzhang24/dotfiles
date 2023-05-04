@@ -12,3 +12,7 @@ ZLE_RPROMPT_INDENT=0
 # My own defined autoload functions (under ~/.config/zsh/functions/)
 fpath+=${0:h}/functions
 autoload -Uz ${0:h}/functions/*(.:t)
+
+# Change open files limit on macOS
+ulimit -n 524288
+ulimit -u 2048

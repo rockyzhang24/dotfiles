@@ -1,9 +1,12 @@
+local map = require('rockyz.keymap').map
+
 require("indent_blankline").setup {
   char = '▏',
   char_priority = 50,
   filetype_exclude = {
     'aerial',
     'checkhealth',
+    'git',
     'help',
     'json',
     'jsonc',
@@ -39,4 +42,4 @@ require("indent_blankline").setup {
 }
 
 -- Toggle indent line
-vim.keymap.set('n', '<BS>i', '<Cmd>IndentBlanklineToggle<CR>')
+map('n', '<BS>i', '<Cmd>IndentBlanklineToggle<CR>')

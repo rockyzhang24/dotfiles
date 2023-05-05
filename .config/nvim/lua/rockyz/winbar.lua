@@ -6,9 +6,7 @@ local devicon = require("nvim-web-devicons")
 
 local function get_win_num()
   local win_num = api.nvim_win_get_number(0)
-  -- Whether the current window is a maximized one (by maximized.nvim)
-  local maximized = vim.t.maximized and '   ' or ''
-  return '[' .. win_num .. maximized .. ']'
+  return '(' .. win_num .. ')'
 end
 
 local function get_file_icon_and_name()
@@ -25,17 +23,17 @@ end
 
 local disabled_filetypes = {
   'aerial',
+  'fugitive',
   'minpacprgs',
   'neo-tree',
   'NvimTree',
   'qf',
-  'fugitive',
   'startify',
 }
 
 M.winbar = function()
 
-  local delimiter = ' > '
+  local delimiter = '  '
   local contents = get_win_num()
 
   for _, ft in pairs(disabled_filetypes) do
@@ -46,7 +44,7 @@ M.winbar = function()
 
   contents = contents .. ' %<'
 
-  local path = fn.expand('%:~:.:h')
+  local path = string.gsub(fn.expand('%:~:.:h'), '/', delimiter)
   local file_icon_and_name = get_file_icon_and_name()
   local modified = get_modified()
 

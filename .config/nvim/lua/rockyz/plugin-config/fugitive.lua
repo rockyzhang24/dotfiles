@@ -31,8 +31,8 @@ function M.git_status()
 end
 
 map('n', ',s', M.git_status)
-map('n', ',d', ':tab Gdiffsplit<Space>', {silent = false})
-map('n', ',t', ':Git difftool -y<Space>', {silent = false})
+map('n', ',ds', ':tab Gdiffsplit<Space>', {silent = false})
+map('n', ',dt', ':Git difftool -y<Space>', {silent = false})
 map('n', ',c', ':Git commit<Space>', {silent = false})
 map('n', ',C', ':Git commit --amend<Space>', {silent = false})
 map('n', ',e', ':Gedit<CR>')

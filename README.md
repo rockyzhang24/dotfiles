@@ -16,45 +16,45 @@ My dotfiles for `macOS` and `Linux`. Just cherry pick the piece of code you tota
 
 ### 🔥 Text Editor
 
-#### [Neovim](https://neovim.io): [⚙️ Config](./.config/nvim/)
+#### [Neovim](https://neovim.io): [[config]](./.config/nvim/)
 
 ### 🐚 Shell
 
-#### [Zsh](https://www.zsh.org): [⚙️ Config](./.config/zsh/)
+#### [Zsh](https://www.zsh.org): [[config]](./.config/zsh/)
 
 * Use [Zim](https://zimfw.sh) to manage Zsh plugins
 * The theme is [Powerlevel10k](https://github.com/romkatv/powerlevel10k)
 
 ### 🛠️ Terminal Emulator
 
-#### [Kitty](https://sw.kovidgoyal.net/kitty/): [⚙️ Config](./.config/kitty/)
+#### [Kitty](https://sw.kovidgoyal.net/kitty/): [[config]](./.config/kitty/)
 
-#### [Wezterm](https://wezfurlong.org/wezterm/): [⚙️ Config](./.config/wezterm/)
+#### [Wezterm](https://wezfurlong.org/wezterm/): [[config]](./.config/wezterm/)
 
-#### [Alacritty](https://alacritty.org): [⚙️ Config](./.config/alacritty/)
+#### [Alacritty](https://alacritty.org): [[config]](./.config/alacritty/)
 
 ### 🪄 Tiling Window Manager
 
-#### [yabai](https://github.com/koekeishiya/yabai): [⚙️ Config](./.config/yabai/)
-#### [skhd](https://github.com/koekeishiya/skhd): [⚙️ Config](./.config/yabai/)
+#### [yabai](https://github.com/koekeishiya/yabai): [[config]](./.config/yabai/)
+#### [skhd](https://github.com/koekeishiya/skhd): [[config]](./.config/yabai/)
 
 ### 🗃️ Console File Manager
 
-#### [lf](https://pkg.go.dev/github.com/gokcehan/lf): [⚙️ Config](./.config/lf/)
+#### [lf](https://pkg.go.dev/github.com/gokcehan/lf): [[config]](./.config/lf/)
 
-#### [vifm](https://vifm.info): [⚙️ Config](./.config/vifm/)
+#### [vifm](https://vifm.info): [[config]](./.config/vifm/)
 
-#### [ranger](https://ranger.github.io): [⚙️ Config](./.config/ranger/)
+#### [ranger](https://ranger.github.io): [[config]](./.config/ranger/)
 
 ### ⌨️ Keyboard Customizer
 
-#### [Karabiner-Elements](https://karabiner-elements.pqrs.org): [⚙️ Config](./.config/karabiner/)
+#### [Karabiner-Elements](https://karabiner-elements.pqrs.org): [[config]](./.config/karabiner/)
 
 ### 🧶 Others
 
-#### [Tmux](https://github.com/tmux/tmux): [⚙️ Config](./.tmux.conf)
+#### [Tmux](https://github.com/tmux/tmux): [[config]](./.tmux.conf)
 
-#### [fzf](https://github.com/junegunn/fzf): [⚙️ Config](./.config/fzf/)
+#### [fzf](https://github.com/junegunn/fzf): [[config]](./.donfig/fzf/)
 
 #### [bin](./.config/bin/): Useful scripts
 

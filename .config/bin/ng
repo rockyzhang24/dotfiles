@@ -1,4 +1,4 @@
-# vim: filetype=zsh
+#!/usr/bin/env bash
 
 # MNEMONIC: [N]vim [G]it
 # DESCRIPTION: Open neovim and run fugitive's `:Git` command to open a summary

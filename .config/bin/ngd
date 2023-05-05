@@ -1,4 +1,4 @@
-# vim: filetype=zsh
+#!/usr/bin/env bash
 
 # MNEMONIC: [N]eovim [G]it [D]ifftool
 # SYNOPSIS: ngd [Args of git difftool]

@@ -1,4 +1,4 @@
-# vim: filetype=zsh
+#!/usr/bin/env bash
 
 # MNEMONIC: [N]eovim [RG]
 # SYNOPSIS: nrg {QUERY}

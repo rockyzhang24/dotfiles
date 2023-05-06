@@ -7,8 +7,11 @@ local cmd = vim.cmd
 local lsp = vim.lsp
 local diagnostic = vim.diagnostic
 
+--
 -- Toggle the diagnostics
+--
 local diagnostics_on = true
+
 function M.toggle_diagnostics()
   if diagnostics_on then
     vim.diagnostic.disable()
@@ -63,7 +66,9 @@ local function get_diagnostic_at_cursor()
   return lsp_diagnostics
 end
 
+--
 -- Get code actions available at the cursor position
+--
 function M.code_action_at_cursor()
   lsp.buf.code_action({
     context = {
@@ -72,14 +77,29 @@ function M.code_action_at_cursor()
   })
 end
 
+--
 -- Show a lightbulb when code actions are available at the cursor
-local bufnr = nil
+--
+local bulb_bufnr = nil
 local prev_lnum = nil
 local prev_topline_num = nil
+local prev_bufnr = nil
 local code_action_support = false
+
+local function remove_bulb()
+  if bulb_bufnr ~= nil then
+    cmd(('noautocmd bwipeout %d'):format(bulb_bufnr))
+    bulb_bufnr = nil
+  end
+end
+
 function M.show_lightbulb()
   -- Check if the method textDocument/codeAction is supported
   local cur_bufnr = api.nvim_get_current_buf()
+  if (cur_bufnr ~= prev_bufnr) then -- when entering to another buffer
+    prev_bufnr = cur_bufnr
+    code_action_support = false
+  end
   if code_action_support == false then
     for _, client in pairs(lsp.get_active_clients({ bufnr = cur_bufnr })) do
       if client then
@@ -90,6 +110,7 @@ function M.show_lightbulb()
     end
   end
   if code_action_support == false then
+    remove_bulb()
     return
   end
   local context = {
@@ -119,14 +140,11 @@ function M.show_lightbulb()
       -- bulb when scroll the window (e.g., C-y, C-e, zz, etc)
       local cur_lnum = fn.line('.')
       local cur_topline_num = fn.line('w0')
-      if (cur_lnum == prev_lnum and cur_topline_num == prev_topline_num and bufnr ~= nil) then
+      if (cur_lnum == prev_lnum and cur_topline_num == prev_topline_num and bulb_bufnr ~= nil) then
         return
       end
       -- Remove the old bulb if necessary, and then create a new bulb
-      if bufnr ~= nil then
-        cmd(('noautocmd bwipeout %d'):format(bufnr))
-        bufnr = nil
-      end
+      remove_bulb()
       prev_lnum = cur_lnum
       prev_topline_num = cur_topline_num
       local icon = ''
@@ -140,8 +158,8 @@ function M.show_lightbulb()
           row = -1
         end
       end
-      bufnr = api.nvim_create_buf(false, true)
-      local winid = api.nvim_open_win(bufnr, false, {
+      bulb_bufnr = api.nvim_create_buf(false, true)
+      local winid = api.nvim_open_win(bulb_bufnr, false, {
         relative = 'cursor',
         width = 1,
         height = 1,
@@ -151,13 +169,12 @@ function M.show_lightbulb()
         noautocmd = true,
       })
       vim.wo[winid].winhl = 'Normal:LightBulb'
-      api.nvim_buf_set_lines(bufnr, 0, 1, false, { icon })
+      api.nvim_buf_set_lines(bulb_bufnr, 0, 1, false, { icon })
       return
     end
     -- If no actions, remove the bulb if it is existing
-    if has_actions == false and bufnr ~= nil then
-      cmd(('noautocmd bwipeout %d'):format(bufnr))
-      bufnr = nil
+    if has_actions == false then
+      remove_bulb()
     end
   end)
 end

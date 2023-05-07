@@ -176,26 +176,47 @@ lspconfig.gopls.setup {
 }
 
 -- Python
-lspconfig.pylsp.setup {
+-- Two options:
+-- 1. pyright: We need to use a separate formatter (black) and a linter
+-- (flake8). Plugin like null-ls is a good pal.
+-- 2. pylsp: It has builtin formatter and linters.
+lspconfig.pyright.setup {
   on_attach = on_attach,
   capabilities = capabilities,
-  -- For further configuration: https://github.com/python-lsp/python-lsp-server/blob/develop/CONFIGURATION.md
+  single_file_support = true,
+  -- All setting options are here: https://github.com/microsoft/pyright/blob/main/docs/settings.md
   settings = {
-    pylsp = {
-      configurationSources = "flake8",
-      plugins = {
-        flake8 = { enabled = true, indentSize = 4 },
-        pylsp_black = { enabled = true },
-        pyls_isort = { enabled = true },
-        pycodestyle = { enabled = false },
-        mccabe = { enabled = false },
-        pyflakes = { enabled = false },
-        yapf = { enabled = false },
-        autopep8 = { enabled = false },
+    python = {
+      analysis = {
+        autoImportCompletions = true,
+        autoSearchPaths = true,
+        diagnosticMode = "workspace", -- openFilesOnly, workspace
+        typeCheckingMode = "basic", -- off, basic, strict
+        useLibraryCodeForTypes = true
       },
-    },
+    }
   },
 }
+-- lspconfig.pylsp.setup {
+--   on_attach = on_attach,
+--   capabilities = capabilities,
+--   -- For further configuration: https://github.com/python-lsp/python-lsp-server/blob/develop/CONFIGURATION.md
+--   settings = {
+--     pylsp = {
+--       configurationSources = "flake8",
+--       plugins = {
+--         flake8 = { enabled = true, indentSize = 4 }, -- linter
+--         pylsp_black = { enabled = true }, -- formatter
+--         yapf = { enabled = false }, -- formatter
+--         autopep8 = { enabled = false }, -- formatter
+--         pyls_isort = { enabled = true }, -- sort the imports
+--         pycodestyle = { enabled = false }, -- linter for style checking
+--         mccabe = { enabled = false }, -- linter for code complexity checking
+--         pyflakes = { enabled = false }, -- linter to detect various errors
+--       },
+--     },
+--   },
+-- }
 
 -- Rust
 lspconfig.rust_analyzer.setup {

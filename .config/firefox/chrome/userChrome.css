@@ -1,0 +1,8 @@
+/* Hide the tabs */
+#TabsToolbar {
+  visibility: collapse;
+}
+/* Hide the header of sidebery */
+#sidebar-header {
+  visibility: collapse !important;
+}

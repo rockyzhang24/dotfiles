@@ -3,6 +3,7 @@ local api = vim.api
 local fn = vim.fn
 
 local devicon = require("nvim-web-devicons")
+local navic = require("nvim-navic")
 
 local function get_win_num()
   local win_num = api.nvim_win_get_number(0)
@@ -34,6 +35,9 @@ local disabled_filetypes = {
 M.winbar = function()
 
   local delimiter = '  '
+  local ellipsis = '…'
+
+  -- Window number
   local contents = get_win_num()
 
   for _, ft in pairs(disabled_filetypes) do
@@ -44,7 +48,8 @@ M.winbar = function()
 
   contents = contents .. ' %<'
 
-  local path = string.gsub(fn.expand('%:~:.:h'), '/', delimiter)
+  -- File path
+  local path = fn.expand('%:~:.:h')
   local file_icon_and_name = get_file_icon_and_name()
   local modified = get_modified()
 
@@ -53,6 +58,12 @@ M.winbar = function()
   end
 
   contents = contents .. file_icon_and_name .. modified
+
+  -- Breadcrumbs
+  if navic.is_available() then
+    local context = navic.get_location()
+    contents = contents .. delimiter .. (context == '' and ellipsis or context)
+  end
 
   return contents
 end

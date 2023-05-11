@@ -41,6 +41,8 @@ function! s:PackInit() abort
 
   " LSP
   call minpac#add('neovim/nvim-lspconfig')
+  call minpac#add('ii14/emmylua-nvim')
+  call minpac#add('SmiteshP/nvim-navic')
 
   " Autocomplete
   call minpac#add('hrsh7th/nvim-cmp')
@@ -83,8 +85,6 @@ function! s:PackInit() abort
   call minpac#add('folke/tokyonight.nvim')
   call minpac#add('dracula/vim', { 'name': 'dracula' })
   call minpac#add('EdenEast/nightfox.nvim')
-
-  " Test
 
 endfunction
 

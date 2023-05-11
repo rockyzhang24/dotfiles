@@ -62,4 +62,4 @@ require("luasnip.loaders.from_lua").lazy_load({ paths = "~/.config/nvim/lua/rock
 
 -- Create a command to edit the snippet file associated with the current
 -- filetype type
-vim.api.nvim_create_user_command('LuaSnipEdit', ':lua require("luasnip.loaders.from_lua").edit_snippet_files()', {})
+vim.api.nvim_create_user_command('SnipEdit', ':lua require("luasnip.loaders.from_lua").edit_snippet_files()', {})

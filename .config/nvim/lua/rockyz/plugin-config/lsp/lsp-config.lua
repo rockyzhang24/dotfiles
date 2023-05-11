@@ -1,5 +1,6 @@
 local lspconfig = require("lspconfig")
 local util = require("lspconfig/util")
+local navic = require("nvim-navic")
 local my_lsp_utils = require('rockyz.plugin-config.lsp.lsp-utils')
 local map = require('rockyz.keymap').map
 local cmd = vim.cmd
@@ -106,6 +107,11 @@ local on_attach = function(client, bufnr)
     pattern = '*',
     callback = my_lsp_utils.show_lightbulb,
   })
+
+  -- Use nvim-navic to get the code context
+  if client.server_capabilities.documentSymbolProvider then
+    navic.attach(client, bufnr)
+  end
 end
 
 -- Update the capabilities (nvim-cmp supports) sent to the server

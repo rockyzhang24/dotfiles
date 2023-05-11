@@ -17,6 +17,7 @@ local modules = {
   "lsp.lsp-config",
   "netrw",
   "nvim-fundo",
+  "nvim-navic",
   "nvim-ufo",
   "nvim-colorizer",
   "project",

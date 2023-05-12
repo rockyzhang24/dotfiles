@@ -28,6 +28,7 @@ function! s:PackInit() abort
   call minpac#add('kevinhwang91/promise-async') " required by kevin's plugins
   call minpac#add('lukas-reineke/indent-blankline.nvim')
   call minpac#add('othree/eregex.vim')
+  call minpac#add('MunifTanjim/nui.nvim') " required by other plugins like nvim-navbuddy
 
   " Telescope
   call minpac#add('nvim-telescope/telescope-fzf-native.nvim', { 'do': 'make' })  " sorter for telescope
@@ -43,6 +44,7 @@ function! s:PackInit() abort
   call minpac#add('neovim/nvim-lspconfig')
   call minpac#add('ii14/emmylua-nvim')
   call minpac#add('SmiteshP/nvim-navic')
+  call minpac#add('SmiteshP/nvim-navbuddy')
 
   " Autocomplete
   call minpac#add('hrsh7th/nvim-cmp')

@@ -1,6 +1,7 @@
 local lspconfig = require("lspconfig")
 local util = require("lspconfig/util")
 local navic = require("nvim-navic")
+local navbuddy = require("nvim-navbuddy")
 local my_lsp_utils = require('rockyz.plugin-config.lsp.lsp-utils')
 local map = require('rockyz.keymap').map
 local cmd = vim.cmd
@@ -108,9 +109,11 @@ local on_attach = function(client, bufnr)
     callback = my_lsp_utils.show_lightbulb,
   })
 
-  -- Use nvim-navic to get the code context
+  -- Use nvim-navic to get the code context, i.e., the breadcrumbs in winbar
+  -- Use nvim-navbuddy for navigation
   if client.server_capabilities.documentSymbolProvider then
     navic.attach(client, bufnr)
+    navbuddy.attach(client, bufnr)
   end
 end
 

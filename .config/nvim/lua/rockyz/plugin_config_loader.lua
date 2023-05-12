@@ -18,6 +18,7 @@ local modules = {
   "netrw",
   "nvim-fundo",
   "nvim-navic",
+  "nvim-navbuddy",
   "nvim-ufo",
   "nvim-colorizer",
   "project",

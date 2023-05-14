@@ -5,4 +5,6 @@ require('treesitter-context').setup {
   multiline_threshold = 20,
   trim_scope = 'outer',
   mode = 'topline',
+  -- Pass a function to control when to disable this plugin
+  on_attach = nil,
 }

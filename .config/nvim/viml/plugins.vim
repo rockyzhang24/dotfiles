@@ -67,6 +67,7 @@ function! s:PackInit() abort
   call minpac#add('JoosepAlviste/nvim-ts-context-commentstring')
   call minpac#add('mizlan/iswap.nvim')
   call minpac#add('m-demare/hlargs.nvim')
+  call minpac#add('nvim-treesitter/nvim-treesitter-context')
 
   " Git
   call minpac#add('lewis6991/gitsigns.nvim')

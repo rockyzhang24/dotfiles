@@ -26,6 +26,7 @@ local modules = {
   "tabline",
   "targets",
   "treesitter",
+  "treesitter-context",
   "telescope.telescope-config",
   "test",
   "undotree",

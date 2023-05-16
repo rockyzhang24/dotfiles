@@ -125,9 +125,6 @@ cnoremap <C-k> <C-\>egetcmdline()[:getcmdpos() - 2]<CR>
 " Ctrl-o to open command-line window
 set cedit=\<C-o>
 
-" Get the full path of the current file
-cnoremap %% <C-R>=fnameescape(expand('%:h')).'/'<cr>
-
 " }}}
 
 " Navigation {{{

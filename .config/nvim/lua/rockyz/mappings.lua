@@ -11,6 +11,16 @@ local smart_dd = function()
 end
 map("n", "dd", smart_dd, { expr = true })
 
+-- Make i indent properly on empty line
+local smart_i = function()
+  if #vim.fn.getline(".") == 0 then
+    return [["_cc]]
+  else
+    return "i"
+  end
+end
+map("n", "i", smart_i, { expr = true })
+
 -- Toggle the layout (horizontal and vertical) of the TWO windows
 local toggle_win_layout = function()
   local wins = api.nvim_tabpage_list_wins(0)
@@ -37,3 +47,10 @@ map('n', 'qD', [[<Cmd>tabdo lua require("rockyz.utils").close_diff()<CR>]]) -- c
 
 -- Show a prompt to open quickfix and/or location list
 map('n', '<Leader>o', require('rockyz.qf').open)
+
+-- Use %% to get the absolute filepath of the current buffer in command-line
+-- mode
+local get_abs_path = function()
+  vim.api.nvim_feedkeys(vim.fn.expand('%:p:h') .. '/', 'c', false)
+end
+map("c", "%%", get_abs_path)

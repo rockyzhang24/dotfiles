@@ -49,6 +49,20 @@ telescope.setup {
         },
       },
     },
+    live_grep = {
+      mappings = {
+        i = {
+          ["<C-r>"] = "to_fuzzy_refine",
+        },
+      },
+    },
+    dynamic_workspace_symbols = {
+      mappings = {
+        i = {
+          ["<C-r>"] = "to_fuzzy_refine",
+        },
+      },
+    },
   },
   extensions = {
     -- telescope-fzf-native as the sorter

@@ -69,10 +69,17 @@ require('nvim-treesitter.configs').setup {
       node_decremental = "<Backspace>",
     },
   },
+
+  -- nvim-ts-context-commentstring
   context_commentstring = {
     enable = true,
   },
+  -- nvim-treesitter/playground
   playground = {
     enable = true,
   },
+  -- vim-matchup
+  matchup = {
+    enable = true,
+  }
 }

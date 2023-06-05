@@ -30,6 +30,7 @@ function! s:PackInit() abort
   call minpac#add('othree/eregex.vim')
   call minpac#add('MunifTanjim/nui.nvim') " required by other plugins like nvim-navbuddy
   call minpac#add('andymass/vim-matchup')
+  call minpac#add('dstein64/nvim-scrollview')
 
   " Telescope
   call minpac#add('nvim-telescope/telescope-fzf-native.nvim', { 'do': 'make' })  " sorter for telescope

@@ -105,15 +105,3 @@ map('n', '<Leader>gv', my_picker.grep_nvim_config)
 map('n', '<Leader>gs', my_picker.grep_string)
 map('n', '<Leader>gw', my_picker.grep_word)
 map('x', '<Leader>gw', my_picker.grep_selection)
-
--- Quickfix for this issue https://github.com/nvim-telescope/telescope.nvim/issues/2501
-api.nvim_create_augroup('my_telescope', { clear = true })
-api.nvim_create_autocmd({ 'WinLeave' }, {
-  group = 'my_telescope',
-  pattern = '*',
-  callback = function()
-    if vim.bo.ft == "TelescopePrompt" and fn.mode() == "i" then
-			api.nvim_feedkeys(api.nvim_replace_termcodes("<Esc>", true, false, true), "i", false)
-		end
-  end,
-})

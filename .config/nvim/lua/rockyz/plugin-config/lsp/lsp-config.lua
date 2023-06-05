@@ -139,6 +139,12 @@ lspconfig.lua_ls.setup {
       runtime = {
         version = 'LuaJIT',
       },
+      -- Inlay hints
+      -- hint = {
+      --   enable = true,
+      --   setType = true,
+      --   arrayIndex = "Disable",
+      -- },
       diagnostics = {
         -- neededFileStatus = {
         --   ["codestyle-check"] = "Any",

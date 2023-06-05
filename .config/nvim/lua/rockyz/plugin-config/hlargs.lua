@@ -1,3 +1,3 @@
 require('hlargs').setup({
-  color = '#f9ae28', -- the same with the hl group @lsp.type.parameter
+  color = '#ff9e64', -- the same with the hl group @lsp.type.parameter
 })

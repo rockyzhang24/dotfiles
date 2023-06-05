@@ -81,5 +81,6 @@ require('nvim-treesitter.configs').setup {
   -- vim-matchup
   matchup = {
     enable = true,
+    disable_virtual_text = true,
   }
 }

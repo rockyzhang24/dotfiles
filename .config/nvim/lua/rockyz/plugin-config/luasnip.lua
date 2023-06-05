@@ -16,8 +16,8 @@ ls.config.setup({
   ext_opts = {
     [types.choiceNode] = {
       active = {
-        virt_text = { { "●", "Comment" } }
-      }
+        virt_text = { { "●", "Description" } }
+      },
     },
   },
   -- Use treesitter for getting the current filetype. This allows correctly resolving

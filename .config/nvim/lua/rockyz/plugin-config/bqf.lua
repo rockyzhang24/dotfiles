@@ -17,7 +17,8 @@ require('bqf').setup {
     }
   },
   preview = {
-    -- border_chars = { '', '', '─', '─', '', '', '', '', '█' },
+    border = { '', '─', '', '', '', '─', '', '' },
+    winblend = 0,
 
     -- Support previewing vim-fugitive :Gclog entries
     -- Ref: https://github.com/kevinhwang91/nvim-bqf/issues/60#issuecomment-1073507403

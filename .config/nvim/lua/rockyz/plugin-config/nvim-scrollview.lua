@@ -1,6 +1,7 @@
 require('scrollview').setup {
   byte_limit = 1000000,
   line_limit = 20000,
+  always_show = true,
   column = 1,
   excluded_filetypes = {},
   signs_on_startup = {

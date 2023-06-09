@@ -14,6 +14,5 @@ zmodule zsh-users/zsh-autosuggestions
 zmodule zsh-users/zsh-syntax-highlighting
 zmodule zsh-users/zsh-history-substring-search
 zmodule romkatv/powerlevel10k
-zmodule skywind3000/z.lua
 zmodule supercrabtree/k
 zmodule Aloxaf/fzf-tab

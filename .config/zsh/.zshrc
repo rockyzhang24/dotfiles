@@ -24,3 +24,7 @@ test -e "${ZDOTDIR}/iterm2_shell_integration.zsh" && source "${ZDOTDIR}/iterm2_s
 
 # Wezterm Shell Integration
 [[ -n $WEZTERM_CONFIG_DIR ]] && test -e "${ZDOTDIR}/wezterm_shell_integration.sh" && source "${ZDOTDIR}/wezterm_shell_integration.sh"
+
+# zoxide
+source $HOME/.config/zoxide/zoxide-config
+eval "$(zoxide init zsh)"

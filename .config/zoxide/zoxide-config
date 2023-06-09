@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+export _ZO_DATA_DIR="$HOME/.config/zoxide"
+export _ZO_FZF_OPTS="$FZF_DEFAULT_OPTS"

@@ -53,13 +53,6 @@ alias aria="aria2c --max-connection-per-server=5 --continue"
 alias yd="yt-dlp --paths ~/Downloads"
 alias yda="yt-dlp --extract-audio --audio-format best --paths ~/Downloads"
 
-# z.lua
-alias zl="z -l"
-alias zc="z -c"
-alias zb="z -b"
-alias zi="z -i"
-alias zf="z -I"
-
 # Use neovim for vim if present
 command -v nvim >/dev/null && alias vim="nvim" vi="nvim" v="nvim" vimdiff="nvim -d"
 

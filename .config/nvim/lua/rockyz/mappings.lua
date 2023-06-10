@@ -54,3 +54,5 @@ local get_abs_path = function()
   vim.api.nvim_feedkeys(vim.fn.expand('%:p:h') .. '/', 'c', false)
 end
 map("c", "%%", get_abs_path)
+
+map("i", "<C-BS>", "<Esc>cvb")

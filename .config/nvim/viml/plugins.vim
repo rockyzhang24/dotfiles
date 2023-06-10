@@ -78,9 +78,6 @@ function! s:PackInit() abort
   call minpac#add('ruanyl/vim-gh-line')
   call minpac#add('rbong/vim-flog')
 
-  " Markdown
-  call minpac#add('iamcco/markdown-preview.nvim', {'type': 'opt', 'do': 'packadd markdown-preview.nvim | call mkdp#util#install()'}) " config at ftplugin/markdown.vim
-
   " Icons
   call minpac#add('kyazdani42/nvim-web-devicons')
 

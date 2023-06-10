@@ -42,20 +42,11 @@ local function lsp_clients()
   local clients = lsp.get_active_clients({ bufnr = bufnr })
   local client_names = {}
   local spinner = { '🌖', '🌗', '🌘', '🌑', '🌒', '🌓', '🌔' }
-  local found_undone = false
 
-  -- Get LS clients the next spinner for showing the progress
+  -- Use a table to contain the LSP clients for the current buffer
   for _, client in pairs(clients) do
     if client.name ~= 'null-ls' then
       table.insert(client_names, client.name)
-    end
-    -- Get the next spinner for showing the progress
-    -- Reference: the source code of the function lsp.util.get_progress_messages()
-    for _, ctx in pairs(client.messages.progress) do
-      if not ctx.done and not found_undone then
-        index = index == #spinner and 1 or index + 1
-        found_undone = true
-      end
     end
   end
 
@@ -66,8 +57,14 @@ local function lsp_clients()
   if next(client_names) == nil then
     return 'LS Inactive'
   end
+
   has_clients = true
-  local progress = found_undone and spinner[index] or '🌕'
+
+  local progress = '🌕'
+  if lsp.status() ~= "" then
+    index = index == #spinner and 1 or index + 1
+    progress = spinner[index]
+  end
   return progress .. ' ' .. table.concat(client_names, ', ')
 end
 
@@ -248,8 +245,8 @@ require 'lualine'.setup {
 
 -- For indicating the progress, update the statusline when the progress notification
 -- is reported from the server
-api.nvim_create_autocmd({ 'User' }, {
-  pattern = { 'LspProgressUpdate' },
+api.nvim_create_autocmd({ 'LspProgress' }, {
+  pattern = '*',
   callback = function()
     require('lualine').refresh()
   end,

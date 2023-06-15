@@ -33,6 +33,7 @@ local modules = {
   "undotree",
   "vim-after-object",
   "vim-asterisk",
+  "vim-floaterm",
   "vim-flog",
   "vim-gh-line",
   "vim-grepper",

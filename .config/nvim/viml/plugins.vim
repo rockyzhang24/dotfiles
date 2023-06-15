@@ -31,6 +31,8 @@ function! s:PackInit() abort
   call minpac#add('MunifTanjim/nui.nvim') " required by other plugins like nvim-navbuddy
   call minpac#add('andymass/vim-matchup')
   call minpac#add('dstein64/nvim-scrollview')
+  call minpac#add('rockyzhang24/lf.vim')
+  call minpac#add('voldikss/vim-floaterm') " required by lf.vim
 
   " Telescope
   call minpac#add('nvim-telescope/telescope-fzf-native.nvim', { 'do': 'make' })  " sorter for telescope

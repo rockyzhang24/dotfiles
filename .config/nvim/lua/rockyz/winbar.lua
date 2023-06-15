@@ -7,7 +7,7 @@ local navic = require("nvim-navic")
 
 local function get_win_num()
   local win_num = api.nvim_win_get_number(0)
-  return '(' .. win_num .. ')'
+  return '[' .. win_num .. ']'
 end
 
 local function get_file_icon_and_name()
@@ -34,11 +34,14 @@ local disabled_filetypes = {
 
 M.winbar = function()
 
+  local logo = ' '
   local delimiter = '  '
   local ellipsis = '…'
 
+  local contents = logo
+
   -- Window number
-  local contents = get_win_num()
+  contents = contents .. get_win_num()
 
   for _, ft in pairs(disabled_filetypes) do
     if (vim.bo.filetype == ft) then

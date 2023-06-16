@@ -147,7 +147,7 @@ cmd copy-absolute-path ${{
 cmd fzf-select ${{
   IFS=' '
   exclude=$(cat $HOME/exclude | sed 's/^/--exclude /' | tr '\n' ' ')
-  select=$(fd --hidden --follow $exclude | fzf)
+  select=$(fd --hidden --follow $exclude | fzf) || true
   lf -remote "send $id select $select"
 }}
 
@@ -155,7 +155,7 @@ cmd fzf-select ${{
 cmd fzf-cd ${{
   IFS=' '
   exclude=$(cat $HOME/exclude | sed 's/^/--exclude /' | tr '\n' ' ')
-  select=$(fd --type d --hidden --follow $exclude | fzf)
+  select=$(fd --type d --hidden --follow $exclude | fzf) || true
   lf -remote "send $id cd $select"
 }}
 

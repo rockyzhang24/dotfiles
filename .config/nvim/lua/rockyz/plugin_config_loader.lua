@@ -12,6 +12,7 @@ local modules = {
   "harpoon",
   "iswap",
   "indent-blankline",
+  "lf",
   "lualine",
   "luasnip",
   "lsp.lsp-config",

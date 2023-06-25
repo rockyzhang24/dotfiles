@@ -26,4 +26,4 @@ require('colorizer').setup({
 })
 
 -- Toggle highlighting of the current buffer
-map('n', '<BS>C', '<Cmd>ColorizerToggle<CR>')
+map('n', '<Leader><Leader>c', '<Cmd>ColorizerToggle<CR>')

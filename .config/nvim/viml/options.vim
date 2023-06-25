@@ -17,7 +17,7 @@ set foldlevel=99
 set foldlevelstart=99
 set completeopt=menu,menuone,noselect
 set timeoutlen=500
-set shortmess+=a shortmess+=c shortmess+=I
+set shortmess+=a shortmess+=c
 set updatetime=200
 set laststatus=3
 set matchpairs+=<:>
@@ -65,6 +65,8 @@ set isfname-==
 set shada=!,'500,<50,s10,h
 set synmaxcol=300
 " set lazyredraw
+set cindent
+set cinoptions+=g-1
 set mouse=a
 set mousemodel=extend
 " Avoid highlighting the last search when sourcing vimrc

@@ -7,4 +7,4 @@ g.undotree_SetFocusWhenToggle = 1
 g.undotree_SplitWidth = 30
 
 -- Toggle undotree
-map('n', '<BS>u', '<Cmd>UndotreeToggle<CR>')
+map('n', '<Leader><Leader>u', '<Cmd>UndotreeToggle<CR>')

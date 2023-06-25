@@ -188,7 +188,7 @@ require("neo-tree").setup {
 -- Mappings
 -----------
 
-map('n', '<BS>t', ':Neotree toggle show<CR>')
+map('n', '<Leader><Leader>e', ':Neotree toggle show<CR>')
 map('n', '<Leader>tt', ':Neotree focus<CR>')
 map('n', '<Leader>tf', ':Neotree reveal<CR>')
 map('n', '<Leader>tr', function() require("neo-tree.sources.manager").refresh("filesystem") end) -- refresh

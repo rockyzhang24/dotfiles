@@ -85,7 +85,7 @@ end
 -- Toggle the tree
 -- Two arguments in toggle() control whether the current file will be revealed,
 -- and whether the tree is not focused.
-map('n', '<BS>t', function() require('nvim-tree').toggle(false, true) end)
+map('n', '<Leader><Leader>e', function() require('nvim-tree').toggle(false, true) end)
 
 map('n', '<Leader>tt', '<Cmd>NvimTreeFocus<CR>')
 map('n', '<Leader>tf', find_file_no_focus)

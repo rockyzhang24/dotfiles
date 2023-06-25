@@ -77,8 +77,8 @@ gitsigns.setup {
 
     buf_map('n', '<Leader>hp', gs.preview_hunk)
     buf_map('n', '<Leader>hb', function() gs.blame_line { full = true } end)
-    buf_map('n', '<BS>c', gs.toggle_deleted) -- toggle showing deleted/changed lines via virtual lines
-    buf_map('n', '<BS>w', gs.toggle_word_diff) -- toggle the word_diff in the buffer
+    buf_map('n', '<Leader><Leader>l', gs.toggle_deleted) -- toggle showing deleted/changed lines via virtual lines
+    buf_map('n', '<Leader><Leader>w', gs.toggle_word_diff) -- toggle the word_diff in the buffer
 
     -- Text object
     buf_map({ 'o', 'x' }, 'ih', ':<C-U>Gitsigns select_hunk<CR>')

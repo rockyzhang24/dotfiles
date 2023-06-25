@@ -16,7 +16,6 @@ nnoremap qt <Cmd>tabclose<CR>
 
 " Save
 nnoremap <C-s> <Cmd>update<CR>
-nnoremap <Leader><Leader>q <Cmd>wq<CR>
 
 " Black hole register
 nnoremap - "_
@@ -205,13 +204,10 @@ nnoremap <silent> <Leader>t. :+tabmove<CR>
 " Toggle {{{
 
 " Toggle spell checking
-nnoremap <silent> <BS>S :setlocal spell! spelllang=en_us<CR>:set spell?<CR>
+nnoremap <silent> <Leader><Leader>s :setlocal spell! spelllang=en_us<CR>:set spell?<CR>
 
 " Toggle wrap
-nnoremap <silent> <BS>r :set wrap!<CR>:set wrap?<CR>
-
-" Toggle relativenumber
-nnoremap <silent> <BS>n :call toggle#ToggleRelativeNum()<CR>
+nnoremap <silent> <Leader><Leader>r :set wrap!<CR>:set wrap?<CR>
 
 " }}}
 

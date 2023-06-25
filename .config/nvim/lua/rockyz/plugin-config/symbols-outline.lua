@@ -6,4 +6,4 @@ require('symbols-outline').setup({
 })
 
 -- Toggle symbols outline
-map('n', '<BS>s', '<Cmd>SymbolsOutline<CR>')
+map('n', '<Leader><Leader>o', '<Cmd>SymbolsOutline<CR>')

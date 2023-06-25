@@ -42,4 +42,4 @@ require("indent_blankline").setup {
 }
 
 -- Toggle indent line
-map('n', '<BS>i', '<Cmd>IndentBlanklineToggle<CR>')
+map('n', '<Leader><Leader>i', '<Cmd>IndentBlanklineToggle<CR>')

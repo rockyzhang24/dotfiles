@@ -99,7 +99,7 @@ local on_attach = function(client, bufnr)
   -- Format
   buf_map({ 'n', 'x' }, '<leader>gq', function() lsp.buf.format { async = true } end)
   -- Toggle diagnostics
-  buf_map('n', '<BS>d', my_lsp_utils.toggle_diagnostics)
+  buf_map('n', '<Leader><Leader>d', my_lsp_utils.toggle_diagnostics)
 
   -- Show a lightbulb when code actions are available
   api.nvim_create_augroup('code_action', { clear = true })
@@ -115,6 +115,11 @@ local on_attach = function(client, bufnr)
     navic.attach(client, bufnr)
     navbuddy.attach(client, bufnr)
   end
+
+  -- LSP inlay hints
+  -- if client.server_capabilities.inlayHintProvider then
+  --   vim.lsp.buf.inlay_hint(bufnr, true)
+  -- end
 end
 
 -- Update the capabilities (nvim-cmp supports) sent to the server

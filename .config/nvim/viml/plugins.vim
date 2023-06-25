@@ -3,6 +3,7 @@ function! s:PackInit() abort
   call minpac#init({'progress_open': 'vertical', 'status_open': 'vertical', 'status_auto': 'TRUE'})
 
   call minpac#add('k-takata/minpac', {'type': 'opt'})
+  call minpac#add('dstein64/vim-startuptime')
   call minpac#add('nvim-lua/plenary.nvim')  " lua library required by other plugins
   call minpac#add('numToStr/Comment.nvim')
   call minpac#add('tpope/vim-surround')
@@ -20,7 +21,6 @@ function! s:PackInit() abort
   call minpac#add('tommcdo/vim-exchange') " cx{motion}, cxx (line), X (visual), cxc (clear), and `.` is supported
   call minpac#add('tversteeg/registers.nvim')
   call minpac#add('ThePrimeagen/harpoon')
-  call minpac#add('kevinhwang91/nvim-fFHighlight')
   call minpac#add('kevinhwang91/nvim-hlslens')
   call minpac#add('kevinhwang91/nvim-bqf')
   call minpac#add('kevinhwang91/nvim-ufo')
@@ -33,6 +33,7 @@ function! s:PackInit() abort
   call minpac#add('dstein64/nvim-scrollview')
   call minpac#add('rockyzhang24/lf.vim')
   call minpac#add('voldikss/vim-floaterm') " required by lf.vim
+  call minpac#add('unblevable/quick-scope')
 
   " Telescope
   call minpac#add('nvim-telescope/telescope-fzf-native.nvim', { 'do': 'make' })  " sorter for telescope

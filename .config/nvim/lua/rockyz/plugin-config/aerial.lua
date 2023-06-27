@@ -9,8 +9,6 @@ require("aerial").setup {
     end
     -- Toggle aerial window
     buf_map('n', '<Leader><Leader>o', '<Cmd>AerialToggle!<CR>')
-    -- Focus aerial window
-    buf_map('n', '<Leader>so', '<Cmd>AerialOpen<CR>')
     -- Jump forwards/backwards
     buf_map('n', '[s', '<cmd>AerialPrev<CR>')
     buf_map('n', ']s', '<cmd>AerialNext<CR>')

@@ -18,10 +18,10 @@ require('scrollview').setup {
     -- 'trail',
   },
   signs_show_in_folds = true,
-  diagnostics_error_symbol = '▮',
-  diagnostics_warn_symbol = '▮',
-  diagnostics_hint_symbol = '▮',
-  diagnostics_info_symbol = '▮',
+  diagnostics_error_symbol = '❙',
+  diagnostics_warn_symbol = '❙',
+  diagnostics_hint_symbol = '❙',
+  diagnostics_info_symbol = '❙',
   search_symbol = '',
 
   search_priority = 999,
@@ -33,4 +33,7 @@ require('scrollview').setup {
 
 -- Enable gitsigns
 require('scrollview.contrib.gitsigns').setup {
+  add_symbol = '│',
+  change_symbol = '│',
+  delete_symbol = '_',
 }

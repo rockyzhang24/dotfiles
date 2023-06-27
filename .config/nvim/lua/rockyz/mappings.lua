@@ -21,7 +21,7 @@ local smart_i = function()
 end
 map("n", "i", smart_i, { expr = true })
 
--- Toggle the layout (horizontal and vertical) of the TWO windows
+-- Switch the layout (horizontal and vertical) of the TWO windows
 local toggle_win_layout = function()
   local wins = api.nvim_tabpage_list_wins(0)
   if #wins > 2 then
@@ -41,12 +41,20 @@ local toggle_win_layout = function()
 end
 map("n", "<Leader>wl", toggle_win_layout)
 
+-- Quit and close
+map("n", "q", "<NOP>")
+map("n", "Q", "<NOP>")
+map("n", "qq", "<Cmd>q<CR>")
+map("n", "qa", "<Cmd>qa<CR>")
+map("n", "qt", "<Cmd>tabclose<CR>")
 map("n", "qc", require("rockyz.qf").close) -- close quickfix or location list window
 map("n", "qd", require("rockyz.utils").close_diff)  -- close diff windows
-map('n', 'qD', [[<Cmd>tabdo lua require("rockyz.utils").close_diff()<CR>]]) -- close diff windows in all tabs
+map("n", "qD", [[<Cmd>tabdo lua require("rockyz.utils").close_diff()<CR>]]) -- close diff windows in all tabs
+
+map("n", "<Leader>m", "q")
 
 -- Show a prompt to open quickfix and/or location list
-map('n', '<Leader>o', require('rockyz.qf').open)
+map('n', 'qo', require('rockyz.qf').open)
 
 -- Use %% to get the absolute filepath of the current buffer in command-line
 -- mode
@@ -55,4 +63,5 @@ local get_abs_path = function()
 end
 map("c", "%%", get_abs_path)
 
+-- Delete the current word
 map("i", "<C-BS>", "<Esc>cvb")

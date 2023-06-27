@@ -6,14 +6,6 @@ noremap <Space> <NOP>
 " `,` is used as a leader key for git, so use `<Leader>,` instead.
 nnoremap <Leader>, ,
 
-" Quit and close
-noremap q <NOP>
-noremap Q <NOP>
-nnoremap <Leader>m q
-nnoremap qq <Cmd>q<CR>
-nnoremap qa <Cmd>qa<CR>
-nnoremap qt <Cmd>tabclose<CR>
-
 " Save
 nnoremap <C-s> <Cmd>update<CR>
 

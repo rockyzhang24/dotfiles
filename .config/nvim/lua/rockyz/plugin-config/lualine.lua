@@ -70,9 +70,11 @@ end
 
 -- Indent type (tab or space) and number of spaces
 local function spaces()
-  local get_option = api.nvim_buf_get_option
-  local expandtab = get_option(0, 'expandtab')
-  local spaces_cnt = expandtab and get_option(0, 'shiftwidth') or get_option(0, 'tabstop')
+  local get_local_option = function(option_name)
+    return api.nvim_get_option_value(option_name, { scope = 'local' })
+  end
+  local expandtab = get_local_option('expandtab')
+  local spaces_cnt = expandtab and get_local_option('shiftwidth') or get_local_option('tabstop')
   return (expandtab and 'S:' or 'T:') .. spaces_cnt
 end
 
@@ -155,7 +157,6 @@ require 'lualine'.setup {
         color = function()
           return { fg = has_clients and colors.white or colors.gray }
         end,
-        padding = { left = 1, right = 0 },
         cond = hide_in_width,
       },
       {
@@ -175,13 +176,11 @@ require 'lualine'.setup {
           return { fg = has_parser and
               (hl_is_enabled and colors.green or colors.red) or colors.gray }
         end,
-        padding = { left = 1, right = 0 },
         cond = hide_in_width,
       },
       {
         spaces,
         icon = { '', color = { fg = colors.yellow } },
-        padding = { left = 1, right = 0 },
         cond = hide_in_width,
       },
       {

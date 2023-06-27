@@ -21,7 +21,7 @@ function M.toggle_diagnostics()
   diagnostics_on = not diagnostics_on
 end
 
---- Get diagnostics (LSP Diagnostic) at the cursor.
+--- Get diagnostics (LSP Diagnostic) at the cursor
 ---
 --- Grab the code from https://github.com/neovim/neovim/issues/21985
 ---
@@ -80,6 +80,9 @@ end
 --
 -- Show a lightbulb when code actions are available at the cursor
 --
+-- It is shown at the beginning (the first column) of the same line, or the
+-- previous line if the space is not enough.
+--
 local bulb_bufnr = nil
 local prev_lnum = nil
 local prev_topline_num = nil
@@ -132,7 +135,8 @@ function M.show_lightbulb()
       end
     end
     if has_actions then
-      -- Avoid bulb icon flashing when move the cursor in a line.
+      -- Avoid bulb icon flashing when move the cursor in a line
+      --
       -- When code actions are available in different positions within a line,
       -- the bulb will be shown in the same place, so no need to remove the
       -- previous bulb and create a new one.
@@ -148,14 +152,31 @@ function M.show_lightbulb()
       prev_lnum = cur_lnum
       prev_topline_num = cur_topline_num
       local icon = ''
+      -- Calculate the row position of the lightbulb relative to the cursor
       local row = 0
-      local col = -vim.fn.getpos('.')[3] + 1
       local cur_indent = fn.indent('.')
       if cur_indent <= 2 then
         if fn.line('.') == fn.line('w0') then
           row = 1
         else
           row = -1
+        end
+      end
+      -- Calculate the col position of the lightbulb relative to the cursor
+      --
+      -- NOTE: We want to get how many columns (characters) before the cursor
+      -- that will be the offset for placing the bulb. If the indent is TAB,
+      -- each indent level is counted as a single one character no matter how
+      -- many spaces the TAB has. We need to convert it to the number of spaces.
+      local cursor_col = vim.fn.col('.')
+      local col = -cursor_col + 1
+      if (not api.nvim_get_option_value('expandtab', {})) then
+        local tabstop = api.nvim_get_option_value('tabstop', {})
+        local tab_cnt = cur_indent / tabstop
+        if (cursor_col <= tab_cnt) then
+          col = -(cursor_col - 1) * tabstop
+        else
+          col = -(cursor_col - tab_cnt + cur_indent) + 1
         end
       end
       bulb_bufnr = api.nvim_create_buf(false, true)

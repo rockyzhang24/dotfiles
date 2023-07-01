@@ -98,33 +98,10 @@ M.grep_string = function()
   builtin.grep_string(vim.tbl_deep_extend("force", ivy, opts))
 end
 
--- Grep by the word under cursor
+-- Grep by the current word or selection
 M.grep_word = function()
   local opts = {
     search = fn.expand("<cword>")
-  }
-  builtin.grep_string(vim.tbl_deep_extend("force", ivy, opts))
-end
-
--- Helper function for getting the selected texts
-local function getVisualSelection()
-  local saved_unnamed_reg = fn.getreg('@')
-  vim.cmd('noau normal! y')
-  local text = fn.getreg('@')
-  fn.setreg('@', saved_unnamed_reg)
-
-  text = string.gsub(text, "\n", "")
-  if #text > 0 then
-    return text
-  else
-    return ''
-  end
-end
-
--- Grep by the selection
-M.grep_selection = function()
-  local opts = {
-    search = getVisualSelection(),
   }
   builtin.grep_string(vim.tbl_deep_extend("force", ivy, opts))
 end

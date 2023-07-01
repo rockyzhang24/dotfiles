@@ -97,7 +97,7 @@ local on_attach = function(client, bufnr)
   -- list
   buf_map('n', '<Leader>qd', dump_diagnostic_to_list)
   -- Format
-  buf_map({ 'n', 'x' }, '<leader>gq', function() lsp.buf.format { async = true } end)
+  buf_map({ 'n', 'x' }, '<leader>F', function() lsp.buf.format { async = true } end)
   -- Toggle diagnostics
   buf_map('n', '<Leader><Leader>d', my_lsp_utils.toggle_diagnostics)
 

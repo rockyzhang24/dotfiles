@@ -20,7 +20,6 @@ local modules = {
   "nvim-fundo",
   "nvim-navic",
   "nvim-navbuddy",
-  "nvim-scrollview",
   "nvim-ufo",
   "project",
   "quick-scope",

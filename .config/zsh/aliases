@@ -54,7 +54,7 @@ alias yd="yt-dlp --paths ~/Downloads"
 alias yda="yt-dlp --extract-audio --audio-format best --paths ~/Downloads"
 
 # Use neovim for vim if present
-command -v nvim >/dev/null && alias vim="nvim" vi="nvim" v="nvim" vimdiff="nvim -d"
+command -v nvim >/dev/null && alias vimdiff="nvim -d"
 
 # Dotfiles management
 alias dot="git --git-dir=$HOME/dotfiles/ --work-tree=$HOME"

@@ -77,7 +77,6 @@ telescope.setup {
 
 -- Extensions
 telescope.load_extension('fzf')
-telescope.load_extension('harpoon')
 telescope.load_extension('projects')
 
 -- Mappings
@@ -103,5 +102,4 @@ map('n', '<Leader>fr', require("telescope.builtin").resume)
 map('n', '<Leader>gl', my_picker.live_grep)
 map('n', '<Leader>gv', my_picker.grep_nvim_config)
 map('n', '<Leader>gs', my_picker.grep_string)
-map('n', '<Leader>gw', my_picker.grep_word)
-map('x', '<Leader>gw', my_picker.grep_selection)
+map({ 'n', 'x' }, '<Leader>gw', my_picker.grep_word)

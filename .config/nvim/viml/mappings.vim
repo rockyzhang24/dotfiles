@@ -245,6 +245,9 @@ nnoremap <silent> <Leader><BS> :vsplit<CR>
 " Move current window to new tab
 nnoremap <Leader>wt <C-w>T
 
+" Duplicate the current window in a new tab
+nnoremap <Leader>wT <Cmd>tab split<CR>
+
 " Close all other windows (not including float windows)
 nnoremap <expr> <Leader>wo len(filter(nvim_tabpage_list_wins(0), { k,v -> nvim_win_get_config(v).relative == "" })) > 1 ? '<C-w>o' : ''
 
@@ -255,12 +258,9 @@ nnoremap <Leader><Left> <C-w>5<
 nnoremap <Leader><Right> <C-w>5>
 
 " Balance size
-nnoremap <Leader>= <C-w>=
+nnoremap <Leader>w= <C-w>=
 
 " Close windows by giving the window numbers
 nnoremap <Leader>wc :CloseWin<Space>
-
-" Duplicate the current window in a new tab
-nnoremap <C-w><C-t> <Cmd>tab split<CR>
 
 " }}}

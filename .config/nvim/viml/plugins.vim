@@ -20,7 +20,7 @@ function! s:PackInit() abort
   call minpac#add('haya14busa/vim-asterisk')
   call minpac#add('tommcdo/vim-exchange') " cx{motion}, cxx (line), X (visual), cxc (clear), and `.` is supported
   call minpac#add('tversteeg/registers.nvim')
-  call minpac#add('ThePrimeagen/harpoon')
+  call minpac#add('rockyzhang24/harpoon')
   call minpac#add('kevinhwang91/nvim-hlslens')
   call minpac#add('kevinhwang91/nvim-bqf')
   call minpac#add('kevinhwang91/nvim-ufo')
@@ -30,7 +30,6 @@ function! s:PackInit() abort
   call minpac#add('othree/eregex.vim')
   call minpac#add('MunifTanjim/nui.nvim') " required by other plugins like nvim-navbuddy
   call minpac#add('andymass/vim-matchup')
-  call minpac#add('dstein64/nvim-scrollview')
   call minpac#add('rockyzhang24/lf.vim')
   call minpac#add('voldikss/vim-floaterm') " required by lf.vim
   call minpac#add('unblevable/quick-scope')

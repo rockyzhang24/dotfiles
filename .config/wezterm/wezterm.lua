@@ -34,7 +34,7 @@ local config = {
     bottom = 0,
   },
   native_macos_fullscreen_mode = false,
-  -- window_background_opacity = 0.92,
+  window_background_opacity = 0.92,
   window_decorations = "RESIZE",
   enable_scroll_bar = true,
   hyperlink_rules = {
@@ -127,9 +127,19 @@ local config = {
     { key = "V", mods = "CTRL|SHIFT", action = act.ActivateCopyMode },
     { key = " ", mods = "CMD|CTRL", action = act.CharSelect },
 
-    -- Fix Ctrl-q on macOS
+    -- Escape code
     { key = "q", mods = "CTRL", action = wezterm.action.SendString '\x11' },
     { key = "Enter", mods = "SHIFT", action = wezterm.action.SendString '\x1b[13;2u' },
+    { key = "1", mods = "CTRL", action = wezterm.action.SendString '\x1b[27;5;49~' },
+    { key = "2", mods = "CTRL", action = wezterm.action.SendString '\x1b[27;5;50~' },
+    { key = "3", mods = "CTRL", action = wezterm.action.SendString '\x1b[27;5;51~' },
+    { key = "4", mods = "CTRL", action = wezterm.action.SendString '\x1b[27;5;52~' },
+    { key = "5", mods = "CTRL", action = wezterm.action.SendString '\x1b[27;5;53~' },
+    { key = "6", mods = "CTRL", action = wezterm.action.SendString '\x1b[27;5;54~' },
+    { key = "7", mods = "CTRL", action = wezterm.action.SendString '\x1b[27;5;55~' },
+    { key = "8", mods = "CTRL", action = wezterm.action.SendString '\x1b[27;5;56~' },
+    { key = "9", mods = "CTRL", action = wezterm.action.SendString '\x1b[27;5;57~' },
+    { key = "0", mods = "CTRL", action = wezterm.action.SendString '\x1b[27;5;58~' },
   },
 }
 

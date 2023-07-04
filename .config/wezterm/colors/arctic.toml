@@ -1,8 +1,8 @@
 [colors]
-foreground = '#d4d4d4'
-background = '#1e1e1e'
+foreground = '#cccccc'
+background = '#1f1f1f'
 ansi = [
-    '#1e1e1e',
+    '#1f1f1f',
     '#f44747',
     '#6a9955',
     '#d7ba7d',
@@ -22,8 +22,8 @@ brights = [
     '#ffffff',
 ]
 selection_fg = 'none'
-selection_bg = '#094771'
-scrollbar_thumb = '#424242'
+selection_bg = '#264f78'
+scrollbar_thumb = '#494d53'
 
 [colors.indexed]
 

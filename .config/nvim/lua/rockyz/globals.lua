@@ -1,5 +1,5 @@
 local g = vim.g
 
 g.colorscheme = "arctic"
-g.transparent = false
+g.transparent = true
 g.border_enabled = true

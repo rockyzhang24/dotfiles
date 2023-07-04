@@ -1,14 +1,20 @@
 local g = vim.g
 local o = vim.o
-local env = vim.env
 local cmd = vim.cmd
 local api = vim.api
 
 o.termguicolors = true
 o.background = "dark"
 
-if g.transparent and env.WEZTERM_CONFIG_DIR ~= "" then
-  api.nvim_set_hl(0, "Normal", {bg = "NONE"})
+if g.transparent then
+  api.nvim_create_augroup('CleanBackground', { clear = true })
+  api.nvim_create_autocmd({ 'ColorScheme' }, {
+    group = 'CleanBackground',
+    pattern = '*',
+    callback = function()
+      api.nvim_set_hl(0, "Normal", { bg = "NONE" })
+    end,
+  })
 end
 
 -- Enable the window border for all floating windows such as diagnostics,

@@ -16,7 +16,7 @@ local colors = {
 -- Format for mode: only show the first char (or first two chars to distinguish
 -- different VISUALs)
 local function simplifiedMode(str)
-  return " " .. (str == "V-LINE" and "VL" or (str == "V-BLOCK" and "VB" or str:sub(1, 1)))
+  return "󰀘 " .. (str == "V-LINE" and "VL" or (str == "V-BLOCK" and "VB" or str:sub(1, 1)))
 end
 
 -- Format for filename: show the filename and the filesize
@@ -180,7 +180,7 @@ require 'lualine'.setup {
       },
       {
         spaces,
-        icon = { '', color = { fg = colors.yellow } },
+        icon = { '', color = { fg = colors.yellow } },
         cond = hide_in_width,
       },
       {

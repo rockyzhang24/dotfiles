@@ -15,9 +15,6 @@ source ~/.config/fzf/fzf-config
 # Rust
 source ~/.cargo/env
 
-# lf
-source $HOME/.config/lf/icons
-
 # iTerm2 Shell Integration
 export ITERM2_SQUELCH_MARK=1
 test -e "${ZDOTDIR}/iterm2_shell_integration.zsh" && source "${ZDOTDIR}/iterm2_shell_integration.zsh"

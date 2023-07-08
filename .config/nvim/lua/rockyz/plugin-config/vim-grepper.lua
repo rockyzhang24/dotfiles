@@ -15,4 +15,4 @@ g.grepper = {
 }
 
 map({ 'n', 'x' }, 'gs', '<Plug>(GrepperOperator)', { remap = true }) -- operator
-map('n', '<Leader>rg', '<Cmd>Grepper<CR>')
+map('n', '<Leader>G', '<Cmd>Grepper<CR>')

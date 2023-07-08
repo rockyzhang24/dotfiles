@@ -2,6 +2,7 @@ local navbuddy = require("nvim-navbuddy")
 local actions = require("nvim-navbuddy.actions")
 local map = require("rockyz.keymap").map
 local theme = require("rockyz.plugin-config.telescope.theme")
+local codicon = require("rockyz.icons").codicon
 
 navbuddy.setup {
   window = {
@@ -16,6 +17,7 @@ navbuddy.setup {
       branch = " ",
     },
   },
+  icons = codicon,
   mappings = {
     ["<esc>"] = actions.close(), -- Close and cursor to original location
     ["q"] = actions.close(),

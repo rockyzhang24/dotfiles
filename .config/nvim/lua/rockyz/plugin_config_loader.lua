@@ -29,6 +29,7 @@ local modules = {
   "treesitter",
   "treesitter-context",
   "telescope.telescope-config",
+  "telescope-tabs",
   "test",
   "undotree",
   "vim-after-object",

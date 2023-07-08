@@ -38,6 +38,7 @@ function! s:PackInit() abort
   call minpac#add('nvim-telescope/telescope-fzf-native.nvim', { 'do': 'make' })  " sorter for telescope
   call minpac#add('nvim-telescope/telescope.nvim')
   call minpac#add('ahmedkhalf/project.nvim')
+  call minpac#add('rockyzhang24/telescope-tabs')
 
   " Text object
   call minpac#add('junegunn/vim-after-object')

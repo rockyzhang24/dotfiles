@@ -1,3 +1,5 @@
+local map = require('rockyz.keymap').map
+
 require('treesitter-context').setup {
   enable = true,
   max_lines = 0,
@@ -8,3 +10,8 @@ require('treesitter-context').setup {
   -- Pass a function to control when to disable this plugin
   on_attach = nil,
 }
+
+-- Jump to the context
+map("n", "[c", function()
+  require("treesitter-context").go_to_context()
+end)

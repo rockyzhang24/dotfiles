@@ -3,6 +3,6 @@
 # Apply nerd font patch for every font file in the given directory
 
 for font in "$1"*
-do 
-  fontforge -script ~/gitrepos/nerd-fonts/font-patcher --complete "$font" --outputdir ~/Downloads/nerdfont-output/
+do
+  fontforge -script ~/Downloads/FontPatcher/font-patcher --complete "$font" --outputdir ~/Downloads/nerdfont-output/
 done

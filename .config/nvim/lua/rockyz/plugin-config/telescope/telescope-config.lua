@@ -1,8 +1,6 @@
 local telescope = require("telescope")
 local my_picker = require("rockyz.plugin-config.telescope.my_picker")
 local map = require('rockyz.keymap').map
-local api = vim.api
-local fn = vim.fn
 
 telescope.setup {
   defaults = {

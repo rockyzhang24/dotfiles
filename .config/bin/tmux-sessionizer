@@ -7,7 +7,8 @@
 
 # Directory candidates in fzf
 read -r -d '' dirs << EOM
-$HOME/oj
+$HOME/oj/
+$HOME/projects/*/
 EOM
 
 if [[ $# -eq 1 ]]; then

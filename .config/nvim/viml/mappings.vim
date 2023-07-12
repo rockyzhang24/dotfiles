@@ -134,6 +134,8 @@ nnoremap <silent> ]A :<C-u>last<CR>
 " Navigation in the buffer list
 nnoremap <silent> [b :<C-u>bprevious<CR>
 nnoremap <silent> ]b :<C-u>bnext<CR>
+nnoremap <silent> <Left> :<C-u>bprevious<CR>
+nnoremap <silent> <Right> :<C-u>bnext<CR>
 nnoremap <silent> [B :<C-u>bfirst<CR>
 nnoremap <silent> ]B :<C-u>blast<CR>
 

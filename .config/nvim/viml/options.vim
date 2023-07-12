@@ -46,7 +46,7 @@ set grepprg=rg\ --vimgrep\ --smart-case\ $*
 set grepformat=%f:%l:%c:%m
 set breakindent
 set breakindentopt=shift:2
-let &showbreak = '﬌ '
+let &showbreak = '↪ '
 set wildignore=*.o,*.obj,*~,*.exe,*.a,*.pdb,*.lib
 set wildignore+=*.so,*.dll,*.swp,*.egg,*.jar,*.class,*.pyc,*.pyo,*.bin,*.dex
 set wildignore+=*.log,*.pyc,*.sqlite,*.sqlite3,*.min.js,*.min.css,*.tags

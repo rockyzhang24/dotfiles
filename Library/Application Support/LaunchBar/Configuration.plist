@@ -1,0 +1,495 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>aliasNames</key>
+	<dict>
+		<key>ODLBPathItem:/</key>
+		<string>Root /</string>
+		<key>ODLBPathItem:/Volumes</key>
+		<string>Mounted Volumes</string>
+		<key>ODLBPathItem:/usr/bin</key>
+		<string>usr/bin</string>
+		<key>ODLBPathItem:/usr/local</key>
+		<string>usr/local</string>
+		<key>ODLBPathItem:/usr/local/bin</key>
+		<string>usr/local/bin</string>
+		<key>ODLBPathItem:/usr/sbin</key>
+		<string>usr/sbin</string>
+	</dict>
+	<key>disabledItems</key>
+	<array>
+		<string>ODLBScriptAction:at.obdev.LaunchBar.action.EvernoteNewNoteWithFile</string>
+		<string>ODLBPathItem:/Applications/Save to Pocket.app</string>
+		<string>ODLBSearchInSpotlightAction</string>
+		<string>ODLBSearchTemplateItem:5E824C1D-86E3-4C29-8CCA-6260A262D77E</string>
+		<string>ODLBScriptAction:at.obdev.LaunchBar.action.EvernoteNewNoteWithText</string>
+		<string>ODLBPathItem:/System/Applications/Utilities/Digital Color Meter.app</string>
+		<string>ODLBPathItem:/System/Applications/Utilities/System Information.app</string>
+		<string>ODLBSearchTemplateItem:C70AE711-04B5-432A-B129-52EB40737A99</string>
+		<string>ODLBSearchTemplateItem:10B87340-06D6-4EEF-9BB2-10169915927F</string>
+		<string>ODLBSearchTemplateItem:2D3F3405-E2C2-4353-BC40-46A4A97D6D4B</string>
+		<string>ODLBPathItem:/System/Applications/Utilities/Screenshot.app</string>
+		<string>ODLBServiceItem:com.apple.Terminal - Search man Page Index in Terminal</string>
+		<string>ODLBServiceItem:com.eusoft.eudic - Eudic • 朗读选中内容</string>
+		<string>ODLBPathItem:/System/Applications/Mission Control.app</string>
+		<string>ODLBPathItem:/System/Library/CoreServices/Certificate Assistant.app</string>
+		<string>ODLBPathItem:/Applications/Instapaper Save.app</string>
+		<string>ODLBPathItem:/System/Library/CoreServices/Applications/Directory Utility.app</string>
+		<string>ODLBSearchTemplateItem:5B148375-C713-478B-A4F8-B38957871117</string>
+		<string>ODLBSearchTemplateItem:3A2CFA99-E625-4728-B408-15007DE12A1A</string>
+		<string>ODLBPathItem:/Applications/1Password for Safari.app</string>
+		<string>ODLBServiceItem:com.eusoft.eudic - Eudic • 翻译选中内容</string>
+		<string>ODLBSearchWikimediaAction:en.wiktionary</string>
+		<string>ODLBPathItem:~/Library/Application Support/LaunchBar/Snippets/Lorem Ipsum.txt</string>
+		<string>ODLBServiceItem:com.apple.Terminal - New Terminal at Folder</string>
+		<string>ODLBPathItem:/System/Applications/Utilities/Migration Assistant.app</string>
+		<string>ODLBSearchTemplateItem:99F2E187-033B-4EBB-B128-D62B75E5DA39</string>
+		<string>ODLBSearchTemplateItem:FED01FF7-CDD4-4CFF-8F5C-6F46E403B58F</string>
+		<string>ODLBSearchTemplateItem:D7714B6A-2EC7-421E-95EE-366C0B58604A</string>
+		<string>ODLBPathItem:~/Library/Application Support/LaunchBar/Snippets/Thank you very much.txt</string>
+		<string>ODLBPathItem:/Applications/Hush.app</string>
+		<string>ODLBPathItem:/Applications/Dark Reader for Safari.app</string>
+		<string>ODLBSearchTemplateItem:EAA54B2E-8B53-4746-8B34-377F902C50FE</string>
+		<string>ODLBSearchTemplateItem:00FB2048-9ADE-49A4-B1AC-66B95CE3CA8A</string>
+		<string>ODLBPathItem:/System/Applications/Image Capture.app</string>
+		<string>ODLBSearchTemplateItem:081FFCFF-5B19-4656-B1B1-088461F9E16B</string>
+		<string>ODLBPathItem:/Applications/Grammarly for Safari.app</string>
+		<string>ODLBSearchTemplateItem:F4DB589B-1834-4F9C-887F-4679117D522B</string>
+		<string>ODLBSearchTemplateItem:055622E8-6676-42F0-A696-7B567503EF1B</string>
+		<string>ODLBSearchTemplateItem:0E6C546F-B418-4D42-91A2-37CE04114FEA</string>
+		<string>ODLBPathItem:/System/Library/CoreServices/Applications/Ticket Viewer.app</string>
+		<string>ODLBSearchTemplateItem:2AF32EF0-4877-410F-B04C-2EB4D069FE94</string>
+		<string>ODLBServiceItem:org.vim.MacVim - MacVim/New MacVim Buffer Here</string>
+		<string>ODLBSearchTemplateItem:44C39A2F-7B47-4769-B52D-7C5843FCBAB9</string>
+		<string>ODLBPathItem:/System/Library/CoreServices/Applications/Feedback Assistant.app</string>
+		<string>ODLBPathItem:/System/Applications/Utilities/Grapher.app</string>
+		<string>ODLBPathItem:/Applications/PayPal Honey.app</string>
+		<string>ODLBPathItem:/Applications/Select Like A Boss For Safari.app</string>
+		<string>ODLBSearchTemplateItem:19FBAEBE-AC56-4D02-AC1D-E0DD978AFB7C</string>
+		<string>ODLBSearchTemplateItem:3210098C-9980-4ABF-8388-77A3F4CEA6DB</string>
+		<string>ODLBPathItem:/System/Applications/Utilities/Bluetooth File Exchange.app</string>
+		<string>ODLBPathItem:/System/Applications/Stickies.app</string>
+		<string>ODLBServiceItem:com.hegenberg.BetterTouchTool - Add to BTT Clipboard</string>
+		<string>ODLBSharingServiceAction:com.getdropbox.dropbox.TransferExtension</string>
+		<string>ODLBSearchTemplateItem:96C00D63-66CD-4AB0-AD9C-48F35767F03F</string>
+		<string>ODLBScriptAction:at.obdev.LaunchBar.action.RunTerminalCommand</string>
+		<string>ODLBPathItem:/System/Applications/Chess.app</string>
+		<string>ODLBPathItem:/Applications/Rakuten Cash Back.app</string>
+		<string>ODLBServiceItem:com.apple.Stickies - Make Sticky</string>
+		<string>ODLBScriptAction:at.obdev.LaunchBar.action.EvernoteNewNoteWithSelectedEmail</string>
+		<string>ODLBPathItem:/System/Library/CoreServices/Applications/Wireless Diagnostics.app</string>
+		<string>ODLBScriptAction:at.obdev.LaunchBar.action.EvernoteCopyLinkOfSelectedNote</string>
+		<string>ODLBPathItem:/System/Applications/Photo Booth.app</string>
+		<string>ODLBPathItem:/System/Library/CoreServices/HelpViewer.app</string>
+		<string>ODLBPathItem:~/Library/Printers/EPSON ET-2760 Series.app</string>
+		<string>ODLBSearchWikimediaAction:zh.wiktionary</string>
+		<string>ODLBPathItem:/System/Applications/Utilities/VoiceOver Utility.app</string>
+		<string>ODLBSearchDictCCAction</string>
+		<string>ODLBSearchTemplateItem:68D96BE1-9D5C-4AC0-B10F-F0B319BDCC14</string>
+		<string>ODLBPathItem:~/Library/Application Support/LaunchBar/Snippets/Yours Sincerely.txt</string>
+		<string>ODLBPathItem:/System/Library/CoreServices/Applications/Expansion Slot Utility.app</string>
+		<string>ODLBSearchTemplateItem:EF3656D2-4C4F-454C-848C-444B59A5BB5E</string>
+		<string>ODLBPathItem:/System/Library/CoreServices/Applications/Desk View.app</string>
+		<string>ODLBSearchTemplateItem:3D3A68FB-A8A9-4995-95F6-BF297BB4DB31</string>
+		<string>ODLBSearchTemplateItem:FD6EBE1C-5639-4F3D-80D4-30A1DC9A8CB8</string>
+		<string>ODLBSearchGoogleAction</string>
+		<string>ODLBPathItem:/Applications/Sourcegraph for Safari.app</string>
+		<string>ODLBServiceItem:com.apple.Terminal - New Terminal Tab at Folder</string>
+		<string>ODLBPathItem:/System/Applications/Utilities/Audio MIDI Setup.app</string>
+		<string>ODLBSearchTemplateItem:145E45F7-E172-43BC-8CA3-38DFAD4336F8</string>
+		<string>ODLBServiceItem:com.apple.Terminal - Open man Page in Terminal</string>
+		<string>ODLBSearchTemplateItem:B0F37E0F-7857-4346-8D65-7FDA78A2CE69</string>
+		<string>ODLBSearchTemplateItem:87F10D02-99E5-4DCD-A7AC-7F4987C5697F</string>
+		<string>ODLBSearchTemplateItem:C446B332-9D31-443F-80DC-88DDCCCBFBFA</string>
+		<string>ODLBSearchTemplateItem:EC430309-6B3C-496D-8978-7A2C8CAC3B66</string>
+		<string>ODLBSearchTemplateItem:64A86411-FCF0-40E9-BC34-5E7FA2202381</string>
+		<string>ODLBSearchTemplateItem:79425581-D288-460A-A5A8-14BC9FE66B23</string>
+		<string>ODLBSearchTemplateItem:BA176BBA-CBBC-451C-8E87-B99AAE659D1A</string>
+		<string>ODLBPathItem:/System/Library/CoreServices/Applications/DVD Player.app</string>
+		<string>ODLBSearchTemplateItem:02534F88-0AEA-4ECA-8D04-7C6D7D701F4F</string>
+		<string>ODLBSearchTemplateItem:ED6DA4EF-D9C1-416B-A7C4-764FD40856E3</string>
+		<string>ODLBSearchTemplateItem:67BFB339-B7A8-4E27-B018-0FBFD275E724</string>
+		<string>ODLBPathItem:/Applications/uBlacklist for Safari.app</string>
+		<string>ODLBServiceItem:org.vim.MacVim - MacVim/New MacVim Buffer With Selection</string>
+		<string>ODLBScriptAction:at.obdev.LaunchBar.action.DuckDuckGo</string>
+		<string>ODLBSearchTemplateItem:8BF6ECC9-1A7A-48F7-8EDC-CD7434E2763B</string>
+		<string>ODLBPathItem:/System/Applications/Utilities/Disk Utility.app</string>
+		<string>ODLBSearchTemplateItem:6658F0C5-DD3A-4A0E-8EDD-EAB391AA05D8</string>
+		<string>ODLBSearchTemplateItem:EC14BC18-6AF3-4651-916E-D01EDB6CAF65</string>
+		<string>ODLBSearchWikimediaAction:en.wikipedia</string>
+		<string>ODLBSearchWikimediaAction:zh.wikipedia</string>
+		<string>ODLBPathItem:/System/Applications/Utilities/AirPort Utility.app</string>
+		<string>ODLBSearchTemplateItem:A6B9342F-2F64-42CF-83F2-DB92B3FC0150</string>
+		<string>ODLBSearchWikimediaAction:en.wikiquote</string>
+		<string>ODLBSearchWikimediaAction:zh.wikiquote</string>
+		<string>ODLBPathItem:/System/Applications/Utilities/ColorSync Utility.app</string>
+		<string>ODLBSearchTemplateItem:8FEC4A61-26AC-43A8-B29B-9D32F12BF208</string>
+		<string>ODLBPathItem:/System/Applications/Utilities/Boot Camp Assistant.app</string>
+		<string>ODLBSearchTemplateItem:EC301A2F-AD0D-4409-B942-85C4651E1466</string>
+		<string>ODLBPathItem:/System/Library/CoreServices/Applications/iOS App Installer.app</string>
+		<string>ODLBPathItem:~/Library/Application Support/LaunchBar/Snippets/Hello Clipboard.txt</string>
+	</array>
+	<key>itemIdentifierVersion</key>
+	<integer>4294967303</integer>
+	<key>rules</key>
+	<array>
+		<dict>
+			<key>className</key>
+			<string>ODLBContactsRule</string>
+		</dict>
+		<dict>
+			<key>abbreviatedSpecificPlaces</key>
+			<array>
+				<string>/Applications</string>
+				<string>/System/Library/CoreServices</string>
+				<string>~/Applications</string>
+				<string>~/Library/Printers</string>
+			</array>
+			<key>className</key>
+			<string>ODLBApplicationsRule</string>
+		</dict>
+		<dict>
+			<key>abbreviatedPath</key>
+			<string>_safariBookmarksPath</string>
+			<key>className</key>
+			<string>ODLBBookmarksRule</string>
+		</dict>
+		<dict>
+			<key>className</key>
+			<string>ODLBPrefPanesRule</string>
+		</dict>
+		<dict>
+			<key>aliasName</key>
+			<string>My Search Templates</string>
+			<key>className</key>
+			<string>ODLBCustomSearchTemplatesRule</string>
+			<key>templates</key>
+			<array>
+				<dict>
+					<key>name</key>
+					<string>1point3acres</string>
+					<key>templateURL</key>
+					<string>https://www.google.com/search?q=site:www.1point3acres.com+*</string>
+					<key>uuid</key>
+					<string>A3FA282C-CBE7-425B-8DCE-3E25625851BB</string>
+				</dict>
+				<dict>
+					<key>name</key>
+					<string>Bilibili</string>
+					<key>templateURL</key>
+					<string>https://search.bilibili.com/all?keyword=*</string>
+					<key>uuid</key>
+					<string>47CDA28D-D2DF-49AE-8C8C-36248C6602CD</string>
+				</dict>
+				<dict>
+					<key>name</key>
+					<string>DuckDuckGo Bangs Google</string>
+					<key>templateURL</key>
+					<string>https://duckduckgo.com/?q=!g+*</string>
+					<key>uuid</key>
+					<string>23BF0D1A-11AF-4B32-B6A9-B1E8DE189B60</string>
+				</dict>
+				<dict>
+					<key>name</key>
+					<string>GitHub</string>
+					<key>templateURL</key>
+					<string>https://github.com/search?q=*</string>
+					<key>uuid</key>
+					<string>E2C0078A-25EA-49E4-B7D3-F21362A69AE9</string>
+				</dict>
+				<dict>
+					<key>name</key>
+					<string>Reddit</string>
+					<key>templateURL</key>
+					<string>https://www.google.com/search?q=site:reddit.com+*</string>
+					<key>uuid</key>
+					<string>8E17352D-008D-47CB-96BA-FED5D5230F0A</string>
+				</dict>
+				<dict>
+					<key>name</key>
+					<string>V2EX</string>
+					<key>templateURL</key>
+					<string>https://www.google.com/search?q=site:v2ex.com+*</string>
+					<key>uuid</key>
+					<string>8FE31331-D22A-4D73-83D9-28088E006EFF</string>
+				</dict>
+			</array>
+		</dict>
+		<dict>
+			<key>className</key>
+			<string>ODLBThemesRule</string>
+			<key>enabled</key>
+			<false/>
+		</dict>
+		<dict>
+			<key>className</key>
+			<string>ODLBNetworkLocationsRule</string>
+		</dict>
+		<dict>
+			<key>abbreviatedPath</key>
+			<string>~</string>
+			<key>className</key>
+			<string>ODLBFolderContentsRule</string>
+			<key>subfolderLevels</key>
+			<integer>0</integer>
+			<key>typeCollectionIdentifier</key>
+			<string>@folder</string>
+		</dict>
+		<dict>
+			<key>className</key>
+			<string>ODLBShortcutsRule</string>
+		</dict>
+		<dict>
+			<key>className</key>
+			<string>ODLBTagsRule</string>
+		</dict>
+		<dict>
+			<key>className</key>
+			<string>ODLBEmojiRule</string>
+			<key>subsearchOnly</key>
+			<true/>
+		</dict>
+		<dict>
+			<key>className</key>
+			<string>ODLBReminderListsRule</string>
+		</dict>
+		<dict>
+			<key>abbreviatedPath</key>
+			<string>_firefoxBookmarksPath</string>
+			<key>className</key>
+			<string>ODLBBookmarksRule</string>
+			<key>enabled</key>
+			<false/>
+		</dict>
+		<dict>
+			<key>className</key>
+			<string>ODLBSafariCloudTabsRule</string>
+		</dict>
+		<dict>
+			<key>className</key>
+			<string>ODLBOnePasswordRule</string>
+		</dict>
+		<dict>
+			<key>abbreviatedPath</key>
+			<string>_chromeBookmarksPath</string>
+			<key>className</key>
+			<string>ODLBBookmarksRule</string>
+			<key>enabled</key>
+			<false/>
+		</dict>
+		<dict>
+			<key>className</key>
+			<string>ODLBDockRule</string>
+		</dict>
+		<dict>
+			<key>className</key>
+			<string>ODLBListRule</string>
+		</dict>
+		<dict>
+			<key>className</key>
+			<string>ODLBCategoriesRule</string>
+		</dict>
+		<dict>
+			<key>aliasName</key>
+			<string>System Directories</string>
+			<key>className</key>
+			<string>ODLBListRule</string>
+			<key>list</key>
+			<array>
+				<string>/bin</string>
+				<string>/private/etc</string>
+				<string>~/Library</string>
+				<string>/sbin</string>
+				<string>/System</string>
+				<string>/private/tmp</string>
+				<string>/usr</string>
+				<string>/usr/bin</string>
+				<string>/usr/local</string>
+				<string>/usr/local/bin</string>
+				<string>/usr/sbin</string>
+				<string>/private/var</string>
+			</array>
+		</dict>
+		<dict>
+			<key>className</key>
+			<string>ODLBWorkflowsRule</string>
+		</dict>
+		<dict>
+			<key>abbreviatedPath</key>
+			<string>~/Library/CloudStorage/Dropbox</string>
+			<key>className</key>
+			<string>ODLBFolderContentsRule</string>
+		</dict>
+		<dict>
+			<key>abbreviatedPath</key>
+			<string>_firefoxHistoryPath</string>
+			<key>className</key>
+			<string>ODLBHistoryRule</string>
+			<key>enabled</key>
+			<false/>
+		</dict>
+		<dict>
+			<key>abbreviatedPath</key>
+			<string>~/Desktop</string>
+			<key>className</key>
+			<string>ODLBFolderContentsRule</string>
+		</dict>
+		<dict>
+			<key>className</key>
+			<string>ODLBMountedVolumesRule</string>
+		</dict>
+		<dict>
+			<key>abbreviatedPath</key>
+			<string>_chromeHistoryPath</string>
+			<key>className</key>
+			<string>ODLBHistoryRule</string>
+			<key>enabled</key>
+			<false/>
+		</dict>
+		<dict>
+			<key>abbreviatedPath</key>
+			<string>~/.config</string>
+			<key>className</key>
+			<string>ODLBFolderContentsRule</string>
+		</dict>
+		<dict>
+			<key>abbreviatedPath</key>
+			<string>~/Documents</string>
+			<key>className</key>
+			<string>ODLBFolderContentsRule</string>
+			<key>skipQualifiers</key>
+			<array>
+				<string>iTunes Music</string>
+			</array>
+		</dict>
+		<dict>
+			<key>className</key>
+			<string>ODLBSafariTopSitesRule</string>
+			<key>enabled</key>
+			<false/>
+		</dict>
+		<dict>
+			<key>className</key>
+			<string>ODLBMusicRule</string>
+			<key>includeLovedSongsInBestOfLists</key>
+			<false/>
+			<key>removeFormationFromArtistName</key>
+			<false/>
+			<key>removeParenthesizedTextFromArtistName</key>
+			<false/>
+			<key>splitArtists</key>
+			<false/>
+		</dict>
+		<dict>
+			<key>className</key>
+			<string>ODLBUserAccountsRule</string>
+			<key>enabled</key>
+			<false/>
+		</dict>
+		<dict>
+			<key>className</key>
+			<string>ODLBSafariReadingListRule</string>
+		</dict>
+		<dict>
+			<key>className</key>
+			<string>ODLBCalendarsRule</string>
+		</dict>
+		<dict>
+			<key>abbreviatedPath</key>
+			<string>_safariHistoryPath</string>
+			<key>className</key>
+			<string>ODLBHistoryRule</string>
+			<key>enabled</key>
+			<false/>
+		</dict>
+		<dict>
+			<key>className</key>
+			<string>ODLBActionsRule</string>
+		</dict>
+		<dict>
+			<key>className</key>
+			<string>ODLBServicesRule</string>
+		</dict>
+		<dict>
+			<key>className</key>
+			<string>ODLBManagedSearchTemplatesRule</string>
+		</dict>
+		<dict>
+			<key>abbreviatedCustomSnippetsFolders</key>
+			<array>
+				<string>/Users/rockyzhang/Library/CloudStorage/Dropbox/configs/LaunchBar/snippets/General</string>
+				<string>/Users/rockyzhang/Library/CloudStorage/Dropbox/configs/LaunchBar/snippets/Greek-Alphabet</string>
+			</array>
+			<key>className</key>
+			<string>ODLBSnippetsRule</string>
+		</dict>
+		<dict>
+			<key>className</key>
+			<string>ODLBCloudDocumentsRule</string>
+		</dict>
+		<dict>
+			<key>aliasName</key>
+			<string>Command Line Tools</string>
+			<key>className</key>
+			<string>ODLBListRule</string>
+			<key>enabled</key>
+			<false/>
+			<key>list</key>
+			<array>
+				<string>/usr/bin/cal</string>
+				<string>/bin/date</string>
+				<string>/usr/bin/dig</string>
+				<string>/usr/bin/host</string>
+				<string>/usr/bin/hostinfo</string>
+				<string>/usr/bin/man</string>
+				<string>/usr/sbin/netstat</string>
+				<string>/sbin/ping</string>
+				<string>/usr/bin/sftp</string>
+				<string>/usr/bin/ssh</string>
+				<string>/usr/bin/su</string>
+				<string>/usr/bin/top</string>
+				<string>/usr/sbin/traceroute</string>
+				<string>/usr/bin/uptime</string>
+			</array>
+		</dict>
+	</array>
+	<key>typeCollections</key>
+	<array>
+		<dict>
+			<key>definition</key>
+			<string>'RTF ', 'SLD8', 'TEXT', 'W6BN', 'W8BN', 'WDBN', 'XLS8', doc, docx, pps, ppsx, ppt, pptx, rtf, txt, xls, xlsx</string>
+			<key>identifier</key>
+			<string>4</string>
+			<key>name</key>
+			<string>MS Office Documents</string>
+		</dict>
+		<dict>
+			<key>definition</key>
+			<string>'CWWP', cwk</string>
+			<key>identifier</key>
+			<string>3</string>
+			<key>name</key>
+			<string>AppleWorks Documents</string>
+		</dict>
+		<dict>
+			<key>definition</key>
+			<string>c, cpp, h, java, m, nib, php, php3, php4, pl</string>
+			<key>identifier</key>
+			<string>2</string>
+			<key>name</key>
+			<string>Source Files</string>
+		</dict>
+		<dict>
+			<key>definition</key>
+			<string>htm, html, htmld</string>
+			<key>identifier</key>
+			<string>1</string>
+			<key>name</key>
+			<string>HTML Files</string>
+		</dict>
+	</array>
+	<key>version</key>
+	<integer>20</integer>
+</dict>
+</plist>

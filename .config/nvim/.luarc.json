@@ -1,7 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/sumneko/vscode-lua/master/setting/schema.json",
   "diagnostics.globals": [
-    // General
     "vim",
     "jit",
     "it",
@@ -10,7 +9,6 @@
     "after_each",
     "setup",
     "teardown",
-    // For LuaSnip
     "s",
     "sn",
     "isn",
@@ -20,6 +18,9 @@
     "c",
     "d",
     "r",
+    "events",
+    "ai",
+    "extras",
     "l",
     "rep",
     "p",
@@ -29,7 +30,17 @@
     "fmt",
     "fmta",
     "conds",
+    "postfix",
+    "types",
     "parse",
-    "ai"
-  ]
+    "ms",
+    "k"
+  ],
+  "workspace": {
+    "library": [
+      "$VIMRUNTIME",
+      "${3rd}/luv/library"
+    ],
+    "checkThirdParty": false
+  }
 }

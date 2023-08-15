@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleIdentifier</key>
+	<string>com.renaghan.launchbar.Updates</string>
+	<key>CFBundleName</key>
+	<string>Action Updates</string>
+	<key>CFBundleVersion</key>
+	<string>2.11</string>
+	<key>CFBundleIconFile</key>
+	<string>font-awesome:fa-spinner</string>
+	<key>LBDebugLogEnabled</key>
+	<true/>
+	<key>LBScripts</key>
+	<dict>
+		<key>LBDefaultScript</key>
+		<dict>
+			<key>LBScriptName</key>
+			<string>updates.js</string>
+			<key>LBRunInBackground</key>
+			<false/>
+			<key>LBReturnsResult</key>
+			<true/>
+		</dict>
+	</dict>
+	<key>LBDescription</key>
+	<dict>
+		<key>LBSummary</key>
+		<string>Checks custom actions to check to see if new version is available. Actions should specify a /LBDescription/LBUpdate key in the Info.plist of their action pointing at the URL which returns the Info.plist of the latest version of the action. Additionally they may specify a /LBDescription/LBDownload key specifying the URL to download the latest .lbaction package of the action.</string>
+		<key>LBAuthor</key>
+		<string>Padraic Renaghan</string>
+		<key>LBEmail</key>
+		<string>prenagha@renaghan.com</string>
+		<key>LBWebsiteURL</key>
+		<string>https://renaghan.com/launchbar/action-updates/</string>
+		<key>LBTwitter</key>
+		<string>@prenagha</string>
+	  <key>LBUpdateURL</key>
+	  <string>https://raw.githubusercontent.com/prenagha/launchbar/master/Updates.lbaction/Contents/Info.plist</string>
+	  <key>LBDownloadURL</key>
+	  <string>https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/prenagha/launchbar/tree/main/Updates.lbaction</string>
+	  <key>LBChangelog</key>
+	  <string>
+	    2.11: Fix download URL
+	    2.10: Fix for new icons @Ptujec
+			2.9: New icons @Ptujec
+			2.8: Fix LaunchBar version check
+	    2.6: Additional error handling
+	    2.5: Added ability to select an action and set it to skip in the preferences file
+	    2.4: Proper version compare assuming major[.minor][.patch] format
+	    2.3: Fix if URLs are already encoded
+	    2.2: replace startsWith and endsWith for better javascript support
+	    2.1: Support new and old keys
+	    2.0: Changed LBUpdateURL, LBWebsiteURL, LBDownloadURL keys per Objective Development standard key names
+	    1.7: Moved skipped items to own group.
+	    1.6: Standardized error handling.
+	    1.5: Support for LBChangelog key.
+	    1.5: Download via explicitly selecting LB items.
+	  </string>
+	</dict>
+</dict>
+</plist>

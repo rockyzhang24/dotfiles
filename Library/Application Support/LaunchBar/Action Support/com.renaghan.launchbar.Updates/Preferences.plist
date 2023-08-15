@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>ActionsDir</key>
+	<string>/Users/rockyzhang/Library/Application Support/LaunchBar/Actions</string>
+	<key>LBUpdateURL</key>
+	<dict>
+		<key>com.example.action1</key>
+		<string>https://example.com/action1.lbaction</string>
+		<key>com.example.action2</key>
+		<string>SKIP</string>
+	</dict>
+</dict>
+</plist>

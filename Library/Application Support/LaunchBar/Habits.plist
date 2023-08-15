@@ -24,6 +24,16 @@
 			<key>ODLBSearchTemplateItem:A3FA282C-CBE7-425B-8DCE-3E25625851BB</key>
 			<integer>1</integer>
 		</dict>
+		<key>8</key>
+		<dict>
+			<key>ODLBPathItem:~/.config/nvim/pack/minpac/start/vim-matchup/test/issues/8</key>
+			<integer>1</integer>
+		</dict>
+		<key>a</key>
+		<dict>
+			<key>ODLBPathItem:/Applications/Arc.app</key>
+			<integer>1</integer>
+		</dict>
 		<key>abb</key>
 		<dict>
 			<key>ODLBSearchTemplateItem:EC430309-6B3C-496D-8978-7A2C8CAC3B66</key>
@@ -52,6 +62,11 @@
 		<key>activ</key>
 		<dict>
 			<key>ODLBServiceItem:com.apple.dt.Instruments - Activity Monitor</key>
+			<integer>1</integer>
+		</dict>
+		<key>activi</key>
+		<dict>
+			<key>ODLBPathItem:/System/Applications/Utilities/Activity Monitor.app</key>
 			<integer>1</integer>
 		</dict>
 		<key>activity</key>
@@ -86,10 +101,15 @@
 			<key>ODLBSearchTemplateItem:B3C2D48A-587E-49AE-B789-5A5E5143ACD4</key>
 			<integer>1</integer>
 		</dict>
+		<key>arc</key>
+		<dict>
+			<key>ODLBPathItem:/Applications/Arc.app</key>
+			<integer>2</integer>
+		</dict>
 		<key>auto</key>
 		<dict>
 			<key>ODLBPathItem:/System/Applications/Automator.app</key>
-			<integer>1</integer>
+			<integer>2</integer>
 		</dict>
 		<key>b</key>
 		<dict>
@@ -114,6 +134,21 @@
 		<key>bo</key>
 		<dict>
 			<key>ODLBRuleItem:ODLBBookmarksRule:Safari Bookmarks:/Users/rockyzhang/Library/Safari/Bookmarks.plist</key>
+			<integer>1</integer>
+		</dict>
+		<key>caff</key>
+		<dict>
+			<key>ODLBScriptAction:com.renaghan.launchbar.Caffeinate</key>
+			<integer>2</integer>
+		</dict>
+		<key>caffei</key>
+		<dict>
+			<key>ODLBScriptAction:com.renaghan.launchbar.Caffeinate</key>
+			<integer>1</integer>
+		</dict>
+		<key>cap</key>
+		<dict>
+			<key>ODLBWorkflowServiceItem:(null) - Float Capture</key>
 			<integer>1</integer>
 		</dict>
 		<key>chro</key>
@@ -215,6 +250,11 @@
 			<key>ODLBServiceItem:com.eusoft.eudic - Eudic • 翻译选中内容</key>
 			<integer>1</integer>
 		</dict>
+		<key>everypro</key>
+		<dict>
+			<key>ODLBScriptAction:ptujec.LaunchBar.action.EveryProcess</key>
+			<integer>1</integer>
+		</dict>
 		<key>file</key>
 		<dict>
 			<key>ODLBServiceItem:com.jinghaoshe.qspace.pro - QSpace Pro/File Hash Value</key>
@@ -239,6 +279,26 @@
 		<dict>
 			<key>ODLBPathItem:/System/Library/CoreServices/Finder.app</key>
 			<integer>2</integer>
+		</dict>
+		<key>fl</key>
+		<dict>
+			<key>ODLBWorkflowServiceItem:(null) - Float Capture</key>
+			<integer>1</integer>
+		</dict>
+		<key>flo</key>
+		<dict>
+			<key>ODLBWorkflowServiceItem:(null) - Float Capture</key>
+			<integer>1</integer>
+		</dict>
+		<key>float</key>
+		<dict>
+			<key>ODLBWorkflowServiceItem:(null) - Float image</key>
+			<integer>1</integer>
+		</dict>
+		<key>floatca</key>
+		<dict>
+			<key>ODLBWorkflowServiceItem:(null) - Float Capture</key>
+			<integer>1</integer>
 		</dict>
 		<key>folder</key>
 		<dict>
@@ -312,6 +372,11 @@
 		<key>key</key>
 		<dict>
 			<key>ODLBPathItem:/System/Library/PreferencePanes/Keyboard.prefPane</key>
+			<integer>1</integer>
+		</dict>
+		<key>keybo</key>
+		<dict>
+			<key>ODLBPathItem:/Applications/Keyboard Maestro.app</key>
 			<integer>1</integer>
 		</dict>
 		<key>ki</key>
@@ -442,6 +507,8 @@
 		<dict>
 			<key>ODLBPathItem:/Users/Shared</key>
 			<integer>1</integer>
+			<key>ODLBScriptAction:ptujec.LaunchBar.action.SearchNotes</key>
+			<integer>2</integer>
 		</dict>
 		<key>sa</key>
 		<dict>
@@ -475,6 +542,21 @@
 			<key>ODLBPathItem:/System/Applications/Utilities/Screenshot.app</key>
 			<integer>1</integer>
 		</dict>
+		<key>sear</key>
+		<dict>
+			<key>ODLBScriptAction:ptujec.LaunchBar.action.SearchNotes</key>
+			<integer>2</integer>
+		</dict>
+		<key>searchno</key>
+		<dict>
+			<key>ODLBScriptAction:ptujec.LaunchBar.action.SearchNotes</key>
+			<integer>1</integer>
+		</dict>
+		<key>service</key>
+		<dict>
+			<key>ODLBRuleItem:ODLBServicesRule</key>
+			<integer>1</integer>
+		</dict>
 		<key>sett</key>
 		<dict>
 			<key>ODLBCategory:Setting Pane</key>
@@ -485,6 +567,16 @@
 		<key>snip</key>
 		<dict>
 			<key>ODLBAddSnippetAction</key>
+			<integer>1</integer>
+		</dict>
+		<key>spee</key>
+		<dict>
+			<key>ODLBScriptAction:ptujec.LaunchBar.action.Speedtest</key>
+			<integer>1</integer>
+		</dict>
+		<key>speed</key>
+		<dict>
+			<key>ODLBScriptAction:ptujec.LaunchBar.action.Speedtest</key>
 			<integer>1</integer>
 		</dict>
 		<key>square</key>
@@ -502,6 +594,18 @@
 			<key>ODLBURLItem:https://luoxu-web.vercel.app/</key>
 			<integer>1</integer>
 		</dict>
+		<key>thing</key>
+		<dict>
+			<key>ODLBScriptAction:com.renaghan.launchbar.Things</key>
+			<integer>1</integer>
+		</dict>
+		<key>things</key>
+		<dict>
+			<key>ODLBPathItem:/Applications/Things3.app</key>
+			<integer>2</integer>
+			<key>ODLBScriptAction:com.renaghan.launchbar.Things</key>
+			<integer>1</integer>
+		</dict>
 		<key>tin</key>
 		<dict>
 			<key>ODLBScriptAction:at.obdev.LaunchBar.action.CopyAsTinyURL</key>
@@ -515,6 +619,11 @@
 		<key>ubl</key>
 		<dict>
 			<key>ODLBPathItem:/Applications/uBlacklist for Safari.app</key>
+			<integer>1</integer>
+		</dict>
+		<key>updates</key>
+		<dict>
+			<key>ODLBScriptAction:com.renaghan.launchbar.Updates</key>
 			<integer>1</integer>
 		</dict>
 		<key>user</key>
@@ -572,9 +681,9 @@
 	<key>accessCounts</key>
 	<dict>
 		<key>Actions</key>
-		<integer>14</integer>
+		<integer>32</integer>
 		<key>Browsing</key>
-		<integer>34</integer>
+		<integer>40</integer>
 		<key>Calculator</key>
 		<integer>2</integer>
 		<key>Calendars</key>
@@ -584,7 +693,7 @@
 		<key>ClipboardHistory</key>
 		<integer>1</integer>
 		<key>FullIndexSearch</key>
-		<integer>211</integer>
+		<integer>246</integer>
 		<key>InfoBrowsing</key>
 		<integer>1</integer>
 		<key>InstantOpen</key>
@@ -594,7 +703,7 @@
 		<key>InstantSendText</key>
 		<integer>18</integer>
 		<key>LaunchingApplications</key>
-		<integer>75</integer>
+		<integer>87</integer>
 		<key>ModifierTaps</key>
 		<integer>25</integer>
 		<key>OpeningDocuments</key>
@@ -606,13 +715,13 @@
 		<key>SendTo</key>
 		<integer>21</integer>
 		<key>Services</key>
-		<integer>6</integer>
+		<integer>13</integer>
 		<key>Snippets</key>
 		<integer>4</integer>
 		<key>Subsearch</key>
-		<integer>28</integer>
+		<integer>32</integer>
 		<key>SystemPreferences</key>
-		<integer>8</integer>
+		<integer>9</integer>
 		<key>WebBookmarks</key>
 		<integer>21</integer>
 	</dict>
@@ -841,6 +950,47 @@
 		<real>713746875.656389</real>
 		<real>713747208.08072495</real>
 		<real>713747949.30566704</real>
+		<real>713748938.21108603</real>
+		<real>713748987.84368002</real>
+		<real>713749103.23628795</real>
+		<real>713754816.16557598</real>
+		<real>713767721.47277904</real>
+		<real>713767733.20327103</real>
+		<real>713767824.02211702</real>
+		<real>713767835.34727705</real>
+		<real>713767860.01517904</real>
+		<real>713768167.28318298</real>
+		<real>713768680.64377701</real>
+		<real>713768713.84603405</real>
+		<real>713768732.49454403</real>
+		<real>713768991.65305495</real>
+		<real>713768994.17002404</real>
+		<real>713769099.93123305</real>
+		<real>713769144.53311205</real>
+		<real>713769596.03445494</real>
+		<real>713770913.22686303</real>
+		<real>713771300.13726604</real>
+		<real>713771327.72270596</real>
+		<real>713771461.88622105</real>
+		<real>713771474.66424298</real>
+		<real>713771697.09218097</real>
+		<real>713771733.00016999</real>
+		<real>713771875.41603601</real>
+		<real>713771894.68925703</real>
+		<real>713771924.10354805</real>
+		<real>713771933.50567198</real>
+		<real>713772077.59882796</real>
+		<real>713772303.56446397</real>
+		<real>713772346.35777795</real>
+		<real>713772368.80018604</real>
+		<real>713772403.73093498</real>
+		<real>713772526.30142498</real>
+		<real>713772558.55170095</real>
+		<real>713772759.72362399</real>
+		<real>713772784.05253804</real>
+		<real>713772793.70047295</real>
+		<real>713772812.82032204</real>
+		<real>713772828.85471702</real>
 	</array>
 	<key>itemIdentifierVersion</key>
 	<integer>4294967303</integer>
@@ -855,7 +1005,7 @@
 		<key>ODLBCalendarItem:0C8440CB-C685-4326-8A1E-F9381CE593A6</key>
 		<integer>713424665</integer>
 		<key>ODLBCategory:Setting Pane</key>
-		<integer>713746391</integer>
+		<integer>713769102</integer>
 		<key>ODLBClipboardHistoryAction</key>
 		<integer>713469734</integer>
 		<key>ODLBEnterTextAction</key>
@@ -872,10 +1022,12 @@
 		<integer>713419685</integer>
 		<key>ODLBPathItem:/Applications/AppCleaner.app</key>
 		<integer>713418204</integer>
+		<key>ODLBPathItem:/Applications/Arc.app</key>
+		<integer>713771934</integer>
 		<key>ODLBPathItem:/Applications/Dropbox.app</key>
 		<integer>713422932</integer>
 		<key>ODLBPathItem:/Applications/Eudic.app</key>
-		<integer>713733611</integer>
+		<integer>713770913</integer>
 		<key>ODLBPathItem:/Applications/Google Chrome.app</key>
 		<integer>713417632</integer>
 		<key>ODLBPathItem:/Applications/Grammarly for Safari.app</key>
@@ -885,7 +1037,7 @@
 		<key>ODLBPathItem:/Applications/Instapaper Save.app</key>
 		<integer>713423160</integer>
 		<key>ODLBPathItem:/Applications/Keyboard Maestro.app</key>
-		<integer>713418930</integer>
+		<integer>713769596</integer>
 		<key>ODLBPathItem:/Applications/Mimestream.app</key>
 		<integer>713419779</integer>
 		<key>ODLBPathItem:/Applications/PDF Expert.app</key>
@@ -900,6 +1052,8 @@
 		<integer>713418238</integer>
 		<key>ODLBPathItem:/Applications/Save to Pocket.app</key>
 		<integer>713423363</integer>
+		<key>ODLBPathItem:/Applications/Things3.app</key>
+		<integer>713772789</integer>
 		<key>ODLBPathItem:/Applications/Visual Studio Code.app</key>
 		<integer>713465510</integer>
 		<key>ODLBPathItem:/Applications/WezTerm.app</key>
@@ -917,11 +1071,11 @@
 		<key>ODLBPathItem:/System/Applications/App Store.app</key>
 		<integer>713733663</integer>
 		<key>ODLBPathItem:/System/Applications/Automator.app</key>
-		<integer>713413538</integer>
+		<integer>713748988</integer>
 		<key>ODLBPathItem:/System/Applications/Mail.app</key>
 		<integer>713479801</integer>
 		<key>ODLBPathItem:/System/Applications/Utilities/Activity Monitor.app</key>
-		<integer>713733520</integer>
+		<integer>713771734</integer>
 		<key>ODLBPathItem:/System/Applications/Utilities/Screenshot.app</key>
 		<integer>713423339</integer>
 		<key>ODLBPathItem:/System/Library/CoreServices/Applications/Folder Actions Setup.app</key>
@@ -929,7 +1083,7 @@
 		<key>ODLBPathItem:/System/Library/CoreServices/Applications/Screen Sharing.app</key>
 		<integer>713423330</integer>
 		<key>ODLBPathItem:/System/Library/CoreServices/Finder.app</key>
-		<integer>713747949</integer>
+		<integer>713768991</integer>
 		<key>ODLBPathItem:/System/Library/CoreServices/Installer.app</key>
 		<integer>713423134</integer>
 		<key>ODLBPathItem:/System/Library/PreferencePanes/Accounts.prefPane</key>
@@ -937,7 +1091,7 @@
 		<key>ODLBPathItem:/System/Library/PreferencePanes/InternetAccounts.prefPane</key>
 		<integer>713479794</integer>
 		<key>ODLBPathItem:/System/Library/PreferencePanes/Keyboard.prefPane</key>
-		<integer>713746393</integer>
+		<integer>713769104</integer>
 		<key>ODLBPathItem:/System/Library/PreferencePanes/Network.prefPane</key>
 		<integer>713424637</integer>
 		<key>ODLBPathItem:/System/Library/PreferencePanes/Security.prefPane</key>
@@ -948,6 +1102,8 @@
 		<integer>713466502</integer>
 		<key>ODLBPathItem:@/Contents/Resources/Action Editor.app</key>
 		<integer>713747210</integer>
+		<key>ODLBPathItem:~/.config/nvim/pack/minpac/start/vim-matchup/test/issues/8</key>
+		<integer>713772080</integer>
 		<key>ODLBPathItem:~/Documents/books/c-and-cpp/C++-Primer.pdf</key>
 		<integer>713474810</integer>
 		<key>ODLBPathItem:~/Documents/books/practical-vim/code/files/mvc/app/views/Settings.js</key>
@@ -974,6 +1130,8 @@
 		<integer>713474801</integer>
 		<key>ODLBRuleItem:ODLBFolderContentsRule:Home ~:~</key>
 		<integer>713490379</integer>
+		<key>ODLBRuleItem:ODLBServicesRule</key>
+		<integer>713767743</integer>
 		<key>ODLBScriptAction:at.obdev.LaunchBar.action.CopyAsTinyURL</key>
 		<integer>713466884</integer>
 		<key>ODLBScriptAction:at.obdev.LaunchBar.action.DuckDuckGo</key>
@@ -982,6 +1140,22 @@
 		<integer>713746582</integer>
 		<key>ODLBScriptAction:at.obdev.LaunchBar.action.OpenTrash</key>
 		<integer>713384959</integer>
+		<key>ODLBScriptAction:com.renaghan.launchbar.Caffeinate</key>
+		<integer>713772560</integer>
+		<key>ODLBScriptAction:com.renaghan.launchbar.Things</key>
+		<integer>713772828</integer>
+		<key>ODLBScriptAction:com.renaghan.launchbar.Updates</key>
+		<integer>713772312</integer>
+		<key>ODLBScriptAction:ptujec.LaunchBar.action.EveryProcess</key>
+		<integer>713771702</integer>
+		<key>ODLBScriptAction:ptujec.LaunchBar.action.SearchNotes</key>
+		<integer>713772417</integer>
+		<key>ODLBScriptAction:ptujec.LaunchBar.action.Speedtest</key>
+		<integer>713771461</integer>
+		<key>ODLBScriptActionResultItem:Messages</key>
+		<integer>713771708</integer>
+		<key>ODLBScriptActionResultItem:Stop caffeinating</key>
+		<integer>713772562</integer>
 		<key>ODLBSearchGoogleAction</key>
 		<integer>713425284</integer>
 		<key>ODLBSearchTemplateItem:10B87340-06D6-4EEF-9BB2-10169915927F</key>
@@ -1036,6 +1210,10 @@
 		<integer>713724236</integer>
 		<key>ODLBURLItem:https://www.bilibili.com/</key>
 		<integer>713429319</integer>
+		<key>ODLBWorkflowServiceItem:(null) - Float Capture</key>
+		<integer>713768994</integer>
+		<key>ODLBWorkflowServiceItem:(null) - Float image</key>
+		<integer>713767727</integer>
 	</dict>
 	<key>objectHabits</key>
 	<dict>
@@ -1048,7 +1226,7 @@
 		<key>ODLBCalendarItem:0C8440CB-C685-4326-8A1E-F9381CE593A6</key>
 		<integer>1</integer>
 		<key>ODLBCategory:Setting Pane</key>
-		<integer>6</integer>
+		<integer>7</integer>
 		<key>ODLBClipboardHistoryAction</key>
 		<integer>1</integer>
 		<key>ODLBEnterTextAction</key>
@@ -1065,10 +1243,12 @@
 		<integer>1</integer>
 		<key>ODLBPathItem:/Applications/AppCleaner.app</key>
 		<integer>2</integer>
+		<key>ODLBPathItem:/Applications/Arc.app</key>
+		<integer>3</integer>
 		<key>ODLBPathItem:/Applications/Dropbox.app</key>
 		<integer>1</integer>
 		<key>ODLBPathItem:/Applications/Eudic.app</key>
-		<integer>27</integer>
+		<integer>30</integer>
 		<key>ODLBPathItem:/Applications/Google Chrome.app</key>
 		<integer>1</integer>
 		<key>ODLBPathItem:/Applications/Grammarly for Safari.app</key>
@@ -1078,7 +1258,7 @@
 		<key>ODLBPathItem:/Applications/Instapaper Save.app</key>
 		<integer>1</integer>
 		<key>ODLBPathItem:/Applications/Keyboard Maestro.app</key>
-		<integer>1</integer>
+		<integer>3</integer>
 		<key>ODLBPathItem:/Applications/Mimestream.app</key>
 		<integer>1</integer>
 		<key>ODLBPathItem:/Applications/PDF Expert.app</key>
@@ -1093,6 +1273,8 @@
 		<integer>2</integer>
 		<key>ODLBPathItem:/Applications/Save to Pocket.app</key>
 		<integer>1</integer>
+		<key>ODLBPathItem:/Applications/Things3.app</key>
+		<integer>2</integer>
 		<key>ODLBPathItem:/Applications/Visual Studio Code.app</key>
 		<integer>1</integer>
 		<key>ODLBPathItem:/Applications/WezTerm.app</key>
@@ -1110,11 +1292,11 @@
 		<key>ODLBPathItem:/System/Applications/App Store.app</key>
 		<integer>2</integer>
 		<key>ODLBPathItem:/System/Applications/Automator.app</key>
-		<integer>1</integer>
+		<integer>2</integer>
 		<key>ODLBPathItem:/System/Applications/Mail.app</key>
 		<integer>1</integer>
 		<key>ODLBPathItem:/System/Applications/Utilities/Activity Monitor.app</key>
-		<integer>1</integer>
+		<integer>2</integer>
 		<key>ODLBPathItem:/System/Applications/Utilities/Screenshot.app</key>
 		<integer>1</integer>
 		<key>ODLBPathItem:/System/Library/CoreServices/Applications/Folder Actions Setup.app</key>
@@ -1122,7 +1304,7 @@
 		<key>ODLBPathItem:/System/Library/CoreServices/Applications/Screen Sharing.app</key>
 		<integer>1</integer>
 		<key>ODLBPathItem:/System/Library/CoreServices/Finder.app</key>
-		<integer>3</integer>
+		<integer>5</integer>
 		<key>ODLBPathItem:/System/Library/CoreServices/Installer.app</key>
 		<integer>1</integer>
 		<key>ODLBPathItem:/System/Library/PreferencePanes/Accounts.prefPane</key>
@@ -1130,7 +1312,7 @@
 		<key>ODLBPathItem:/System/Library/PreferencePanes/InternetAccounts.prefPane</key>
 		<integer>1</integer>
 		<key>ODLBPathItem:/System/Library/PreferencePanes/Keyboard.prefPane</key>
-		<integer>3</integer>
+		<integer>4</integer>
 		<key>ODLBPathItem:/System/Library/PreferencePanes/Network.prefPane</key>
 		<integer>1</integer>
 		<key>ODLBPathItem:/System/Library/PreferencePanes/Security.prefPane</key>
@@ -1140,6 +1322,8 @@
 		<key>ODLBPathItem:/Users/Shared</key>
 		<integer>1</integer>
 		<key>ODLBPathItem:@/Contents/Resources/Action Editor.app</key>
+		<integer>1</integer>
+		<key>ODLBPathItem:~/.config/nvim/pack/minpac/start/vim-matchup/test/issues/8</key>
 		<integer>1</integer>
 		<key>ODLBPathItem:~/Documents/books/c-and-cpp/C++-Primer.pdf</key>
 		<integer>8</integer>
@@ -1167,6 +1351,8 @@
 		<integer>4</integer>
 		<key>ODLBRuleItem:ODLBFolderContentsRule:Home ~:~</key>
 		<integer>1</integer>
+		<key>ODLBRuleItem:ODLBServicesRule</key>
+		<integer>1</integer>
 		<key>ODLBScriptAction:at.obdev.LaunchBar.action.CopyAsTinyURL</key>
 		<integer>1</integer>
 		<key>ODLBScriptAction:at.obdev.LaunchBar.action.DuckDuckGo</key>
@@ -1175,6 +1361,22 @@
 		<integer>1</integer>
 		<key>ODLBScriptAction:at.obdev.LaunchBar.action.OpenTrash</key>
 		<integer>2</integer>
+		<key>ODLBScriptAction:com.renaghan.launchbar.Caffeinate</key>
+		<integer>3</integer>
+		<key>ODLBScriptAction:com.renaghan.launchbar.Things</key>
+		<integer>4</integer>
+		<key>ODLBScriptAction:com.renaghan.launchbar.Updates</key>
+		<integer>1</integer>
+		<key>ODLBScriptAction:ptujec.LaunchBar.action.EveryProcess</key>
+		<integer>1</integer>
+		<key>ODLBScriptAction:ptujec.LaunchBar.action.SearchNotes</key>
+		<integer>6</integer>
+		<key>ODLBScriptAction:ptujec.LaunchBar.action.Speedtest</key>
+		<integer>3</integer>
+		<key>ODLBScriptActionResultItem:Messages</key>
+		<integer>1</integer>
+		<key>ODLBScriptActionResultItem:Stop caffeinating</key>
+		<integer>1</integer>
 		<key>ODLBSearchGoogleAction</key>
 		<integer>2</integer>
 		<key>ODLBSearchTemplateItem:10B87340-06D6-4EEF-9BB2-10169915927F</key>
@@ -1229,6 +1431,10 @@
 		<integer>2</integer>
 		<key>ODLBURLItem:https://www.bilibili.com/</key>
 		<integer>2</integer>
+		<key>ODLBWorkflowServiceItem:(null) - Float Capture</key>
+		<integer>6</integer>
+		<key>ODLBWorkflowServiceItem:(null) - Float image</key>
+		<integer>1</integer>
 	</dict>
 	<key>preferredSendToTargets</key>
 	<dict>
@@ -1263,7 +1469,7 @@
 		</array>
 	</dict>
 	<key>totalInvocationCount</key>
-	<integer>221</integer>
+	<integer>262</integer>
 	<key>version</key>
 	<integer>4</integer>
 </dict>

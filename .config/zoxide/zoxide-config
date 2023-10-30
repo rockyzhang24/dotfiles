@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
 
+fzf_preview="--delimiter ' ' --preview 'tree -C {2}'"
+
 export _ZO_DATA_DIR="$HOME/.config/zoxide"
-export _ZO_FZF_OPTS="$FZF_DEFAULT_OPTS"
+export _ZO_FZF_OPTS="$FZF_DEFAULT_OPTS $fzf_preview"

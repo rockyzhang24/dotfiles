@@ -5,6 +5,8 @@
   excludesfile = /Users/rockyzhang/.gitignore_global
   pager = delta
   commentchar = ";"
+[alias]
+  tree = log --all --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr, %ad) %C(bold blue)<%an>%Creset' --abbrev-commit --date=short
 [interactive]
   diffFilter = delta --color-only
 [delta]
@@ -53,7 +55,6 @@
   cmd = nvim -d $LOCAL $REMOTE
 [merge]
   tool = nvimdiff
-  conflictstyle = diff3
 [mergetool]
   prompt = true
 [mergetool "nvimdiff"]

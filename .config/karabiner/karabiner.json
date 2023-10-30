@@ -20,7 +20,7 @@
                     {
                         "manipulators": [
                             {
-                                "description": "Change right Command to HYPER key (Command + Option + Shift + Control)",
+                                "description": "Change right Command to HYPER key (Command + Option + Shift + Control), or F19 if pressed alone",
                                 "from": {
                                     "key_code": "right_command"
                                 },
@@ -32,6 +32,11 @@
                                             "left_shift",
                                             "left_control"
                                         ]
+                                    }
+                                ],
+                                "to_if_alone": [
+                                    {
+                                        "key_code": "f19"
                                     }
                                 ],
                                 "type": "basic"

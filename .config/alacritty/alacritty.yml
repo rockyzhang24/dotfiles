@@ -2,23 +2,23 @@
 
 window:
   decorations: none
-  opacity: 0.91
+  opacity: 1
   option_as_alt: OnlyRight
 
 font:
   normal:
-    family: JetBrainsMono Nerd Font
+    family: Iosevka Nerd Font
     style: Regular
   bold:
-    family: JetBrainsMono Nerd Font
+    family: Iosevka Nerd Font
     style: Bold
   italic:
-    family: JetBrainsMono Nerd Font
+    family: Iosevka Nerd Font
     style: Italic
   bold_italic:
-    family: JetBrainsMono Nerd Font
+    family: Iosevka Nerd Font
     style: Bold Italic
-  size: 14.0
+  size: 15.5
 
 colors:
   primary:
@@ -185,7 +185,8 @@ key_bindings:
   # Special (escape code)
   # Ctrl+Enter
   # Shift+Enter
-  # Ctrl+0/1/.../9
+  # Ctrl+0...9
+  # Ctrl+/
   - { key: Return, mods: Control, chars: "\x1b[13;5u" }
   - { key: Return, mods: Shift, chars: "\x1b[13;2u" }
   - { key: Key1, mods: Control, chars: "\x1b[27;5;49~" }
@@ -198,3 +199,4 @@ key_bindings:
   - { key: Key8, mods: Control, chars: "\x1b[27;5;56~" }
   - { key: Key9, mods: Control, chars: "\x1b[27;5;57~" }
   - { key: Key0, mods: Control, chars: "\x1b[27;5;58~" }
+  - { key: Slash, mods: Control, chars: "\x1f" }

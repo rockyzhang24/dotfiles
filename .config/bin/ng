@@ -7,10 +7,10 @@
 git rev-parse >/dev/null 2>&1
 
 if [[ $? -eq 0 ]]; then
-  nvim -c "lua require('rockyz.plugin-config.fugitive').git_status()"
+  nvim -c "lua require('rockyz.plugins.fugitive').git_status()"
 else
   # If not in a git repo, use my dotfiles git bare repo
   nvim -c "let \$GIT_DIR = '$HOME/dotfiles'" \
       -c "let \$GIT_WORK_TREE = '$HOME'" \
-      -c "lua require('rockyz.plugin-config.fugitive').git_status()"
+      -c "lua require('rockyz.plugins.fugitive').git_status()"
 fi

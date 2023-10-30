@@ -1,4 +1,5 @@
 # Reference: https://github.com/junegunn/fzf-git.sh/blob/main/fzf-git.sh
+# till the commits on Aug 7 2023
 
 if [[ $# -eq 1 ]]; then
   branches() {
@@ -12,7 +13,7 @@ if [[ $# -eq 1 ]]; then
   }
   case "$1" in
     branches)
-      echo $'CTRL-O (open in browser) ╱ ALT-A (show all branches)\n'
+      echo $'CTRL-O (open in browser), ALT-A (show all branches)\n'
       branches
       ;;
     all-branches)
@@ -20,11 +21,11 @@ if [[ $# -eq 1 ]]; then
       branches -a
       ;;
     refs)
-      echo $'CTRL-O (open in browser) ╱ ALT-E (examine in editor) ╱ ALT-A (show all refs)\n'
+      echo $'CTRL-O (open in browser), ALT-E (examine in editor), ALT-A (show all refs)\n'
       refs 'grep -v ^refs/remotes'
       ;;
     all-refs)
-      echo $'CTRL-O (open in browser) ╱ ALT-E (examine in editor)\n'
+      echo $'CTRL-O (open in browser), ALT-E (examine in editor)\n'
       refs 'cat'
       ;;
     nobeep) ;;
@@ -84,7 +85,7 @@ if [[ $- =~ i ]]; then
 _fzf_git_fzf() {
   fzf --layout=reverse --multi --height=50% --min-height=20 \
     --color='header:italic:underline' \
-    --preview-window='nohidden,right,50%,border-sharp' \
+    --preview-window='nohidden,right,50%,border-left' \
     --bind='ctrl-/:change-preview-window(down,50%|hidden|)' "$@"
 }
 
@@ -114,11 +115,11 @@ fi
 # Files
 _fzf_git_files() {
   _fzf_git_check || return
-  (git -c color.status=always status --short
+  (git -c color.status=always status --short --no-branch
    git ls-files | grep -vxFf <(git status -s | grep '^[^?]' | cut -c4-; echo :) | sed 's/^/   /') |
   _fzf_git_fzf -m --ansi --nth 2..,.. \
     --prompt '📁 Files> ' \
-    --header $'CTRL-O (open in browser) ╱ ALT-E (open in editor)\n\n' \
+    --header $'CTRL-O (open in browser), ALT-E (open in editor)\n\n' \
     --bind "ctrl-o:execute-silent:bash $__fzf_git file {-1}" \
     --bind "alt-e:execute:${EDITOR:-vim} {-1} > /dev/tty" \
     --preview "git diff --no-ext-diff --color=always -- {-1} | sed 1,4d; $_fzf_git_cat {-1}" "$@" |
@@ -159,7 +160,7 @@ _fzf_git_hashes() {
   git log --date=short --format="%C(green)%C(bold)%cd %C(auto)%h%d %s (%an)" --graph --color=always |
   _fzf_git_fzf --ansi --no-sort --bind 'ctrl-s:toggle-sort' \
     --prompt '🍡 Hashes> ' \
-    --header $'CTRL-O (open in browser) ╱ CTRL-D (diff) ╱ CTRL-S (toggle sort)\n\n' \
+    --header $'CTRL-O (open in browser), CTRL-D (diff), CTRL-S (toggle sort)\n\n' \
     --bind "ctrl-o:execute-silent:bash $__fzf_git commit {}" \
     --bind 'ctrl-d:execute:grep -o "[a-f0-9]\{7,\}" <<< {} | head -n 1 | xargs git diff > /dev/tty' \
     --color hl:underline,hl+:underline \
@@ -191,6 +192,15 @@ _fzf_git_stashes() {
   cut -d: -f1
 }
 
+# Reflogs
+_fzf_git_lreflogs() {
+  _fzf_git_check || return
+  git reflog --color=always --format="%C(blue)%gD %C(yellow)%h%C(auto)%d %gs" | _fzf_git_fzf --ansi \
+    --prompt '📒 Reflogs> ' \
+    --preview 'git show --color=always {1}' "$@" |
+  awk '{print $1}'
+}
+
 # Each ref
 _fzf_git_each_ref() {
   _fzf_git_check || return
@@ -216,6 +226,7 @@ _fzf_git_each_ref() {
 # CTRL-G R for remotes
 # CTRL-G H for commit hashes
 # CTRL-G S for stashes
+# CTRL-G L for Reflogs
 # CTRL-G E for Each ref (git for-each-ref)
 
 if [[ -n "${BASH_VERSION:-}" ]]; then
@@ -246,7 +257,7 @@ elif [[ -n "${ZSH_VERSION:-}" ]]; then
     done
   }
 fi
-__fzf_git_init files branches tags remotes hashes stashes each_ref
+__fzf_git_init files branches tags remotes hashes stashes lreflogs each_ref
 
 # -----------------------------------------------------------------------------
 fi

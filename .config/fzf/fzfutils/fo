@@ -7,8 +7,8 @@
 #   - CTRL-v or ENTER: using $EDITOR
 
 if [[ -d $1 ]]; then
-  files=($(fd --hidden --follow --type f $FD_EXCLUDE '.*' $1 | fzf --query="$2" --exit-0))
+  files=($(fd --hidden --follow --type f $FD_EXCLUDE '.*' $1 | fzf --query="$2" --exit-0 --prompt="Open> "))
 else
-  files=($(fd --hidden --follow --type f $FD_EXCLUDE '.*' | fzf --query="$1" --exit-0))
+  files=($(fd --hidden --follow --type f $FD_EXCLUDE '.*' | fzf --query="$1" --exit-0 --prompt="Open> "))
 fi
 [[ -n $files ]] && ${EDITOR:-vim} ${files[@]}

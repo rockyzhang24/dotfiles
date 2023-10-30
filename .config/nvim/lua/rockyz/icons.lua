@@ -26,7 +26,7 @@ icons.codicon = {
   Struct = ' ',
   Event = ' ',
   Operator = ' ',
-  TypeParameter = ' '
+  TypeParameter = ' ',
 }
 
 return icons

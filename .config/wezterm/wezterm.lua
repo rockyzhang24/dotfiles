@@ -34,7 +34,7 @@ local config = {
     bottom = 0,
   },
   native_macos_fullscreen_mode = false,
-  window_background_opacity = 0.92,
+  window_background_opacity = 1.0,
   window_decorations = "RESIZE",
   enable_scroll_bar = true,
   hyperlink_rules = {

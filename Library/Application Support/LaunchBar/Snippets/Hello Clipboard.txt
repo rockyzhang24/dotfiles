@@ -1,6 +1,0 @@
-Hello <clipboard>,
-
-<|>
-
-Yours,
-<first name>

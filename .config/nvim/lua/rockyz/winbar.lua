@@ -1,71 +1,88 @@
 local M = {}
-local api = vim.api
-local fn = vim.fn
 
-local devicon = require("nvim-web-devicons")
-local navic = require("nvim-navic")
+local devicon = require('nvim-web-devicons')
+local navic = require('nvim-navic')
+
+local icons = {
+  folder = ' ',
+  delimiter = '',
+  ellipsis = '…',
+  quickfix = ' ',
+  source_control = ' ',
+  outline = ' ',
+  explorer = ' ',
+  term = ' ',
+}
 
 local function get_win_num()
-  local win_num = api.nvim_win_get_number(0)
+  local win_num = vim.api.nvim_win_get_number(0)
   return '[' .. win_num .. ']'
 end
 
 local function get_file_icon_and_name()
-  local filename = fn.expand('%:t')
-  local file_icon, file_icon_color = devicon.get_icon_color_by_filetype(vim.bo.filetype, { default = true })
-  api.nvim_set_hl(0, 'WinbarFileIcon', { fg = file_icon_color })
+  local filename = vim.fn.expand('%:t')
+  local ft = vim.bo.filetype
+  local file_icon, file_icon_color = devicon.get_icon_color_by_filetype(ft, { default = true })
+  vim.api.nvim_set_hl(0, 'WinbarFileIcon', { fg = file_icon_color })
   return '%#WinbarFileIcon#' .. file_icon .. '%* ' .. (filename == '' and '[No Name]' or filename)
 end
 
 local function get_modified()
-  local modified = api.nvim_eval_statusline('%m', {}).str
+  local modified = vim.api.nvim_eval_statusline('%m', {}).str
   return modified == '' and '' or ' %#Normal#' .. modified .. '%*'
 end
 
-local disabled_filetypes = {
-  'aerial',
-  'fugitive',
-  'minpacprgs',
-  'neo-tree',
-  'NvimTree',
-  'qf',
-  'startify',
-}
-
 M.winbar = function()
-
-  local logo = ' '
-  local delimiter = '  '
-  local ellipsis = '…'
-
-  local contents = logo
+  local contents = ''
 
   -- Window number
   contents = contents .. get_win_num()
 
-  for _, ft in pairs(disabled_filetypes) do
-    if (vim.bo.filetype == ft) then
-      return contents
-    end
+  -- Deal with the special buffers
+  local ft = vim.bo.filetype
+  if ft == 'qf' then
+    return contents .. ' %#Directory#' .. icons.quickfix .. '%* Quickfix List'
+  elseif ft == 'fugitive' then
+    -- fugitive: show the repo path
+    return contents
+      .. ' %#Directory#'
+      .. icons.source_control
+      .. '%* Fugitive: '
+      .. string.match(vim.fn.expand('%:h:h'), 'fugitive://(.*)')
+  elseif ft == 'oil' then
+    -- oil: show the parent dir
+    return contents
+      .. ' %#Directory#'
+      .. icons.explorer
+      .. '%* Oil: '
+      .. string.match(vim.fn.expand('%'), 'oil://(.*)')
+  elseif ft == 'git' then
+    return contents .. ' %#Directory#' .. icons.source_control .. '%* ' .. vim.fn.expand('%')
+  elseif ft == 'term' then
+    return contents .. ' %#Directory#' .. icons.term .. '%* ' .. vim.fn.expand('%')
+  elseif ft == 'aerial' then
+    return contents .. ' %#Directory#' .. icons.outline .. '%* Outline (Aerial)'
   end
-
-  contents = contents .. ' %<'
 
   -- File path
-  local path = fn.expand('%:~:.:h')
-  local file_icon_and_name = get_file_icon_and_name()
-  local modified = get_modified()
-
+  local path = vim.fn.expand('%:~:.:h')
   if path ~= '' and path ~= '.' then
-    contents = contents .. path .. delimiter
+    local colored_folder = '%#Directory#' .. icons.folder .. '%*'
+    contents = contents .. ' ' .. colored_folder .. ' ' .. path .. ' ' .. icons.delimiter
   end
 
-  contents = contents .. file_icon_and_name .. modified
+  -- File name and modified indicator
+  local file_icon_and_name = get_file_icon_and_name()
+  local modified = get_modified()
+  contents = contents .. ' ' .. file_icon_and_name .. modified
+
+  -- Truncate if too long
+  contents = contents .. ' %<'
 
   -- Breadcrumbs
   if navic.is_available() then
     local context = navic.get_location()
-    contents = contents .. delimiter .. (context == '' and ellipsis or context)
+    contents = contents .. icons.delimiter .. ' ' .. (context == '' and icons.ellipsis or context)
   end
 
   return contents

@@ -8,15 +8,9 @@ augroup general
   " Automatically equalize splits when Vim is resized
   autocmd VimResized * wincmd =
   " Make it not be overwritten by the default setting of neovim
-  autocmd FileType * set formatoptions-=t formatoptions-=o formatoptions-=r textwidth=80
+  autocmd FileType * set formatoptions-=t formatoptions-=o formatoptions+=n textwidth=100
   " Command-line window
   autocmd CmdWinEnter * setlocal colorcolumn=
-augroup END
-
-" Highlight selection on yank
-augroup highlight_yank
-  autocmd!
-  autocmd TextYankPost * silent! lua vim.highlight.on_yank({higroup="Substitute", timeout=300})
 augroup END
 
 " Disable syntax highlighting for some filetypes if they are too long
@@ -25,7 +19,6 @@ augroup syntax_off
   autocmd FileType yaml if line('$') > 500 | setlocal syntax=OFF | endif
 augroup END
 
-" Quit vim (or close the tab) automatically if all buffers left are auxiliary
 function! s:AutoQuit() abort
   let l:filetypes = ['aerial', 'NvimTree', 'neo-tree', 'tsplayground', 'query']
   let l:tabwins = nvim_tabpage_list_wins(0)
@@ -47,6 +40,7 @@ function! s:Quit() abort
   endif
 endfunction
 
+" Quit vim (or close the tab) automatically if all buffers left are auxiliary
 augroup auto_quit
   autocmd!
   autocmd BufEnter * call s:AutoQuit()

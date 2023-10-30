@@ -4,7 +4,7 @@
 setopt HIST_IGNORE_ALL_DUPS
 
 # Prompt for spelling correction of commands.
-setopt CORRECT
+# setopt CORRECT
 
 # Make right prompt aligned to the rightmost
 ZLE_RPROMPT_INDENT=0

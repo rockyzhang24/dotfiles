@@ -18,7 +18,7 @@ if g:colorscheme ==# 'arctic'
     hi def link qfFileName QfFileName
     hi def link qfSeparatorLeft WinSeparator
     hi def link qfLineNr QfText
-    hi def link qfSeparatorRight FloatBorder
+    hi def link qfSeparatorRight WinSeparator
     hi def link qfError DiagnosticSignError
     hi def link qfWarning DiagnosticSignWarn
     hi def link qfInfo DiagnosticSignInfo

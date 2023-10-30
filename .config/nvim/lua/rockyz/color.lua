@@ -1,18 +1,13 @@
-local g = vim.g
-local o = vim.o
-local cmd = vim.cmd
-local api = vim.api
+vim.o.termguicolors = true
+vim.o.background = 'dark'
 
-o.termguicolors = true
-o.background = "dark"
-
-if g.transparent then
-  api.nvim_create_augroup('CleanBackground', { clear = true })
-  api.nvim_create_autocmd({ 'ColorScheme' }, {
+if vim.g.transparent then
+  vim.api.nvim_create_augroup('CleanBackground', { clear = true })
+  vim.api.nvim_create_autocmd({ 'ColorScheme' }, {
     group = 'CleanBackground',
     pattern = '*',
     callback = function()
-      api.nvim_set_hl(0, "Normal", { bg = "NONE" })
+      vim.api.nvim_set_hl(0, 'Normal', { bg = 'NONE' })
     end,
   })
 end
@@ -28,15 +23,15 @@ end
 -- 'winhighlight' to control its highlighting. We should remove the backgroun of
 -- the float window through this option, e.g., vim.o.winhighlight =
 -- 'Normal:Normal'
-if g.border_enabled then
-  api.nvim_create_augroup('HighlightAdjust', { clear = true })
-  api.nvim_create_autocmd({ 'ColorScheme' }, {
+if vim.g.border_enabled then
+  vim.api.nvim_create_augroup('HighlightAdjust', { clear = true })
+  vim.api.nvim_create_autocmd({ 'ColorScheme' }, {
     group = 'HighlightAdjust',
     pattern = '*',
     callback = function()
-      api.nvim_set_hl(0, 'NormalFloat', { link = 'Normal' })
+      vim.api.nvim_set_hl(0, 'NormalFloat', { link = 'Normal' })
     end,
   })
 end
 
-cmd("colorscheme " .. g.colorscheme)
+vim.cmd('colorscheme ' .. vim.g.colorscheme)

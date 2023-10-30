@@ -1,24 +1,71 @@
 # vim: filetype=zsh
+# Ref: https://github.com/junegunn/fzf/blob/master/ADVANCED.md#switching-between-ripgrep-mode-and-fzf-mode
 
 # MNEMONIC: [F]uzzy search [R]ip[G]rep
-# SYNOPSIS: same with rg
-# DESCRIPTION: Fuzzy search for the results of rg
-#   - ENTER: open EDITOR by feeding the selections into quickfix list
+# SYNOPSIS: frg [rg's OPTIONS] [PATTERN]
+# DESCRIPTION: Riggrep powered by FZF
+#   It has two modes:
+#   1) rg mode, fzf merely acts as the interactive interface, providing the live
+#      grep experience for rg.
+#   2) fzf mode, normal fzf, fuzzy finder for the current results of rg.
+# KEYBINDINGS:
+#   1) ENTER: open the selections via neovim: if only one entry is selected,
+#      open it directly; if multiple entrys are selected, open the first one and
+#      dump all into the quickfix.
+#   2) CTRL-R: switch to rg mode
+#   3) CTRL-F: switch to fzf mode
+# NOTE:
+#   -e/--regex is not supported
+# EXAMPLES:
+#   frg -s "Foo", given some rg's options and the initial query
+#   frg "foo", just given the initial query
+#   frg, launch it directly
 
-local errorfile_path=$HOME/.local/share/rg
+# Temp file to store the query when switch to another mode so that the query can
+# be restored when switch back.
+rm -f /tmp/rg-fzf-{r,f}
+
+# Path for the file where all selected entries are saved and they will be fed to
+# the quickfix.
+errorfile_path=$HOME/.local/share/rg
 [[ ! -e $errorfile_path ]] && mkdir $errorfile_path
 
-local selection=$(rg --line-number --column --color=always --smart-case --vimgrep $RG_EXCLUDE $@ \
-    | fzf --height 100% \
-        --ansi \
-        --exit-0 \
-        --delimiter : \
-        --header 'Press ENTER to open vim and load all selections into quickfix list' \
-        --preview 'bat --color=always --style=numbers,changes,header --highlight-line {2} {1}' \
-        --preview-window 'down,nohidden,+{2}+3/3,~4')
+last_arg=${*: -1}
+if [[ $last_arg =~ "^-" ]]; then
+  initial_query=""
+  extra_opts=$*
+else
+  initial_query=$last_arg
+  extra_opts="${*%%$last_arg}"
+fi
 
-if [[ -n "$selection" ]]; then
-  echo $selection >| $errorfile_path/frg-errorfile && $EDITOR -q $errorfile_path/frg-errorfile \
+rg_prefix="rg --line-number --column --color=always --smart-case --vimgrep $RG_EXCLUDE $extra_opts "
+
+local selections=$(: | fzf \
+  --height 100% \
+  --ansi \
+  --disabled \
+  --query "$initial_query" \
+  --bind "start:reload($rg_prefix {q})+unbind(ctrl-r)" \
+  --bind "change:reload:sleep 0.1; $rg_prefix {q} || true" \
+  --bind "ctrl-f:unbind(change,ctrl-f)+change-prompt(2. fzf> )+enable-search+rebind(ctrl-r)+transform-query(echo {q} > /tmp/rg-fzf-r; cat /tmp/rg-fzf-f)" \
+  --bind "ctrl-r:unbind(ctrl-r)+change-prompt(1. rg> )+disable-search+reload($rg_prefix {q} || true)+rebind(change,ctrl-f)+transform-query(echo {q} > /tmp/rg-fzf-f; cat /tmp/rg-fzf-r)" \
+  --prompt '1. rg> ' \
+  --delimiter : \
+  --header 'ENTER (open selections in vim), CTRL-R (ripgrep mode), CTRL-F (fzf mode)' \
+  --preview "bat --color=always --style=numbers,changes,header --highlight-line {2} {1}" \
+  --preview-window "down,nohidden,border-up,+{2}+1/3,~1" \
+)
+
+if [[ -n "$selections" ]]; then
+  local cnt=$(echo $selections | wc -l)
+  if [[ $cnt -eq 1 ]]; then
+    read -r file line <<<$(echo $selections | awk -F: '{print $1, $2}')
+    $EDITOR $file -c $line
+  else
+    echo $selections >| $errorfile_path/frg-errorfile && $EDITOR -q $errorfile_path/frg-errorfile \
       -c "copen" \
-      -c "call setqflist([], 'r', {'context': {'bqf': {'pattern_hl': '\%#' . '${@: -1}'}}})"
+      -c "call setqflist([], 'r', {'context': {'bqf': {'pattern_hl': '\%#' . '${@: -1}'}}})" \
+      -c "bwipeout 1"
+  fi
 fi

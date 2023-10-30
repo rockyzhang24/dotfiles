@@ -1,5 +1,4 @@
-local g = vim.g
-
-g.colorscheme = "arctic"
-g.transparent = true
-g.border_enabled = true
+vim.g.colorscheme = 'arctic'
+vim.g.transparent = true
+vim.g.border_enabled = true
+vim.g.border_style = vim.g.border_enabled and 'rounded' or 'none'

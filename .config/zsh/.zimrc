@@ -5,14 +5,10 @@ zmodule git
 zmodule input
 zmodule termtitle
 zmodule archive
-# zmodule utility
-# zmodule git-info
-# zmodule steeef
 zmodule zsh-users/zsh-completions
 zmodule completion
+zmodule Aloxaf/fzf-tab
 zmodule zsh-users/zsh-autosuggestions
 zmodule zsh-users/zsh-syntax-highlighting
 zmodule zsh-users/zsh-history-substring-search
 zmodule romkatv/powerlevel10k
-zmodule supercrabtree/k
-zmodule Aloxaf/fzf-tab

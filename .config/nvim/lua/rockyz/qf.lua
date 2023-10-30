@@ -3,9 +3,6 @@
 
 local M = {}
 local fn = vim.fn
-local cmd = vim.cmd
-local api = vim.api
-
 -- Define the appearance for the texts displayed in quickfix
 function M.qftf(info)
   local items
@@ -53,13 +50,13 @@ vim.o.quickfixtextfunc = [[{info -> v:lua.require('rockyz.qf').qftf(info)}]]
 
 -- Show a prompt to close quickfix window and/or the location list window
 function M.close()
-  local locWinid = fn.getloclist(0, {winid = 0}).winid
+  local locWinid = fn.getloclist(0, { winid = 0 }).winid
   if locWinid == 0 then
-    cmd('cclose')
+    vim.cmd('cclose')
   else
-    local qfWinid = fn.getqflist({winid = 0}).winid
+    local qfWinid = fn.getqflist({ winid = 0 }).winid
     if qfWinid == 0 then
-      cmd('lclose')
+      vim.cmd('lclose')
     else
       local prompt = ' [q]uickfix, [l]ocation, [a]ll ? '
       local actions = {
@@ -70,13 +67,12 @@ function M.close()
       require('rockyz.utils').prompt_for_actions(prompt, actions)
     end
   end
-
 end
 
 -- Show a prompt to open the quickfix window and/or the location list window
 local function open_loclist()
   if next(fn.getloclist(0)) ~= nil then
-    cmd('lopen')
+    vim.cmd('lopen')
   else
     print('No location list for current window')
   end
@@ -88,7 +84,7 @@ function M.open()
     l = open_loclist,
     a = function()
       open_loclist()
-      cmd('copen')
+      vim.cmd('copen')
     end,
   }
   require('rockyz.utils').prompt_for_actions(prompt, actions)

@@ -20,6 +20,8 @@ set preview
 set previewer ~/.config/lf/previewer
 set cleaner ~/.config/lf/cleaner
 set dircounts
+setlocal ~/Downloads sortby "atime"
+setlocal ~/Downloads reverse
 
 # ========== Commands ==========
 
@@ -161,13 +163,18 @@ cmd fzf-cd ${{
 
 # zoxide
 cmd z %{{
-	result="$(zoxide query --exclude $PWD $@ | sed 's/\\/\\\\/g;s/"/\\"/g')"
-	lf -remote "send $id cd \"$result\""
+  result="$(zoxide query --exclude $PWD $@ | sed 's/\\/\\\\/g;s/"/\\"/g')"
+  lf -remote "send $id cd \"$result\""
 }}
 
 cmd zi ${{
-	result="$(zoxide query -i | sed 's/\\/\\\\/g;s/"/\\"/g')"
-	lf -remote "send $id cd \"$result\""
+  result="$(zoxide query -i | sed 's/\\/\\\\/g;s/"/\\"/g')"
+  lf -remote "send $id cd \"$result\""
+}}
+
+# Git for dotfiles
+cmd dot ${{
+  git --git-dir=/Users/rockyzhang/dotfiles/ --work-tree=/Users/rockyzhang $@
 }}
 
 # ========== Mappings ==========
@@ -227,3 +234,6 @@ map Jg cd ~/gitrepos
 map Jp cd ~/projects
 map Jc cd ~/.config
 map Jv cd ~/.config/nvim
+
+cmap <tab> cmd-menu-complete
+cmap <backtab> cmd-menu-complete-back

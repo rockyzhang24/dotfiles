@@ -17,7 +17,6 @@ export PATH=$(/opt/homebrew/bin/gfind $HOME/.config/bin -type d -printf "%p:")$P
 export PATH=$GOPATH/bin:$PATH   # Golong programs
 export PATH=/Users/rockyzhang/gitrepos/diff-so-fancy:$PATH  # diff-so-fancy
 export PATH=/opt/homebrew/opt/llvm/bin:$PATH  # Use the latest llvm instead of macOS builtin
-export PATH=/Users/rockyzhang/oj/leetcode/scripts:$PATH   # leetcode
 
 # Use Neovim as "preferred editor"
 export EDITOR="nvim"
@@ -41,9 +40,6 @@ export GTAGSLABEL='native-pygments'
 local conf_path="/opt/homebrew/Cellar/global/*/share/gtags/gtags.conf"
 export GTAGSCONF=$(print ${~conf_path})
 
-# z.lua
-export _ZL_ROOT_MARKERS=".git,.svn,.hg,.root,package.json"
-
 # Ranger: avoid loading config twice (only loading the custom config under ~/.config/ranger/, not loading the default/global config)
 export RANGER_LOAD_DEFAULT_RC=FALSE
 
@@ -57,7 +53,7 @@ export CLICOLOR=1
 export LSCOLORS='ExfxcxdxbxGxDxabagacad'
 
 # Bat
-export BAT_THEME="Monokai Extended"
+export BAT_THEME="gruvbox-dark"
 
 # User-defined
 # Build --exclude parameters for fd (i.e., --exclude .git --exclude .Trash
@@ -65,6 +61,8 @@ export BAT_THEME="Monokai Extended"
 export FD_EXCLUDE=($(< $HOME/exclude | sed 's/^/--exclude /'))
 # Build -g parameters for rg (i.e., -g !.git -g !.Trash -g ...)
 export RG_EXCLUDE=($(< $HOME/exclude | sed 's/^/-g !/'))
+# Background is transparent
+export TRANSPARENT=true
 
 #
 # Configs below are taken from zimfw utility: https://github.com/zimfw/utility/blob/master/init.zsh

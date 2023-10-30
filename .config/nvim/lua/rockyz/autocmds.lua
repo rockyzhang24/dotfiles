@@ -1,57 +1,48 @@
-local fn = vim.fn
-local api = vim.api
-local cmd = vim.cmd
-
 -- Auto-create dir when saving a file, in case some intermediate directory does not exist
-api.nvim_create_augroup("auto_create_dir", {
-  clear = true
-})
-api.nvim_create_autocmd({ "BufWritePre" }, {
-  pattern = "*",
-  group = "auto_create_dir",
+vim.api.nvim_create_autocmd({ 'BufWritePre' }, {
+  pattern = '*',
+  group = vim.api.nvim_create_augroup('auto_create_dir', { clear = true }),
   callback = function(ctx)
-    local dir = fn.fnamemodify(ctx.file, ":p:h")
-    local res = fn.isdirectory(dir)
-    if res == 0 then
-      fn.mkdir(dir, 'p')
-    end
-  end
-})
-
--- Automatically toggle the relative and absolute numbers
--- Copy the code from https://github.com/sitiom/nvim-numbertoggle
-local function excluded(filetype)
-  local blacklist = { "harpoon" }
-  for _, ft in pairs(blacklist) do
-    if (filetype == ft) then
-      return true
-    end
-  end
-  return false
-end
-local augroup = api.nvim_create_augroup("numbertoggle", { clear = true })
-api.nvim_create_autocmd({ "BufEnter", "FocusGained", "InsertLeave", "CmdlineLeave", "WinEnter" }, {
-  pattern = "*",
-  group = augroup,
-  callback = function()
-    if excluded(vim.bo.filetype) then
+    -- Prevent oil.nivm from creating an extra oil:/ dir when we create a
+    -- file/dir
+    if vim.bo.ft == 'oil' then
       return
     end
-    if vim.o.nu and api.nvim_get_mode().mode ~= "i" then
-      vim.opt.relativenumber = true
+    local dir = vim.fn.fnamemodify(ctx.file, ':p:h')
+    local res = vim.fn.isdirectory(dir)
+    if res == 0 then
+      vim.fn.mkdir(dir, 'p')
     end
   end,
 })
-api.nvim_create_autocmd({ "BufLeave", "FocusLost", "InsertEnter", "CmdlineEnter", "WinLeave" }, {
-  pattern = "*",
-  group = augroup,
+
+-- Highlight the selections on yank
+vim.api.nvim_create_autocmd({ 'TextYankPost' }, {
+  pattern = '*',
+  group = vim.api.nvim_create_augroup('highlight_yank', { clear = true }),
   callback = function()
-    if excluded(vim.bo.filetype) then
-      return
+    vim.highlight.on_yank({ higroup = 'Substitute', timeout = 300 })
+  end,
+})
+
+-- Reload buffer if it is modified outside neovim
+vim.api.nvim_create_autocmd({
+  'FocusGained',
+  'BufEnter',
+  'CursorHold',
+}, {
+  group = vim.api.nvim_create_augroup('buffer_reload', { clear = true }),
+  callback = function()
+    if vim.fn.getcmdwintype() == '' then
+      vim.cmd('checktime')
     end
-    if vim.o.nu then
-      vim.opt.relativenumber = false
-      cmd("redraw")
-    end
+  end,
+})
+
+-- Automatically load diagnostics into location list
+vim.api.nvim_create_autocmd({ 'DiagnosticChanged' }, {
+  group = vim.api.nvim_create_augroup('diagnostics', { clear = true }),
+  callback = function()
+    vim.diagnostic.setloclist({ open = false })
   end,
 })

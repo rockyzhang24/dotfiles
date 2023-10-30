@@ -15,6 +15,10 @@ zstyle ':zim:input' double-dot-expand yes
 
 ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets)
 
+# fzf-tab
 # Fix https://github.com/Aloxaf/fzf-tab/issues/24
 zstyle -d ':completion:*' format
 zstyle ':completion:*:descriptions' format '[%d]'
+# Preview
+zstyle ':fzf-tab:*' fzf-flags '--preview-window=hidden,<9999(hidden)'
+zstyle ':fzf-tab:*' fzf-preview 'echo Preview is not available!'

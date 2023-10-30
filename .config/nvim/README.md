@@ -43,7 +43,7 @@ I assign the key mappings rationally aiming to make them efficient and easy to r
 
 * Multiple leader keys
 
-  In addition to `<Space>` that is the general leader key, `<Space><Space>` and `,` are set as the leader keys for toggling and git respectively.
+  In addition to `<Space>` that is the general leader key, `,` is set as the leader key for git.
 
 * Mnemonic
 

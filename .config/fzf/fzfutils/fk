@@ -10,9 +10,9 @@ opts="--multi --header=$'Press ENTER to kill; Press CTRL-R to reload\n\n' --head
 
 local pid
 if [ "$UID" != "0" ]; then
-  pid=$(eval "(date; ps -f -u $UID) | fzf --bind='ctrl-r:reload(date; ps -f -u $UID)' $opts" | awk '{print $2}')
+  pid=$(eval "(date; ps -f -u $UID) | fzf --prompt='Kill> ' --bind='ctrl-r:reload(date; ps -f -u $UID)' $opts" | awk '{print $2}')
 else
-  pid=$(eval "(date; ps -ef) | fzf --bind='ctrl-r:reload(date; ps -ef)' $opts" | awk '{print $2}')
+  pid=$(eval "(date; ps -ef) | fzf --prompt='Kill> ' --bind='ctrl-r:reload(date; ps -ef)' $opts" | awk '{print $2}')
 fi
 
 if [ "x$pid" != "x" ]

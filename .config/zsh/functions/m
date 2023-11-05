@@ -1,0 +1,30 @@
+# vim: filetype=bash
+
+# Directory bookmark
+#
+# Ref1: https://gist.github.com/skywind3000/563510347244a60f4e79a62b472db535
+# Ref2: https://x.com/skywind3000/status/1693608461659955625
+
+markpath="${MARKPATH:-$HOME/.local/share/marks}"
+[[ -d $markpath ]] || mkdir -p -m 700 "$markpath" 2> /dev/null
+case "$1" in
+  +*)       # m +foo  - add new bookmark for $PWD
+    ln -snf "$(pwd)" "$markpath/${1:1}"
+    ;;
+  -*)       # m -foo  - delete a bookmark named "foo"
+    rm -i "$markpath/${1:1}"
+    ;;
+  /*)       # m /bar  - search bookmarks matching "bar"
+    find "$markpath" -type l -name "*${1:1}*" | \
+      awk -F "/" '{print $NF}' | markpath="$markpath" xargs -I'{}' \
+      sh -c 'echo "{} ->" $(readlink "$markpath/{}")'
+    ;;
+  "")       # m  - list all bookmarks
+    command ls -1 "$markpath/" | markpath="$markpath" xargs -I'{}' \
+      sh -c 'echo "{} ->" $(readlink "$markpath/{}")'
+    ;;
+  *)        # m foo  - cd to the bookmark directory
+    local dest="$(readlink "$markpath/$1" 2> /dev/null)"
+    [[ -d $dest ]] && cd "$dest" || echo "No such mark: $1"
+    ;;
+esac

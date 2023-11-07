@@ -56,6 +56,12 @@ I assign the key mappings rationally aiming to make them efficient and easy to r
 
 # 🎪 Showcases
 
+### Blazing fast fuzzy finder via [fzf.vim](https://github.com/junegunn/fzf.vim) and [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim)
+
+Use `fzf` for the performance-critical operations such as files finder and grep, and `telescope` for interacting with other plugins such as [nvim-navbuddy](https://github.com/SmiteshP/nvim-navbuddy) due to its great ecosystem.
+
+https://github.com/rockyzhang24/dotfiles/assets/11582667/9b680aba-dc77-470d-b28b-048eb995e7f0
+
 ### Ultimate fold with [nvim-ufo](https://github.com/kevinhwang91/nvim-ufo)
 
 Now the fold is asynchronous and powered by LSP with a customizable appearance for the folded line and peek window.
@@ -64,12 +70,6 @@ https://user-images.githubusercontent.com/11582667/220818557-a136df65-aaa4-4742-
 
 ### Enhanced quickfix window with [nvim-bqf](https://github.com/kevinhwang91/nvim-bqf)
 
-Equip the quickfix with a preview window and an interactive filter (backed by `fzf`), and introduce many convenient actions for quickfix
+Equip the quickfix with a preview window and an interactive filter (backed by `fzf`), and introduce many convenient actions for quickfix.
 
 https://user-images.githubusercontent.com/11582667/220798455-e5463890-8176-40c1-b27b-9210451eadd8.mp4
-
-### All-in-one Fuzzy Finder via [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim)
-
-Fuzzy finder over lists of files, buffers, search results, git commits, etc.
-
-https://user-images.githubusercontent.com/11582667/220837891-f23ada38-c7d9-447f-a28b-e092d40b111b.mp4

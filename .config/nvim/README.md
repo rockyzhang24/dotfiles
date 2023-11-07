@@ -9,7 +9,7 @@ Cherry pick the lines you need and totally understand.
 Always a WIP 🏗
 
 ![nvim-demo](https://user-images.githubusercontent.com/11582667/220524725-08513f05-2190-49e1-8fba-2483896fd75f.png)
-  <sub>For the colorscheme, check [arctic.nvim](https://github.com/rockyzhang24/arctic.nvim). For more showcases, check [showcases](https://github.com/rockyzhang24/dotfiles/tree/master/.config/nvim#showcases) section below.</sub>
+  <sub>For the colorscheme, check [arctic.nvim](https://github.com/rockyzhang24/arctic.nvim). For more showcases, check [showcases](https://github.com/rockyzhang24/dotfiles/tree/master/.config/nvim#-showcases) section below.</sub>
 
 </div>
 
@@ -17,21 +17,22 @@ Always a WIP 🏗
 
 * Beautiful colorscheme with my own [arctic.nvim](https://github.com/rockyzhang24/arctic.nvim)
 * Nvim builtin LSP client configured by [nvim-lspconfig](https://github.com/neovim/nvim-lspconfig)
-* Enhanced code formatting and linting with [null-ls.nvim](https://github.com/jose-elias-alvarez/null-ls.nvim)
+* Treesitter support [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter)
 * Powerful auto-completion backed by [nvim-cmp](https://github.com/hrsh7th/nvim-cmp)
-* Fuzzy finder for everything with [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim)
+* Blazing fast fuzzy finder by integrating [fzf.vim](https://github.com/junegunn/fzf.vim) and [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim)
+* Fully Git integration with [vim-fugitive](https://github.com/tpope/vim-fugitive), [gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim), [vim-flog](https://github.com/rbong/vim-flog), etc
+* Consolidated code formatting with [conform.nvim](https://github.com/stevearc/conform.nvim)
 * Modern fold with [nvim-ufo](https://github.com/kevinhwang91/nvim-ufo)
 * Better quickfix window with [nvim-bqf](https://github.com/kevinhwang91/nvim-bqf)
-* Fully Git integration with [vim-fugitive](https://github.com/tpope/vim-fugitive), [gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim), [vim-flog](https://github.com/rbong/vim-flog), etc
-* Treesitter support [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter)
-* Blazing fast statusline with [lualine.nvim](https://github.com/nvim-lualine/lualine.nvim)
+* Comprehensive statusline with [lualine.nvim](https://github.com/nvim-lualine/lualine.nvim)
 * Better glance at search information with [nvim-hlslens](https://github.com/kevinhwang91/nvim-hlslens)
 * Snippet engine with [LuaSnip](https://github.com/L3MON4D3/LuaSnip)
 * Smart code comment with [Comment.nvim](https://github.com/numToStr/Comment.nvim)
 * Undo history visualizer with [undotree](https://github.com/mbbill/undotree)
 * Indentation guide with [indent-blankline.nvim](https://github.com/lukas-reineke/indent-blankline.nvim)
 * Improved code search via [vim-grepper](https://github.com/mhinz/vim-grepper), [vim-asterisk](https://github.com/haya14busa/vim-asterisk), etc
-* Comprehensive text objects with [vim-after-object](https://github.com/junegunn/vim-after-object), [targets.vim](https://github.com/wellle/targets.vim), etc
+* Enhanced text objects with [targets.vim](https://github.com/wellle/targets.vim), etc
+* File explorer with [oil.nvim](https://github.com/stevearc/oil.nvim)
 * Markdown preview with [markdown-preview.nvim](https://github.com/iamcco/markdown-preview.nvim)
 * ...
 

@@ -15,8 +15,6 @@ function! s:PackInit() abort
   call minpac#add('NvChad/nvim-colorizer.lua')
   call minpac#add('godlygeek/tabular')
   call minpac#add('mbbill/undotree')
-  call minpac#add('junegunn/fzf', { 'do': 'packloadall! | call fzf#install()' })
-  call minpac#add('junegunn/fzf.vim')
   call minpac#add('mhinz/vim-grepper')
   call minpac#add('haya14busa/vim-asterisk')
   call minpac#add('tommcdo/vim-exchange') " cx{motion}, cxx (line), X (visual), cxc (clear), and `.` is supported
@@ -30,6 +28,7 @@ function! s:PackInit() abort
   call minpac#add('othree/eregex.vim')
   call minpac#add('MunifTanjim/nui.nvim') " required by other plugins like nvim-navbuddy
   call minpac#add('andymass/vim-matchup')
+  call minpac#add('wellle/targets.vim')
   call minpac#add('unblevable/quick-scope')
   call minpac#add('danymat/neogen')
   call minpac#add('stevearc/oil.nvim')
@@ -38,14 +37,13 @@ function! s:PackInit() abort
   call minpac#add('Wansmer/treesj')
   call minpac#add('willothy/flatten.nvim')
 
-  " Telescope
+  " Fuzzy Finder
+  call minpac#add('junegunn/fzf', { 'do': 'packloadall! | call fzf#install()' })
+  call minpac#add('junegunn/fzf.vim')
   call minpac#add('nvim-telescope/telescope.nvim')
   call minpac#add('nvim-telescope/telescope-fzf-native.nvim', { 'do': 'make' })  " sorter for telescope
   call minpac#add('ahmedkhalf/project.nvim')
   call minpac#add('LukasPietzschmann/telescope-tabs')
-
-  " Text object
-  call minpac#add('wellle/targets.vim')
 
   " LSP
   call minpac#add('neovim/nvim-lspconfig')

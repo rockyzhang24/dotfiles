@@ -41,6 +41,9 @@
       "$VIMRUNTIME",
       "${3rd}/luv/library"
     ],
-    "checkThirdParty": false
+    "ignoreDir": [
+      "lua/rockyz/snippets"
+    ],
+    "checkThirdParty": "Disable"
   }
 }

@@ -9,7 +9,7 @@ HORIZONTAL_POS="${4}"
 VERTICAL_POS="${5}"
 
 image_preview_by_kitty() {
-  kitten icat --transfer-mode memory --stdin no --place \
+  kitten icat --clear --transfer-mode memory --stdin no --place \
       "${PV_WIDTH}x${PV_HEIGHT}@${HORIZONTAL_POS}x${VERTICAL_POS}" \
       "${1}" < /dev/null > /dev/tty
 }

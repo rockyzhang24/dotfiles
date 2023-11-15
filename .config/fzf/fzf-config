@@ -1,4 +1,7 @@
 #!/usr/bin/env zsh
+ 
+# Terminal background is transparent or not
+export TRANSPARENT=false
 
 # FZF builtin key bindings and completion
 [ -f ~/.config/fzf/fzf.zsh ] && source ~/.config/fzf/fzf.zsh
@@ -12,9 +15,9 @@ export FZF_DEFAULT_COMMAND="fd --type f --hidden --follow $FD_EXCLUDE"
 # Keybindings:
 # - ctrl-d: move cursor half page down
 # - ctrl-u: move cursor halp page up
-# - alt-d : move preview half page down
-# - alt-u : move preview half page up
-# - ctrl-a : toggle all
+# - alt-d: move preview half page down
+# - alt-u: move preview half page up
+# - ctrl-a: toggle all
 # - ctrl-/: toggle preview window
 # - ctrl-o: open the selections via default application
 # - ctrl-y: copy the selections to system clipboard
@@ -43,12 +46,7 @@ export FZF_DEFAULT_OPTS=" \
     `ctrl-y:execute-silent(echo -n {+} | pbcopy),`
     `ctrl-e:execute(\$EDITOR {+} < /dev/tty > /dev/tty 2>&1),`
     `change:first' \
-  --preview '([[ \$(file -b {}) == directory ]] && tree -C {} \
-    || ( MIME=\$(file --dereference --mime {}) && [[ \$MIME =~ binary ]] && echo \$MIME ) \
-    || ( bat --color=always --style=numbers,changes,header {} \
-      || highlight -O truecolor -s darkplus --force -l {} \
-      || cat {} ) \
-    || echo -e No preview for this selection:\"\n\n\" {} ) 2> /dev/null | head -200' \
+  --preview '~/.config/fzf/fzf-previewer.sh {}' \
   --preview-window 'border-left,<80(down,border-up)' \
   --color=dark,fg:#cccccc,preview-fg:#cccccc,bg:$bg,preview-bg:$bg,`
     `hl:#2aaaff,fg+:#ffffff,bg+:#04395e,gutter:$bg,hl+:#2aaaff,query:#cccccc,`

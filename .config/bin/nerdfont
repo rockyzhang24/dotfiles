@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 
 # Apply nerd font patch for every font file in the given directory
+# E.g., nerdfont ~/Downloads/inconsolata
 
-for font in "$1"*
+for font in "$1"/*
 do
   fontforge -script ~/Downloads/FontPatcher/font-patcher --complete "$font" --outputdir ~/Downloads/nerdfont-output/
 done

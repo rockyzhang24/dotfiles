@@ -7,18 +7,18 @@ window:
 
 font:
   normal:
-    family: Iosevka Nerd Font
-    style: Regular
+    family: SauceCodePro Nerd Font
+    style: Medium
   bold:
-    family: Iosevka Nerd Font
+    family: SauceCodePro Nerd Font
     style: Bold
   italic:
-    family: Iosevka Nerd Font
-    style: Italic
+    family: SauceCodePro Nerd Font
+    style: Medium Italic
   bold_italic:
-    family: Iosevka Nerd Font
+    family: SauceCodePro Nerd Font
     style: Bold Italic
-  size: 15.5
+  size: 14
 
 colors:
   primary:

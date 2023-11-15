@@ -53,16 +53,16 @@ export CLICOLOR=1
 export LSCOLORS='ExfxcxdxbxGxDxabagacad'
 
 # Bat
-export BAT_THEME="gruvbox-dark"
+export BAT_THEME="Visual Studio Dark+"
 
+#
 # User-defined
+#
 # Build --exclude parameters for fd (i.e., --exclude .git --exclude .Trash
 # --exclude ...)
 export FD_EXCLUDE=($(< $HOME/exclude | sed 's/^/--exclude /'))
 # Build -g parameters for rg (i.e., -g !.git -g !.Trash -g ...)
 export RG_EXCLUDE=($(< $HOME/exclude | sed 's/^/-g !/'))
-# Background is transparent
-export TRANSPARENT=true
 
 #
 # Configs below are taken from zimfw utility: https://github.com/zimfw/utility/blob/master/init.zsh

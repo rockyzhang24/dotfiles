@@ -114,3 +114,8 @@ vim.keymap.set('n', 'K', function()
 end)
 
 return M
+
+-- NOTES:
+-- 1. How to define a kind (lsp supports only two kinds: import and comment) for automatically
+--    folding?
+-- https://github.com/kevinhwang91/nvim-ufo/issues/64#issuecomment-1242919369

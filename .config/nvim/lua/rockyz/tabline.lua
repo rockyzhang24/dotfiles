@@ -9,11 +9,10 @@ function M.tabline()
       table.insert(tl, '%#TabLine#')
     end
     table.insert(tl, ' ' .. i .. ' ')
-    local name
     local winid = vim.api.nvim_tabpage_get_win(tp)
     local bufnr = vim.api.nvim_win_get_buf(winid)
     local bufname = vim.api.nvim_buf_get_name(bufnr)
-    name = vim.fn.fnamemodify(bufname, ':t')
+    local name = vim.fn.fnamemodify(bufname, ':t')
     if not name or name == '' then
       local winType = vim.fn.win_gettype(winid)
       if winType == 'loclist' then
@@ -27,7 +26,7 @@ function M.tabline()
     if string.match(bufname, '%d;#FZF') then
       name = '[FZF]'
     elseif string.match(bufname, 'fugitive:///') then
-      name = '[Fugivie]'
+      name = '[Fugitive]'
     elseif string.match(bufname, 'oil:///') then
       name = '[Oil]'
     elseif string.match(bufname, 'term:.*/bin/zsh') then

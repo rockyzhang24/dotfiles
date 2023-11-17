@@ -65,3 +65,7 @@ require('bqf').setup({
     end,
   },
 })
+
+-- NOTES:
+-- 1. Integrate window picker
+-- https://github.com/kevinhwang91/nvim-bqf/issues/100

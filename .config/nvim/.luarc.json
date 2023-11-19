@@ -36,6 +36,9 @@
     "ms",
     "k"
   ],
+  "diagnostics.disable": [
+    "missing-fields"
+  ],
   "workspace": {
     "library": [
       "$VIMRUNTIME",

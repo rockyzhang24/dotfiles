@@ -4,7 +4,6 @@ local modules = {
   'cmp',
   'comment',
   'conform',
-  'dressing',
   'eregex',
   'flatten',
   'fugitive',

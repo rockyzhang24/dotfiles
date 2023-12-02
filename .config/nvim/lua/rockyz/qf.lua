@@ -1,9 +1,8 @@
--- Dress up quickfix window
--- Ref: https://github.com/kevinhwang91/nvim-bqf#customize-quickfix-window-easter-egg
-
 local M = {}
 local fn = vim.fn
--- Define the appearance for the texts displayed in quickfix
+
+-- Change the appearance for the texts displayed in quickfix
+-- Ref: https://github.com/kevinhwang91/nvim-bqf#customize-quickfix-window-easter-egg
 function M.qftf(info)
   local items
   local ret = {}

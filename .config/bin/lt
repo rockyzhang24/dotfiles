@@ -53,6 +53,8 @@ if [[ $language == "cpp" ]]; then
 
 #include <cstring>
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include <array>
 #include <string>
 #include <vector>
@@ -70,6 +72,7 @@ if [[ $language == "cpp" ]]; then
 #include <functional>
 #include <random>
 #include <memory>
+#include <iterator>
 
 using namespace std;
 

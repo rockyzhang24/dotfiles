@@ -26,7 +26,7 @@ require('nvim-treesitter.configs').setup({
       enable = true,
       set_jumps = true,
       goto_next_start = {
-        [']c'] = '@class.outer',
+        [']e'] = '@class.outer',  -- ]c is the builtin for next diff
         [']f'] = '@function.outer',
         [']a'] = '@parameter.inner',
         [']i'] = '@conditional.outer',
@@ -34,7 +34,7 @@ require('nvim-treesitter.configs').setup({
         [']v'] = '@call.outer',
       },
       goto_next_end = {
-        [']C'] = '@class.outer',
+        [']E'] = '@class.outer',
         [']F'] = '@function.outer',
         [']A'] = '@parameter.inner',
         [']I'] = '@conditional.outer',
@@ -42,7 +42,7 @@ require('nvim-treesitter.configs').setup({
         [']V'] = '@call.outer',
       },
       goto_previous_start = {
-        ['[c'] = '@class.outer',
+        ['[e'] = '@class.outer',
         ['[f'] = '@function.outer',
         ['[a'] = '@parameter.inner',
         ['[i'] = '@conditional.outer',
@@ -50,7 +50,7 @@ require('nvim-treesitter.configs').setup({
         ['[v'] = '@call.outer',
       },
       goto_previous_end = {
-        ['[C'] = '@class.outer',
+        ['[E'] = '@class.outer',
         ['[F'] = '@function.outer',
         ['[A'] = '@parameter.inner',
         ['[I'] = '@conditional.outer',

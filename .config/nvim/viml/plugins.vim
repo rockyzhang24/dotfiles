@@ -3,6 +3,7 @@ function! s:PackInit() abort
   call minpac#init({'progress_open': 'vertical', 'status_open': 'vertical', 'status_auto': 'TRUE'})
 
   call minpac#add('k-takata/minpac', {'type': 'opt'})
+  call minpac#add('editorconfig/editorconfig-vim')
   call minpac#add('dstein64/vim-startuptime')
   call minpac#add('nvim-lua/plenary.nvim')  " lua library required by other plugins
   call minpac#add('rockyzhang24/lualine.nvim')
@@ -24,7 +25,6 @@ function! s:PackInit() abort
   call minpac#add('kevinhwang91/nvim-ufo')
   call minpac#add('kevinhwang91/nvim-fundo')
   call minpac#add('kevinhwang91/promise-async') " required by kevin's plugins
-  call minpac#add('lukas-reineke/indent-blankline.nvim')
   call minpac#add('othree/eregex.vim')
   call minpac#add('MunifTanjim/nui.nvim') " required by other plugins like nvim-navbuddy
   call minpac#add('andymass/vim-matchup')

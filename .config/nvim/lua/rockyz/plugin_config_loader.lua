@@ -13,7 +13,6 @@ local modules = {
   'hlslens',
   'harpoon',
   'inc-rename',
-  'indent-blankline',
   'iswap',
   'lualine',
   'luasnip',

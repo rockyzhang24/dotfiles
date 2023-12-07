@@ -75,6 +75,7 @@ if [[ $language == "cpp" ]]; then
 #include <iterator>
 
 using namespace std;
+using namespace std::placeholders;
 
 /*
  * Idea:

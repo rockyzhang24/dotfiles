@@ -54,18 +54,18 @@ function utils#Reindent(...)
   if a:0 != 2
     echoerr "Two arguments are required"
   endif
-  let save_et = &et
-  let save_ts = &ts
+  let save_et = &expandtab
+  let save_ts = &tabstop
   try
-    let &ts = a:1
-    set noet
+    let &tabstop = a:1
+    set noexpandtab
     retab!
-    let &ts = a:2
-    set et
+    let &tabstop = a:2
+    set expandtab
     retab!
-    let &l:sw = a:2
+    let &l:shiftwidth = a:2
   finally
-    let &et = save_et
-    let &ts = save_ts
+    let &expandtab = save_et
+    let &tabstop = save_ts
   endtry
 endfunction

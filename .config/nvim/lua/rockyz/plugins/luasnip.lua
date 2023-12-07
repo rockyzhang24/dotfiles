@@ -22,16 +22,16 @@ luasnip.setup({
         virt_text_pos = 'inline',
       },
     },
-    [types.insertNode] = {
-      active = {
-        virt_text = { { '●', 'Keyword' } },
-        virt_text_pos = 'inline',
-      },
-      unvisited = {
-        virt_text = { { '●', 'Comment' } },
-        virt_text_pos = 'inline',
-      },
-    },
+    -- [types.insertNode] = {
+    --   active = {
+    --     virt_text = { { '●', 'Keyword' } },
+    --     virt_text_pos = 'inline',
+    --   },
+    --   unvisited = {
+    --     virt_text = { { '●', 'Comment' } },
+    --     virt_text_pos = 'inline',
+    --   },
+    -- },
   },
   -- Use treesitter for getting the current filetype. This allows correctly resolving
   -- the current filetype in eg. a markdown-code block or `vim.cmd()`.

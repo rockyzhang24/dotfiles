@@ -8,7 +8,7 @@ augroup general
   " Automatically equalize splits when Vim is resized
   autocmd VimResized * wincmd =
   " Make it not be overwritten by the default setting of neovim
-  autocmd FileType * set formatoptions-=t formatoptions-=o formatoptions+=n textwidth=100
+  autocmd FileType * set formatoptions-=t formatoptions-=o formatoptions+=r formatoptions+=n textwidth=100
   " Command-line window
   autocmd CmdWinEnter * setlocal colorcolumn=
 augroup END

@@ -8,8 +8,3 @@ require('treesitter-context').setup({
   -- Pass a function to control when to disable this plugin
   on_attach = nil,
 })
-
--- Jump to the context
-vim.keymap.set('n', '[c', function()
-  require('treesitter-context').go_to_context()
-end)

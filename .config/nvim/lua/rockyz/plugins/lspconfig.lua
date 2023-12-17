@@ -14,6 +14,8 @@ vim.diagnostic.config({
     severity_sort = true,
     border = vim.g.border_style,
   },
+  -- To change the signs displayed in the sign column, tweak the text field in signs, see :h
+  -- vim.diagnostic.config for details
   signs = false,
   underline = true,
   virtual_text = {

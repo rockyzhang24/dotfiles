@@ -3,6 +3,7 @@ set relativenumber
 set cursorline
 set cursorlineopt=number,screenline
 set noshowmode
+set noshowcmd
 set wildmode=longest:full,full
 set textwidth=100
 set colorcolumn=100

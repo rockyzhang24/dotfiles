@@ -72,7 +72,7 @@ navbuddy.setup({
 
     -- Fuzzy finder at current level
     ['<Leader>f'] = actions.telescope(require('rockyz.plugins.telescope').get_ivy({
-      prompt_prefix = 'Nodes(curent level)> ',
+      prompt_prefix = 'Nodes (curent level)> ',
     })),
 
     ['g?'] = actions.help(), -- Open mappings help window

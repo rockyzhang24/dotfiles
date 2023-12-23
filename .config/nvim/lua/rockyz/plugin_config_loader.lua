@@ -31,7 +31,6 @@ local modules = {
   'registers',
   'targets',
   'treesitter',
-  'treesitter-context',
   'treesitter-textobjects',
   'treesj',
   'telescope',

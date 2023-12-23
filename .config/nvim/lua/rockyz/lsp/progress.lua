@@ -151,124 +151,180 @@
 --
 -- I use the args passed in the callback of LspProgress to get the progress message. If there are
 -- multiple servers sending progress nofitications at the same time, display the message from
--- different servers in a separate window.
+-- different servers in a separate window. The windows are stacked from bottom to top above the
+-- statusline in the bottom-right corner.
 local icons = {
   spinner = { '⣾', '⣽', '⣻', '⢿', '⡿', '⣟', '⣯', '⣷' },
   done = ''
 }
 
--- Maintain the status of each window showing progress message. Each one is indexed by the client id
--- and has these fields:
---  - is_done: whether the progress is finished. If so, remove the window.
---  - spinner_idx: current index of the spinner
---  - winid: winid of the floating window
---  - bufnr: bufnr of the floating window
---  - win_row: row position of the floating window
-local clients = {}
-local wins_cnt = 0
+-- Maintain the status of each floating window. Each one is indexed by the client id and has these
+-- fields:
+-- * is_done: whether the progress is finished. If so, remove the window.
+-- * spinner_idx: current index of the spinner
+-- * winid: winid of the floating window
+-- * bufnr: bufnr of the floating window
+-- * message: the progress message that will be shown in this window
+-- * pos: the position of this window counting from bottom to top
+local wins = {}
+-- Maintain the current total number of windows
+local total_wins = 0
 
+-- Get the row position of the current floating window. If it is the first one, it is placed just
+-- right above the statuslien; if not, it is placed on top of others.
+local function get_win_row(pos)
+  return vim.o.lines - vim.o.cmdheight - 1 - pos * 3
+end
+
+-- Update the window config
+local function win_set_config(win)
+  vim.api.nvim_win_set_config(win.winid, {
+    relative = 'editor',
+    width = #win.message,
+    height = 1,
+    row = get_win_row(win.pos),
+    col = vim.o.columns - #win.message,
+  })
+end
+
+local group = vim.api.nvim_create_augroup('lsp_progress', { clear = true })
 vim.api.nvim_create_autocmd({ 'LspProgress' }, {
-  group = vim.api.nvim_create_augroup('lsp_progress', { clear = true }),
+  group = group,
   pattern = '*',
   callback = function(args)
-    if not args.data then
-      return
-    end
-
+    -- Initialize the status of the window for this client
     local id = args.data.client_id
-    if clients[id] == nil then
-      clients[id] = {
+    if wins[id] == nil then
+      wins[id] = {
         is_done = false,
         spinner_idx = 0,
+        winid = nil,
+        bufnr = nil,
+        message = nil,
+        pos = total_wins + 1,
       }
     end
+    local cur_win = wins[id]
+
     -- Assemble the output progress message
     -- - General: ⣾ [client_name] title: message ( 5%)
     -- - Done:     [client_name] title: DONE!
-    local output = ''
+    local message = ''
     local client_name = vim.lsp.get_client_by_id(id).name
-    output = '[' .. client_name .. ']'
+    message = '[' .. client_name .. ']'
     local kind = args.data.result.value.kind
     local title = args.data.result.value.title
     if title then
-      output = output .. ' ' .. title .. ':'
+      message = message .. ' ' .. title .. ':'
     end
     if kind == 'end' then
-      clients[id].is_done = true
-      output = icons.done .. ' ' .. output .. ' DONE!'
+      cur_win.is_done = true
+      message = icons.done .. ' ' .. message .. ' DONE!'
     else
-      clients[id].is_done = false
+      cur_win.is_done = false
       local msg = args.data.result.value.message
       local pct = args.data.result.value.percentage
       if msg then
-        output = output .. ' ' .. msg
+        message = message .. ' ' .. msg
       end
       if pct then
-        output = string.format('%s (%3d%%)', output, pct)
+        message = string.format('%s (%3d%%)', message, pct)
       end
       -- Spinner
-      local idx = clients[id].spinner_idx
+      local idx = cur_win.spinner_idx
       idx = idx == #icons.spinner * 4 and 1 or idx + 1
-      output = icons.spinner[math.ceil(idx / 4)] .. ' ' .. output
-      clients[id].spinner_idx = idx
+      message = icons.spinner[math.ceil(idx / 4)] .. ' ' .. message
+      cur_win.spinner_idx = idx
     end
+    cur_win.message = message
 
-    -- The row position of the floating window for the current client. If there are multiple
-    -- windows, show it right on the top.
-    local win_row = clients[id].win_row
-    if win_row == nil then
-      win_row = vim.o.lines - vim.o.cmdheight - 4 - wins_cnt * 3
-      clients[id].win_row = win_row
-    end
+    local winid = cur_win.winid
+    local bufnr = cur_win.bufnr
 
-    local winid = clients[id].winid
-    local bufnr = clients[id].bufnr
-    -- If the window for showing the progress message of the current client doesn't exist, we create
-    -- it; otherwise we just adjust its size.
+    -- Create a new window or update the existing one
     if
       winid == nil
       or not vim.api.nvim_win_is_valid(winid)
-      or vim.api.nvim_win_get_tabpage(winid) ~= vim.api.nvim_get_current_tabpage()
+      or vim.api.nvim_win_get_tabpage(winid) ~= vim.api.nvim_get_current_tabpage() -- Switch to another tab
     then
       bufnr = vim.api.nvim_create_buf(false, true)
       winid = vim.api.nvim_open_win(bufnr, false, {
         relative = 'editor',
-        width = #output,
+        width = #cur_win.message,
         height = 1,
-        row = win_row,
-        col = vim.o.columns - #output,
+        row = get_win_row(cur_win.pos),
+        col = vim.o.columns - #cur_win.message,
+        focusable = false,
         style = 'minimal',
         noautocmd = true,
         border = vim.g.border_style,
       })
-      clients[id].bufnr = bufnr
-      clients[id].winid = winid
-      wins_cnt = wins_cnt + 1
+      cur_win.bufnr = bufnr
+      cur_win.winid = winid
+      total_wins = total_wins + 1
     else
-      vim.api.nvim_win_set_config(winid, {
-        relative = 'editor',
-        width = #output,
-        row = win_row,
-        col = vim.o.columns - #output,
-      })
+      win_set_config(cur_win)
     end
     -- Put the progress message in the buffer of the window
     vim.wo[winid].winhl = 'Normal:Normal'
-    vim.api.nvim_buf_set_lines(bufnr, 0, 1, false, { output })
-    -- If the progress finishes, we should remove the window along with deleting its buffer. But
-    -- in order to see the final message, let it stay on the screen for a few seconds.
-    if clients[id].is_done then
+    vim.api.nvim_buf_set_lines(bufnr, 0, 1, false, { message })
+
+    -- When the progress reporting ends, have the window stay on the screen for a few seconds before
+    -- closing it
+    if cur_win.is_done then
       vim.defer_fn(function()
-        if vim.api.nvim_win_is_valid(winid) then
-          vim.api.nvim_win_close(winid, true)
+        -- During this period of time, the same server may report another around of progress
+        -- notification, and this window will continue to be used for displaying. When the period is
+        -- over (i.e., this defered function will be called to close the window), there are two
+        -- possible scenarios:
+        -- 1. the new round of progress notification report has not yet finished, so this window
+        --    cannot be closed.
+        -- 2. the new round of progress notification report has finished. This window will be closed
+        --    twice, so the second execution of this function should return directly.
+        if not cur_win.is_done or not vim.api.nvim_win_is_valid(winid) then
+          return
         end
+        vim.api.nvim_win_close(winid, true)
         if vim.api.nvim_buf_is_valid(bufnr) then
           vim.api.nvim_buf_delete(bufnr, { force = true })
         end
-        wins_cnt = wins_cnt - 1
-        clients[id].winid = nil
-        clients[id].spinner_idx = 0
-      end, 5000)
+        total_wins = total_wins - 1
+        -- When the window is closed, all the window above it need to move down one position
+        for _, w in ipairs(wins) do
+          if w.pos > cur_win.pos then
+            w.pos = w.pos - 1
+            win_set_config(w)
+          end
+        end
+        wins[id] = nil
+      end, 3000)
+    end
+  end,
+})
+
+-- Update windows.
+-- 1. VimResized: When the server finishes reporting the progress notification, I have the window
+--    stayed on screen for a few seconds, however, the window (such as its position) won't be
+--    updated any more in LspProgress event. When the terminal window is resized, windows of this
+--    kind need to be updated.
+-- 2. TermLeave: It's for fzf.vim and it's so weird. Take the golang server as an example, it only
+--    send two progress notifications, 'begin' kind and 'end' kind. After we open a golang file,
+--    firstly a floating window will be created showing the message of the first progress
+--    notification (i.e., 'begin' kind). Let's say the window width is 53. Meanwhile, we open a
+--    fzf.vim window. At this point, that floating window has already displayed the message of the
+--    second progress notification (i.e., 'end' kind) and it will stay on the screen for a few
+--    seconds before it is closed. Let's say its width is 35. Now we quite the fzf.vim window. We
+--    can see that the width of the floating window is changed back to 53, i.e., reverting to the
+--    width when displaying the first message before that fzf.vim window was opened. THIS IS SO
+--    WEIRD! So use this autocmd to set the floating window back to 35.
+vim.api.nvim_create_autocmd({ 'VimResized', 'TermLeave' }, {
+  group = group,
+  pattern = '*',
+  callback = function()
+    for _, win in ipairs(wins) do
+      if win.is_done then
+        win_set_config(win)
+      end
     end
   end,
 })

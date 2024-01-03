@@ -29,4 +29,6 @@ icons.codicon = {
   TypeParameter = ' ',
 }
 
+icons.lightbulb = ''
+
 return icons

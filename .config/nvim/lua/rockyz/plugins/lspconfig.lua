@@ -48,11 +48,15 @@ vim.api.nvim_create_autocmd('LspAttach', {
     vim.keymap.set('n', 'gI', vim.lsp.buf.implementation, opts)
     vim.keymap.set('n', 'gr', vim.lsp.buf.references, opts)
     vim.keymap.set('n', '<Leader>rn', vim.lsp.buf.rename, opts)
-    -- Code actions at the cursor
+    -- Code actions under the cursor
+    -- TODO: so far vim.lsp.buf.code_action() returns code actions on the entire cursor line, not
+    -- just right under the cursor. So I extracted only those diagnostics overlapping the cursor and
+    -- use them to get code actions. Once this issue https://github.com/neovim/neovim/issues/21985
+    -- is solved, we just need to directly call vim.lsp.buf.code_action().
     vim.keymap.set({ 'n', 'x' }, '<Leader>ca', function()
       vim.lsp.buf.code_action({
         context = {
-          diagnostics = require('rockyz.lsp.utils').get_diagnostic_at_cursor(),
+          diagnostics = require('rockyz.lsp.utils').get_diagnostics_under_cursor(),
         },
       })
     end, opts)
@@ -87,18 +91,8 @@ vim.api.nvim_create_autocmd('LspAttach', {
     -- Lsp progress
     require('rockyz.lsp.progress')
 
-    -- Show a lightbulb when code actions are available at the cursor position
-    vim.api.nvim_create_augroup('code_action', { clear = true })
-    vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI', 'WinScrolled' }, {
-      group = 'code_action',
-      pattern = '*',
-      callback = lightbulb.show_lightbulb,
-    })
-    vim.api.nvim_create_autocmd({ 'TermEnter' }, {
-      group = 'code_action',
-      pattern = '*',
-      callback = lightbulb.remove_bulb,
-    })
+    -- Show a lightbulb when code actions are available under the cursor
+    require('rockyz.lsp.lightbulb')
 
     -- Use nvim-navic to get the code context, i.e., the breadcrumbs in winbar
     -- Use nvim-navbuddy for navigation

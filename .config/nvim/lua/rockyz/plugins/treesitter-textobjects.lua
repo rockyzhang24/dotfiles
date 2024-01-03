@@ -1,61 +1,56 @@
+-- k for class (c, l, a and s have been occupied already)
+-- a for parameter (argument)
+-- i for condition (if)
+-- o for loop
+
 require('nvim-treesitter.configs').setup({
   textobjects = {
     select = {
       enable = true,
       lookahead = true,
       keymaps = {
-        ['ac'] = '@class.outer',
-        ['ic'] = '@class.inner',
+        ['ak'] = '@class.outer',
+        ['ik'] = '@class.inner',
         ['af'] = '@function.outer',
         ['if'] = '@function.inner',
-        ['aa'] = '@parameter.outer',  -- a for argument
+        ['aa'] = '@parameter.outer',
         ['ia'] = '@parameter.inner',
-        ['ai'] = '@conditional.outer',  -- i for if
+        ['ai'] = '@conditional.outer',
         ['ii'] = '@conditional.inner',
-        ['ao'] = '@loop.outer',  -- o for loop
+        ['ao'] = '@loop.outer',
         ['io'] = '@loop.inner',
-        ['av'] = '@call.outer',  -- v for invoke
-        ['iv'] = '@call.inner',
-        ['a='] = '@assignment.outer',
-        ['i='] = '@assignment.inner',
-        ['[='] = '@assignment.lhs',
-        [']='] = '@assignment.rhs',
       },
     },
     move = {
       enable = true,
       set_jumps = true,
       goto_next_start = {
-        [']e'] = '@class.outer',  -- ]c is the builtin for next diff
+        [']k'] = '@class.outer',
         [']f'] = '@function.outer',
         [']a'] = '@parameter.inner',
         [']i'] = '@conditional.outer',
         [']o'] = '@loop.outer',
-        [']v'] = '@call.outer',
       },
       goto_next_end = {
-        [']E'] = '@class.outer',
+        [']K'] = '@class.outer',
         [']F'] = '@function.outer',
         [']A'] = '@parameter.inner',
         [']I'] = '@conditional.outer',
         [']O'] = '@loop.outer',
-        [']V'] = '@call.outer',
       },
       goto_previous_start = {
-        ['[e'] = '@class.outer',
+        ['[k'] = '@class.outer',
         ['[f'] = '@function.outer',
         ['[a'] = '@parameter.inner',
         ['[i'] = '@conditional.outer',
         ['[o'] = '@loop.outer',
-        ['[v'] = '@call.outer',
       },
       goto_previous_end = {
-        ['[E'] = '@class.outer',
+        ['[K'] = '@class.outer',
         ['[F'] = '@function.outer',
         ['[A'] = '@parameter.inner',
         ['[I'] = '@conditional.outer',
         ['[O'] = '@loop.outer',
-        ['[V'] = '@call.outer',
       },
     },
   },

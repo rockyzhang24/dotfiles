@@ -29,14 +29,15 @@ Always a WIP 🏗
 * Snippet engine with [LuaSnip](https://github.com/L3MON4D3/LuaSnip)
 * Smart code comment with [Comment.nvim](https://github.com/numToStr/Comment.nvim)
 * Undo history visualizer with [undotree](https://github.com/mbbill/undotree)
-* Indentation guide with [indent-blankline.nvim](https://github.com/lukas-reineke/indent-blankline.nvim)
 * Improved code search via [vim-grepper](https://github.com/mhinz/vim-grepper), [vim-asterisk](https://github.com/haya14busa/vim-asterisk), etc
 * Enhanced text objects with [targets.vim](https://github.com/wellle/targets.vim), etc
 * File explorer with [oil.nvim](https://github.com/stevearc/oil.nvim)
 * Markdown preview with [markdown-preview.nvim](https://github.com/iamcco/markdown-preview.nvim)
 * ...
 
-To see all the plugins I am using 👉 [plugins](./.config/nvim/viml/plugins.vim)
+I'm a minimalist, adhering to the KISS principle and embracing the philosophy of "do one thing and do it better". I only install and use plugins that are absolutely essential. I dislike those all-in-one plugins. I prefer plugins that enhance the native functionality of Vim and strongly avoid those that modify Vim's original features. For functionalities that can be implemented with just a few lines of code, I prefer to implement them myself, such as [LSP progress](./lua/rockyz/lsp/progress.lua), [lightbulb](./lua/rockyz/lsp/lightbulb.lua) and [indent guide](./lua/rockyz/autocmds.lua).
+
+To see all the plugins I am using 👉 [plugins](./viml/plugins.vim)
 
 # 🚀 Key mappings
 

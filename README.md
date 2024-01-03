@@ -54,9 +54,9 @@ My dotfiles for `macOS` and `Linux`. Just cherry pick the piece of code you tota
 
 #### [Tmux](https://github.com/tmux/tmux): [[config]](./.tmux.conf)
 
-#### [fzf](https://github.com/junegunn/fzf): [[config]](./.donfig/fzf/)
+#### [fzf](https://github.com/junegunn/fzf): [[config]](./.config/fzf/)
 
-#### [bin](./.config/bin/): Useful scripts
+#### My scripts: [bin](./.config/bin/)
 
 # 💡 How I am managing the dotfiles
 

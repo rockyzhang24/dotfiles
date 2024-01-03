@@ -85,7 +85,7 @@ vim.keymap.set('n', ']<Space>', 'm`' .. vim.v.count .. 'o<Esc>``')
 vim.keymap.set('n', 'U', "<Cmd>execute 'earlier ' .. vim.v.count1 .. 'f'<CR>")
 vim.keymap.set('n', '<M-r>', "<Cmd>execute 'later ' .. vim.v.count1 .. 'f'<CR>")
 -- Macro
-vim.keymap.set('n', '<Leader>m', 'q')
+vim.keymap.set({ 'n', 'x' }, '<Leader>m', 'q')
 -- Open quickfix or location list
 vim.keymap.set('n', '<Leader>qq', '<Cmd>copen<CR>')
 vim.keymap.set('n', '<Leader>ll', '<Cmd>lopen<CR>')
@@ -94,7 +94,7 @@ vim.keymap.set('n', '<Leader>ll', '<Cmd>lopen<CR>')
 -- Quit and close
 --
 
-vim.keymap.set('n', 'q', '<NOP>')
+vim.keymap.set({ 'n', 'x' }, 'q', '<NOP>')
 vim.keymap.set('n', 'Q', '<NOP>')
 vim.keymap.set('n', 'qq', '<Cmd>q<CR>')
 vim.keymap.set('n', 'qa', '<Cmd>qa<CR>')

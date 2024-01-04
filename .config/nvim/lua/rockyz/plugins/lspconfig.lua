@@ -40,7 +40,6 @@ vim.api.nvim_create_autocmd('LspAttach', {
       })
     end
     -- Mappings
-    -- NOTE: K has been mapped to hover by default
     local opts = { buffer = bufnr }
     vim.keymap.set('n', 'gd', vim.lsp.buf.definition, opts)
     vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, opts)
@@ -60,6 +59,7 @@ vim.api.nvim_create_autocmd('LspAttach', {
         },
       })
     end, opts)
+    vim.keymap.set('n', 'K', vim.lsp.buf.hover, opts)
     vim.keymap.set('i', '<C-k>', vim.lsp.buf.signature_help, opts)
     -- Diagnostics
     vim.keymap.set('n', 'go', vim.diagnostic.open_float, opts)

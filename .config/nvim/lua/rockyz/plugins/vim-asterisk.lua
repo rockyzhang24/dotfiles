@@ -1,3 +1,7 @@
+-- Keep cursor position across matches
 vim.g['asterisk#keeppos'] = 1
 
--- Find key mappings in nvim-hlslens config: ~/.config/nvim/lua/rockyz/plugins/hlslens.lua
+vim.keymap.set({ 'n', 'x' }, '*', '<Plug>(asterisk-z*)')
+vim.keymap.set({ 'n', 'x' }, '#', '<Plug>(asterisk-z#)')
+vim.keymap.set({ 'n', 'x' }, 'g*', '<Plug>(asterisk-gz*)')
+vim.keymap.set({ 'n', 'x' }, 'g#', '<Plug>(asterisk-gz#)')

@@ -20,11 +20,7 @@ function! s:PackInit() abort
   call minpac#add('haya14busa/vim-asterisk')
   call minpac#add('tommcdo/vim-exchange') " cx{motion}, cxx (line), X (visual), cxc (clear), and `.` is supported
   call minpac#add('tversteeg/registers.nvim')
-  call minpac#add('kevinhwang91/nvim-hlslens')
   call minpac#add('kevinhwang91/nvim-bqf')
-  call minpac#add('kevinhwang91/nvim-ufo')
-  call minpac#add('kevinhwang91/nvim-fundo')
-  call minpac#add('kevinhwang91/promise-async') " required by kevin's plugins
   call minpac#add('othree/eregex.vim')
   call minpac#add('MunifTanjim/nui.nvim') " required by other plugins like nvim-navbuddy
   call minpac#add('andymass/vim-matchup')
@@ -80,11 +76,6 @@ function! s:PackInit() abort
 
   " Icons
   call minpac#add('kyazdani42/nvim-web-devicons')
-
-  " Color schemes
-  call minpac#add('folke/tokyonight.nvim')
-  call minpac#add('dracula/vim', { 'name': 'dracula' })
-  call minpac#add('EdenEast/nightfox.nvim')
 
 endfunction
 

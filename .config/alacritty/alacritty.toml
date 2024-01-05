@@ -1,0 +1,184 @@
+# Find the document for Alacritty's configuration here https://alacritty.org/config-alacritty.html
+
+live_config_reload = true
+
+[window]
+decorations = "none"
+opacity = 1
+option_as_alt = "OnlyRight"
+
+[font]
+normal = { family = "Iosevka Nerd Font", style = "Regular" }
+bold = { family = "Iosevka Nerd Font", style = "Bold" }
+bold_italic = { family = "Iosevka Nerd Font", style = "Bold Italic" }
+italic = { family = "Iosevka Nerd Font", style = "Italic" }
+size = 15
+
+[colors]
+cursor = { text = "#000000", cursor = "#52ad70" } # stolen from wezterm
+vi_mode_cursor = { text = "CellBackground", cursor = "CellForeground" }
+footer_bar = { foreground = "#ffffff", background = "#68217a" }
+selection = { text = "CellForeground", background = "#264f78" }
+
+[colors.search]
+focused_match = { foreground = "CellForeground", background = "#9e6a03" }
+matches = { foreground = "CellForeground", background = "#623315" }
+
+[colors.primary]
+background = "#1f1f1f"
+foreground = "#cccccc"
+
+[colors.normal]
+black = "#1f1f1f"
+blue = "#569cd6"
+cyan = "#4dc9d0"
+green = "#6a9955"
+magenta = "#c586c0"
+red = "#f44747"
+white = "#dddddd"
+yellow = "#d7ba7d"
+
+[colors.bright]
+black = "#808080"
+blue = "#6fabdc"
+cyan = "#70d3bf"
+green = "#80ad6b"
+magenta = "#d6a9d2"
+red = "#f55757"
+white = "#ffffff"
+yellow = "#e1cb9e"
+
+[cursor]
+vi_mode_style = "Block"
+
+[hints]
+alphabet = "jfkdls;ahgurieowpq"
+
+[[hints.enabled]]
+command = "open"
+hyperlinks = true
+post_processing = true
+regex = "(ipfs:|ipns:|magnet:|mailto:|gemini:|gopher:|https:|http:|news:|file:|git:|ssh:|ftp:)[^\u0000-\u001F\u007F-<>\"\\s{-}\\^⟨⟩`]+"
+binding = { key = "U", mods = "Control|Shift" }
+mouse = { mods = "None", enabled = true }
+
+[keyboard]
+bindings = [
+# Scroll
+{ key = "B", mods = "Control|Shift", action = "ScrollPageUp" },
+{ key = "F", mods = "Control|Shift", action = "ScrollPageDown" },
+{ key = "Left", mods = "Control|Shift", action = "ScrollToTop" },
+{ key = "Right", mods = "Control|Shift", action = "ScrollToBottom" },
+# Vi Mode
+# - Ctrl+Shift+v: toggle vi mode
+# - i: quit vi mode
+# - g: scroll to top
+# - G: scroll to bottom
+# - y/Cmd+c: copy and clear selection
+# - ESC: clear selection
+# - Ctrl+y/e: scroll line up/down
+# - Ctrl+b/f: scroll page up/down
+# - Ctrl+u/d: scroll half page up/down
+# - v: selection
+# - V: line selection
+# - Ctrl+v: block selection
+# - Alt+v: semantic selection
+# - k/j/h/l: move cursor
+# - 0/$: go to the first/last column
+# - ^: go to the first non-empty column
+# - enter: open
+# - z: center
+# - H/M/L: go to the top/middle/bottom line
+# - b/w/e: word jump
+# - B/W/E: WORD jump
+# - %: go the matched bracket
+# - /: search forward
+# - ?: search backward
+# - n/N: search next/previous
+{ key = "V", mods = "Control|Shift", action = "ToggleViMode" },
+{ key = "I", mode = "Vi|~Search", action = "ScrollToBottom" },
+{ key = "I", mode = "Vi|~Search", action = "ToggleViMode" },
+{ key = "G", mode = "Vi|~Search", action = "ScrollToTop" },
+{ key = "G", mods = "Shift", mode = "Vi|~Search", action = "ScrollToBottom" },
+{ key = "Y", mode = "Vi|~Search", action = "Copy" },
+{ key = "Y", mode = "Vi|~Search", action = "ClearSelection" },
+{ key = "Escape", mode = "Vi|~Search", action = "ClearSelection" },
+{ key = "Y", mods = "Control", mode = "Vi|~Search", action = "ScrollLineUp" },
+{ key = "E", mods = "Control", mode = "Vi|~Search", action = "ScrollLineDown" },
+{ key = "B", mods = "Control", mode = "Vi|~Search", action = "ScrollPageUp" },
+{ key = "F", mods = "Control", mode = "Vi|~Search", action = "ScrollPageDown" },
+{ key = "U", mods = "Control", mode = "Vi|~Search", action = "ScrollHalfPageUp" },
+{ key = "D", mods = "Control", mode = "Vi|~Search", action = "ScrollHalfPageDown" },
+{ key = "V", mode = "Vi|~Search", action = "ToggleNormalSelection" },
+{ key = "V", mods = "Shift", mode = "Vi|~Search", action = "ToggleLineSelection" },
+{ key = "V", mods = "Control", mode = "Vi|~Search", action = "ToggleBlockSelection" },
+{ key = "V", mods = "Alt", mode = "Vi|~Search", action = "ToggleSemanticSelection" },
+{ key = "K", mode = "Vi|~Search", action = "Up" },
+{ key = "J", mode = "Vi|~Search", action = "Down" },
+{ key = "H", mode = "Vi|~Search", action = "Left" },
+{ key = "L", mode = "Vi|~Search", action = "Right" },
+{ key = "Key0", mode = "Vi|~Search", action = "First" },
+{ key = "Key4", mods = "Shift", mode = "Vi|~Search", action = "Last" },
+{ key = "Key6", mods = "Shift", mode = "Vi|~Search", action = "FirstOccupied" },
+{ key = "Return", mode = "Vi|~Search", action = "Open" },
+{ key = "Z", mode = "Vi|~Search", action = "CenterAroundViCursor" },
+{ key = "H", mods = "Shift", mode = "Vi|~Search", action = "High" },
+{ key = "M", mods = "Shift", mode = "Vi|~Search", action = "Middle" },
+{ key = "L", mods = "Shift", mode = "Vi|~Search", action = "Low" },
+{ key = "B", mode = "Vi|~Search", action = "SemanticLeft" },
+{ key = "W", mode = "Vi|~Search", action = "SemanticRight" },
+{ key = "E", mode = "Vi|~Search", action = "SemanticRightEnd" },
+{ key = "B", mods = "Shift", mode = "Vi|~Search", action = "WordLeft" },
+{ key = "W", mods = "Shift", mode = "Vi|~Search", action = "WordRight" },
+{ key = "E", mods = "Shift", mode = "Vi|~Search", action = "WordRightEnd" },
+{ key = "Key5", mods = "Shift", mode = "Vi|~Search", action = "Bracket" },
+{ key = "Slash", mode = "Vi|~Search", action = "SearchForward" },
+{ key = "Slash", mods = "Shift", mode = "Vi|~Search", action = "SearchBackward" },
+{ key = "N", mode = "Vi|~Search", action = "SearchNext" },
+{ key = "N", mods = "Shift", mode = "Vi|~Search", action = "SearchPrevious" },
+# Search Mode
+# - Ctrl+u: clear the whole query
+# - Ctrl+w: delete the current word in the query
+# - Ctrl+n/p: next/previous query
+# - Enter/Shift+Enter: go to the next/previous match
+{ key = "Return", mode = "Search|Vi", action = "SearchConfirm" },
+{ key = "Escape", mode = "Search", action = "SearchCancel" },
+{ key = "U", mods = "Control", mode = "Search", action = "SearchClear" },
+{ key = "W", mods = "Control", mode = "Search", action = "SearchDeleteWord" },
+{ key = "P", mods = "Control", mode = "Search", action = "SearchHistoryPrevious" },
+{ key = "N", mods = "Control", mode = "Search", action = "SearchHistoryNext" },
+{ key = "Return", mode = "Search|~Vi", action = "SearchFocusNext" },
+{ key = "Return", mods = "Shift", mode = "Search|~Vi", action = "SearchFocusPrevious" },
+# General (macOS)
+{ key = "Key0", mods = "Command", action = "ResetFontSize" },
+{ key = "Equals", mods = "Command", action = "IncreaseFontSize" },
+{ key = "Minus", mods = "Command", action = "DecreaseFontSize" },
+{ key = "V", mods = "Command", action = "Paste" },
+{ key = "C", mods = "Command", action = "Copy" },
+{ key = "C", mods = "Command", mode = "Vi|~Search", action = "ClearSelection" },
+{ key = "H", mods = "Command", action = "Hide" },
+{ key = "M", mods = "Command", action = "Minimize" },
+{ key = "Q", mods = "Command", action = "Quit" },
+{ key = "W", mods = "Command", action = "Quit" },
+{ key = "N", mods = "Command", action = "CreateNewWindow" },
+{ key = "F", mods = "Command", mode = "~Search", action = "SearchForward" },
+{ key = "B", mods = "Command", mode = "~Search", action = "SearchBackward" },
+# Special (escape code)
+# - Ctrl+Enter
+# - Shift+Enter
+# - Ctrl+0...9
+# - Ctrl+/
+{ key = "Return", mods = "Control", chars = "\u001b[13;5u" },
+{ key = "Return", mods = "Shift", chars = '\u001b[13;2u' },
+{ key = "Key1", mods = "Control", chars = "\u001b[27;5;49~" },
+{ key = "Key2", mods = "Control", chars = "\u001b[27;5;50~" },
+{ key = "Key3", mods = "Control", chars = "\u001b[27;5;51~" },
+{ key = "Key4", mods = "Control", chars = "\u001b[27;5;52~" },
+{ key = "Key5", mods = "Control", chars = "\u001b[27;5;53~" },
+{ key = "Key6", mods = "Control", chars = "\u001b[27;5;54~" },
+{ key = "Key7", mods = "Control", chars = "\u001b[27;5;55~" },
+{ key = "Key8", mods = "Control", chars = "\u001b[27;5;56~" },
+{ key = "Key9", mods = "Control", chars = "\u001b[27;5;57~" },
+{ key = "Key0", mods = "Control", chars = "\u001b[27;5;58~" },
+{ key = "Slash", mods = "Control", chars = "\u001f" },
+]

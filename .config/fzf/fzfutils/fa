@@ -7,9 +7,11 @@
 
 home="/Users/rockyzhang"
 prefix="git --git-dir=/Users/rockyzhang/dotfiles/ --work-tree=/Users/rockyzhang/"
+preview="[[ ! -e {} ]] && echo 'No preview for deleted file.' || $prefix diff --color=always {} | diff-so-fancy"
+
 files=($(eval "$prefix diff --name-only" | sed "s~^~$home/~" \
-    | fzf --exit-0 --height 100% --preview "$prefix diff --color=always {} \
-        | diff-so-fancy" --preview-window nohidden,right,60% --prompt="DotAdd> "))
+    | fzf --exit-0 --height 100% --preview $preview --preview-window nohidden,right,60% --prompt="DotAdd> "))
+
 if [[ -n $files ]]; then
   eval "$prefix add ${files[@]}"
 fi

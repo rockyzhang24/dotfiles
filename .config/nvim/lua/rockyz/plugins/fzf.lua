@@ -1,5 +1,30 @@
 -- Configurations for fzf.vim
 
+-- NOTES:
+--
+-- 1. fzf#vim#preview(), if this function is used, fzf.vim will use fzf.vim/bin/preview.sh as the
+--    value of fzf's --preview option. More importantly, we can use a placeholder to specify which
+--    part is the filename for bat command and which line should be highlighted for the
+--    --highlight-line option of bat. The "Deleted selected buffers" keymap below will show an
+--    example of the placeholder usage. On the contrary, if we don't use this funciton, fzf.vim's
+--    functions may define --preview itself (e.g., fzf#vim#commits use delta command to preview the
+--    git commit), or we can explicitly define --preview in the options table in [spec dict] passed
+--    into fzf.vim's functions, or --preview defined in FZF_DEFAULT_OPTS will be used.
+--
+--    Ref: https://github.com/junegunn/fzf.vim#advanced-customization
+--
+-- 2. placeholder. The argument passed to fzf#vim#with_preview has a placeholder field, its value is
+--    placeholders separated by colon, i.e., {FILENAME}[:{LINENO}]. They're the placeholders for
+--    fzf's --preview option (see man fzf). They will be passed into the preview script
+--    (fzf.vim/bin/preview.sh) where command bat is used as the preview command. FILENAME is the
+--    FILE for bat, and LINENO is for --highlight-line in bat.
+--
+--    If the placeholder is set an empty string, fzf#vim#preview won't wrap --preview option. It
+--    means fzf#vim#preview has no effects, i.e., the same at not using this function.
+--
+--    Ref: the source code of fzf#vim#with_preview in
+--    https://github.com/junegunn/fzf.vim/blob/master/autoload/fzf/vim.vim
+
 local rg_prefix = 'rg --column --line-number --no-heading --color=always --smart-case'
 
 -- Override fzf default options set in shell
@@ -16,11 +41,6 @@ vim.g.fzf_layout = {
   },
 }
 
-vim.g.fzf_preview_window = {
-  'right,border-left',
-  'ctrl-/',
-}
-
 vim.g.fzf_action = {
   ['ctrl-x'] = 'split',
   ['ctrl-v'] = 'vsplit',
@@ -31,10 +51,30 @@ vim.g.fzf_action = {
 vim.keymap.set('n', '<Leader>fb', '<Cmd>Buffers<CR>')
 vim.keymap.set('n', '<C-p>', '<Cmd>GFiles<CR>')
 vim.keymap.set('n', '<Leader>ff', '<Cmd>Files<CR>')
-vim.keymap.set('n', '<Leader>fo', '<Cmd>History<CR>')
-vim.keymap.set('n', '<Leader>f/', '<Cmd>History/<CR>')
-vim.keymap.set('n', '<Leader>f;', '<Cmd>History:<CR>')
 vim.keymap.set('n', '<Leader>fc', '<Cmd>BCommits<CR>')
+vim.keymap.set('n', '<Leader>fo', '<Cmd>History<CR>')
+-- Search history with preview disabled
+vim.keymap.set('n', '<Leader>f/', function()
+  vim.fn['fzf#vim#search_history']({
+    options = {
+      '--preview-window',
+      'hidden,<9999(hidden)',
+      '--bind',
+      'start:unbind(ctrl-/)+unbind(ctrl-_)',
+    },
+  })
+end)
+-- Command history with preview disabled
+vim.keymap.set('n', '<Leader>f:', function()
+  vim.fn['fzf#vim#command_history']({
+    options = {
+      '--preview-window',
+      'hidden,<9999(hidden)',
+      '--bind',
+      'start:unbind(ctrl-/)+unbind(ctrl-_)',
+    },
+  })
+end)
 
 -- Delete the selected buffers
 -- Ref: https://github.com/junegunn/fzf.vim/pull/733#issuecomment-559720813
@@ -45,7 +85,7 @@ vim.keymap.set('n', '<Leader>bD', function()
   local buflist = {}
   -- Get a list of buffers: split the string by \n.
   -- Each buffer info is like ` 7 h "path/to/the/buffer" line 10`. It has 5
-  -- parts: bufnr, indicator, buffer path, literal word line and the line number
+  -- parts: bufnr, indicators (may have multiple), buffer path, literal word line and the line number
   -- of of cursor.
   for item in string.gmatch(bufs, '([^\n]+)\n?') do
     -- Remove the doulbe quotes in the buffer path
@@ -78,15 +118,11 @@ vim.keymap.set('n', '<Leader>bD', function()
       '--preview-window',
       '+{5}-/2',
     },
-    -- fzf#vim`with_preview accepts a placeholder field and the format is
-    -- FILENAME[:LINENO]. The placeholder will be passed into the preview script
-    -- (fzf.vim/bin/preview.sh) where command bat is used as the preview
-    -- command. FILENAME is the FILE for bat, and LINENO is for --highlight-line
-    -- in bat.
-    -- In each buffer info, the 3rd part is the buffer path that will be the
-    -- FILENAME for bat and the 5th part is the line number that is for bat's
+    -- {FILENAME}:{LINENO}
+    -- In each buffer info, the 3rd to last part is the buffer path that will be the
+    -- FILENAME for bat and the last part is the line number that is for bat's
     -- --highlight-line option
-    placeholder = '{3}:{5}',
+    placeholder = '{-3}:{-1}',
   })))
 end)
 

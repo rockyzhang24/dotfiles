@@ -72,6 +72,6 @@ require('luasnip.loaders.from_lua').lazy_load({ paths = '~/.config/nvim/lua/rock
 -- filetype type
 vim.api.nvim_create_user_command(
   'SnipEdit',
-  ':lua require("luasnip.loaders.from_lua").edit_snippet_files()',
+  ':lua require("luasnip.loaders").edit_snippet_files()',
   {}
 )

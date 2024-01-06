@@ -95,4 +95,22 @@ function M.prompt_for_actions(prompt, actions)
   end)
 end
 
+-- Align the markdown table with tabular.vim
+-- Ref: https://gist.github.com/tpope/287147
+function M.md_table_bar_align()
+  local p = '^%s*|%s.*%s|%s*$'
+  local line = vim.fn.line('.')
+  local prev_line = vim.fn.getline(line - 1)
+  local cur_line = vim.fn.getline('.')
+  local next_line = vim.fn.getline(line + 1)
+  local cur_col = vim.fn.col('.')
+  if vim.fn.exists(':Tabularize') and cur_line:match('^%s*|') and (prev_line:match(p) or next_line:match(p)) then
+    local col = #cur_line:sub(1, cur_col):gsub('[^|]', '')
+    local pos = #vim.fn.matchstr(cur_line:sub(1, cur_col), ".*|\\s*\\zs.*")
+    vim.cmd('Tabularize/|/l1')
+    vim.cmd('normal! 0')
+    vim.fn.search(('[^|]*|'):rep(col) .. ('\\s\\{-\\}'):rep(pos), 'ce', line)
+  end
+end
+
 return M

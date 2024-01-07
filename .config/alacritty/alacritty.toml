@@ -8,10 +8,10 @@ opacity = 1
 option_as_alt = "OnlyRight"
 
 [font]
-normal = { family = "Iosevka Nerd Font", style = "Regular" }
-bold = { family = "Iosevka Nerd Font", style = "Bold" }
-bold_italic = { family = "Iosevka Nerd Font", style = "Bold Italic" }
-italic = { family = "Iosevka Nerd Font", style = "Italic" }
+normal = { family = "IosevkaTerm Nerd Font", style = "Regular" }
+bold = { family = "IosevkaTerm Nerd Font", style = "Bold" }
+bold_italic = { family = "IosevkaTerm Nerd Font", style = "Bold Italic" }
+italic = { family = "IosevkaTerm Nerd Font", style = "Italic" }
 size = 15
 
 [colors]

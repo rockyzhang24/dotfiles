@@ -13,6 +13,7 @@ local blue = '#4fc1ff'
 local blue2 = '#2aaaff'
 local light_blue = '#9CDCFE'
 local dark_blue = '#569CD6'
+local cornflower_blue = '#6796E6'
 local dark_pink = '#C586C0'
 local bright_pink = '#f92672'
 local purple = '#ae81ff'
@@ -252,114 +253,124 @@ local groups = {
   --
   -- Treesitter
   --
-  -- The obsolete TS* highlight groups are removed since this commit
-  -- https://github.com/nvim-treesitter/nvim-treesitter/commit/42ab95d5e11f247c6f0c8f5181b02e816caa4a4f
   -- Now use the capture names directly as the highlight groups.
-  -- (1). How to define the highlight group, see https://github.com/rktjmp/lush.nvim/issues/109
-  -- (2). To find all the capture names, see https://github.com/nvim-treesitter/nvim-treesitter/blob/master/CONTRIBUTING.md#highlights)
-
-  -- Misc
-  ["@comment"] = "Comment",
-  ["@comment.documentation"] = "@comment",
-  ["@error"] = { fg = error_red },
-  -- ["@none"] = { },
-  -- ["@preproc"] = { },
-  -- ["@define"] = { },
-  ["@operator"] = { fg = norm_fg },
-
-  -- Punctuation
-  ["@punctuation.delimiter"] = { fg = norm_fg },
-  ["@punctuation.bracket"] = { fg = norm_fg },
-  ["@punctuation.special"] = { fg = dark_blue },
-
-  -- Literals
-  ["@string"] = "String",
-  ["@string.documentation"] = { fg = brown },
-  ["@string.regex"] = { fg = dark_red },
-  ["@string.escape"] = { fg = yellow_orange },
-  -- ["@string.special"] = { },
-  -- ["@character"] = { },
-  -- ["@character.special"] = { },
-  -- ["@boolean"] = { },
-  -- ["@number"] = { },
-  -- ["@float"] = { },
-
-  -- Function
-  ["@function"] = "Function",
-  ["@function.builtin"] = "Function",
-  ["@function.call"] = "Function",
-  ["@function.macro"] = "Function",
-  -- [@method"] = { },
-  -- [@method.call"] = { },
-  ["@constructor"] = { fg = blue_green },
-  ["@parameter"] = { fg = light_blue },
-
-  -- Keyword
-  ["@keyword"] = "Keyword",
-  ["@keyword.coroutine"] = { fg = dark_pink },
-  ["@keyword.function"] = { fg = dark_blue },
-  ["@keyword.operator"] = { fg = norm_fg },
-  ["@keyword.return"] = { fg = dark_pink },
-  -- ["@conditional"] = { },
-  -- ["@conditional.ternary"] = { },
-  -- ["@repeat"] = { },
-  -- ["@debug"] = { },
-  ["@label"] = { fg = label_fg },
-  -- ["@include"] = { },
-  -- ["@exception"] = { },
-
-  -- Types
-  ["@type"] = { fg = blue_green },
-  ["@type.builtin"] = { fg = dark_blue },
-  ["@type.definition"] = { fg = blue_green },
-  ["@type.qualifier"] = { fg = dark_blue },
-  ["@storageclass"] = { fg = dark_blue },
-  ["@attribute"] = { fg = blue_green },
-  ["@field"] = { fg = light_blue },
-  ["@property"] = "@field",
+  -- To find all the capture names, see https://github.com/nvim-treesitter/nvim-treesitter/blob/master/CONTRIBUTING.md#highlights)
 
   -- Identifiers
-  ["@variable"] = { fg = light_blue },
-  ["@variable.builtin"] = { fg = dark_blue },
-  ["@constant"] = "Constant",
-  ["@constant.builtin"] = "Constant",
-  ["@constant.macro"] = "Constant",
-  ["@namespace"] = { fg = blue_green },
-  ["@namespace.builtin"] = { fg = dark_blue },
-  -- ["@symbol"] = { },
+  ["@variable"] = { fg = light_blue }, -- various variable names
+  ["@variable.builtin"] = { fg = dark_blue }, -- built-in variable names (e.g. `this`)
+  ["@variable.parameter"] = { fg = orange }, -- parameters of a function, use a conspicuous color (VSCode uses the common light_blue)
+  ["@variable.member"] = { fg = light_blue }, -- object and struct fields
 
-  -- Text (Mainly for markup languages)
-  ["@text"] = { fg = norm_fg },
-  ["@text.strong"] = { fg = norm_fg, bold = true },
-  ["@text.emphasis"] = { fg = norm_fg, italic = true },
-  ["@text.underline"] = { fg = norm_fg, underline = true },
-  ["@text.strike"] = { fg = norm_fg, strikethrough = true },
-  ["@text.title"] = "Title",
-  ["@text.literal"] = { fg = brown },
-  -- ["@text.quote"] = { },
-  ["@text.uri"] = "Tag",
-  ["@text.math"] = { fg = blue_green },
-  -- ["@text.environment"] = { },
-  -- ["@text.environment.name"] = { },
-  ["@text.reference"] = { fg = brown },
-  ["@text.todo"] = "Todo",
-  ["@text.note"] = { fg = info_blue },
-  ["@text.warning"] = { fg = warn_yellow },
-  ["@text.danger"] = { fg = error_red },
-  ["@text.diff.add"] = "DiffTextAdded",
-  ["@text.diff.delete"] = "DiffTextDeleted",
+  ["@constant"] = "Constant", -- constant identifiers
+  ["@constant.builtin"] = "Constant", -- built-in constant values
+  ["@constant.macro"] = "Constant", -- constants defined by the preprocessor
 
-  -- Tags
-  ["@tag"] = { fg = dark_blue },
-  ["@tag.attribute"] = { fg = light_blue },
-  ["@tag.delimiter"] = { fg = gray3 },
+  ["@module"] = { fg = blue_green }, -- modules or namespaces
+  ["@module.builtin"] = "@module", -- built-in modules or namespaces
+  ["@label"] = { fg = label_fg }, -- GOTO and other labels (e.g. `label:` in C), including heredoc labels
 
-  -- Conceal
-  -- ["@conceal"] = { },
+  -- Literals
+  ["@string"] = "String", -- string literals
+  ["@string.documentation"] = { fg = brown }, -- string documenting code (e.g. Python docstrings)
+  ["@string.regexp"] = { fg = dark_red }, -- regular expressions
+  ["@string.escape"] = { fg = yellow_orange }, -- escape sequences
+  ["@string.special"] = "SpecialChar", -- other special strings (e.g. dates)
+  ["@string.special.symbol"] = "@string.special", -- symbols or atoms
+  ["@string.special.url"] = "@string.special", -- URIs (e.g. hyperlinks), it's url outside markup
+  ["@string.special.path"] = "@string.special", -- filenames
 
-  -- Spell
-  -- ["@spell"] = { },
-  -- ["@nospell"] = { },
+  ["@character"] = "Character", -- character literals
+  ["@character.special"] = "SpecialChar", -- special characters (e.g. wildcards)
+
+  ["@boolean"] = "Boolean", -- boolean literals
+  ["@number"] = "Number", -- numeric literals
+  ["@number.float"] = "Float", -- floating-point number literals
+
+  -- Types
+  ["@type"] = { fg = blue_green }, -- type or class definitions and annotations
+  ["@type.builtin"] = { fg = dark_blue }, -- built-in types
+  ["@type.definition"] = { fg = blue_green }, -- identifiers in type definitions (e.g. `typedef <type> <identifier>` in C)
+  ["@type.qualifier"] = { fg = dark_blue }, -- type qualifiers (e.g. `const`)
+
+  ["@attribute"] = { fg = blue_green }, -- attribute annotations (e.g. Python decorators)
+  ["@property"] = "@variable.member", -- the key in key/value pairs
+
+  -- Function
+  ["@function"] = "Function", -- function definitions
+  ["@function.builtin"] = "Function", -- built-in functions
+  ["@function.call"] = "Function", -- function calls
+  ["@function.macro"] = "Function", -- preprocessor macros
+
+  ["@function.method"] = "@function", -- method definitions
+  ["@function.method.call"] = "@function.call", -- method calls
+
+  ["@constructor"] = { fg = blue_green }, -- constructor calls and definitions
+  ["@operator"] = "Operator", -- symbolic operators (e.g. `+` / `*`)
+
+  -- Keyword
+  ["@keyword"] = "Keyword", -- keywords not fitting into specific categories
+  ["@keyword.coroutine"] = { fg = dark_pink }, -- keywords related to coroutines (e.g. `go` in Go, `async/await` in Python)
+  ["@keyword.function"] = { fg = dark_blue }, -- keywords that define a function (e.g. `func` in Go, `def` in Python)
+  ["@keyword.operator"] = "@operator", -- operators that are English words (e.g. `and` / `or`)
+  ["@keyword.import"] = "Include", -- keywords for including modules (e.g. `import` / `from` in Python)
+  ["@keyword.storage"] = "StorageClass", -- modifiers that affect storage in memory or life-time
+  ["@keyword.repeat"] = "Repeat", -- keywords related to loops (e.g. `for` / `while`)
+  ["@keyword.return"] = { fg = dark_pink }, --  keywords like `return` and `yield`
+  ["@keyword.debug"] = "Debug", -- keywords related to debugging
+  ["@keyword.exception"] = "Exception", -- keywords related to exceptions (e.g. `throw` / `catch`)
+
+  ["@keyword.conditional"] = "Conditional", -- keywords related to conditionals (e.g. `if` / `else`)
+  ["@keyword.conditional.ternary"] = "@operator", -- ternary operator (e.g. `?` / `:`)
+
+  ["@keyword.directive"] = "PreProc", -- various preprocessor directives & shebangs
+  ["@keyword.directive.define"] = "@keyword.directive", -- preprocessor definition directives
+
+  -- Punctuation
+  ["@punctuation.delimiter"] = { fg = norm_fg }, -- delimiters (e.g. `;` / `.` / `,`)
+  ["@punctuation.bracket"] = { fg = norm_fg }, -- brackets (e.g. `()` / `{}` / `[]`)
+  ["@punctuation.special"] = { fg = dark_blue }, -- special symbols (e.g. `{}` in string interpolation)
+
+  -- Comments
+  ["@comment"] = "Comment", -- line and block comments
+  ["@comment.documentation"] = "@comment", -- comments documenting code
+
+  ["@comment.error"] = { fg = error_red }, -- error-type comments (e.g., `DEPRECATED:`)
+  ["@comment.warning"] = { fg = warn_yellow }, -- warning-type comments (e.g., `WARNING:`, `FIX:`)
+  ["@comment.hint"] = { fg = hint_gray },  -- note-type comments (e.g., `NOTE:`)
+  ["@comment.info"] = { fg = info_blue }, -- info-type comments
+  ["@comment.todo"] = "Todo", -- todo-type comments (e.g-, `TODO:`, `WIP:`)
+
+  -- Markup
+  ["@markup.strong"] = { fg = norm_fg, bold = true }, -- bold text
+  ["@markup.italic"] = { fg = norm_fg, italic = true }, -- text with emphasis
+  ["@markup.strikethrough"] = { fg = norm_fg, strikethrough = true }, -- strikethrough text
+  ["@markup.underline"] = { fg = norm_fg, underline = true }, -- underlined text (only for literal underline markup!)
+
+  ["@markup.heading"] = "Title", -- headings, titles (including markers)
+
+  ["@markup.quote"] = { fg = green }, -- block quotes
+  ["@markup.math"] = { fg = blue_green }, -- math environments (e.g. `$ ... $` in LaTeX)
+  ["@markup.environment"] = { fg = yellow }, -- environments (e.g. in LaTeX)
+
+  ["@markup.link"] = { fg = brown }, -- text references, footnotes, citations, etc.
+  ["@markup.link.label"] = "@markup.link", -- non-url links
+  ["@markup.link.url"] = "@markup.link", -- url links in markup
+
+  ["@markup.raw"] = { fg = brown }, -- literal or verbatim text (e.g., inline code)
+  ["@markup.raw.block"] = { fg = norm_fg }, -- literal or verbatim text as a stand-alone block
+
+  ["@markup.list"] = { fg = cornflower_blue }, -- list markers
+  -- ["@markup.list.checked"] = { }, -- checked todo-style list markers
+  -- ["@markup.list.unchecked"] = { }, -- unchecked todo-style list markers
+
+  ["@diff.plus"] = "DiffTextAdded", -- added text (for diff files)
+  ["@diff.minus"] = "DiffTextDeleted", -- deleted text (for diff files)
+  ["@diff.delta"] = "DiffTextChanged", -- changed text (for diff files)
+
+  ["@tag"] = { fg = dark_blue }, -- XML tag names
+  ["@tag.attribute"] = { fg = light_blue }, -- XML tag attributes
+  ["@tag.delimiter"] = { fg = gray3 }, -- XML tag delimiters
 
   --
   -- LSP semantic tokens
@@ -374,7 +385,7 @@ local groups = {
   ["@lsp.type.interface"] = { fg = blue_green },
   ["@lsp.type.struct"] = { fg = blue_green },
   ["@lsp.type.typeParameter"] = { fg = blue_green },
-  ["@lsp.type.parameter"] = { fg = orange }, -- Use a conspicuous color for semantic parameters (VSCode uses the common light_blue)
+  ["@lsp.type.parameter"] = "@variable.parameter", 
   ["@lsp.type.variable"] = { fg = light_blue },
   ["@lsp.type.property"] = { fg = light_blue },
   ["@lsp.type.enumMember"] = { fg = blue },
@@ -395,7 +406,7 @@ local groups = {
   ["@lsp.type.builtinType"] = { fg = dark_blue },
   ["@lsp.type.typeAlias"] = { fg = blue_green },
   ["@lsp.type.unresolvedReference"] = { undercurl = true, sp = error_red },
-  ["@lsp.type.lifetime"] = "@storageclass",
+  ["@lsp.type.lifetime"] = "@keyword.storage",
   ["@lsp.type.generic"] = "@variable",
   ["@lsp.type.selfTypeKeyword"] = "@variable.buitin",
   ["@lsp.type.deriveHelper"] = "@attribute",
@@ -564,7 +575,7 @@ local groups = {
   TelescopeMultiIcon = { fg = blue_green },
   TelescopeMatching = "CmpItemAbbrMatch",
   TelescopeNormal = "Normal",
-  TelescopePromptPrefix = "Icon",
+  TelescopePromptPrefix = { fg = '#cccccc', bold = true }, -- Same as Icon but bold
 
   --
   -- Harpoon

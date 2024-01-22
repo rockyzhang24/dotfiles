@@ -11,6 +11,7 @@ set fillchars=fold:\ ,foldopen:,foldclose:,foldsep:\ ,eob:\ ,msgsep:‾,
 set foldcolumn=1
 set foldlevel=99
 set foldlevelstart=99
+set foldtext=
 set completeopt=menu,menuone,noselect
 set timeoutlen=500
 set shortmess+=a shortmess+=c shortmess+=I

@@ -1,4 +1,5 @@
-# vim: filetype=zsh
+#!/usr/bin/env bash
+
 # Ref: https://github.com/junegunn/fzf/blob/master/ADVANCED.md#switching-between-ripgrep-mode-and-fzf-mode
 
 # MNEMONIC: [F]uzzy search [R]ip[G]rep
@@ -27,43 +28,43 @@ rm -f /tmp/rg-fzf-{r,f}
 
 # Path for the file where all selected entries are saved and they will be fed to
 # the quickfix.
-errorfile_path=$HOME/.local/share/rg
-[[ ! -e $errorfile_path ]] && mkdir $errorfile_path
+errorfile_path="$HOME/.local/share/rg"
+[[ ! -e $errorfile_path ]] && mkdir "$errorfile_path"
 
 last_arg=${*: -1}
 if [[ $last_arg =~ "^-" ]]; then
   initial_query=""
   extra_opts=$*
 else
-  initial_query=$last_arg
-  extra_opts="${*%%$last_arg}"
+  initial_query="$last_arg"
+  extra_opts="${*%%"$last_arg"}"
 fi
 
 rg_prefix="rg --line-number --column --color=always --smart-case --vimgrep $RG_EXCLUDE $extra_opts "
 
-local selections=$(: | fzf \
+selections="$(: | fzf \
   --height 100% \
   --ansi \
   --disabled \
   --query "$initial_query" \
   --bind "start:reload($rg_prefix {q})+unbind(ctrl-r)" \
   --bind "change:reload:sleep 0.1; $rg_prefix {q} || true" \
-  --bind "ctrl-f:unbind(change,ctrl-f)+change-prompt(2. fzf> )+enable-search+rebind(ctrl-r)+transform-query(echo {q} > /tmp/rg-fzf-r; cat /tmp/rg-fzf-f)" \
+  --bind 'ctrl-f:unbind(change,ctrl-f)+change-prompt(2. fzf> )+enable-search+rebind(ctrl-r)+transform-query(echo {q} > /tmp/rg-fzf-r; cat /tmp/rg-fzf-f)' \
   --bind "ctrl-r:unbind(ctrl-r)+change-prompt(1. rg> )+disable-search+reload($rg_prefix {q} || true)+rebind(change,ctrl-f)+transform-query(echo {q} > /tmp/rg-fzf-f; cat /tmp/rg-fzf-r)" \
   --prompt '1. rg> ' \
   --delimiter : \
-  --header 'ENTER (open selections in vim), CTRL-R (ripgrep mode), CTRL-F (fzf mode)' \
-  --preview "bat --color=always --style=numbers,changes,header --highlight-line {2} {1}" \
-  --preview-window "down,nohidden,border-up,+{2}+1/3,~1" \
-)
+  --header ':: ENTER (open selections in vim), CTRL-R (ripgrep mode), CTRL-F (fzf mode)' \
+  --preview 'bat --color=always --style=numbers,changes,header --highlight-line {2} {1}' \
+  --preview-window 'down,nohidden,border-up,+{2}+1/3,~1' \
+)"
 
-if [[ -n "$selections" ]]; then
-  local cnt=$(echo $selections | wc -l)
+if [[ -n $selections ]]; then
+  cnt=$(echo "$selections" | wc -l)
   if [[ $cnt -eq 1 ]]; then
-    read -r file line <<<$(echo $selections | awk -F: '{print $1, $2}')
-    $EDITOR $file -c $line
+    read -r file line <<<$(echo "$selections" | awk -F: '{print $1, $2}')
+    nvim "$file" -c "$line"
   else
-    echo $selections >| $errorfile_path/frg-errorfile && $EDITOR -q $errorfile_path/frg-errorfile \
+    echo "$selections" >| "$errorfile_path"/frg-errorfile && nvim -q "$errorfile_path"/frg-errorfile \
       -c "copen" \
       -c "call setqflist([], 'r', {'context': {'bqf': {'pattern_hl': '\%#' . '${@: -1}'}}})" \
       -c "bwipeout 1"

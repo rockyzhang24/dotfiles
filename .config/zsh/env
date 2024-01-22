@@ -14,6 +14,7 @@ export PATH=/Users/rockyzhang/.emacs.d/bin:$PATH  # Doom Emacs
 export PATH=/Users/rockyzhang/Library/Python/2.7/bin:$PATH  # pip, pip2, pip2.7
 export PATH=/opt/local/bin:/opt/local/sbin:$PATH  # MacPorts
 export PATH=$(/opt/homebrew/bin/gfind $HOME/.config/bin -type d -printf "%p:")$PATH # my own scripts under ~/.config/bin/
+export PATH=$HOME/.config/fzf/bin:$PATH # fzf scripts
 export PATH=$GOPATH/bin:$PATH   # Golong programs
 export PATH=/Users/rockyzhang/gitrepos/diff-so-fancy:$PATH  # diff-so-fancy
 export PATH=/opt/homebrew/opt/llvm/bin:$PATH  # Use the latest llvm instead of macOS builtin
@@ -60,9 +61,9 @@ export BAT_THEME="Visual Studio Dark+"
 #
 # Build --exclude parameters for fd (i.e., --exclude .git --exclude .Trash
 # --exclude ...)
-export FD_EXCLUDE=($(< $HOME/exclude | sed 's/^/--exclude /'))
+export FD_EXCLUDE="$(cat $HOME/exclude | sed 's/^/--exclude /' | tr '\n' ' ')"
 # Build -g parameters for rg (i.e., -g !.git -g !.Trash -g ...)
-export RG_EXCLUDE=($(< $HOME/exclude | sed 's/^/-g !/'))
+export RG_EXCLUDE="$(cat $HOME/exclude | sed 's/^/-g !/' | tr '\n' ' ')"
 
 #
 # Configs below are taken from zimfw utility: https://github.com/zimfw/utility/blob/master/init.zsh

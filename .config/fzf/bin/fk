@@ -1,14 +1,16 @@
-# vim: filetype=zsh
+#!/usr/bin/env bash
 
 # MNEMONIC: [F]uzzy search [K]ill
 # SYNOPSIS: fk
 # DESCRIPTION: Fuzzy finder for a process of $UID to kill.
 
-opts="--multi --header=$'Press ENTER to kill; Press CTRL-R to reload\n\n' --header-lines=2 \
-    --preview='echo {}' --preview-window=down,3,wrap \
-    --layout=reverse --height=80%"
+opts=" \
+  --multi \
+  --header=$':: ENTER (kill), CTRL-R (reload)\n\n' \
+  --header-lines=2 \
+  --preview='echo {}' \
+  --preview-window=down,3,wrap"
 
-local pid
 if [ "$UID" != "0" ]; then
   pid=$(eval "(date; ps -f -u $UID) | fzf --prompt='Kill> ' --bind='ctrl-r:reload(date; ps -f -u $UID)' $opts" | awk '{print $2}')
 else
@@ -17,5 +19,5 @@ fi
 
 if [ "x$pid" != "x" ]
 then
-  echo $pid | xargs kill -${1:-9}
+  echo "$pid" | xargs kill -${1:-9}
 fi

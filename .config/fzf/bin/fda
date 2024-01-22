@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+# MNEMONIC: [F]uzzy search for [D]otfile git [A]dd
+# SYNOPSIS: fda
+# DESCRIPTION: Fuzzy finder for the unstaged files in my dotfile bare repository
+# and git add the selections
+
+prefix="git --git-dir=$HOME/dotfiles/ --work-tree=$HOME"
+preview="[[ ! -e {} ]] && echo 'No preview for deleted file.' || "$prefix" diff --color=always {} | diff-so-fancy"
+
+files=($(eval "$prefix diff --name-only" | sed "s~^~$HOME/~" \
+    | fzf --exit-0 --preview "$preview" --preview-window nohidden,right,60% --prompt="DotfilesGitAdd> "))
+
+if [[ -n $files ]]; then
+  eval "$prefix add ${files[@]}"
+fi

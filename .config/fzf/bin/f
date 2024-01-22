@@ -1,11 +1,11 @@
-# vim: filetype=zsh
+#!/usr/bin/env bash
 
 # MNEMONIC: [F]uzzy search
 # SYNOPSIS: f [DIR] [FZF ARGS]
 # DESCRIPTION: Make FZF support execution under a certain directory
 
 if [[ $# == 0 ]] || [[ $1 =~ ^--\|^- ]]; then
-  fzf $@
+  fzf "$@"
 else
-  fd --type f --hidden --follow $FD_EXCLUDE '.*' $1 2> /dev/null | ( shift && fzf $@ )
+  fd --type f --hidden --follow $FD_EXCLUDE '.*' "$1" 2> /dev/null | ( shift && fzf "$@" )
 fi

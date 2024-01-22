@@ -1,4 +1,4 @@
-# vim: filetype=zsh
+#!/usr/bin/env bash
 
 # MNEMONIC: [F]uzzy search [G]it [I]gnore
 # SYNOPSIS: fgi [PARAM]
@@ -13,8 +13,8 @@ function __gi() {
 if  [ "$#" -eq 0 ]; then
   IFS+=","
   for item in $(__gi list); do
-    echo $item
-  done | fzf --multi --ansi --prompt="GitIgnore> " | paste -s -d "," - |
+    echo "$item"
+  done | fzf --multi --ansi --prompt="GitIgnore> " --preview-window="hidden,<9999(hidden)" | paste -s -d "," - |
   { read result && __gi "$result"; }
 else
   __gi "$@"

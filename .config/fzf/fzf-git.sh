@@ -1,5 +1,7 @@
 # Reference: https://github.com/junegunn/fzf-git.sh/blob/main/fzf-git.sh
-# till the commits on Aug 7 2023
+# till the commits on Dec 17 2023
+
+[[ $0 = - ]] && return
 
 if [[ $# -eq 1 ]]; then
   branches() {
@@ -83,10 +85,10 @@ if [[ $- =~ i ]]; then
 
 # This function defines options for fzf
 _fzf_git_fzf() {
-  fzf --layout=reverse --multi --height=50% --min-height=20 \
+  fzf --layout=default --multi --height=100% --min-height=20 \
     --color='header:italic:underline' \
     --preview-window='nohidden,right,50%,border-left' \
-    --bind='ctrl-/:change-preview-window(down,50%|hidden|)' "$@"
+    --bind='ctrl-/:change-preview-window(up,50%|hidden|)' "$@"
 }
 
 # Check git repository

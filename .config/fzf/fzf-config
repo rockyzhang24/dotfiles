@@ -28,26 +28,24 @@ if $TRANSPARENT; then
 fi
 export FZF_DEFAULT_OPTS=" \
   --multi \
-  --reverse \
   --no-mouse \
-  --height 60% \
   --scrollbar '█' \
   --history /tmp/fzfhistory \
   --prompt 'FZF> ' \
   --pointer '' \
   --marker ' ' \
   --tabstop=4 \
-  --info 'inline:<' \
+  --info 'inline:< ' \
   --no-separator \
-  --border 'top' \
   --bind 'ctrl-d:half-page-down,ctrl-u:half-page-up,alt-d:preview-half-page-down,`
     `alt-u:preview-half-page-up,ctrl-a:toggle-all,`
     `ctrl-/:toggle-preview,ctrl-o:execute(open {+}),`
     `ctrl-y:execute-silent(echo -n {+} | pbcopy),`
     `ctrl-e:execute(\$EDITOR {+} < /dev/tty > /dev/tty 2>&1),`
-    `change:first' \
+    `change:first,`
+    `tab:toggle+up,shift-tab:toggle+down' \
   --preview '~/.config/fzf/fzf-previewer.sh {}' \
-  --preview-window 'border-left,<80(down,border-up)' \
+  --preview-window 'border-left,<80(up,border-down)' \
   --color=dark,fg:#cccccc,preview-fg:#cccccc,bg:$bg,preview-bg:$bg,`
     `hl:#2aaaff,fg+:#ffffff,bg+:#04395e,gutter:$bg,hl+:#2aaaff,query:#cccccc,`
     `disabled:#808080,info:#8b949e,border:#454545,separator:#454545,`
@@ -57,34 +55,40 @@ export FZF_DEFAULT_OPTS=" \
 # Use fd for FZF completion
 # 1). listing files and dirs ($1 is the base path to start search) such as "vim ~/.config/**<TAB>"
 _fzf_compgen_path() {
-  fd --hidden --follow $FD_EXCLUDE . "$1"
+  fd --hidden --follow ${(z)FD_EXCLUDE} . "$1"
 }
 # 2). listing dirs such as "cd **<TAB>"
 _fzf_compgen_dir() {
-  fd --type d --hidden --follow $FD_EXCLUDE . "$1"
+  fd --type d --hidden --follow ${(z)FD_EXCLUDE} . "$1"
 }
+export FZF_COMPLETION_OPTS=" \
+  --layout default \
+  --height 100%"
 
 # CTRL-t to paste the selected files and directories onto the command-line
 export FZF_CTRL_T_COMMAND="fd --hidden --follow $FD_EXCLUDE"
 export FZF_CTRL_T_OPTS=" \
-  --header 'Paste the selected files and directories onto the command-line'"
+  --header ':: ENTER (paste selected files and dirs onto command-line)' \
+  --layout default \
+  --height 100%"
 
 # CTRL-r to search the command history
 export FZF_CTRL_R_OPTS=" \
   --preview 'echo {}' \
   --preview-window down:3:wrap,border-up \
   --bind 'ctrl-y:execute-silent(echo -n {2..} | pbcopy)' \
-  --header 'Press CTRL-Y to copy command into clipboard'"
+  --header ':: CTRL-Y (copy command into clipboard)' \
+  --layout default \
+  --height 100%"
 
 # CTRL-j to cd into the selected dir
 bindkey '^j' fzf-cd-widget
 export FZF_ALT_C_COMMAND="fd --type d --hidden --follow $FD_EXCLUDE"
 export FZF_ALT_C_OPTS=" \
-  --preview 'tree -C {} | head -200' --header 'cd into the selected directory'"
-
-# Utility commands (autoload functions defined under ~/.config/fzf/fzfutils/)
-fpath+=${0:h}/fzfutils
-autoload -Uz ${0:h}/fzfutils/*(.:t)
+  --preview 'tree -C {} | head -200' \
+  --header ':: ENTER (cd into the selected dir)' \
+  --layout default \
+  --height 100%"
 
 # fzf + git
 # Reference: https://github.com/junegunn/fzf-git.sh

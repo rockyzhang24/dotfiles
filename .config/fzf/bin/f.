@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+# MNEMONIC: [F]uzzy search [.]dotfiles
+# SYNOPSIS: f. [QUERY]
+# DESCRIPTION: Fuzzy search for the dotfiles and open the selected files via vim
+
+selections=($(git --git-dir=$HOME/dotfiles/ --work-tree=$HOME ls-files $HOME --full-name | sed "s~^~$HOME/~" | fzf --query="$1" --prompt="Dotfiles> "))
+
+if [[ -n $selections ]]; then
+  ${EDITOR:-vim} "${selections[@]}"
+fi

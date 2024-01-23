@@ -224,15 +224,5 @@ map <space>x extract
 # Open the directory in Finder on macOS
 map <space>f &if [[ -d $f ]]; then open $f; fi
 
-# Fast navigation
-map Jh cd ~
-map Jo cd ~/Documents
-map Jl cd ~/Downloads
-map Jb cd ~/Library/CloudStorage/Dropbox/
-map Jg cd ~/gitrepos
-map Jp cd ~/projects
-map Jc cd ~/.config
-map Jv cd ~/.config/nvim
-
 cmap <tab> cmd-menu-complete
 cmap <backtab> cmd-menu-complete-back

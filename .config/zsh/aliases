@@ -62,12 +62,3 @@ alias vtg='function video_to_gif(){ ffmpeg -i $1 -pix_fmt rgb8 -r 10 -vf scale=2
 # "ranger" is an autoload function defined at ../functions/ranger
 # When quitting ranger using Z, change the shell pwd to the last visited directory
 alias ra="ranger"
-
-# Quick navigation (J for Jump)
-alias Jo="cd ~/Documents"
-alias Jl="cd ~/Downloads"
-alias Jb="cd ~/Library/CloudStorage/Dropbox/"
-alias Jg="cd ~/gitrepos"
-alias Jp="cd ~/projects"
-alias Jc="cd ~/.config"
-alias Jv="cd ~/.config/nvim"

@@ -260,7 +260,7 @@ local groups = {
   ["@variable"] = { fg = light_blue }, -- various variable names
   ["@variable.builtin"] = { fg = dark_blue }, -- built-in variable names (e.g. `this`)
   ["@variable.parameter"] = { fg = orange }, -- parameters of a function, use a conspicuous color (VSCode uses the common light_blue)
-  ["@variable.member"] = { fg = light_blue }, -- object and struct fields
+  ["@variable.member"] = { fg = blue_green }, -- object and struct fields
 
   ["@constant"] = "Constant", -- constant identifiers
   ["@constant.builtin"] = "Constant", -- built-in constant values
@@ -378,43 +378,43 @@ local groups = {
   -- The help page :h lsp-semantic-highlight
   -- A short guide: https://gist.github.com/swarn/fb37d9eefe1bc616c2a7e476c0bc0316
   -- Token types and modifiers are described here: http://code.visualstudio.com/api/language-extensions/semantic-highlight-guide
-  ["@lsp.type.namespace"] = { fg = blue_green },
-  ["@lsp.type.type"] = { fg = blue_green },
-  ["@lsp.type.class"] = { fg = blue_green },
-  ["@lsp.type.enum"] = { fg = blue_green },
-  ["@lsp.type.interface"] = { fg = blue_green },
-  ["@lsp.type.struct"] = { fg = blue_green },
-  ["@lsp.type.typeParameter"] = { fg = blue_green },
-  ["@lsp.type.parameter"] = "@variable.parameter", 
-  ["@lsp.type.variable"] = { fg = light_blue },
-  ["@lsp.type.property"] = { fg = light_blue },
+  ["@lsp.type.namespace"] = "@module",
+  ["@lsp.type.type"] = "@type",
+  ["@lsp.type.class"] = "@type",
+  ["@lsp.type.enum"] = "@type",
+  ["@lsp.type.interface"] = "@type",
+  ["@lsp.type.struct"] = "@type",
+  ["@lsp.type.typeParameter"] = "@type.definition",
+  ["@lsp.type.parameter"] = "@variable.parameter",
+  ["@lsp.type.variable"] = "@variable",
+  ["@lsp.type.property"] = "@property",
   ["@lsp.type.enumMember"] = { fg = blue },
   -- ["@lsp.type.event"] = { },  -- TODO: what is event property?
-  ["@lsp.type.function"] = { fg = yellow },
-  ["@lsp.type.method"] = { fg = yellow },
-  ["@lsp.type.macro"] = { fg = dark_blue },
-  ["@lsp.type.keyword"] = { fg = dark_blue },
-  ["@lsp.type.modifier"] = { fg = dark_blue },
-  ["@lsp.type.comment"] = { fg = green },
-  ["@lsp.type.string"] = { fg = brown },
-  ["@lsp.type.number"] = { fg = light_green },
-  ["@lsp.type.regexp"] = { fg = dark_red },
-  ["@lsp.type.operator"] = { fg = norm_fg },
-  ["@lsp.type.decorator"] = { fg = yellow },
-  ["@lsp.type.escapeSequence"] = { fg = yellow_orange },
+  ["@lsp.type.function"] = "@function",
+  ["@lsp.type.method"] = "@function",
+  ["@lsp.type.macro"] = "@constant.macro",
+  ["@lsp.type.keyword"] = "@keyword",
+  ["@lsp.type.comment"] = "@comment",
+  ["@lsp.type.string"] = "@string",
+  ["@lsp.type.number"] = "@number",
+  ["@lsp.type.regexp"] = "@string.regexp",
+  ["@lsp.type.operator"] = "@operator",
+  ["@lsp.type.decorator"] = "@attribute",
+  ["@lsp.type.escapeSequence"] = "@string.escape",
   ["@lsp.type.formatSpecifier"] = { fg = light_blue },
-  ["@lsp.type.builtinType"] = { fg = dark_blue },
-  ["@lsp.type.typeAlias"] = { fg = blue_green },
+  ["@lsp.type.builtinType"] = "@type.builtin",
+  ["@lsp.type.typeAlias"] = "@type.definition",
   ["@lsp.type.unresolvedReference"] = { undercurl = true, sp = error_red },
   ["@lsp.type.lifetime"] = "@keyword.storage",
   ["@lsp.type.generic"] = "@variable",
+  ["@lsp.type.selfKeyword"] = "@variable.buitin",
   ["@lsp.type.selfTypeKeyword"] = "@variable.buitin",
   ["@lsp.type.deriveHelper"] = "@attribute",
   ["@lsp.type.boolean"] = "@boolean",
-  ["@lsp.typemod.type.defaultLibrary"] = "type.builtin",
-  ["@lsp.typemod.typeAlias.defaultLibrary"] = "@lsp.typemod.type.defaultLibrary",
-  ["@lsp.typemod.class.defaultLibrary"] = "type.builtin",
-  ["@lsp.typemod.variable.defaultLibrary"] = "variable.builtin",
+  ["@lsp.typemod.type.defaultLibrary"] = "@type.builtin",
+  ["@lsp.typemod.typeAlias.defaultLibrary"] = "@type.builtin",
+  ["@lsp.typemod.class.defaultLibrary"] = "@type.builtin",
+  ["@lsp.typemod.variable.defaultLibrary"] = "@variable.builtin",
   ["@lsp.typemod.function.defaultLibrary"] = "@function.builtin",
   ["@lsp.typemod.method.defaultLibrary"] = "@function.builtin",
   ["@lsp.typemod.macro.defaultLibrary"] = "@function.builtin",
@@ -425,14 +425,14 @@ local groups = {
   ["@lsp.typemod.variable.callable"] = "@function",
   ["@lsp.typemod.variable.static"] = "@constant",
   ["@lsp.typemod.property.readonly"] = { fg = blue },
-  ["@lsp.typemod.keyword.async"] = { fg = dark_pink },
+  ["@lsp.typemod.keyword.async"] = "@keyword.coroutine",
   ["@lsp.typemod.keyword.injected"] = "@keyword",
   -- Set injected highlights. Mainly for Rust doc comments and also works for
   -- other lsps that inject tokens in comments.
   -- Ref: https://github.com/folke/tokyonight.nvim/pull/340
-  ["@lsp.typemod.operator.injected"] = "@lsp.type.operator",
-  ["@lsp.typemod.string.injected"] = "@lsp.type.string",
-  ["@lsp.typemod.variable.injected"] = "@lsp.type.variable",
+  ["@lsp.typemod.operator.injected"] = "@operator",
+  ["@lsp.typemod.string.injected"] = "@string",
+  ["@lsp.typemod.variable.injected"] = "@variable",
 
   --
   -- nvim-lspconfig

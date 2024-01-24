@@ -260,7 +260,7 @@ local groups = {
   ["@variable"] = { fg = light_blue }, -- various variable names
   ["@variable.builtin"] = { fg = dark_blue }, -- built-in variable names (e.g. `this`)
   ["@variable.parameter"] = { fg = orange }, -- parameters of a function, use a conspicuous color (VSCode uses the common light_blue)
-  ["@variable.member"] = { fg = blue_green }, -- object and struct fields
+  ["@variable.member"] = { fg = light_blue }, -- object and struct fields
 
   ["@constant"] = "Constant", -- constant identifiers
   ["@constant.builtin"] = "Constant", -- built-in constant values
@@ -372,6 +372,10 @@ local groups = {
   ["@tag.attribute"] = { fg = light_blue }, -- XML tag attributes
   ["@tag.delimiter"] = { fg = gray3 }, -- XML tag delimiters
 
+  -- Language specific
+  -- Lua
+  ["@variable.member.lua"] = { fg = blue_green },
+
   --
   -- LSP semantic tokens
   --
@@ -433,6 +437,10 @@ local groups = {
   ["@lsp.typemod.operator.injected"] = "@operator",
   ["@lsp.typemod.string.injected"] = "@string",
   ["@lsp.typemod.variable.injected"] = "@variable",
+
+  -- Language specific
+  -- Lua
+  ["@lsp.type.property.lua"] = "@variable.member.lua",
 
   --
   -- nvim-lspconfig

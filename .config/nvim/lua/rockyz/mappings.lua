@@ -1,3 +1,5 @@
+local M = {}
+
 vim.g.mapleader = ' '
 
 vim.keymap.set({ 'n', 'x' }, '<Leader>', '<Nop>')
@@ -287,10 +289,25 @@ vim.keymap.set('n', '<Leader>wl', function()
 end)
 -- Close all other windows (not including float windows)
 vim.keymap.set('n', '<Leader>wo', function()
-  return vim.fn.len(vim.fn.filter(vim.api.nvim_tabpage_list_wins(0), function(k, v)
+  return vim.fn.len(vim.fn.filter(vim.api.nvim_tabpage_list_wins(0), function(_, v)
     return vim.api.nvim_win_get_config(v).relative == ''
   end)) > 1 and '<C-w>o' or ''
 end, { expr = true })
+-- Scroll the other window
+-- 1:half-page up, 2:half-page down
+function M.other_win_scroll(mode)
+  vim.cmd('noautocmd silent! wincmd p')
+  if mode == 1 then
+    vim.cmd('exec "normal! \\<c-u>"')
+  elseif mode == 2 then
+    vim.cmd('exec "normal! \\<c-d>"')
+  end
+  vim.cmd('noautocmd silent! wincmd p')
+end
+vim.keymap.set('n', '<M-u>', "<Cmd>lua require('rockyz.mappings').other_win_scroll(1)<CR>")
+vim.keymap.set('n', '<M-d>', "<Cmd>lua require('rockyz.mappings').other_win_scroll(2)<CR>")
+vim.keymap.set('i', '<M-u>', "<C-\\><C-o><Cmd>lua require('rockyz.mappings').other_win_scroll(1)<CR>")
+vim.keymap.set('i', '<M-d>', "<C-\\><C-o><Cmd>lua require('rockyz.mappings').other_win_scroll(2)<CR>")
 
 --
 -- Terminal
@@ -302,3 +319,5 @@ vim.keymap.set('t', '<Leader><Esc>', '<C-\\><C-n>')
 vim.keymap.set('t', '<M-r>', function()
   return '<C-\\><C-n>"' .. vim.fn.nr2char(vim.fn.getchar()) .. 'pi'
 end, { expr = true })
+
+return M

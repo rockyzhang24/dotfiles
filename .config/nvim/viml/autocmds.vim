@@ -1,16 +1,22 @@
 augroup general
   autocmd!
-  " Jump to the position when you last quit
-  autocmd BufReadPost *
-        \ if line("'\"") > 1 && line("'\"") <= line("$") && &filetype !~# 'commit\|rebase' |
-        \   exe "normal! g'\"" |
-        \ endif
   " Automatically equalize splits when Vim is resized
   autocmd VimResized * wincmd =
   " Make it not be overwritten by the default setting of neovim
   autocmd FileType * set formatoptions-=t formatoptions-=o formatoptions+=r formatoptions+=n textwidth=100
   " Command-line window
   autocmd CmdWinEnter * setlocal colorcolumn=
+augroup END
+
+" Jump to the position when you last quit (:h last-position-jump)
+augroup restore_cursor
+  autocmd!
+  autocmd BufRead * autocmd FileType <buffer> ++once
+    \ let s:line = line("'\"")
+    \ | if s:line >= 1 && s:line <= line("$") && &filetype !~# 'commit'
+    \      && index(['xxd', 'gitrebase'], &filetype) == -1
+    \ |   execute "normal! g`\""
+    \ | endif
 augroup END
 
 " Disable syntax highlighting for some filetypes if they are too long
@@ -76,7 +82,7 @@ function! s:SetGitEnv() abort
   endif
 endfunction
 
-augroup personal
+augroup dotfiles
   autocmd!
   autocmd BufNewFile,BufRead,BufEnter * call s:SetGitEnv()
 augroup END

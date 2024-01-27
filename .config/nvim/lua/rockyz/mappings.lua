@@ -114,8 +114,6 @@ vim.keymap.set('n', 'qD', [[<Cmd>tabdo lua require("rockyz.utils").close_diff()<
 
 -- Search within selected range
 vim.keymap.set('x', '/', '<Esc>/\\%V')
--- Substitute all the occurrance of the current word
-vim.keymap.set('n', '<Leader>S', ':%s/\\<<C-r><C-w>\\>/<C-r><C-w>/gI<Left><Left><Left>')
 -- Clean search highlighting and update diff if needed
 vim.keymap.set('n', '<BS>', function()
   if vim.v.hlsearch then
@@ -124,6 +122,13 @@ vim.keymap.set('n', '<BS>', function()
     return '<BS>'
   end
 end, { expr = true, silent = true })
+
+--
+-- Replace
+--
+-- Replace visually selected word, or word under cursor
+vim.keymap.set('x', '<Leader>rw', '"hy:%s/<C-r>h/<C-r>h/gc<Left><Left><Left>')
+vim.keymap.set('n', '<Leader>rw', ':%s/\\<<C-r><C-w>\\>/<C-r><C-w>/gI<Left><Left><Left>')
 
 --
 -- Buffer

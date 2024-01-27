@@ -64,6 +64,7 @@ local function lightbulb_create(row, col)
     col = col,
     style = 'minimal',
     noautocmd = true,
+    focusable = false,
     zindex = 1,
   })
   vim.wo[winid].winhl = 'Normal:LightBulb'

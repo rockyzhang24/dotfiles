@@ -26,7 +26,7 @@ local gray4 = '#9d9d9d'
 local black = '#2d2d2d' -- TabLine
 local black2 = '#252526'
 local black3 = '#282828' -- CursorLine (editor.lineHighlightBorder). Or use #2a2d2e (list.hoverBackground) for a brighter color
-local black4 = '#181818' -- Statusline
+local black4 = '#181818' -- Statusline and Tabline
 
 local error_red = '#F14C4C'
 local warn_yellow = '#CCA700'
@@ -40,7 +40,6 @@ local float_border_fg = '#454545'
 local indent_guide_fg = '#404040'
 local indent_guide_scope_fg = '#707070'
 local label_fg = '#c8c8c8'
-local tabline_bg = '#3e3e3e'
 
 local groups = {
 
@@ -141,9 +140,9 @@ local groups = {
   SpellRare  = { undercurl = true, sp = info_blue  },
   StatusLine = { bg = black4 },
   StatusLineNC = { fg = gray, bg = black4 },
-  TabLine = { fg = gray4, bg = tabline_bg }, -- tab.inactiveBackground, tab.inactiveForeground
-  TabLineFill = { fg = 'NONE', bg = tabline_bg }, -- editorGroupHeader.tabsBackground
-  TabLineSel = { fg = white, bg = norm_bg }, -- tab.activeBackground, tab.activeForeground
+  TabLine = { fg = gray4, bg = black4 }, -- tab.inactiveBackground, tab.inactiveForeground
+  TabLineFill = { fg = 'NONE', bg = black4 }, -- editorGroupHeader.tabsBackground
+  TabLineSel = { fg = white, bg = norm_bg, bold = true }, -- tab.activeBackground, tab.activeForeground
   Title = { fg = dark_blue, bold = true },
   Visual = { bg = '#264F78' }, -- editor.selectionBackground
   -- VisualNOS = { },

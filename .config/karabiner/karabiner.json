@@ -46,27 +46,6 @@
                     {
                         "manipulators": [
                             {
-                                "description": "Change left Command to F18 if it is pressed alone",
-                                "from": {
-                                    "key_code": "left_command"
-                                },
-                                "to": [
-                                    {
-                                        "key_code": "left_command"
-                                    }
-                                ],
-                                "to_if_alone": [
-                                    {
-                                        "key_code": "f18"
-                                    }
-                                ],
-                                "type": "basic"
-                            }
-                        ]
-                    },
-                    {
-                        "manipulators": [
-                            {
                                 "description": "Change right Shift to MEH key (Option + Shift + Control)",
                                 "from": {
                                     "key_code": "right_shift"

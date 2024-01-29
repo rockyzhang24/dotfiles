@@ -6,10 +6,11 @@ FILE_EXTENSION_LOWER="$(printf "%s" "${FILE_EXTENSION}" | tr '[:upper:]' '[:lowe
 PV_WIDTH="${2}"
 PV_HEIGHT="${3}"
 HORIZONTAL_POS="${4}"
-VERTICAL_POS="${5}"
+VERTICAL_POS="$(( $5 + 2 ))"
 
 image_preview_by_kitty() {
-  kitten icat --clear --transfer-mode memory --stdin no --place \
+  echo "Resolution: $(identify -format "%w×%h\n" ${1})"
+  kitty icat --clear --transfer-mode file --stdin no --place \
       "${PV_WIDTH}x${PV_HEIGHT}@${HORIZONTAL_POS}x${VERTICAL_POS}" \
       "${1}" < /dev/null > /dev/tty
 }
@@ -52,7 +53,7 @@ handle_mime() {
       pandoc -s -t markdown -- "${FILE_PATH}" && exit 1;;
     # Image
     image/*)
-      if [[ $TERM == "xterm-kitty" ]]; then
+      if [[ $TERM == "xterm-kitty" || $TERM == "wezterm" ]]; then
         image_preview_by_kitty "${FILE_PATH}"
       else
         exiftool "${FILE_PATH}"
@@ -60,7 +61,7 @@ handle_mime() {
       exit 1;;
     # Video and audio
     video/* | audio/*)
-      if [[ $TERM == "xterm-kitty" ]]; then
+      if [[ $TERM == "xterm-kitty" || $TERM == "wezterm" ]]; then
         local thumbnail=$($HOME/.config/lf/vidthumb "${FILE_PATH}")
         image_preview_by_kitty "${thumbnail}"
       else

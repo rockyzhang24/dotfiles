@@ -23,9 +23,9 @@ brights = [
 ]
 selection_fg = 'none'
 selection_bg = '#264f78'
-scrollbar_thumb = '#494d53'
-
-[colors.indexed]
+scrollbar_thumb = '#434343'
 
 [metadata]
-name = 'arctic'
+aliases = []
+author = "rockyzhang24"
+name = "arctic"

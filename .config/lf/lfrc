@@ -15,9 +15,10 @@ set ignorecase
 set anchorfind
 set findlen 1
 set tabstop 4
-set info 'size'
+set info size
 set preview
 set previewer ~/.config/lf/previewer
+set cleaner ~/.config/lf/cleaner
 set dircounts
 setlocal ~/Downloads sortby "atime"
 setlocal ~/Downloads reverse

@@ -19,7 +19,6 @@ function! s:PackInit() abort
   call minpac#add('mhinz/vim-grepper')
   call minpac#add('haya14busa/vim-asterisk')
   call minpac#add('tommcdo/vim-exchange') " cx{motion}, cxx (line), X (visual), cxc (clear), and `.` is supported
-  call minpac#add('tversteeg/registers.nvim')
   call minpac#add('kevinhwang91/nvim-bqf')
   call minpac#add('othree/eregex.vim')
   call minpac#add('MunifTanjim/nui.nvim') " required by other plugins like nvim-navbuddy

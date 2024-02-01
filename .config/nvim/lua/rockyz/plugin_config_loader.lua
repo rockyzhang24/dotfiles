@@ -25,7 +25,6 @@ local modules = {
   'oil',
   'project',
   'quick-scope',
-  'registers',
   'targets',
   'treesitter',
   'treesitter-textobjects',

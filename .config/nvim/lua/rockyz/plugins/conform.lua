@@ -5,18 +5,6 @@ conform.setup({
     lua = { 'stylua' },
     c = { 'clang_format' },
     cpp = { 'clang_format' },
-    python = { 'isort', 'black' },
-    go = { 'gofumpt', 'goimports' },
-    html = { 'prettier' },
-    css = { 'prettier' },
-    less = { 'prettier' },
-    scss = { 'prettier' },
-    javascript = { 'prettier' },
-    typescript = { 'prettier' },
-    javascriptreact = { 'prettier' },
-    typescriptreact = { 'prettier' },
-    json = { 'prettier' },
-    yaml = { 'prettier' },
   },
 })
 

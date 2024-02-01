@@ -51,7 +51,7 @@ set shada=!,'500,<50,s10,h
 set synmaxcol=300
 set cindent
 set cinoptions+=g-1
-set mouse=a
+set mouse=
 set mousemodel=extend
 set list
 "

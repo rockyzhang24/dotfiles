@@ -56,7 +56,6 @@ vim.api.nvim_create_autocmd('FileType', {
     if require('nvim-treesitter.parsers').get_parser() then
       vim.wo.foldmethod = 'expr'
       vim.wo.foldexpr = 'v:lua.vim.treesitter.foldexpr()'
-      vim.wo.foldtext = 'v:lua.vim.treesitter.foldtext()'
     end
   end,
 })

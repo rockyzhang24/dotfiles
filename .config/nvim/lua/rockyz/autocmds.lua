@@ -39,14 +39,6 @@ vim.api.nvim_create_autocmd({
   end,
 })
 
--- Automatically load diagnostics into location list
-vim.api.nvim_create_autocmd({ 'DiagnosticChanged' }, {
-  group = vim.api.nvim_create_augroup('diagnostics', { clear = true }),
-  callback = function()
-    vim.diagnostic.setloclist({ open = false })
-  end,
-})
-
 -- I am using tab and leadmultispace in listchars to display the indent line. The chars for tab and
 -- leadmultispace should be updated based on whether the indentation has been changed.
 -- * If using space as indentation: set tab to a special character for denotation and leadmultispace

@@ -54,7 +54,7 @@ cmp.setup({
     ['<C-f>'] = {
       i = cmp.mapping.scroll_docs(4),
     },
-    ['<C-Space>'] = {
+    ['<C-Enter>'] = {
       i = cmp.mapping.complete(),
     },
     ['<C-e>'] = cmp.mapping({
@@ -126,43 +126,4 @@ cmp.setup({
       hl_group = 'GhostText',
     },
   },
-})
-
--- For search forward
-cmp.setup.cmdline('/', {
-  sources = {
-    {
-      name = 'buffer',
-      option = {
-        get_bufnrs = get_bufnrs,
-      },
-    },
-  },
-  view = {
-    entries = { name = 'wildmenu', separator = ' · ' },
-  },
-})
-
--- For search backward
-cmp.setup.cmdline('?', {
-  sources = {
-    {
-      name = 'buffer',
-      option = {
-        get_bufnrs = get_bufnrs,
-      },
-    },
-  },
-  view = {
-    entries = { name = 'wildmenu', separator = ' · ' },
-  },
-})
-
--- For cmdline
-cmp.setup.cmdline(':', {
-  sources = cmp.config.sources({
-    { name = 'path' },
-  }, {
-    { name = 'cmdline' },
-  }),
 })

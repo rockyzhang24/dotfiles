@@ -32,7 +32,10 @@ function M.tabline()
     elseif string.match(bufname, 'term:.*/bin/zsh') then
       name = '[Zsh]'
     else
-      name = '[' .. vim.fn.fnamemodify(bufname, ':t') ..']'
+      name = vim.fn.fnamemodify(bufname, ':t')
+      if not string.match(name, '%[.+%]$') then
+        name = '[' .. name .. ']'
+      end
     end
     table.insert(tl, name .. ' ')
     local bufmodified = vim.fn.getbufvar(bufnr, '&mod')

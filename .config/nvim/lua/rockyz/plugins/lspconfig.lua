@@ -2,7 +2,6 @@ local lspconfig = require('lspconfig')
 local util = require('lspconfig/util')
 local navic = require('nvim-navic')
 local navbuddy = require('nvim-navbuddy')
-local lightbulb = require('rockyz.lsp.lightbulb')
 
 -- Enable border for LspInfo window
 require('lspconfig.ui.windows').default_options.border = vim.g.border_style
@@ -79,7 +78,7 @@ vim.api.nvim_create_autocmd('LspAttach', {
     -- end, opts)
     -- Toggle LSP inlay hints
     if client and client.server_capabilities.inlayHintProvider then
-      vim.keymap.set('n', '<Leader>lh', function()
+      vim.keymap.set('n', '<Leader>ih', function()
         if vim.lsp.inlay_hint.is_enabled() then
           vim.lsp.inlay_hint.enable(0, false)
         else

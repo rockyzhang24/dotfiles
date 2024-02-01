@@ -62,3 +62,7 @@ alias vtg='function video_to_gif(){ ffmpeg -i $1 -pix_fmt rgb8 -r 10 -vf scale=2
 # "ranger" is an autoload function defined at ../functions/ranger
 # When quitting ranger using Z, change the shell pwd to the last visited directory
 alias ra="ranger"
+
+# inferno-flamegraph
+# https://github.com/jonhoo/inferno
+alias inferno="$HOME/gitrepos/inferno/target/release/inferno-flamegraph"

@@ -24,3 +24,11 @@ vim.api.nvim_create_user_command('DiffSplit', function(opts)
     vim.cmd('normal! gg]c')
   end
 end, { nargs = '+', complete = 'file' })
+
+-- Profiler
+vim.api.nvim_create_user_command('ProfileStart', function()
+  require('plenary.profile').start('profile.log', { flame = true })
+end, {})
+vim.api.nvim_create_user_command('ProfileStop', function()
+  require('plenary.profile').stop()
+end, {})

@@ -1,8 +1,5 @@
-source ~/.config/zsh/prompt # Powerlevel10k, should be at the top of zshrc
-
 # zsh
 source ~/.config/zsh/general
-source ~/.config/zsh/vi
 source ~/.config/zsh/completion
 source ~/.config/zsh/plugins
 source ~/.config/zsh/aliases

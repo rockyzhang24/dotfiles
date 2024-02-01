@@ -4,6 +4,8 @@
 <dict>
 	<key>AdjustWindowForFontSizeChange</key>
 	<false/>
+	<key>AllowClipboardAccess</key>
+	<true/>
 	<key>Default Bookmark Guid</key>
 	<string>B144EBFE-3D17-47F1-91BC-3D3C8CE32ABA</string>
 	<key>GlobalKeyMap</key>

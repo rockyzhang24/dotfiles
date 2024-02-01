@@ -1,4 +1,5 @@
 # Find the document for Alacritty's configuration here https://alacritty.org/config-alacritty.html
+# For all the default keybingds, run man 5 alacritty-bindings
 
 live_config_reload = true
 

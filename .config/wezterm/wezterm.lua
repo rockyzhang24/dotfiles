@@ -27,7 +27,7 @@ config.window_padding = {
 }
 
 -- Color scheme
-config.color_scheme = 'arctic'
+config.color_scheme = 'homebrew'
 
 -- Tab bar
 config.window_frame = {
@@ -46,8 +46,6 @@ wezterm.on('format-tab-title', function(tab)
 end)
 
 -- Key binding
-config.send_composed_key_when_left_alt_is_pressed = true
-config.send_composed_key_when_right_alt_is_pressed = false
 config.disable_default_key_bindings = true
 config.keys = {
   { key = 'c', mods = 'CMD', action = act.CopyTo('Clipboard') },

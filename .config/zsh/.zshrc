@@ -22,3 +22,6 @@ test -e "${ZDOTDIR}/iterm2_shell_integration.zsh" && source "${ZDOTDIR}/iterm2_s
 # zoxide
 source $HOME/.config/zoxide/zoxide-config
 eval "$(zoxide init zsh)"
+
+# Starship
+eval "$(starship init zsh)"

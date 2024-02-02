@@ -1,13 +1,15 @@
 vim.o.termguicolors = true
 vim.o.background = 'dark'
 
+-- Remove the background color for transparent background
 if vim.g.transparent then
   vim.api.nvim_create_augroup('CleanBackground', { clear = true })
   vim.api.nvim_create_autocmd({ 'ColorScheme' }, {
     group = 'CleanBackground',
     pattern = '*',
     callback = function()
-      vim.api.nvim_set_hl(0, 'Normal', { bg = 'NONE' })
+      local normal_hl = vim.api.nvim_get_hl(0, { name = 'Normal' })
+      vim.api.nvim_set_hl(0, 'Normal', { fg = normal_hl.fg, bg = 'NONE' })
     end,
   })
 end

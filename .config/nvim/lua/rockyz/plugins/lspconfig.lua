@@ -238,9 +238,11 @@ lspconfig.rust_analyzer.setup({
 lspconfig.jsonls.setup({
   capabilities = capabilities,
   settings = {
-    -- Use JSON Schema Store (SchemaStore.nvim)
-    schemas = require('schemastore').json.schemas(),
-    validate = { enable = true },
+    json = {
+      -- Use JSON Schema Store (SchemaStore.nvim)
+      schemas = require('schemastore').json.schemas(),
+      validate = { enable = true },
+    }
   },
 })
 
@@ -259,4 +261,9 @@ lspconfig.yamlls.setup({
       schemas = require('schemastore').yaml.schemas(),
     },
   },
+})
+
+-- TOML
+lspconfig.taplo.setup({
+  capabilities = capabilities,
 })

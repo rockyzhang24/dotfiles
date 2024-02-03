@@ -17,11 +17,24 @@ vim.api.nvim_create_autocmd({ 'BufWritePre' }, {
 })
 
 -- Highlight the selections on yank
+-- It conflicts with vim-illuminate, so we should toggle it before and after on_yank
+local function toggle_illuminate(state)
+  local ok, res = pcall(require, 'illuminate')
+  if not ok then
+    return
+  end
+  if state == 0 then
+    res.pause()
+  else
+    res.resume()
+  end
+end
 vim.api.nvim_create_autocmd({ 'TextYankPost' }, {
-  pattern = '*',
   group = vim.api.nvim_create_augroup('highlight_yank', { clear = true }),
   callback = function()
-    vim.highlight.on_yank({ higroup = 'Substitute', timeout = 300 })
+    toggle_illuminate(0)
+    vim.highlight.on_yank({ timeout = 300 })
+    toggle_illuminate(1)
   end,
 })
 

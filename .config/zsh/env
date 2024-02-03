@@ -54,7 +54,7 @@ export CLICOLOR=1
 export LSCOLORS='ExfxcxdxbxGxDxabagacad'
 
 # Bat
-export BAT_THEME="Visual Studio Dark+"
+export BAT_THEME="Monokai Extended"
 
 #
 # User-defined

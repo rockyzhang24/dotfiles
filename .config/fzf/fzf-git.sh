@@ -85,10 +85,11 @@ if [[ $- =~ i ]]; then
 
 # This function defines options for fzf
 _fzf_git_fzf() {
-  fzf --layout=default --multi --height=100% --min-height=20 \
+  fzf --multi \
+    --min-height=20 \
     --color='header:italic:underline' \
     --preview-window='nohidden,right,50%,border-left' \
-    --bind='ctrl-/:change-preview-window(up,50%|hidden|)' "$@"
+    --bind='ctrl-/:change-preview-window(down,50%|hidden|)' "$@"
 }
 
 # Check git repository
@@ -121,7 +122,7 @@ _fzf_git_files() {
    git ls-files | grep -vxFf <(git status -s | grep '^[^?]' | cut -c4-; echo :) | sed 's/^/   /') |
   _fzf_git_fzf -m --ansi --nth 2..,.. \
     --prompt '📁 Files> ' \
-    --header $'CTRL-O (open in browser), ALT-E (open in editor)\n\n' \
+    --header $':: CTRL-O (open in browser), ALT-E (open in editor)\n\n' \
     --bind "ctrl-o:execute-silent:bash $__fzf_git file {-1}" \
     --bind "alt-e:execute:${EDITOR:-vim} {-1} > /dev/tty" \
     --preview "git diff --no-ext-diff --color=always -- {-1} | sed 1,4d; $_fzf_git_cat {-1}" "$@" |
@@ -151,7 +152,7 @@ _fzf_git_tags() {
   git tag --sort -version:refname |
   _fzf_git_fzf --preview-window right,70% \
     --prompt '📛 Tags> ' \
-    --header $'CTRL-O (open in browser)\n\n' \
+    --header $':: CTRL-O (open in browser)\n\n' \
     --bind "ctrl-o:execute-silent:bash $__fzf_git tag {}" \
     --preview 'git show --color=always {}' "$@"
 }
@@ -162,7 +163,7 @@ _fzf_git_hashes() {
   git log --date=short --format="%C(green)%C(bold)%cd %C(auto)%h%d %s (%an)" --graph --color=always |
   _fzf_git_fzf --ansi --no-sort --bind 'ctrl-s:toggle-sort' \
     --prompt '🍡 Hashes> ' \
-    --header $'CTRL-O (open in browser), CTRL-D (diff), CTRL-S (toggle sort)\n\n' \
+    --header $':: CTRL-O (open in browser), CTRL-D (diff), CTRL-S (toggle sort)\n\n' \
     --bind "ctrl-o:execute-silent:bash $__fzf_git commit {}" \
     --bind 'ctrl-d:execute:grep -o "[a-f0-9]\{7,\}" <<< {} | head -n 1 | xargs git diff > /dev/tty' \
     --color hl:underline,hl+:underline \
@@ -176,7 +177,7 @@ _fzf_git_remotes() {
   git remote -v | awk '{print $1 "\t" $2}' | uniq |
   _fzf_git_fzf --tac \
     --prompt '📡 Remotes> ' \
-    --header $'CTRL-O (open in browser)\n\n' \
+    --header $':: CTRL-O (open in browser)\n\n' \
     --bind "ctrl-o:execute-silent:bash $__fzf_git remote {1}" \
     --preview-window right,70% \
     --preview 'git log --oneline --graph --date=short --color=always --pretty="format:%C(auto)%cd %h%d %s" {1}/"$(git rev-parse --abbrev-ref HEAD)"' "$@" |
@@ -188,7 +189,7 @@ _fzf_git_stashes() {
   _fzf_git_check || return
   git stash list | _fzf_git_fzf \
     --prompt '🥡 Stashes> ' \
-    --header $'CTRL-X (drop stash)\n\n' \
+    --header $':: CTRL-X (drop stash)\n\n' \
     --bind 'ctrl-x:execute-silent(git stash drop {1})+reload(git stash list)' \
     -d: --preview 'git show --color=always {1}' "$@" |
   cut -d: -f1

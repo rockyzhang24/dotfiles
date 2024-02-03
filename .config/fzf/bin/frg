@@ -43,7 +43,7 @@ fi
 rg_prefix="rg --line-number --column --color=always --smart-case --vimgrep $RG_EXCLUDE $extra_opts "
 
 selections="$(: | fzf \
-  --height 100% \
+  --height 80% \
   --ansi \
   --disabled \
   --query "$initial_query" \

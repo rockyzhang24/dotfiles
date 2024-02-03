@@ -2,17 +2,7 @@ local M = {}
 
 local devicon = require('nvim-web-devicons')
 local navic = require('nvim-navic')
-
-local icons = {
-  folder = ' ',
-  delimiter = '',
-  ellipsis = '…',
-  quickfix = ' ',
-  source_control = ' ',
-  outline = ' ',
-  explorer = ' ',
-  term = ' ',
-}
+local icons = require('rockyz.icons').winbar
 
 local function get_win_num()
   local win_num = vim.api.nvim_win_get_number(0)

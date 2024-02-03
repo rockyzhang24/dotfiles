@@ -31,4 +31,15 @@ icons.codicon = {
 
 icons.lightbulb = ''
 
+icons.winbar = {
+  folder = ' ',
+  delimiter = '',
+  ellipsis = ' ',
+  quickfix = ' ',
+  source_control = ' ',
+  outline = ' ',
+  explorer = ' ',
+  term = ' ',
+}
+
 return icons

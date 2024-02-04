@@ -27,7 +27,7 @@ config.window_padding = {
 }
 
 -- Color scheme
-config.color_scheme = 'homebrew'
+config.color_scheme = 'matrix'
 
 -- Tab bar
 config.window_frame = {

@@ -84,7 +84,7 @@ local function lightbulb_update(scrolled)
   local row_offset = get_row_offset()
   local col_offset = get_col_offset()
   local bulb_linenr = vim.fn.line('.') + row_offset
-  -- To avoid bulb flickering: don't refresh the bulb when moving in a line
+  -- To avoid bulb flickering: don't refresh the bulb when moving the cursor within a same line
   if bulb_bufnr ~= nil and bulb_linenr == prev_bulb_linenr and not scrolled then
     return
   end
@@ -133,13 +133,11 @@ end
 vim.api.nvim_create_augroup('lightbulb', { clear = true })
 vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
   group = 'lightbulb',
-  pattern = '*',
   callback = lightbulb,
 })
 -- The bulb should be updated when scrolling the window
 vim.api.nvim_create_autocmd({ 'WinScrolled' }, {
   group = 'lightbulb',
-  pattern = '*',
   callback = function()
     local winid = vim.api.nvim_get_current_win()
     local event = vim.v.event[tostring(winid)]
@@ -147,4 +145,12 @@ vim.api.nvim_create_autocmd({ 'WinScrolled' }, {
       lightbulb_update(true)
     end
   end,
+})
+-- If we open a terminal (:term) and automatically enters INSERT mode, the bulb won't be removed. So
+-- if the terminal is opened in the current buffer, the bulb will show in the terminal.
+vim.api.nvim_create_autocmd({ 'TermOpen' }, {
+  group = 'lightbulb',
+  callback = function()
+    lightbulb_remove()
+  end
 })

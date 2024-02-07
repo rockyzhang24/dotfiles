@@ -21,6 +21,7 @@ export PATH=/opt/homebrew/opt/llvm/bin:$PATH  # Use the latest llvm instead of m
 
 # Use Neovim as "preferred editor"
 export EDITOR="nvim"
+export VISUAL="$EDITOR"
 
 # Use Neovim as man pager
 export MANPAGER="nvim +Man!"
@@ -54,7 +55,7 @@ export CLICOLOR=1
 export LSCOLORS='ExfxcxdxbxGxDxabagacad'
 
 # Bat
-export BAT_THEME="Monokai Extended"
+export BAT_THEME="Dracula"
 
 #
 # User-defined

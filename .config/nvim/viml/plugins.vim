@@ -22,7 +22,6 @@ function! s:PackInit() abort
   call minpac#add('kevinhwang91/nvim-bqf')
   call minpac#add('othree/eregex.vim')
   call minpac#add('MunifTanjim/nui.nvim') " required by other plugins like nvim-navbuddy
-  call minpac#add('andymass/vim-matchup')
   call minpac#add('wellle/targets.vim')
   call minpac#add('unblevable/quick-scope')
   call minpac#add('danymat/neogen')

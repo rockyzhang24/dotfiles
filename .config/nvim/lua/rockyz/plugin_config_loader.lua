@@ -38,7 +38,6 @@ local modules = {
   'vim-gh-line',
   'vim-grepper',
   'vim-illuminate',
-  'vim-matchup',
 }
 
 for _, module in ipairs(modules) do

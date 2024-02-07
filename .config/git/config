@@ -5,6 +5,9 @@
   excludesfile = /Users/rockyzhang/.gitignore_global
   pager = delta
   commentchar = ";"
+  editor = nvim
+[init]
+  defaultBranch = main
 [alias]
   tree = log --all --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr, %ad) %C(bold blue)<%an>%Creset' --abbrev-commit --date=short
 [interactive]
@@ -44,7 +47,6 @@
   required = true
 [credential]
   helper = osxkeychain
-
 ; Use neovim as git diff and merge tool
 [diff]
   tool = nvimdiff

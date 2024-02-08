@@ -30,7 +30,7 @@ telescope.setup({
         ['<C-Enter>'] = 'toggle_selection',
         ['<C-r>'] = 'to_fuzzy_refine',
         ['<C-/>'] = require('telescope.actions.layout').toggle_preview,
-        ['<C-_>'] = require('telescope.actions.layout').toggle_preview,
+        ['<C-_>'] = require('telescope.actions.layout').toggle_preview, -- alacritty uses <C-_> as <C-/>
         ['<C-h>'] = 'which_key',
         ['<Esc>'] = 'close',
         ['<C-c>'] = { '<Esc>', type = 'command' },

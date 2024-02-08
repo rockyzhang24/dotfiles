@@ -17,7 +17,7 @@ require('bqf').setup({
     sclear = 'c',
     pscrollup = '<M-u>',
     pscrolldown = '<M-d>',
-    ptoggleauto = '<C-_>',
+    ptoggleauto = '<C-/>',
   },
   filter = {
     fzf = {
@@ -30,6 +30,7 @@ require('bqf').setup({
         '│',
         '--preview-window',
         'default',
+        '--reverse',
       },
     },
   },

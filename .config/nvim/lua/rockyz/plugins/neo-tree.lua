@@ -131,7 +131,7 @@ require('neo-tree').setup({
         [']g'] = 'next_git_modified',
         ['.'] = 'set_root',
         ['<BS>'] = 'navigate_up',
-        ['zh'] = 'toggle_hidden',
+        ['z.'] = 'toggle_hidden',
         ['/'] = 'fuzzy_finder',
         ['f'] = 'filter_on_submit',
         ['<C-c>'] = 'clear_filter',

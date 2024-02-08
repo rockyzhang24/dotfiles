@@ -41,7 +41,7 @@ require('nvim-tree').setup({
         { key = '<BS>', action = 'dir_up' },
         { key = '.', action = 'cd' },
         { key = 'zi', action = 'toggle_ignored' }, -- toggle visibility of files or directories in filters.custom list
-        { key = 'zh', action = 'toggle_dotfiles' },
+        { key = 'z.', action = 'toggle_dotfiles' },
         { key = 'T', action = 'trash' },
         { key = 'd', action = 'remove' },
         { key = 'yy', action = 'copy' },

@@ -45,11 +45,11 @@ I assign the key mappings rationally aiming to make them efficient and easy to r
 
 * Multiple leader keys
 
-  In addition to `<Space>` that is the general leader key, `,` is set as the leader key for git.
+  In addition to `<Space>` that is the general leader key, `,` serves as the leader key for git, while `<BS>` functions as the leader key for toggling.
 
 * Mnemonic
 
-  Key bindings are organized using mnemonic prefixes like `<Leader>b` for buffer, `<Leader>f` for fuzzy finder, `<Leader>w` for window, etc.
+  Key bindings are organized using mnemonic prefixes like `<Leader>b` for buffer, `<Leader>f` for fuzzy finder, `<Leader>w` for window, and so forth.
 
 * Consistent
 

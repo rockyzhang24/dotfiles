@@ -4,8 +4,8 @@ require('aerial').setup({
     local buf_map = function(mode, lhs, rhs)
       vim.keymap.set(mode, lhs, rhs, { buffer = bufnr })
     end
-    -- Toggle aerial window (o for outline)
-    buf_map('n', '<Leader>o', '<Cmd>AerialToggle!<CR>')
+    -- Toggle aerial window (s for symbols)
+    buf_map('n', '<BS>s', '<Cmd>AerialToggle!<CR>')
     -- Jump forwards/backwards
     buf_map('n', '[s', '<cmd>AerialPrev<CR>')
     buf_map('n', ']s', '<cmd>AerialNext<CR>')

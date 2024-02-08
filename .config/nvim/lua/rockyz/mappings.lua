@@ -115,11 +115,11 @@ vim.keymap.set('n', 'qD', [[<Cmd>tabdo lua require("rockyz.utils").close_diff()<
 -- Search within selected range
 vim.keymap.set('x', '/', '<Esc>/\\%V')
 -- Clean search highlighting and update diff if needed
-vim.keymap.set('n', '<BS>', function()
+vim.keymap.set('n', '<Esc>', function()
   if vim.v.hlsearch then
     return ":<C-u>nohlsearch<C-R>=has('diff')?'<Bar>diffupdate':''<CR><CR>"
   else
-    return '<BS>'
+    return '<Esc>'
   end
 end, { expr = true, silent = true })
 

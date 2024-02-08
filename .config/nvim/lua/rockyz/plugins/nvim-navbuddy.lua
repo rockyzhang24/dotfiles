@@ -64,7 +64,8 @@ navbuddy.setup({
     ['J'] = actions.move_down(),
 
     -- Toggle the preview
-    ['<C-_>'] = actions.toggle_preview(),
+    ['<C-/>'] = actions.toggle_preview(),
+    ['<C-_>'] = actions.toggle_preview(), -- alacritty uses <C-_> as <C-/>
 
     -- Open selected node in split
     ['<C-v>'] = actions.vsplit(),

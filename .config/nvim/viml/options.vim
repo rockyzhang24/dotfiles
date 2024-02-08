@@ -86,6 +86,11 @@ exec 'nohlsearch'
 let g:tex_flavor = 'latex'
 " Soft wrap in Man page
 let g:man_hardwrap = 0
+" Disable health checks for these providers
+let g:loaded_python3_provider = 0
+let g:loaded_ruby_provider = 0
+let g:loaded_perl_provider = 0
+let g:loaded_node_provider = 0
 " Netrw
 let g:netrw_banner = 0
 let g:netrw_winsize = 25

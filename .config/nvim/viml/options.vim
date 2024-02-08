@@ -86,3 +86,7 @@ exec 'nohlsearch'
 let g:tex_flavor = 'latex'
 " Soft wrap in Man page
 let g:man_hardwrap = 0
+" Netrw
+let g:netrw_banner = 0
+let g:netrw_winsize = 25
+let g:netrw_localcopydircmd = 'cp -r'

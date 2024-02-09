@@ -27,29 +27,21 @@ vim.keymap.set('n', 'zh', '10zh')
 vim.keymap.set('n', 'zl', '10zl')
 -- Visual select all
 vim.keymap.set('n', '<M-a>', 'VggoG')
--- Smart j
+-- Smart jk
+local function smart_jk(jk)
+  if vim.v.count ~= 0 then
+    if vim.v.count > 5 then
+      return "m'" .. vim.v.count .. jk
+    end
+    return jk
+  end
+  return 'g' .. jk
+end
 vim.keymap.set('n', 'j', function()
-  if vim.v.count ~= 0 then
-    local ret = 'j'
-    if vim.v.count > 5 then
-      ret = "m'" .. vim.v.count .. 'j'
-    end
-    return ret
-  else
-    return 'gj'
-  end
+  return smart_jk('j')
 end, { expr = true })
--- Smart k
 vim.keymap.set('n', 'k', function()
-  if vim.v.count ~= 0 then
-    local ret = 'k'
-    if vim.v.count > 5 then
-      ret = "m'" .. vim.v.count .. 'k'
-    end
-    return ret
-  else
-    return 'gk'
-  end
+  return smart_jk('k')
 end, { expr = true })
 -- Smart dd: use blackhole register if we delete empty line by dd
 vim.keymap.set('n', 'dd', function()
@@ -88,9 +80,24 @@ vim.keymap.set('n', 'U', "<Cmd>execute 'earlier ' .. vim.v.count1 .. 'f'<CR>")
 vim.keymap.set('n', '<M-r>', "<Cmd>execute 'later ' .. vim.v.count1 .. 'f'<CR>")
 -- Macro
 vim.keymap.set({ 'n', 'x' }, '<Leader>m', 'q')
--- Open quickfix or location list
-vim.keymap.set('n', '<Leader>qq', '<Cmd>copen<CR>')
-vim.keymap.set('n', '<Leader>ll', '<Cmd>lopen<CR>')
+-- Toggle the quickfix window
+vim.keymap.set('n', '<BS>q', function()
+  if vim.fn.getqflist({ winid = 0 }).winid ~= 0 then
+    vim.cmd.cclose()
+  elseif #vim.fn.getqflist() > 0 then
+    vim.cmd.copen()
+    vim.cmd.wincmd('p')
+  end
+end)
+-- Toggle the location list window
+vim.keymap.set('n', '<BS>l', function()
+  if vim.fn.getloclist(0, { winid = 0 }).winid ~= 0 then
+    vim.cmd.lclose()
+  elseif #vim.fn.getloclist(0) > 0 then
+    vim.cmd.lopen()
+    vim.cmd.wincmd('p')
+  end
+end)
 
 --
 -- Quit and close

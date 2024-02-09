@@ -17,7 +17,6 @@ local modules = {
   'luasnip',
   'lspconfig',
   'neogen',
-  'netrw',
   'nvim-colorizer',
   'nvim-navic',
   'nvim-navbuddy',

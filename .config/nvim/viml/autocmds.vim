@@ -71,8 +71,8 @@ function! s:SetGitEnv() abort
   endif
   let git_dir = expand('~/dotfiles')
   let work_tree = expand('~')
-  let jib = jobstart(["git", "--git-dir", git_dir, "--work-tree", work_tree, "ls-files", "--error-unmatch", cur_file])
-  let ret = jobwait([jib])[0]
+  let jid = jobstart(["git", "--git-dir", git_dir, "--work-tree", work_tree, "ls-files", "--error-unmatch", cur_file])
+  let ret = jobwait([jid])[0]
   if ret == 0
     let $GIT_DIR = git_dir
     let $GIT_WORK_TREE = work_tree

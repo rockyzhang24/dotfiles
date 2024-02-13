@@ -1,7 +1,7 @@
 # Homebrew color from iTerm2
 
 [colors]
-foreground = '#008f11'
+foreground = '#1ca152'
 background = '#000000'
 cursor_fg = '#ff261d'
 cursor_bg = '#07f91d'

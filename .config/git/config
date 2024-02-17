@@ -8,6 +8,10 @@
   editor = nvim
 [init]
   defaultBranch = main
+[commit]
+  verbose = true
+[branch]
+  sort = -committerdate
 [alias]
   tree = log --all --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr, %ad) %C(bold blue)<%an>%Creset' --abbrev-commit --date=short
 [interactive]
@@ -51,12 +55,15 @@
 [diff]
   tool = nvimdiff
   colorMoved = default
+  algorithm = histogram
 [difftool]
   prompt = false
 [difftool "nvimdiff"]
   cmd = nvim -d $LOCAL $REMOTE
 [merge]
   tool = nvimdiff
+  ; Reference on zdiff3: https://ductile.systems/zdiff3/
+  conflictStyle = zdiff3
 [mergetool]
   prompt = true
 [mergetool "nvimdiff"]

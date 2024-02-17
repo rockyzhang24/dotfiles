@@ -57,6 +57,11 @@ M.winbar = function()
   -- File path
   local path = vim.fn.expand('%:~:.:h')
   if path ~= '' and path ~= '.' then
+    if vim.api.nvim_win_get_width(0) < math.floor(vim.o.columns / 3) then
+      path = vim.fn.pathshorten(path)
+    else
+      path = path:gsub('^~', 'HOME'):gsub('^/', 'ROOT/'):gsub('/', ' ' .. icons.delimiter .. ' ')
+    end
     local colored_folder = '%#Directory#' .. icons.folder .. '%*'
     contents = contents .. ' ' .. colored_folder .. ' ' .. path .. ' ' .. icons.delimiter
   end

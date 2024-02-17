@@ -32,7 +32,7 @@ icons.codicon = {
 icons.lightbulb = ''
 
 icons.winbar = {
-  folder = ' ',
+  folder = ' ',
   delimiter = '',
   ellipsis = ' ',
   quickfix = ' ',

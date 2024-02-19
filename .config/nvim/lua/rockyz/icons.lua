@@ -42,4 +42,33 @@ icons.winbar = {
   term = ' ',
 }
 
+icons.diagnostics = {
+  ERROR = ' ',
+  WARN = ' ',
+  HINT = ' ',
+  INFO = ' ',
+}
+
+icons.git = {
+  branch = ' ',
+  added = ' ',
+  modified = ' ',
+  removed = ' ',
+}
+
+icons.separators = {
+  chevron_left = '',
+  chevron_right = '',
+  triangle_left = '',
+  triangle_right = '',
+}
+
+icons.misc = {
+  logo = '󰀘 ',
+  search = ' ',
+  disconnect = ' ',
+  edit = ' ',
+  indent = ' ',
+}
+
 return icons

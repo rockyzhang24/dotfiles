@@ -1,4 +1,7 @@
--- Some functions are highly inspired by LunarVim
+local diagnostic_icons = require('rockyz.icons').diagnostics
+local git_icons = require('rockyz.icons').git
+local separator_icons = require('rockyz.icons').separators
+local misc_icons = require('rockyz.icons').misc
 
 local colors = {
   white = '#ffffff',
@@ -11,7 +14,7 @@ local colors = {
 -- Format for mode: only show the first char (or first two chars to distinguish
 -- different VISUALs)
 local function simplifiedMode(str)
-  return '󰀘 ' .. (str == 'V-LINE' and 'VL' or (str == 'V-BLOCK' and 'VB' or str:sub(1, 1)))
+  return misc_icons.logo .. (str == 'V-LINE' and 'VL' or (str == 'V-BLOCK' and 'VB' or str:sub(1, 1)))
 end
 
 -- Format for filename: show the filename and the filesize
@@ -81,8 +84,14 @@ require('lualine').setup({
   options = {
     icons_enabled = true,
     theme = 'arctic',
-    component_separators = { left = '', right = '' },
-    section_separators = { left = '', right = '' },
+    component_separators = {
+      left = separator_icons.chevron_right,
+      right = separator_icons.chevron_left,
+    },
+    section_separators = {
+      left = separator_icons.triangle_right,
+      right = separator_icons.triangle_left,
+    },
     disabled_filetypes = {
     },
     always_divide_middle = true,
@@ -99,14 +108,18 @@ require('lualine').setup({
       -- Git branch (fetched from gitsigns.nvim)
       {
         'b:gitsigns_head',
-        icon = { '', color = { fg = colors.yellow } },
+        icon = { git_icons.branch, color = { fg = colors.yellow } },
       },
     },
     lualine_c = {
       -- Git diff (use gitsigns.nvim as its source)
       {
         'diff',
-        symbols = { added = ' ', modified = ' ', removed = ' ' },
+        symbols = {
+          added = git_icons.added,
+          modified = git_icons.modified,
+          removed = git_icons.removed,
+        },
         source = function()
           local status = vim.b.gitsigns_status_dict
           if status then
@@ -142,7 +155,7 @@ require('lualine').setup({
         fmt = function(str)
           local cnt = string.match(str, '(%d+/%d+)')
           if cnt ~= nil then
-            return ' ' .. cnt
+            return misc_icons.search .. cnt
           end
           return ''
         end,
@@ -152,7 +165,12 @@ require('lualine').setup({
       {
         'diagnostics',
         sources = { 'nvim_diagnostic' },
-        symbols = { error = ' ', warn = ' ', info = ' ', hint = ' ' },
+        symbols = {
+          error = diagnostic_icons.ERROR,
+          warn = diagnostic_icons.WARN,
+          info = diagnostic_icons.INFO,
+          hint = diagnostic_icons.HINT,
+        },
         cond = function()
           return not vim.diagnostic.is_disabled()
         end,
@@ -160,7 +178,7 @@ require('lualine').setup({
       -- Show a symbol when diagnostic is off
       {
         function()
-          return ' '
+          return misc_icons.disconnect
         end,
         color = { fg = colors.red },
         cond = function()
@@ -170,7 +188,7 @@ require('lualine').setup({
       -- Show a symbol when spell is on
       {
         function()
-          return vim.o.spell and ' ' or ''
+          return vim.o.spell and misc_icons.edit or ''
         end,
         color = { fg = colors.green },
       },
@@ -196,7 +214,7 @@ require('lualine').setup({
       },
       {
         indent,
-        icon = { '', color = { fg = colors.yellow } },
+        icon = { misc_icons.indent, color = { fg = colors.yellow } },
         cond = hide_in_width,
       },
     },

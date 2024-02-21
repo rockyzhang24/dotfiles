@@ -30,7 +30,6 @@ local modules = {
   'treesj',
   'telescope',
   'telescope-tabs',
-  'test',
   'undotree',
   'vim-asterisk',
   'vim-flog',

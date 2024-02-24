@@ -1,3 +1,5 @@
+local M = {}
+
 --
 -- Get diagnostics (LSP Diagnostic[]) whose range overlap the current cursor position
 --
@@ -16,8 +18,6 @@
 -- Diagnostic[] can be used as context.diagnostics when calling vim.lsp.buf.code_action() or sending
 -- a textDocument/codeAction request to the server.
 --
-
-local M = {}
 
 ---@return table # A table of LSP Diagnostic, i.e., LSP Diagnostic[]
 function M.get_diagnostics_under_cursor()

@@ -59,7 +59,7 @@ vim.keymap.set('n', 'i', function()
     return 'i'
   end
 end, { expr = true })
--- Remove the trailing whitespaces in the whole buffer or just the selected lines
+-- Remove the trailing whitespaces in the selected lines or the whole buffer
 vim.keymap.set(
   'n',
   '<Leader>$',
@@ -98,6 +98,8 @@ vim.keymap.set('n', '<BS>l', function()
     vim.cmd.wincmd('p')
   end
 end)
+-- Format the whole buffer and preserve the cursor position
+vim.keymap.set('n', 'gQ', 'mzgggqG`z<Cmd>delmarks z<CR>')
 
 --
 -- Quit and close
@@ -316,6 +318,7 @@ function M.other_win_scroll(mode)
   end
   vim.cmd('noautocmd silent! wincmd p')
 end
+
 vim.keymap.set('n', '<M-u>', "<Cmd>lua require('rockyz.mappings').other_win_scroll(1)<CR>")
 vim.keymap.set('n', '<M-d>', "<Cmd>lua require('rockyz.mappings').other_win_scroll(2)<CR>")
 vim.keymap.set('i', '<M-u>', "<C-\\><C-o><Cmd>lua require('rockyz.mappings').other_win_scroll(1)<CR>")

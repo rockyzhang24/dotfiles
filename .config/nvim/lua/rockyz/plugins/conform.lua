@@ -1,3 +1,6 @@
+-- Use conform for gq
+vim.o.formatexpr = "v:lua.require('conform').formatexpr()"
+
 local conform = require('conform')
 
 conform.setup({
@@ -5,9 +8,12 @@ conform.setup({
     lua = { 'stylua' },
     c = { 'clang_format' },
     cpp = { 'clang_format' },
+    sh = { 'shfmt' },
+  },
+  formatters = {
+    shfmt = {
+      -- Use 2 spaces as indentation
+      prepend_args = { '-i', '2' },
+    },
   },
 })
-
-vim.keymap.set({ 'n', 'x' }, '<Leader>F', function()
-  conform.format({ lsp_fallback = true })
-end)

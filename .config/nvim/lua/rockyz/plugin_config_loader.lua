@@ -21,7 +21,6 @@ local modules = {
   'nvim-navic',
   'nvim-navbuddy',
   'nvim-ts-context-commentstring',
-  'oil',
   'project',
   'quick-scope',
   'targets',

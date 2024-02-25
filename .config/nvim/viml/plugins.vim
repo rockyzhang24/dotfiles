@@ -25,7 +25,6 @@ function! s:PackInit() abort
   call minpac#add('wellle/targets.vim')
   call minpac#add('unblevable/quick-scope')
   call minpac#add('danymat/neogen')
-  call minpac#add('stevearc/oil.nvim')
   call minpac#add('stevearc/conform.nvim')
   call minpac#add('Wansmer/treesj')
   call minpac#add('willothy/flatten.nvim')

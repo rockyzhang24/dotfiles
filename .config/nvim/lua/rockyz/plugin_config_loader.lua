@@ -32,7 +32,6 @@ local modules = {
   'undotree',
   'vim-asterisk',
   'vim-flog',
-  'vim-gh-line',
   'vim-grepper',
   'vim-illuminate',
 }

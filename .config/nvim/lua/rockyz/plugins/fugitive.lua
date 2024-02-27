@@ -37,6 +37,8 @@ vim.keymap.set('n', ',e', ':Gedit<CR>', { silent = true })
 vim.keymap.set('n', ',r', ':Gread<CR>', { silent = true })
 vim.keymap.set('n', ',w', ':Gwrite<CR>', { silent = true })
 vim.keymap.set('n', ',b', ':Git blame -w<Bar>wincmd p<CR>', { silent = true })
+vim.keymap.set({ 'n', 'x' }, ',B', ':GBrowse')
+
 vim.keymap.set('n', ',,', ':diffget //2<CR>', { silent = true })
 vim.keymap.set('n', ',.', ':diffget //3<CR>', { silent = true })
 

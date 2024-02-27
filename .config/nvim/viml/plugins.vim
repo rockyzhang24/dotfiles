@@ -68,7 +68,6 @@ function! s:PackInit() abort
   call minpac#add('lewis6991/gitsigns.nvim')
   call minpac#add('tpope/vim-fugitive')
   call minpac#add('tpope/vim-rhubarb')  " vim-fugitive's companion for :GBrowse
-  call minpac#add('ruanyl/vim-gh-line')
   call minpac#add('rbong/vim-flog')
 
   " Icons

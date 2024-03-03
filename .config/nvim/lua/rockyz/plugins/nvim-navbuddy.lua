@@ -1,6 +1,6 @@
 local navbuddy = require('nvim-navbuddy')
 local actions = require('nvim-navbuddy.actions')
-local codicon = require('rockyz.icons').codicon
+local symbol_kinds = require('rockyz.icons').symbol_kinds
 
 navbuddy.setup({
   window = {
@@ -15,7 +15,7 @@ navbuddy.setup({
       branch = ' ',
     },
   },
-  icons = codicon,
+  icons = symbol_kinds,
   use_default_mappings = false,
   mappings = {
     -- Close and cursor to the original location

@@ -1,9 +1,8 @@
 local navic = require('nvim-navic')
-local codicon = require('rockyz.icons').codicon
+local symbol_kinds = require('rockyz.icons').symbol_kinds
 
 navic.setup({
-  -- Use codicon (VSCode like icons)
-  icons = codicon,
+  icons = symbol_kinds,
   highlight = true,
   separator = '  ',
 })

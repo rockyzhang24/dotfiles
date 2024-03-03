@@ -1,6 +1,6 @@
 local icons = {}
 
-icons.codicon = {
+icons.symbol_kinds = {
   -- Predefined in CompletionItemKind from runtime/lua/vim/lsp/protocl.lua
   Text = ' ',
   Method = ' ',

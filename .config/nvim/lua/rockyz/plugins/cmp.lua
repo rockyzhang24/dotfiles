@@ -1,7 +1,7 @@
 local cmp = require('cmp')
 local feedkeys = require('cmp.utils.feedkeys')
 local keymap = require('cmp.utils.keymap')
-local symbol_kinds = require('rockyz.icons').codicon
+local symbol_kinds = require('rockyz.icons').symbol_kinds
 
 -- Disable buffer source for large file
 local large_file_disable = function()

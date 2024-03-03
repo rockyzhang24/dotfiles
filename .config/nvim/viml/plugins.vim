@@ -50,8 +50,6 @@ function! s:PackInit() abort
   call minpac#add('hrsh7th/cmp-buffer')
   call minpac#add('hrsh7th/cmp-path')
   call minpac#add('hrsh7th/cmp-cmdline')
-  call minpac#add('hrsh7th/cmp-nvim-lua')
-  call minpac#add('onsails/lspkind.nvim')
 
   " Snippets
   call minpac#add('L3MON4D3/LuaSnip')

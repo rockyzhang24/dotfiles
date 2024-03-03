@@ -1,13 +1,13 @@
 local cmp = require('cmp')
-local lspkind = require('lspkind')
 local feedkeys = require('cmp.utils.feedkeys')
 local keymap = require('cmp.utils.keymap')
+local symbol_kinds = require('rockyz.icons').codicon
 
-local get_bufnrs = function()
+-- Disable buffer source for large file
+local large_file_disable = function()
   local buf = vim.api.nvim_get_current_buf()
   local byte_size = vim.api.nvim_buf_get_offset(buf, vim.api.nvim_buf_line_count(buf))
-  -- Disable buffer source for large file (1MB)
-  if byte_size > 1024 * 1024 then
+  if byte_size > 1024 * 1024 then -- 1MB
     return {}
   end
   return { buf }
@@ -30,12 +30,13 @@ cmp.setup({
     completion = {
       winhighlight = winhighlight,
       border = vim.g.border_style,
-      col_offset = 2,
     },
     documentation = {
       winhighlight = winhighlight,
       border = vim.g.border_style,
       focusable = true,
+      max_height = math.floor(vim.o.lines * 0.5),
+      max_width = math.floor(vim.o.columns * 0.4),
     },
   },
   -- Mappings
@@ -83,8 +84,6 @@ cmp.setup({
     },
   },
   sources = cmp.config.sources({
-    -- The order of the sources gives them priority, or use priority = xxx to specify it.
-    { name = 'nvim_lua' }, -- nvim_lua make it only be enabled for Lua filetype
     {
       name = 'nvim_lsp',
       -- Filter out snippets from LSP
@@ -93,27 +92,31 @@ cmp.setup({
       -- end,
     },
     { name = 'luasnip' },
+  }, {
     {
       name = 'buffer',
       option = {
-        get_bufnrs = get_bufnrs,
+        get_bufnrs = large_file_disable,
       },
     },
     { name = 'path' },
   }),
   formatting = {
-    -- Icons
-    format = lspkind.cmp_format({
-      mode = 'symbol',
-      preset = 'codicons',
-      menu = {
-        buffer = '[Buf]',
-        nvim_lsp = '[LSP]',
-        luasnip = '[Snip]',
-        nvim_lua = '[Vim]',
-        path = '[Path]',
-      },
-    }),
+    format = function(_, vim_item)
+      local MAX_ABBR_WIDTH, MAX_MENU_WIDTH = 25, 30
+      local ellipsis = require('rockyz.icons').misc.ellipsis
+      -- Add the icon
+      vim_item.kind = string.format('%s %s', symbol_kinds[vim_item.kind] or symbol_kinds.Text, vim_item.kind)
+      -- Truncate the label
+      if vim.api.nvim_strwidth(vim_item.abbr) > MAX_ABBR_WIDTH then
+        vim_item.abbr = vim.fn.strcharpart(vim_item.abbr, 0, MAX_ABBR_WIDTH) .. ellipsis
+      end
+      -- Truncate the description part
+      if vim.api.nvim_strwidth(vim_item.menu or '') > MAX_MENU_WIDTH then
+        vim_item.menu = vim.fn.strcharpart(vim_item.menu, 0, MAX_MENU_WIDTH) .. ellipsis
+      end
+      return vim_item
+    end,
     -- Adjust the order of completion menu fields
     fields = {
       'kind',
@@ -134,12 +137,12 @@ cmp.setup.cmdline('/', {
     {
       name = 'buffer',
       option = {
-        get_bufnrs = get_bufnrs,
+        get_bufnrs = large_file_disable,
       },
     },
   },
   view = {
-    entries = { name = 'wildmenu', separator = ' · ' },
+    entries = { name = 'wildmenu', separator = ' | ' },
   },
 })
 
@@ -149,12 +152,12 @@ cmp.setup.cmdline('?', {
     {
       name = 'buffer',
       option = {
-        get_bufnrs = get_bufnrs,
+        get_bufnrs = large_file_disable,
       },
     },
   },
   view = {
-    entries = { name = 'wildmenu', separator = ' · ' },
+    entries = { name = 'wildmenu', separator = ' | ' },
   },
 })
 

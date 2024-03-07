@@ -1,5 +1,5 @@
 # Reference: https://github.com/junegunn/fzf-git.sh/blob/main/fzf-git.sh
-# till the commits on Dec 17 2023
+# till the commits 2b93e95 on 2/16/2024
 
 [[ $0 = - ]] && return
 
@@ -142,7 +142,7 @@ _fzf_git_branches() {
     --bind 'ctrl-/:change-preview-window(down,70%|hidden|)' \
     --bind "ctrl-o:execute-silent:bash $__fzf_git branch {}" \
     --bind "alt-a:change-prompt(🌳 All branches> )+reload:bash \"$__fzf_git\" all-branches" \
-    --preview 'git log --oneline --graph --date=short --color=always --pretty="format:%C(auto)%cd %h%d %s" $(sed s/^..// <<< {} | cut -d" " -f1)' "$@" |
+    --preview 'git log --oneline --graph --date=short --color=always --pretty="format:%C(auto)%cd %h%d %s" $(sed s/^..// <<< {} | cut -d" " -f1) --' "$@" |
   sed 's/^..//' | cut -d' ' -f1
 }
 
@@ -180,7 +180,7 @@ _fzf_git_remotes() {
     --header $':: CTRL-O (open in browser)\n\n' \
     --bind "ctrl-o:execute-silent:bash $__fzf_git remote {1}" \
     --preview-window right,70% \
-    --preview 'git log --oneline --graph --date=short --color=always --pretty="format:%C(auto)%cd %h%d %s" {1}/"$(git rev-parse --abbrev-ref HEAD)"' "$@" |
+    --preview 'git log --oneline --graph --date=short --color=always --pretty="format:%C(auto)%cd %h%d %s" {1}/"$(git rev-parse --abbrev-ref HEAD)" --' "$@" |
   cut -d$'\t' -f1
 }
 
@@ -190,7 +190,7 @@ _fzf_git_stashes() {
   git stash list | _fzf_git_fzf \
     --prompt '🥡 Stashes> ' \
     --header $':: CTRL-X (drop stash)\n\n' \
-    --bind 'ctrl-x:execute-silent(git stash drop {1})+reload(git stash list)' \
+    --bind 'ctrl-x:reload(git stash drop -q {1}; git stash list)' \
     -d: --preview 'git show --color=always {1}' "$@" |
   cut -d: -f1
 }
@@ -218,8 +218,23 @@ _fzf_git_each_ref() {
     --bind "ctrl-o:execute-silent:bash $__fzf_git {1} {2}" \
     --bind "alt-e:execute:${EDITOR:-vim} <(git show {2}) > /dev/tty" \
     --bind "alt-a:change-prompt(🍀 Every ref> )+reload:bash \"$__fzf_git\" all-refs" \
-    --preview 'git log --oneline --graph --date=short --color=always --pretty="format:%C(auto)%cd %h%d %s" {2}' "$@" |
+    --preview 'git log --oneline --graph --date=short --color=always --pretty="format:%C(auto)%cd %h%d %s" {2} --' "$@" |
   awk '{print $2}'
+}
+
+# Worktrees
+_fzf_git_worktrees() {
+  _fzf_git_check || return
+  git worktree list | _fzf_git_fzf \
+    --prompt '🌴 Worktrees> ' \
+    --header $':: CTRL-X (remove worktree)\n\n' \
+    --bind 'ctrl-x:reload(git worktree remove {1} > /dev/null; git worktree list)' \
+    --preview '
+      git -c color.status=always -C {1} status --short --branch
+      echo
+      git log --oneline --graph --date=short --color=always --pretty="format:%C(auto)%cd %h%d %s" {2} --
+    ' "$@" |
+  awk '{print $1}'
 }
 
 # Setup key bindings:
@@ -231,6 +246,7 @@ _fzf_git_each_ref() {
 # CTRL-G S for stashes
 # CTRL-G L for Reflogs
 # CTRL-G E for Each ref (git for-each-ref)
+# CTRL-G W for Worktrees
 
 if [[ -n "${BASH_VERSION:-}" ]]; then
   __fzf_git_init() {
@@ -260,7 +276,7 @@ elif [[ -n "${ZSH_VERSION:-}" ]]; then
     done
   }
 fi
-__fzf_git_init files branches tags remotes hashes stashes lreflogs each_ref
+__fzf_git_init files branches tags remotes hashes stashes lreflogs each_ref worktrees
 
 # -----------------------------------------------------------------------------
 fi

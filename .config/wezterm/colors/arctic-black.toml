@@ -1,0 +1,31 @@
+[colors]
+foreground = '#cccccc'
+background = '#000000'
+ansi = [
+    '#000000',
+    '#f44747',
+    '#6a9955',
+    '#d7ba7d',
+    '#569cd6',
+    '#c586c0',
+    '#4dc9b0',
+    '#dddddd',
+]
+brights = [
+    '#808080',
+    '#f55757',
+    '#80ad6b',
+    '#e1cb9e',
+    '#6fabdc',
+    '#d6a9d2',
+    '#70d3bf',
+    '#ffffff',
+]
+selection_fg = 'none'
+selection_bg = '#264f78'
+scrollbar_thumb = '#434343'
+
+[metadata]
+aliases = []
+author = 'rockyzhang24'
+name = 'arctic-black'

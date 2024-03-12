@@ -27,7 +27,7 @@ config.window_padding = {
 }
 
 -- Color scheme
-config.color_scheme = 'matrix'
+config.color_scheme = 'arctic-black'
 
 -- Tab bar
 config.window_frame = {

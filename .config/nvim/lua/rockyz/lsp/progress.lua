@@ -150,23 +150,24 @@
 
 --
 -- I use the args passed in the callback of LspProgress to get the progress message. If there are
--- multiple servers sending progress nofitications at the same time, display the message from
+-- multiple servers sending progress notifications at the same time, display the message from
 -- different servers in a separate window. The windows are stacked from bottom to top above the
 -- statusline in the bottom-right corner.
 local icons = {
   spinner = { '⣾', '⣽', '⣻', '⢿', '⡿', '⣟', '⣯', '⣷' },
-  done = ''
+  done = ' '
 }
 
--- Maintain the status of each floating window. Each one is indexed by the client id and has these
--- fields:
--- * is_done: whether the progress is finished. If so, remove the window.
+-- Maintain the states for each client receiving the progress notifications. It is indexed by the
+-- client id and has these fields:
+-- * name: client name
+-- * is_done: whether the progress is finished
 -- * spinner_idx: current index of the spinner
 -- * winid: winid of the floating window
 -- * bufnr: bufnr of the floating window
--- * message: the progress message that will be shown in this window
+-- * message: the progress message that will be shown in the window
 -- * pos: the position of this window counting from bottom to top
-local wins = {}
+local clients = {}
 -- Maintain the current total number of windows
 local total_wins = 0
 
@@ -177,7 +178,7 @@ local function get_win_row(pos)
 end
 
 -- Update the window config
-local function win_set_config(win)
+local function win_update_config(win)
   vim.api.nvim_win_set_config(win.winid, {
     relative = 'editor',
     width = #win.message,
@@ -187,118 +188,190 @@ local function win_set_config(win)
   })
 end
 
-local group = vim.api.nvim_create_augroup('lsp_progress', { clear = true })
-vim.api.nvim_create_autocmd({ 'LspProgress' }, {
-  group = group,
-  pattern = '*',
-  callback = function(args)
-    -- Initialize the status of the window for this client
-    local id = args.data.client_id
-    if wins[id] == nil then
-      wins[id] = {
-        is_done = false,
-        spinner_idx = 0,
-        winid = nil,
-        bufnr = nil,
-        message = nil,
-        pos = total_wins + 1,
-      }
+-- Suppress errors that may occur while render windows. E.g., nvim_buf_set_lines() will throw E565
+-- when textlock is active. I encounter this issue when I use quick-scope in visual mode and its
+-- getchar() brings about textlock.
+-- All other errors will be re-thrown.
+-- Adapted from j-hui/fidget.nvim
+---@param callable function
+---@return boolean # If the callable executes successfully or not
+local function guard(callable)
+  local whitelist = {
+    "E11: Invalid in command%-line window",
+    "E523: Not allowed here",
+    'E565: Not allowed to change',
+  }
+  local ok, err = pcall(callable)
+  if ok then
+    return true
+  end
+  if type(err) ~= "string" then
+    error(err)
+  end
+  for _, msg in ipairs(whitelist) do
+    if string.find(err, msg) then
+      return false
     end
-    local cur_win = wins[id]
+  end
+  error(err)
+end
 
-    -- Assemble the output progress message
-    -- - General: ⣾ [client_name] title: message ( 5%)
-    -- - Done:     [client_name] title: DONE!
-    local message = ''
-    local client_name = vim.lsp.get_client_by_id(id).name
-    message = '[' .. client_name .. ']'
-    local kind = args.data.result.value.kind
-    local title = args.data.result.value.title
-    if title then
-      message = message .. ' ' .. title .. ':'
+-- Close the window and its associated buffer
+local function clear_window(winid, bufnr)
+  if vim.api.nvim_win_is_valid(winid) then
+    vim.api.nvim_win_close(winid, true)
+  end
+  if vim.api.nvim_buf_is_valid(bufnr) then
+    vim.api.nvim_buf_delete(bufnr, { force = true })
+  end
+end
+
+-- Clear the timer
+local function clear_timer(timer)
+  timer:stop()
+  timer:close()
+end
+
+-- Assemble the output progress message and set the flag to mark if it's completed.
+-- * General: ⣾ [client_name] title: message ( 5%)
+-- * Done:     [client_name] title: DONE!
+local function process_message(client, params)
+  local message = ''
+  message = '[' .. client.name .. ']'
+  local kind = params.value.kind
+  local title = params.value.title
+  if title then
+    message = message .. ' ' .. title .. ':'
+  end
+  if kind == 'end' then
+    client.is_done = true
+    message = icons.done .. ' ' .. message .. ' DONE!'
+  else
+    client.is_done = false
+    local raw_msg = params.value.message
+    local pct = params.value.percentage
+    if raw_msg then
+      message = message .. ' ' .. raw_msg
     end
-    if kind == 'end' then
-      cur_win.is_done = true
-      message = icons.done .. ' ' .. message .. ' DONE!'
-    else
-      cur_win.is_done = false
-      local msg = args.data.result.value.message
-      local pct = args.data.result.value.percentage
-      if msg then
-        message = message .. ' ' .. msg
-      end
-      if pct then
-        message = string.format('%s (%3d%%)', message, pct)
-      end
-      -- Spinner
-      local idx = cur_win.spinner_idx
-      idx = idx == #icons.spinner * 4 and 1 or idx + 1
-      message = icons.spinner[math.ceil(idx / 4)] .. ' ' .. message
-      cur_win.spinner_idx = idx
+    if pct then
+      message = string.format('%s (%3d%%)', message, pct)
     end
-    cur_win.message = message
+    -- Spinner
+    local idx = client.spinner_idx
+    idx = idx == #icons.spinner * 4 and 1 or idx + 1
+    message = icons.spinner[math.ceil(idx / 4)] .. ' ' .. message
+    client.spinner_idx = idx
+  end
+  return message
+end
 
-    local winid = cur_win.winid
-    local bufnr = cur_win.bufnr
+-- Display the progress message
+local function handler(args)
+  local client_id = args.data.client_id
+  -- Initialize the state of the client
+  if clients[client_id] == nil then
+    clients[client_id] = {
+      name = vim.lsp.get_client_by_id(client_id).name,
+      is_done = false,
+      spinner_idx = 0,
+      winid = nil,
+      bufnr = nil,
+      message = nil,
+      pos = total_wins + 1,
+    }
+  end
+  local cur_client = clients[client_id]
 
-    -- Create a new window or update the existing one
-    if
-      winid == nil
-      or not vim.api.nvim_win_is_valid(winid)
-      or vim.api.nvim_win_get_tabpage(winid) ~= vim.api.nvim_get_current_tabpage() -- Switch to another tab
-    then
-      bufnr = vim.api.nvim_create_buf(false, true)
+  -- Get the formatted progress message
+  local message = process_message(cur_client, args.data.result)
+  cur_client.message = message
+
+  -- Create a new window or update the existing one
+  local winid = cur_client.winid
+  local bufnr = cur_client.bufnr
+  if
+    winid == nil
+    or not vim.api.nvim_win_is_valid(winid)
+    or vim.api.nvim_win_get_tabpage(winid) ~= vim.api.nvim_get_current_tabpage() -- Switch to another tab
+  then
+    bufnr = vim.api.nvim_create_buf(false, true)
+    local success = guard(function()
       winid = vim.api.nvim_open_win(bufnr, false, {
         relative = 'editor',
-        width = #cur_win.message,
+        width = #cur_client.message,
         height = 1,
-        row = get_win_row(cur_win.pos),
-        col = vim.o.columns - #cur_win.message,
+        row = get_win_row(cur_client.pos),
+        col = vim.o.columns - #cur_client.message,
         focusable = false,
         style = 'minimal',
         noautocmd = true,
         border = vim.g.border_style,
       })
-      cur_win.bufnr = bufnr
-      cur_win.winid = winid
-      total_wins = total_wins + 1
-    else
-      win_set_config(cur_win)
+    end)
+    if not success then
+      return
     end
-    -- Put the progress message in the buffer of the window
-    vim.wo[winid].winhl = 'Normal:Normal'
-    vim.api.nvim_buf_set_lines(bufnr, 0, 1, false, { message })
+    cur_client.bufnr = bufnr
+    cur_client.winid = winid
+    total_wins = total_wins + 1
+  else
+    win_update_config(cur_client)
+  end
 
-    -- When the progress reporting ends, have the window stay on the screen for a few seconds before
-    -- closing it
-    if cur_win.is_done then
-      vim.defer_fn(function()
-        -- During this period of time, the same server may report another around of progress
-        -- notification, and this window will continue to be used for displaying. When the period is
-        -- over (i.e., this defered function will be called to close the window), there are two
-        -- possible scenarios:
-        -- 1. the new round of progress notification report has not yet finished, so this window
-        --    cannot be closed.
-        -- 2. the new round of progress notification report has finished. This window will be closed
-        --    twice, so the second execution of this function should return directly.
-        if not cur_win.is_done or not vim.api.nvim_win_is_valid(winid) then
-          return
-        end
-        vim.api.nvim_win_close(winid, true)
-        if vim.api.nvim_buf_is_valid(bufnr) then
-          vim.api.nvim_buf_delete(bufnr, { force = true })
-        end
+  -- Show the progress message in the window
+  vim.wo[winid].winhl = 'Normal:Normal'
+  guard(function()
+    vim.api.nvim_buf_set_lines(bufnr, 0, 1, false, { message })
+  end)
+
+  -- Close the window when finished and adjust the positions of other windows if they exist.
+  -- Let the window stay briefly on the screen before closing it (say 1s). When closing, attempt to
+  -- close at intervals (say 100ms) to handle the potential textlock. We can use uv.timer to
+  -- implement it.
+  --
+  -- NOTE:
+  -- During the waiting period, if it is set for a long duration like 3s, the same server may report
+  -- another around of progress notification, and this window will continue to be used for
+  -- displaying. When the period is over and an attempt is made to close the window, two possible
+  -- scenarios may occur:
+  -- 1. the new round of progress notification report has not yet finished, so this window
+  --    should not be closed.
+  -- 2. the new round of progress notification report has finished. We should avoid the window being
+  --    closed twice. In the code below, timer:start() will be called again and it just resets the
+  --    timer, so the window will not be closed twice.
+  if cur_client.is_done then
+    local timer = vim.uv.new_timer()
+    timer:start(1000, 100, vim.schedule_wrap(function()
+      if not cur_client.is_done then
+        clear_timer(timer)
+        return
+      end
+      local success = guard(function()
+        clear_window(winid, bufnr)
+      end)
+      -- When the window is closed, all the window above it need to move down one position
+      if success then
+        clear_timer(timer)
         total_wins = total_wins - 1
-        -- When the window is closed, all the window above it need to move down one position
-        for _, w in ipairs(wins) do
-          if w.pos > cur_win.pos then
+        for _, w in ipairs(clients) do
+          if w.pos > cur_client.pos then
             w.pos = w.pos - 1
-            win_set_config(w)
+            win_update_config(w)
           end
         end
-        wins[id] = nil
-      end, 3000)
-    end
+        clients[client_id] = nil
+      end
+    end))
+  end
+end
+
+-- Display the progress message when it comes
+local group = vim.api.nvim_create_augroup('lsp_progress', { clear = true })
+vim.api.nvim_create_autocmd({ 'LspProgress' }, {
+  group = group,
+  pattern = '*',
+  callback = function(args)
+    handler(args)
   end,
 })
 
@@ -321,9 +394,9 @@ vim.api.nvim_create_autocmd({ 'VimResized', 'TermLeave' }, {
   group = group,
   pattern = '*',
   callback = function()
-    for _, win in ipairs(wins) do
+    for _, win in ipairs(clients) do
       if win.is_done then
-        win_set_config(win)
+        win_update_config(win)
       end
     end
   end,

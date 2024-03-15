@@ -20,6 +20,12 @@ if [[ -n $KITTY_WINDOW_ID && $mime =~ image/ ]]; then
   kitty icat --clear --transfer-mode=memory --unicode-placeholder --stdin=no --place=${FZF_PREVIEW_COLUMNS}x${FZF_PREVIEW_LINES}@0x0 "$1" | sed '$d' | sed $'$s/$/\e[m/'
   exit
 fi
+# Video can be previewed by previewing its thumbnail
+if [[ -n $KITTY_WINDOW_ID && $mime =~ video/|audio/ ]]; then
+  thumbnail=$($HOME/.config/lf/vidthumb "$1")
+  kitty icat --clear --transfer-mode=memory --unicode-placeholder --stdin=no --place=${FZF_PREVIEW_COLUMNS}x${FZF_PREVIEW_LINES}@0x0 "$thumbnail" | sed '$d' | sed $'$s/$/\e[m/'
+  exit
+fi
 
 (bat --color=always --style=numbers,changes,header "$1" \
   || highlight --out-format truecolor --style darkplus --force --line-numbers "$1" \

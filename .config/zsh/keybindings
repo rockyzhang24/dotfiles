@@ -1,5 +1,7 @@
 #!/usr/bin/env zsh
 
+bindkey -e
+
 bindkey '^P' history-substring-search-up
 bindkey '^N' history-substring-search-down
 bindkey -M vicmd 'k' history-substring-search-up

@@ -1,16 +1,17 @@
 # zsh
-source ~/.config/zsh/general
-source ~/.config/zsh/completion
-source ~/.config/zsh/plugins
-source ~/.config/zsh/aliases
-source ~/.config/zsh/keybindings
-source ~/.config/zsh/env
+source $HOME/.config/zsh/general
+source $HOME/.config/zsh/completion
+source $HOME/.config/zsh/plugins
+source $HOME/.config/zsh/aliases
+source $HOME/.config/zsh/keybindings
+# source $HOME/.config/zsh/vi # use vi mode
+source $HOME/.config/zsh/env
 
 # fzf
-source ~/.config/fzf/fzf-config
+source $HOME/.config/fzf/fzf-config
 
 # Rust
-source ~/.cargo/env
+source $HOME/.cargo/env
 
 # iTerm2 Shell Integration
 export ITERM2_SQUELCH_MARK=1

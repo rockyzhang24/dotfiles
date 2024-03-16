@@ -19,4 +19,4 @@ ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets)
 # Preview
 zstyle ':fzf-tab:*' fzf-flags '--preview-window=hidden,<9999(hidden)'
 zstyle ':fzf-tab:*' fzf-preview 'echo Preview is not available!'
-zstyle ':fzf-tab:*' fzf-pad 3
+zstyle ':fzf-tab:*' fzf-pad 4

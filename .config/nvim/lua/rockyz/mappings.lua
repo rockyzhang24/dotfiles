@@ -328,7 +328,7 @@ vim.keymap.set('i', '<M-d>', "<C-\\><C-o><Cmd>lua require('rockyz.mappings').oth
 -- Terminal
 --
 
-vim.keymap.set('t', '<Esc>', '<C-\\><C-n>')
+vim.keymap.set('t', '<Leader><Esc>', '<C-\\><C-n>')
 -- Simulate <C-r> in insert mode for inserting the content of a register.
 -- Reference: http://vimcasts.org/episodes/neovim-terminal-paste/
 vim.keymap.set('t', '<M-r>', function()

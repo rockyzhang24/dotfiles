@@ -9,10 +9,9 @@ HORIZONTAL_POS="${4}"
 VERTICAL_POS="$(( $5 + 2 ))"
 
 image_preview_by_kitty() {
+  local place="${PV_WIDTH}x${PV_HEIGHT}@${HORIZONTAL_POS}x${VERTICAL_POS}"
   echo "Resolution: $(identify -format "%w×%h\n" ${1})"
-  kitty icat --clear --transfer-mode file --stdin no --place \
-      "${PV_WIDTH}x${PV_HEIGHT}@${HORIZONTAL_POS}x${VERTICAL_POS}" \
-      "${1}" < /dev/null > /dev/tty
+  kitty icat --clear --transfer-mode memory --stdin no --place "${place}" "${1}" < /dev/null > /dev/tty
 }
 
 handle_extension() {
@@ -53,19 +52,21 @@ handle_mime() {
       pandoc -s -t markdown -- "${FILE_PATH}" && exit 1;;
     # Image
     image/*)
-      if [[ $TERM == "xterm-kitty" || $TERM == "wezterm" ]]; then
+      if [[ $TERM == "xterm-kitty" ]]; then
         image_preview_by_kitty "${FILE_PATH}"
-      else
-        exiftool "${FILE_PATH}"
+      elif [[ $TERM == "tmux-256color" ]]; then
+        echo -e "Image preview is NOT supported in lf running in tmux!\n"
+        echo "Use CTRL-F to invoke fzf for image preview and file toggle."
       fi
       exit 1;;
     # Video and audio
     video/* | audio/*)
-      if [[ $TERM == "xterm-kitty" || $TERM == "wezterm" ]]; then
+      if [[ $TERM == "xterm-kitty" ]]; then
         local thumbnail=$($HOME/.config/lf/vidthumb "${FILE_PATH}")
         image_preview_by_kitty "${thumbnail}"
-      else
-        mediainfo "${FILE_PATH}"
+      elif [[ $TERM =~ "tmux-256color" ]]; then
+        echo -e "Video's thumbnail preview is NOT supported in lf running in tmux!\n"
+        echo "Use CTRL-F to invoke fzf for thumbnail preview and file toggle."
       fi
       exit 1;;
     # Text
@@ -79,8 +80,11 @@ handle_mime() {
 }
 
 handle_fallback() {
-    echo '----- File Type Classification -----' && file --dereference --brief -- "${FILE_PATH}" && exit 1
-    exit 1
+  # Use file command as the fallback. It outputs the file properties, separated by comma, in a
+  # single lone line. In order to fit the width of the preview window, replace each comma with a
+  # line break, but leave the commas inside square brackets unchanged.
+  file --dereference --brief -- "${FILE_PATH}" | gsed -r ':a; s/(\[[^][]*),([^][]*\])/\1TTEEMMPP\2/g; ta; s/, /\n/g; s/TTEEMMPP/,/g' && exit 1
+  exit 1
 }
 
 MIMETYPE="$( file --dereference --brief --mime-type -- "${FILE_PATH}" )"

@@ -145,20 +145,26 @@ cmd copy-absolute-path ${{
   echo $fx | tr ' ' '\n' | pbcopy
 }}
 
-# Select the file or directory via fzf
+# toggle the selections in fzf
 cmd fzf-select ${{
   IFS=' '
   exclude=$(cat $HOME/exclude | sed 's/^/--exclude /' | tr '\n' ' ')
-  select=$(fd --hidden --follow $exclude | fzf) || true
-  lf -remote "send $id select $select"
+  selections=$(fd --hidden --follow $exclude | fzf --multi --header ':: ENTER (toggle the selections)' --prompt 'Files> ') || true
+  if [[ -n $selections ]]; then
+    # Escape white spaces and format multi-line string to a single line one
+    targets=$(echo "$selections" | sed 's/ /\\ /g' | tr '\n' ' ')
+    lf -remote "send $id toggle $targets"
+  fi
 }}
 
-# cd into the selected directory via fzf
+# cd into the selected directory in fzf
 cmd fzf-cd ${{
   IFS=' '
   exclude=$(cat $HOME/exclude | sed 's/^/--exclude /' | tr '\n' ' ')
-  select=$(fd --type d --hidden --follow $exclude | fzf) || true
-  lf -remote "send $id cd $select"
+  select=$(fd --type d --hidden --follow $exclude | fzf --no-multi --header ':: ENTER (cd into the selected directory)' --prompt 'Dirs> ') || true
+  if [[ -n $select ]]; then
+    lf -remote "send $id cd $select"
+  fi
 }}
 
 # zoxide

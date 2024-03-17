@@ -259,6 +259,7 @@ local groups = {
   ["@variable"] = { fg = light_blue }, -- various variable names
   ["@variable.builtin"] = { fg = dark_blue }, -- built-in variable names (e.g. `this`)
   ["@variable.parameter"] = { fg = orange }, -- parameters of a function, use a conspicuous color (VSCode uses the common light_blue)
+  ["@variable.parameter.builtin"] = "@variable.parameter", -- special parameters (e.g. `_`, `it`)
   ["@variable.member"] = { fg = light_blue }, -- object and struct fields
 
   ["@constant"] = "Constant", -- constant identifiers
@@ -290,9 +291,9 @@ local groups = {
   ["@type"] = { fg = blue_green }, -- type or class definitions and annotations
   ["@type.builtin"] = { fg = dark_blue }, -- built-in types
   ["@type.definition"] = { fg = blue_green }, -- identifiers in type definitions (e.g. `typedef <type> <identifier>` in C)
-  ["@type.qualifier"] = { fg = dark_blue }, -- type qualifiers (e.g. `const`)
 
   ["@attribute"] = { fg = blue_green }, -- attribute annotations (e.g. Python decorators)
+  ["@attribute.builtin"] = "@attribute", -- builtin annotations (e.g. `@property` in Python)
   ["@property"] = "@variable.member", -- the key in key/value pairs
 
   -- Function
@@ -313,7 +314,8 @@ local groups = {
   ["@keyword.function"] = { fg = dark_blue }, -- keywords that define a function (e.g. `func` in Go, `def` in Python)
   ["@keyword.operator"] = "@operator", -- operators that are English words (e.g. `and` / `or`)
   ["@keyword.import"] = "Include", -- keywords for including modules (e.g. `import` / `from` in Python)
-  ["@keyword.storage"] = "StorageClass", -- modifiers that affect storage in memory or life-time
+  ["@keyword.type"] = { fg = dark_blue }, -- keywords describing composite types (e.g. `struct`, `enum`)
+  ["@keyword.modifier"] = { fg = dark_blue }, -- keywords modifying other constructs (e.g. `const`, `static`, `public`)
   ["@keyword.repeat"] = "Repeat", -- keywords related to loops (e.g. `for` / `while`)
   ["@keyword.return"] = { fg = dark_pink }, --  keywords like `return` and `yield`
   ["@keyword.debug"] = "Debug", -- keywords related to debugging
@@ -347,10 +349,15 @@ local groups = {
   ["@markup.underline"] = { fg = norm_fg, underline = true }, -- underlined text (only for literal underline markup!)
 
   ["@markup.heading"] = "Title", -- headings, titles (including markers)
+  ["@markup.heading.1"] = "@markup.heading",
+  ["@markup.heading.2"] = "@markup.heading",
+  ["@markup.heading.3"] = "@markup.heading",
+  ["@markup.heading.4"] = "@markup.heading",
+  ["@markup.heading.5"] = "@markup.heading",
+  ["@markup.heading.6"] = "@markup.heading",
 
   ["@markup.quote"] = { fg = green }, -- block quotes
   ["@markup.math"] = { fg = blue_green }, -- math environments (e.g. `$ ... $` in LaTeX)
-  ["@markup.environment"] = { fg = yellow }, -- environments (e.g. in LaTeX)
 
   ["@markup.link"] = { fg = brown }, -- text references, footnotes, citations, etc.
   ["@markup.link.label"] = "@markup.link", -- non-url links
@@ -368,6 +375,7 @@ local groups = {
   ["@diff.delta"] = "DiffTextChanged", -- changed text (for diff files)
 
   ["@tag"] = { fg = dark_blue }, -- XML tag names
+  ["@tag.builtin"] = "@tag", -- builtin tag names (e.g. HTML5 tags)
   ["@tag.attribute"] = { fg = light_blue }, -- XML tag attributes
   ["@tag.delimiter"] = { fg = gray3 }, -- XML tag delimiters
 
@@ -384,7 +392,7 @@ local groups = {
   ["@lsp.type.namespace"] = "@module",
   ["@lsp.type.type"] = "@type",
   ["@lsp.type.class"] = "@type",
-  ["@lsp.type.enum"] = "@type",
+  ["@lsp.type.enum"] = "@keyword.type",
   ["@lsp.type.interface"] = "@type",
   ["@lsp.type.struct"] = "@type",
   ["@lsp.type.typeParameter"] = "@type.definition",
@@ -414,7 +422,7 @@ local groups = {
   ["@lsp.type.selfTypeKeyword"] = "@variable.buitin",
   ["@lsp.type.deriveHelper"] = "@attribute",
   ["@lsp.type.boolean"] = "@boolean",
-  ["@lsp.type.modifier"] = "@type.qualifier",
+  ["@lsp.type.modifier"] = "@keyword.modifier",
   ["@lsp.typemod.type.defaultLibrary"] = "@type.builtin",
   ["@lsp.typemod.typeAlias.defaultLibrary"] = "@type.builtin",
   ["@lsp.typemod.class.defaultLibrary"] = "@type.builtin",

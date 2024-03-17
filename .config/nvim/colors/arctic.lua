@@ -392,7 +392,7 @@ local groups = {
   ["@lsp.type.variable"] = "@variable",
   ["@lsp.type.property"] = "@property",
   ["@lsp.type.enumMember"] = { fg = blue },
-  -- ["@lsp.type.event"] = { },  -- TODO: what is event property?
+  ["@lsp.type.event"] = "@type",
   ["@lsp.type.function"] = "@function",
   ["@lsp.type.method"] = "@function",
   ["@lsp.type.macro"] = "@constant.macro",
@@ -414,6 +414,7 @@ local groups = {
   ["@lsp.type.selfTypeKeyword"] = "@variable.buitin",
   ["@lsp.type.deriveHelper"] = "@attribute",
   ["@lsp.type.boolean"] = "@boolean",
+  ["@lsp.type.modifier"] = "@type.qualifier",
   ["@lsp.typemod.type.defaultLibrary"] = "@type.builtin",
   ["@lsp.typemod.typeAlias.defaultLibrary"] = "@type.builtin",
   ["@lsp.typemod.class.defaultLibrary"] = "@type.builtin",

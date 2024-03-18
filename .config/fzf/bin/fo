@@ -6,9 +6,10 @@
 #   - CTRL-o: using the default application
 #   - CTRL-v or ENTER: using $EDITOR
 
+header=":: CTRL-O (Open in default application), ENTER (Open in EDITOR)"
 if [[ -d $1 ]]; then
-  files=($(fd --hidden --follow --type f $FD_EXCLUDE '.*' "$1" | fzf --query="$2" --exit-0 --prompt="Open> "))
+  files=($(fd --hidden --follow --type f $FD_EXCLUDE '.*' "$1" | fzf --query="$2" --exit-0 --prompt="Open> " --header "$header"))
 else
-  files=($(fd --hidden --follow --type f $FD_EXCLUDE '.*' | fzf --query="$1" --exit-0 --prompt="Open> "))
+  files=($(fd --hidden --follow --type f $FD_EXCLUDE '.*' | fzf --query="$1" --exit-0 --prompt="Open> " --header "$header"))
 fi
 [[ -n $files ]] && ${EDITOR:-vim} ${files[@]}

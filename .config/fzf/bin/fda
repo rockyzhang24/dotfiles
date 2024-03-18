@@ -9,7 +9,7 @@ prefix="git --git-dir=$HOME/dotfiles/ --work-tree=$HOME"
 preview="[[ ! -e {} ]] && echo 'No preview for deleted file.' || "$prefix" diff --color=always {} | diff-so-fancy"
 
 files=($(eval "$prefix diff --name-only" | sed "s~^~$HOME/~" \
-    | fzf --exit-0 --preview "$preview" --preview-window nohidden,right,60% --prompt="DotfilesGitAdd> "))
+  | fzf --exit-0 --preview "$preview" --preview-window nohidden,right,60% --prompt="DotAdd> " --header ":: ENTER (dot add the selected files)"))
 
 if [[ -n $files ]]; then
   eval "$prefix add ${files[@]}"

@@ -416,7 +416,7 @@ local groups = {
   ["@lsp.type.builtinType"] = "@type.builtin",
   ["@lsp.type.typeAlias"] = "@type.definition",
   ["@lsp.type.unresolvedReference"] = { undercurl = true, sp = error_red },
-  ["@lsp.type.lifetime"] = "@keyword.storage",
+  ["@lsp.type.lifetime"] = "@keyword.modifier",
   ["@lsp.type.generic"] = "@variable",
   ["@lsp.type.selfKeyword"] = "@variable.buitin",
   ["@lsp.type.selfTypeKeyword"] = "@variable.buitin",

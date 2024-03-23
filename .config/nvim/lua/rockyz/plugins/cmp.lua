@@ -102,11 +102,21 @@ cmp.setup({
     { name = 'path' },
   }),
   formatting = {
-    format = function(_, vim_item)
+    format = function(entry, vim_item)
       local MAX_ABBR_WIDTH, MAX_MENU_WIDTH = 25, 30
       local ellipsis = require('rockyz.icons').misc.ellipsis
-      -- Add the icon
-      vim_item.kind = string.format('%s %s', symbol_kinds[vim_item.kind] or symbol_kinds.Text, vim_item.kind)
+      -- Prepend icons to item.kind
+      -- For kind from path source (i.e., all kinds of files), use devicons to get icons and
+      -- highlight groups. For other kinds, use codicons.
+      local file_icon
+      if vim.tbl_contains({ 'path' }, entry.source.name) then
+        local icon, hl_group = require('nvim-web-devicons').get_icon(entry:get_completion_item().label)
+        if icon then
+          file_icon = icon .. ' '
+          vim_item.kind_hl_group = hl_group
+        end
+      end
+      vim_item.kind = string.format('%s %s', file_icon or symbol_kinds[vim_item.kind] or symbol_kinds.Text, vim_item.kind)
       -- Truncate the label
       if vim.api.nvim_strwidth(vim_item.abbr) > MAX_ABBR_WIDTH then
         vim_item.abbr = vim.fn.strcharpart(vim_item.abbr, 0, MAX_ABBR_WIDTH) .. ellipsis

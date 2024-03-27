@@ -21,7 +21,7 @@ if [[ $mime =~ image/ ]]; then
   if [[ -n $KITTY_WINDOW_ID && -z $NVIM ]]; then
     # --transfer-mode=memory is the fastest option but if you want fzf to be able to redraw the image
     # on terminal resize or on 'change-preview-window', you need to use --transfer-mode=stream.
-    kitty icat --clear --transfer-mode=memory --unicode-placeholder --stdin=no --place=${FZF_PREVIEW_COLUMNS}x${FZF_PREVIEW_LINES}@0x0 "$1" | sed '$d' | sed $'$s/$/\e[m/'
+    kitty icat --clear --transfer-mode=memory --unicode-placeholder --stdin=no --align left --place=${FZF_PREVIEW_COLUMNS}x${FZF_PREVIEW_LINES}@0x0 "$1" | sed '$d' | sed $'$s/$/\e[m/'
   else
     file "$1" | gsed -r ':a; s/(\[[^][]*),([^][]*\])/\1TTEEMMPP\2/g; ta; s/, /\n/g; s/TTEEMMPP/,/g'
   fi
@@ -31,7 +31,7 @@ fi
 if [[ $mime =~ video/|audio/ ]]; then
   if [[ -n $KITTY_WINDOW_ID && -z $NVIM ]]; then
     thumbnail=$($HOME/.config/lf/vidthumb "$1")
-    kitty icat --clear --transfer-mode=memory --unicode-placeholder --stdin=no --place=${FZF_PREVIEW_COLUMNS}x${FZF_PREVIEW_LINES}@0x0 "$thumbnail" | sed '$d' | sed $'$s/$/\e[m/'
+    kitty icat --clear --transfer-mode=memory --unicode-placeholder --stdin=no --align left --place=${FZF_PREVIEW_COLUMNS}x${FZF_PREVIEW_LINES}@0x0 "$thumbnail" | sed '$d' | sed $'$s/$/\e[m/'
   else
     file "$1" | gsed -r ':a; s/(\[[^][]*),([^][]*\])/\1TTEEMMPP\2/g; ta; s/, /\n/g; s/TTEEMMPP/,/g'
   fi

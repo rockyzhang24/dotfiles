@@ -5,42 +5,76 @@ FILE_EXTENSION="${FILE_PATH##*.}"
 FILE_EXTENSION_LOWER="$(printf "%s" "${FILE_EXTENSION}" | tr '[:upper:]' '[:lower:]')"
 PV_WIDTH="${2}"
 PV_HEIGHT="${3}"
+PV_HEIGHT_IMAGE="$(( ${PV_HEIGHT} / 3 ))"
 HORIZONTAL_POS="${4}"
-VERTICAL_POS="$(( $5 + 2 ))"
+VERTICAL_POS="${5}"
+
+exiftool() {
+  command exiftool '--ExifTool*' '--Directory' '--File*' '--ProfileDescription*' "$@"
+}
+
+bat() {
+  command bat \
+    --color=always --paging=never \
+    --style=plain \
+    --wrap=character \
+    --line-range :"${PV_HEIGHT}" \
+    --terminal-width="${PV_WIDTH}" "$@"
+}
 
 image_preview_by_kitty() {
-  local place="${PV_WIDTH}x${PV_HEIGHT}@${HORIZONTAL_POS}x${VERTICAL_POS}"
-  echo "Resolution: $(identify -format "%w×%h\n" ${1})"
-  kitty icat --clear --transfer-mode memory --stdin no --place "${place}" "${1}" < /dev/null > /dev/tty
+  local place="${PV_WIDTH}x${PV_HEIGHT_IMAGE}@${HORIZONTAL_POS}x${VERTICAL_POS}"
+  kitty icat --clear --transfer-mode memory --stdin no --align left --place "${place}" "${1}" < /dev/null > /dev/tty
 }
 
 handle_extension() {
   case "${FILE_EXTENSION_LOWER}" in
     # Markdown
     md)
-      glow -s dark -- "${FILE_PATH}" && exit 1;;
+      glow -s dark --width "${PV_WIDTH}" -- "${FILE_PATH}" && exit 1;;
     # Archive
     bz2|gz|lz|tar|xz|zip)
       atool --list -- "${FILE_PATH}" && exit 1;;
     rar)
-      unrar l -p- -- "${FILE_PATH}" && exit 1;;
+      unrar lt -p- -- "${FILE_PATH}" && exit 1;;
     7z)
       7z l -p -- "${FILE_PATH}" && exit 1;;
     # PDF
     pdf)
-      pdftotext -l 10 -nopgbrk -q -- "${FILE_PATH}" - | fmt -w "$((${PV_WIDTH} - 2))" && exit 1;;
+      pdftotext -l 10 -nopgbrk -q -- "${FILE_PATH}" - | fmt -w "${PV_WIDTH}" && exit 1;;
     # OpenDocument
     odt|sxw|ods|odp)
       odt2txt "${FILE_PATH}" && exit 1;;
     # XLSX
     xlsx)
-      xlsx2csv -- "${FILE_PATH}" && exit 1;;
+      xlsx2csv -- "${FILE_PATH}" | head -n 500 && exit 1;;
     # JSON
     json)
       jq --color-output . "${FILE_PATH}" && exit1 ;;
     # BitTorrent
     torrent)
       transmission-show -- "${FILE_PATH}" && exit 1;;
+    # Dmg
+    dmg)
+      hdiutil imageinfo "${FILE_PATH}" | bat -l yaml && exit 1;;
+    # Music
+    mp3|flac|wav|m4a)
+      exiftool -b -CoverArt -Picture "${FILE_PATH}"
+      exiftool -Title -SortName -TitleSort -TitleSortOrder -Artist -SortArtist -ArtistSort -PerformerSortOrder \
+        -Album -SortAlbum -AlbumSort -AlbumSortOrder -AlbumArtist -SortAlbumArtist -AlbumArtistSort -AlbumArtistSortOrder \
+        -Genre -TrackNumber -Year -Duration -SampleRate -AudioSampleRate -AudioBitrate -AvgBitrate -Channels \
+        -AudioChannels "${FILE_PATH}" | bat -l yaml
+      exit 1;;
+    # CSV and TSV
+    csv|tsv)
+      mlr --icsv --opprint -C --key-color darkcyan --value-color grey70 head -n 500 "${FILE_PATH}" && exit 1;;
+    # Sqlite3 and sqlite
+    sqlite3 | sqlite)
+      sqlite3 "${FILE_PATH}" .schema | sed "s/;/;\n/g" | bat -l sql && exit 1;;
+    # so and dylib
+    so|dylib)
+      nm "${FILE_PATH}" && exit 1
+      nm -D "${FILE_PATH}" && exit 1
   esac
 }
 
@@ -49,18 +83,22 @@ handle_mime() {
   case "${mimetype}" in
     # DOCX, ePub, FB2
     *wordprocessingml.document|*/epub+zip|*/x-fictionbook+xml)
-      pandoc -s -t markdown -- "${FILE_PATH}" && exit 1;;
+      pandoc -s -t markdown -- "${FILE_PATH}" | glow -s dark --width "${PV_WIDTH}" && exit 1;;
     # Image
     image/*)
       if [[ $TERM == "xterm-kitty" ]]; then
         image_preview_by_kitty "${FILE_PATH}"
+        for (( i = 0; i < PV_HEIGHT_IMAGE; ++i )); do
+          echo
+        done
       elif [[ $TERM == "tmux-256color" ]]; then
         echo -e "Image preview is NOT supported in lf running in tmux!\n"
-        echo "Use CTRL-F to invoke fzf for image preview and file toggle."
+        echo -e "Use CTRL-F to invoke fzf for image preview and file toggle.\n"
       fi
+      exiftool '-ImageSize' '-*' "${FILE_PATH}" | bat -l yaml
       exit 1;;
-    # Video and audio
-    video/* | audio/*)
+    # Video
+    video/*)
       if [[ $TERM == "xterm-kitty" ]]; then
         local thumbnail=$($HOME/.config/lf/vidthumb "${FILE_PATH}")
         image_preview_by_kitty "${thumbnail}"
@@ -71,8 +109,7 @@ handle_mime() {
       exit 1;;
     # Text
     text/* | */xml)
-      (bat --color=always --style=numbers,changes --line-range=:"${PV_HEIGHT}" \
-          --terminal-width "$((${PV_WIDTH} - 2))" -- "${FILE_PATH}" \
+      (bat --style=numbers,changes -- "${FILE_PATH}" \
       || highlight --out-format truecolor --style darkplus --force \
           --line-numbers --line-range=1-"${PV_HEIGHT}" -- "${FILE_PATH}" \
       || cat -- "${FILE_PATH}") && exit 1;;

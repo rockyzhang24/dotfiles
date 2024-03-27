@@ -31,7 +31,10 @@ M.winbar = function()
   -- Deal with the special buffers
   local ft = vim.bo.filetype
   if ft == 'qf' then
-    return contents .. ' %#Directory#' .. icons.quickfix .. '%* Quickfix List'
+    local is_loclist = vim.fn.getloclist(0, { filewinid = 0 }).filewinid ~= 0
+    local list_type = is_loclist and 'Location List' or 'Quickfix List'
+    local list_title = is_loclist and vim.fn.getloclist(0, { title = 0 }).title or vim.fn.getqflist({ title = 0 }).title
+    return contents .. ' %#Directory#' .. icons.quickfix .. '%* ' .. list_type .. ' ' .. icons.delimiter .. ' ' .. list_title
   elseif ft == 'fugitive' then
     -- fugitive: show the repo path
     return contents

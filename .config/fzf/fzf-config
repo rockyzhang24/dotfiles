@@ -27,7 +27,7 @@ export FZF_DEFAULT_COMMAND="fd --type f --hidden --follow $FD_EXCLUDE"
 # - ctrl-o: open the selections via default application
 # - ctrl-y: copy the selections to system clipboard
 # - ctrl-e: edit the selections via $EDITOR
-bg='#000000'
+bg='#1f1f1f'
 if $TRANSPARENT; then
   bg=-1
 fi

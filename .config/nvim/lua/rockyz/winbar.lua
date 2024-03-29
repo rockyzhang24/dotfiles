@@ -13,7 +13,7 @@ local function get_file_icon_and_name()
   local filename = vim.fn.expand('%:t')
   local ft = vim.bo.filetype
   local file_icon, file_icon_color = devicon.get_icon_color_by_filetype(ft, { default = true })
-  vim.api.nvim_set_hl(0, 'WinbarFileIcon', { fg = file_icon_color })
+  vim.api.nvim_set_hl(0, 'WinbarFileIcon', { fg = file_icon_color, underline = true, sp = '#000000' })
   return '%#WinbarFileIcon#' .. file_icon .. '%* ' .. (filename == '' and '[No Name]' or filename)
 end
 
@@ -65,7 +65,7 @@ M.winbar = function()
     else
       path = path:gsub('^~', 'HOME'):gsub('^/', 'ROOT/'):gsub('/', ' ' .. icons.delimiter .. ' ')
     end
-    local colored_folder = '%#Directory#' .. icons.folder .. '%*'
+    local colored_folder = '%#WinbarFolder#' .. icons.folder .. '%*'
     contents = contents .. ' ' .. colored_folder .. ' ' .. path .. ' ' .. icons.delimiter
   end
 

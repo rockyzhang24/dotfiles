@@ -27,6 +27,7 @@ local black = '#2d2d2d' -- TabLine
 local black2 = '#252526'
 local black3 = '#282828' -- CursorLine (editor.lineHighlightBorder). Or use #2a2d2e (list.hoverBackground) for a brighter color
 local black4 = '#181818' -- Statusline and Tabline
+local pure_black = '#000000'
 
 local error_red = '#F14C4C'
 local warn_yellow = '#CCA700'
@@ -40,13 +41,13 @@ local float_border_fg = '#454545'
 local indent_guide_fg = '#404040'
 local indent_guide_scope_fg = '#707070'
 local label_fg = '#c8c8c8'
+local tab_border_fg = '#2b2b2b'
 
 local groups = {
 
   --
   -- Preset
   --
-  TabBorder = { fg = '#2b2b2b' }, -- tab.border
   FloatBorder = { fg = float_border_fg },
   SelectionHighlightBackground = { bg = '#343a41' }, -- editor.selectionHighlightBackground
   LightBulb = { fg = '#ffcc00' }, -- editorLightBulb.foreground
@@ -54,7 +55,7 @@ local groups = {
   GutterGitAdded = { fg = '#2ea043' }, -- editorGutter.addedBackground
   GutterGitDeleted = { fg = '#f85149' }, -- editorGutter.deletedBackground
   GutterGitModified = { fg = '#0078d4' }, -- editorGutter.modifiedBackground
-  Breadcrumb = { fg = '#a9a9a9', bg = norm_bg, bold = true }, -- breadcrumb.foreground/background
+  Breadcrumb = { fg = '#a9a9a9', bg = norm_bg, underline = true, sp = pure_black }, -- breadcrumb.foreground/background
   ScrollbarSlider = { bg = '#434343' }, -- the slider on the scrollbar (scrollbarSlider.activeBackground)
   ScrollbarSliderHover = { bg = '#4f4f4f' }, -- scrollbarSlider.hoverBackground
   PeekViewBorder = { fg = '#3794ff' },
@@ -87,6 +88,8 @@ local groups = {
   -- Inline hints
   InlayHint = { fg = '#969696', bg = '#242424' }, -- editorInlayHint.foreground/background
   InlayHintType = "InlayHint", -- editorInlayHint.typeBackground/typeForeground
+  -- Winbar
+  WinbarFolder = { fg = dark_blue, underline = true, sp = pure_black }, -- the folder icon right after the window number in winbar
 
   --
   -- Editor
@@ -140,9 +143,9 @@ local groups = {
   SpellRare  = { undercurl = true, sp = info_blue  },
   StatusLine = { bg = black4 },
   StatusLineNC = { fg = gray, bg = black4 },
-  TabLine = { fg = gray4, bg = black4 }, -- tab.inactiveBackground, tab.inactiveForeground
-  TabLineFill = { fg = 'NONE', bg = black4 }, -- editorGroupHeader.tabsBackground
-  TabLineSel = { fg = white, bg = norm_bg, bold = true }, -- tab.activeBackground, tab.activeForeground
+  TabLine = { fg = gray4, bg = black4, underline = true, sp = tab_border_fg }, -- tab.inactiveBackground, tab.inactiveForeground
+  TabLineFill = { fg = 'NONE', bg = black4, underline = true, sp = tab_border_fg }, -- editorGroupHeader.tabsBackground
+  TabLineSel = { fg = white, bg = norm_bg, bold = true, underline = true, sp = tab_border_fg }, -- tab.activeBackground, tab.activeForeground
   Title = { fg = dark_blue, bold = true },
   Visual = { bg = '#264F78' }, -- editor.selectionBackground
   -- VisualNOS = { },
@@ -537,34 +540,43 @@ local groups = {
   --
   -- nvim-navic
   --
+
+  -- Consistent with nvim-cmp but has an additional black underline for winbar decoration
   NavicText = "Winbar",
-  NavicIconsFile = "CmpItemKindFile",
-  NavicIconsModule = "CmpItemKindModule",
-  NavicIconsNamespace = "NavicText",
-  NavicIconsPackage = "NavicText",
-  NavicIconsClass = "CmpItemKindClass",
-  NavicIconsMethod = "CmpItemKindMethod",
-  NavicIconsProperty = "CmpItemKindProperty",
-  NavicIconsField = "CmpItemKindField",
-  NavicIconsConstructor = "CmpItemKindConstructor",
-  NavicIconsEnum = "CmpItemKindEnum",
-  NavicIconsInterface = "CmpItemKindInterface",
-  NavicIconsFunction = "CmpItemKindFunction",
-  NavicIconsVariable = "CmpItemKindVariable",
-  NavicIconsConstant = "CmpItemKindConstant",
-  NavicIconsString = "NavicText",
-  NavicIconsNumber = "NavicText",
-  NavicIconsBoolean = "NavicText",
-  NavicIconsArray = "NavicText",
-  NavicIconsObject = "NavicText",
-  NavicIconsKey = "NavicText",
-  NavicIconsNull = "NavicText",
-  NavicIconsEnumMember = "CmpItemKindEnumMember",
-  NavicIconsStruct = "CmpItemKindStruct",
-  NavicIconsEvent = "CmpItemKindEvent",
-  NavicIconsOperator = "CmpItemKindOperator",
-  NavicIconsTypeParameter = "CmpItemKindTypeParameter",
   NavicSeparator = "NavicText",
+  NavicIconsMethod = { fg = '#b180d7', bg = norm_bg, underline = true, sp = pure_black },
+  NavicIconsFunction = "NavicIconsMethod",
+  NavicIconsConstructor = "NavicIconsMethod",
+  NavicIconsField = { fg = '#75beff', bg = norm_bg, underline = true, sp = pure_black },
+  NavicIconsVariable = "NavicIconsField",
+  NavicIconsClass = { fg = '#ee9d28', bg = norm_bg, underline = true, sp = pure_black },
+  NavicIconsInterface = "NavicIconsField",
+  NavicIconsModule = "NavicText",
+  NavicIconsProperty = "NavicText",
+  NavicIconsUnit = "NavicText",
+  NavicIconsValue = "NavicText",
+  NavicIconsEnum = "NavicIconsClass",
+  NavicIconsKeyword = "NavicText",
+  NavicIconsSnippet = "NavicText",
+  NavicIconsColor = "NavicText",
+  NavicIconsFile = "NavicText",
+  NavicIconsReference = "NavicText",
+  NavicIconsFolder = "NavicText",
+  NavicIconsEnumMember = "NavicIconsField",
+  NavicIconsConstant = "NavicText",
+  NavicIconsStruct = "NavicText",
+  NavicIconsEvent = "NavicIconsClass",
+  NavicIconsOperator = "NavicText",
+  NavicIconsTypeParameter = "NavicText",
+  NavicIconsArray = "NavicText",
+  NavicIconsBoolean = "NavicText",
+  NavicIconsKey = "NavicText",
+  NavicIconsNamespace = "NavicText",
+  NavicIconsString = "NavicText",
+  NavicIconsNull = "NavicText",
+  NavicIconsNumber = "NavicText",
+  NavicIconsObject = "NavicText",
+  NavicIconsPackage = "NavicText",
 
   --
   -- Gitsigns

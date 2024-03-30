@@ -35,11 +35,14 @@ M.winbar = function()
     -- Quickfix
     local is_loclist = vim.fn.getloclist(0, { filewinid = 0 }).filewinid ~= 0
     local list_type = is_loclist and 'Location List' or 'Quickfix List'
-    local list_title = is_loclist and vim.fn.getloclist(0, { title = 0 }).title or vim.fn.getqflist({ title = 0 }).title
-    contents = contents .. ' ' .. list_type
+    local what = { title = 0, size = 0, idx = 0 }
+    local list = is_loclist and vim.fn.getloclist(0, what) or vim.fn.getqflist(what)
+    local list_title = list.title
+    contents = contents .. ' ' .. list_type -- show type (quickfix or location list)
     if list_title ~= '' then
-      contents = contents .. ' ' .. misc_icons.delimiter .. ' ' .. list_title
+      contents = contents .. ' ' .. misc_icons.delimiter .. ' ' .. list_title -- show title
     end
+    contents = contents .. ' [' .. list.idx .. '/' .. list.size .. ']' -- show size of the list and current focused idx
     return contents
   elseif ft == 'fugitive' then
     -- Fugitive: show the repo path

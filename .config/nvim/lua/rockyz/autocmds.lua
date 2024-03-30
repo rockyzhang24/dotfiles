@@ -39,28 +39,45 @@ vim.api.nvim_create_autocmd({
 })
 
 -- Automatically toggle relative number
+local exclude_ft = {
+  'qf',
+}
+local function tbl_contains(t, value)
+  for _, v in ipairs(t) do
+    if v == value then
+      return true
+    end
+  end
+  return false
+end
 local relative_number_group = vim.api.nvim_create_augroup('toggle_relative_number', {})
 vim.api.nvim_create_autocmd({ 'BufEnter', 'FocusGained', 'InsertLeave', 'CmdlineLeave', 'WinEnter' }, {
-    group = relative_number_group,
-    desc = 'Toggle relative line numbers on',
-    callback = function()
-        if vim.wo.nu and not vim.startswith(vim.api.nvim_get_mode().mode, 'i') then
-            vim.wo.relativenumber = true
-        end
-    end,
+  group = relative_number_group,
+  desc = 'Toggle relative line numbers on',
+  callback = function()
+    if tbl_contains(exclude_ft, vim.bo.filetype) then
+      return
+    end
+    if vim.wo.nu and not vim.startswith(vim.api.nvim_get_mode().mode, 'i') then
+      vim.wo.relativenumber = true
+    end
+  end,
 })
 vim.api.nvim_create_autocmd({ 'BufLeave', 'FocusLost', 'InsertEnter', 'CmdlineEnter', 'WinLeave' }, {
-    group = relative_number_group,
-    desc = 'Toggle relative line numbers off',
-    callback = function(args)
-        if vim.wo.nu then
-            vim.wo.relativenumber = false
-        end
-        -- Redraw here to avoid having to first write something for the line numbers to update.
-        if args.event == 'CmdlineEnter' then
-            vim.cmd.redraw()
-        end
-    end,
+  group = relative_number_group,
+  desc = 'Toggle relative line numbers off',
+  callback = function(args)
+    if tbl_contains(exclude_ft, vim.bo.filetype) then
+      return
+    end
+    if vim.wo.nu then
+      vim.wo.relativenumber = false
+    end
+    -- Redraw here to avoid having to first write something for the line numbers to update.
+    if args.event == 'CmdlineEnter' then
+      vim.cmd.redraw()
+    end
+  end,
 })
 
 -- I am using tab and leadmultispace in listchars to display the indent line. The chars for tab and

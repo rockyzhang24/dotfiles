@@ -1,43 +1,30 @@
 -- Configurations for fzf.vim
 
--- NOTES:
+-- Notes about fzf#vim#with_preview()
 --
--- 1. fzf#vim#preview(), if this function is used, fzf.vim will use fzf.vim/bin/preview.sh as the
---    value of fzf's --preview option. More importantly, we can use a placeholder to specify which
---    part is the filename for bat command and which line should be highlighted for the
---    --highlight-line option of bat. The "Deleted selected buffers" keymap below will show an
---    example of the placeholder usage. On the contrary, if we don't use this funciton, fzf.vim's
---    functions may define --preview itself (e.g., fzf#vim#commits use delta command to preview the
---    git commit), or we can explicitly define --preview in the options table in [spec dict] passed
---    into fzf.vim's functions, or --preview defined in FZF_DEFAULT_OPTS will be used.
---
---    Ref: https://github.com/junegunn/fzf.vim#advanced-customization
---
--- 2. placeholder. The argument passed to fzf#vim#with_preview has a placeholder field, its value is
---    placeholders separated by colon, i.e., {FILENAME}[:{LINENO}]. They're the placeholders for
---    fzf's --preview option (see man fzf). They will be passed into the preview script
---    (fzf.vim/bin/preview.sh) where command bat is used as the preview command. FILENAME is the
---    FILE for bat, and LINENO is for --highlight-line in bat.
---
---    If the placeholder is set an empty string, fzf#vim#preview won't wrap --preview option. It
---    means fzf#vim#preview has no effects, i.e., the same at not using this function.
---
---    Ref: the source code of fzf#vim#with_preview in
---    https://github.com/junegunn/fzf.vim/blob/master/autoload/fzf/vim.vim
+-- 1. It uses the value of g:fzf_vim.preview_window to set the preview window of fzf through its
+--    --preview-window option.
+-- 2. It sets the --preview option of fzf to `--preview fzf.vim/bin/preview.sh {FILENAME}:{LINENO}`.
+--    {FILENAME} and {LINENO} are placeholders of fzf. In this case, {FILENAME} will be the file
+--    name for bat and {LINENO} the line number to be highlighted for bat's --highlight-line option.
+-- 3. The placeholders in fzf's --preview option can be specified through the placeholder field in
+--    the table passed to this function. This table is the spec dictionary similar to vim#wrap. The
+--    "Deleted selected buffers" keymap below illustrate how to set the placeholders.
+-- 4. If the placeholder is assigned to an empty string, fzf#vim#with_preview won't set --preview
+--    option for fzf. The outer function calling fzf#vim#with_preview may set --preview instead
+--    (e.g., fzf#vim#commits set --preview to use delta), or we can explicitly set the --preview
+--    option in the `options` table in the spec dictionary (e.g., see the BCommits keymap below). If
+--    --preview option is not set anywhere, the one defined in FZF_DEFAULT_OPTS will be used.
+
+local uv = require('luv')
+local qf = require('rockyz.qf')
 
 local rg_prefix = 'rg --column --line-number --no-heading --color=always --smart-case'
 
--- Override fzf default options set in shell
--- The cursor shape in nvim builtin terminal is block instead of beam, so we
--- need an extra space before the info separator for a better looking.
-vim.env.FZF_DEFAULT_OPTS = vim.env.FZF_DEFAULT_OPTS .. " --info 'inline: <'"
-
 vim.g.fzf_layout = {
   window = {
-    width = 1,
-    height = 0.6,
-    yoffset = 1.0,
-    border = 'top',
+    height = 0.8,
+    width = 0.5,
   },
 }
 
@@ -48,32 +35,159 @@ vim.g.fzf_action = {
   ['enter'] = 'drop',
 }
 
-vim.keymap.set('n', '<Leader>fb', '<Cmd>Buffers<CR>')
-vim.keymap.set('n', '<C-p>', '<Cmd>GFiles<CR>')
-vim.keymap.set('n', '<Leader>ff', '<Cmd>Files<CR>')
-vim.keymap.set('n', '<Leader>fc', '<Cmd>BCommits<CR>')
-vim.keymap.set('n', '<Leader>fo', '<Cmd>History<CR>')
--- Search history with preview disabled
-vim.keymap.set('n', '<Leader>f/', function()
-  vim.fn['fzf#vim#search_history']({
-    options = {
-      '--preview-window',
-      'hidden,<9999(hidden)',
-      '--bind',
-      'start:unbind(ctrl-/)+unbind(ctrl-_)',
-    },
-  })
+-- The layout of the preview window. vim#fzf#with_preview must be used to make this option
+-- effective.
+vim.g.fzf_vim = {
+  preview_window = {
+    'up,40%,border-down',
+    'ctrl-/',
+  },
+}
+
+local function merge_default(opts)
+  local extra_default_opts = {
+    '--border',
+    'rounded',
+    '--layout',
+    'reverse-list',
+  }
+  return vim.list_extend(opts, extra_default_opts)
+end
+
+-- Files
+vim.keymap.set('n', '<Leader>ff', function()
+  vim.fn['fzf#vim#files'](
+    '',
+    vim.fn['fzf#vim#with_preview']({
+      options = merge_default({
+        '--preview-window',
+        'hidden',
+      }),
+    })
+  )
 end)
--- Command history with preview disabled
-vim.keymap.set('n', '<Leader>f:', function()
-  vim.fn['fzf#vim#command_history']({
-    options = {
+
+-- Old files
+vim.keymap.set('n', '<Leader>fo', function()
+  vim.fn['fzf#vim#history'](vim.fn['fzf#vim#with_preview']({
+    options = merge_default({
+      '--prompt',
+      'OldFiles> ',
       '--preview-window',
-      'hidden,<9999(hidden)',
+      'hidden',
+    }),
+  }))
+end)
+
+-- Git files
+vim.keymap.set('n', '<C-p>', function()
+  vim.fn['fzf#vim#gitfiles'](
+    '',
+    vim.fn['fzf#vim#with_preview']({
+      options = merge_default({
+        '--preview-window',
+        'hidden',
+      }),
+    })
+  )
+end)
+
+-- Git commits
+vim.cmd([[
+  command! -bar -bang -nargs=* -range=% GitCommits <line1>,<line2>call fzf#vim#commits(<q-args>, {
+    \ "options": [
+    \   "--border",
+    \   "rounded",
+    \   "--layout",
+    \   "reverse-list",
+    \   "--prompt",
+    \   "Commits> ",
+    \   "--preview-window",
+    \   "up,70%,border-down",
+    \   "--header",
+    \   ":: CTRL-S (toggle sort), CTRL-Y (yank commmit hashes), CTRL-D (diff)",
+    \ ]}, <bang>0)
+]])
+vim.keymap.set({ 'n', 'x' }, '<Leader>fC', function()
+  local original_layout = vim.g.fzf_layout
+  vim.g.fzf_layout = {
+    window = {
+      height = 0.8,
+      width = 0.8,
+    }
+  }
+  vim.cmd('GitCommits')
+  vim.g.fzf_layout = original_layout
+end)
+
+-- Git commits for current buffer or visual-select lines
+vim.cmd([[
+  command! -bar -bang -nargs=* -range=% GitBufCommits <line1>,<line2>call fzf#vim#buffer_commits(<q-args>, {
+    \ "options": [
+    \   "--border",
+    \   "rounded",
+    \   "--layout",
+    \   "reverse-list",
+    \   "--prompt",
+    \   "BufCommits> ",
+    \   "--preview-window",
+    \   "up,70%,border-down",
+    \   "--header",
+    \   ":: CTRL-S (toggle sort), CTRL-Y (yank commmit hashes), CTRL-D (diff)",
+    \ ]}, <bang>0)
+]])
+vim.keymap.set({ 'n', 'x' }, '<Leader>fc', function()
+  local original_layout = vim.g.fzf_layout
+  vim.g.fzf_layout = {
+    window = {
+      height = 0.8,
+      width = 0.8,
+    }
+  }
+  vim.cmd('GitBufCommits')
+  vim.g.fzf_layout = original_layout
+end)
+
+-- Search history
+vim.keymap.set('n', '<Leader>f/', function()
+  vim.fn['fzf#vim#search_history'](vim.fn['fzf#vim#with_preview']({
+    options = merge_default({
+      '--prompt',
+      'SearchHist> ',
       '--bind',
-      'start:unbind(ctrl-/)+unbind(ctrl-_)',
-    },
+      'start:unbind(ctrl-/)',
+      '--preview-window',
+      'hidden',
+    }),
+  }))
+end)
+
+-- Command history
+vim.keymap.set('n', '<Leader>f:', function()
+  vim.fn['fzf#vim#command_history'](vim.fn['fzf#vim#with_preview']({
+    options = merge_default({
+      '--prompt',
+      'CommandHist> ',
+      '--bind',
+      'start:unbind(ctrl-/)',
+      '--preview-window',
+      'hidden',
+    }),
+  }))
+end)
+
+-- Buffers
+vim.keymap.set('n', '<Leader>fb', function()
+  vim.fn['fzf#vim#buffers'](
+  '',
+  vim.fn['fzf#vim#with_preview']({
+    placeholder = '{1}',
+    options = merge_default({
+      '--prompt',
+      'Buffers> ',
+    }),
   })
+  )
 end)
 
 -- Delete the selected buffers
@@ -107,17 +221,16 @@ vim.keymap.set('n', '<Leader>bD', function()
         vim.cmd('bwipeout ' .. table.concat(bufnrs, ' '))
       end
     end,
-    options = {
+    options = merge_default({
       '--multi',
-      '--reverse',
       '--prompt',
       'DelBufs> ',
       '--header',
-      'Press ENTER to delete all the selected buffers',
-      -- Set SCROLL in the preview window, {5} is the line numbrer
+      ':: ENTER (delete all selected buffers)',
+      -- Set SCROLL in the preview window, {-1} is the line numbrer
       '--preview-window',
-      '+{5}-/2',
-    },
+      '+{-1}-/2',
+    }),
     -- {FILENAME}:{LINENO}
     -- In each buffer info, the 3rd to last part is the buffer path that will be the
     -- FILENAME for bat and the last part is the line number that is for bat's
@@ -126,99 +239,33 @@ vim.keymap.set('n', '<Leader>bD', function()
   })))
 end)
 
--- List all the quickfix lists and switch to the selected one
-vim.keymap.set('n', '<Leader>fQ', function()
-  -- :chistory outputs a multiple line string containing all the quickfix lists
-  -- (each line is one qf list)
-  local qfs = vim.fn.execute('chistory')
-  local qflist = {}
-  local i = 1
-  -- Get a list of quickfix lists: split the string by \n.
-  -- We prepend sequence number in order to switch to the specific qf list via
-  -- :[count]chistory
-  for qf in string.gmatch(qfs, '([^\n]+)\n?') do
-    table.insert(qflist, '[' .. i .. '] ' .. qf)
-    i = i + 1
-  end
-  vim.fn['fzf#run'](vim.fn['fzf#wrap'](vim.fn['fzf#vim#with_preview']({
-    source = qflist,
-    ['sink*'] = function(lines)
-      local count = string.match(lines[1], '[(%d+)]')
-      vim.cmd('silent! ' .. count .. 'chistory')
-    end,
-    options = {
-      '--no-multi',
-      '--reverse',
-      '--prompt',
-      'QuickfixListHist> ',
-      '--header',
-      'Press Enter to switch to the selected quickfix list',
-      '--preview-window',
-      'hidden,<9999(hidden)',
-      '--bind',
-      'start:unbind(ctrl-/)+unbind(ctrl-_)',
-    },
-  })))
-end)
-
--- List all the location lists and switch to the selected one
-vim.keymap.set('n', '<Leader>fL', function()
-  -- :lhistory outputs a multiple line string containing all the location lists
-  -- (each line is one list)
-  local lls = vim.fn.execute('lhistory')
-  local list = {}
-  local i = 1
-  -- Get a list of location lists: split the string by \n.
-  -- We prepend sequence number in order to switch to the specific location list
-  -- via :[count]lhistory
-  for l in string.gmatch(lls, '([^\n]+)\n?') do
-    table.insert(list, '[' .. i .. '] ' .. l)
-    i = i + 1
-  end
-  vim.fn['fzf#run'](vim.fn['fzf#wrap'](vim.fn['fzf#vim#with_preview']({
-    source = list,
-    ['sink*'] = function(lines)
-      local count = string.match(lines[1], '[(%d+)]')
-      vim.cmd('silent! ' .. count .. 'lhistory')
-    end,
-    options = {
-      '--no-multi',
-      '--reverse',
-      '--prompt',
-      'LocationListHist> ',
-      '--header',
-      'Press Enter to switch to the selected location list',
-      '--preview-window',
-      'hidden,<9999(hidden)',
-      '--bind',
-      'start:unbind(ctrl-/)+unbind(ctrl-_)',
-    },
-  })))
-end)
-
--- Find files (:Files) for my dotfiles
+-- Find files for my dotfiles
 vim.keymap.set('n', '<Leader>f.', function()
   vim.fn['fzf#vim#files'](
     '',
     vim.fn['fzf#vim#with_preview']({
       source = 'ls-dotfiles',
-      options = {
+      options = merge_default({
         '--prompt',
         'Dotfiles> ',
-      },
+        '--preview-window',
+        'hidden',
+      }),
     })
   )
 end)
 
--- Find files under home
+-- Find files under home directory
 vim.keymap.set('n', '<Leader>f~', function()
   vim.fn['fzf#vim#files'](
     '~',
     vim.fn['fzf#vim#with_preview']({
-      options = {
+      options = merge_default({
         '--prompt',
         'HomeFiles> ',
-      },
+        '--preview-window',
+        'hidden',
+      }),
     })
   )
 end)
@@ -228,10 +275,136 @@ vim.keymap.set('i', '<C-x><C-f>', function()
   vim.fn['fzf#vim#complete#path']('fd')
 end)
 
--- Config grep to be the same as my shell script frg (~/.config/fzf/fzfutils/frg).
--- It could run rg with its normal options and has two modes:
+--
+-- Quickfix list history and location list history
+--
+
+-- Create temp dirs to store temp files for quickfix/location list preview
+local qflist_hist_dir = vim.fn.tempname()
+local loclist_hist_dir = vim.fn.tempname()
+uv.fs_mkdir(qflist_hist_dir, 511, function()
+end)
+uv.fs_mkdir(loclist_hist_dir, 511, function()
+end)
+
+-- Remove temp dirs when quiting nvim
+vim.api.nvim_create_autocmd('VimLeave', {
+  callback = function()
+    uv.fs_rmdir(qflist_hist_dir, function()
+    end)
+    uv.fs_rmdir(loclist_hist_dir, function()
+    end)
+  end,
+})
+
+-- Write contents into a file
+local function write_file(filepath, contents)
+  local file, _ = uv.fs_open(filepath, 'w', 438)
+  uv.fs_write(file, contents, -1, function()
+    uv.fs_close(file)
+  end)
+end
+
+-- Show list history in fzf and support preview for each entry.
+-- Dump the errors in each list into a separate temp file, and cat this file to preview the list.
+---@param win_local boolean Whether it's a window-local location list or quickfix list
+local function fzf_qf_history(win_local)
+  local hist_dir = win_local and loclist_hist_dir or qflist_hist_dir
+  local cur_nr = win_local and vim.fn.getloclist(0, { nr = 0 }).nr or vim.fn.getqflist({ nr = 0 }).nr
+  local entries = {}
+  local cnt = 1
+  for i = 1, 10 do
+    local what = { nr = i, id = 0, title = true, items = true, size = true }
+    local list = win_local and vim.fn.getloclist(0, what) or vim.fn.getqflist(what)
+    if list.id == 0 then
+      break
+    end
+    -- Prepend id to each entry is to use it for the fzf's --preview option, because id serves as
+    -- part of the filename of the temp file used for preview.
+    -- id won't be presented in each entry in fzf (thanks to fzf's --with-nth option).
+    -- Each entry presented in fzf is like: "[3] 1 items    Diagnostics".
+    local entry = list.id .. ' [' .. cnt .. '] ' .. list.size .. ' items    ' .. list.title
+    if list.nr == cur_nr then
+      entry = entry .. ' '
+    end
+    table.insert(entries, entry)
+    cnt = cnt + 1
+
+    -- Filename of the temp file
+    -- * For location list: use quickfix-id plus current winid
+    -- * For quickfix list: use quickfix-id
+    -- Name the file using quickfix-id because it is unique in a vim session. So each list will be
+    -- associated with one specific temp file, and this allows for avoiding the need to regenerate
+    -- the temp file every time.
+    local hist_path = hist_dir .. '/' .. list.id
+    if win_local then
+      hist_path = hist_path .. '-' .. vim.api.nvim_get_current_win()
+    end
+    local stat, _ = uv.fs_stat(hist_path)
+    if not stat then
+      local errors = {}
+      -- Number of entries written to the temp file for preview
+      local hist_size = 100
+      for j = 1, hist_size do
+        local item = list.items[j]
+        if item == nil then
+          break
+        end
+        local str = qf.format_qf_item(item)
+        table.insert(errors, str)
+      end
+      write_file(hist_path, table.concat(errors, '\n'))
+    end
+  end
+
+  -- fzf
+  local hist_cmd = win_local and 'lhistory' or 'chistory'
+  local open_cmd = win_local and 'lopen' or 'copen'
+  local prompt = win_local and 'LocationListHist' or 'QuickfixListHist'
+  local preview = 'cat ' .. hist_dir .. '/$(echo {1} | sed "s/[][]//g")'
+  if win_local then
+    preview = preview .. '-' .. vim.api.nvim_get_current_win()
+  end
+  vim.fn['fzf#run'](vim.fn['fzf#wrap']({
+    source = entries,
+    ['sink'] = function(line)
+      local count = string.match(line, '[(%d+)]')
+      vim.cmd('silent! ' .. count .. hist_cmd)
+      vim.cmd(open_cmd)
+    end,
+    placeholder = '',
+    options = merge_default({
+      '--with-nth',
+      '2..',
+      '--no-multi',
+      '--prompt',
+      prompt.. '> ',
+      '--header',
+      ':: ENTER (switch to the selected quickfix list)',
+      '--preview-window',
+      'up,70%,border-down',
+      '--preview',
+      preview,
+    }),
+  }))
+end
+
+-- List all the quickfix lists and switch to the selected one
+vim.keymap.set('n', '<Leader>fQ', function()
+  fzf_qf_history(false)
+end)
+
+-- List all the location lists for the current window and switch to the selected one
+vim.keymap.set('n', '<Leader>fL', function()
+  fzf_qf_history(true)
+end)
+
+--
+-- Config grep to be the same as my shell script frg (~/.config/fzf/fzfutils/frg). It could run rg
+-- with its normal options and has two modes:
 -- * RG mode (fzf will be just an interactive interface for RG) and
 -- * FZF mode (fzf will be the fuzzy finder for the results of RG)
+--
 
 ---Generate the fzf options for rg and fzf integration
 ---@param rg string The final rg command
@@ -240,7 +413,7 @@ end)
 ---@return table
 local function get_fzf_opts_for_RG(rg, query, name)
   name = name or ''
-  return {
+  return merge_default({
     '--ansi',
     '--disabled',
     '--query',
@@ -253,25 +426,26 @@ local function get_fzf_opts_for_RG(rg, query, name)
     'change:reload:' .. rg .. ' {q} || true',
     '--bind',
     'ctrl-f:unbind(change,ctrl-f)+change-prompt('
-        .. name
-        .. ' [FZF]> )+enable-search+rebind(ctrl-r)+transform-query(echo {q} > /tmp/rg-fzf-vim-r; cat /tmp/rg-fzf-vim-f)',
+      .. name
+      .. ' [FZF]> )+enable-search+rebind(ctrl-r)+transform-query(echo {q} > /tmp/rg-fzf-vim-r; cat /tmp/rg-fzf-vim-f)',
     '--bind',
     'ctrl-r:unbind(ctrl-r)+change-prompt('
-        .. name
-        .. ' [RG]> )+disable-search+reload('
-        .. rg
-        .. ' {q} || true)+rebind(change,ctrl-f)+transform-query(echo {q} > /tmp/rg-fzf-vim-f; cat /tmp/rg-fzf-vim-r)',
+      .. name
+      .. ' [RG]> )+disable-search+reload('
+      .. rg
+      .. ' {q} || true)+rebind(change,ctrl-f)+transform-query(echo {q} > /tmp/rg-fzf-vim-f; cat /tmp/rg-fzf-vim-r)',
     '--delimiter',
     ':',
     '--header',
-    'CTRL-R (RG mode), CTRL-F (FZF mode)',
+    ':: CTRL-R (RG mode), CTRL-F (FZF mode)',
     '--preview-window',
-    '+{2}-/2',
-  }
+    'up,70%,border-down,+{2}-/2',
+    '--preview',
+    'bat --style=numbers,changes --color=always --pager=never --highlight-line {2} -- {1}',
+  })
 end
 
--- Define a new command :RGU (U for Ultimate) that supports rg options and the
--- two modes mentioned above
+-- Define a new command :RGU (U for Ultimate) that supports rg options and two modes
 vim.api.nvim_create_user_command('RGU', function(opts)
   os.execute('rm -f /tmp/rg-fzf-vim-{r,f}')
   local extra_flags = {}
@@ -287,14 +461,14 @@ vim.api.nvim_create_user_command('RGU', function(opts)
   vim.fn['fzf#vim#grep2'](
     rg,
     query,
-    vim.fn['fzf#vim#with_preview']({
+    {
       options = get_fzf_opts_for_RG(rg, query, 'RGU'),
-    })
+    }
   )
 end, { bang = true, nargs = '*' })
 vim.keymap.set('n', '<Leader>gg', ':RGU ')
 
--- Live grep (:RG) for the nvim config
+-- Live grep (:RG) in nvim config
 vim.keymap.set('n', '<Leader>gv', function()
   os.execute('rm -f /tmp/rg-fzf-vim-{r,f}')
   local rg = rg_prefix .. ' --glob=!minpac -- '
@@ -302,16 +476,17 @@ vim.keymap.set('n', '<Leader>gv', function()
   vim.fn['fzf#vim#grep2'](
     rg,
     query,
-    vim.fn['fzf#vim#with_preview']({
+    {
       dir = '~/.config/nvim',
       options = get_fzf_opts_for_RG(rg, query, 'NvimConfig'),
-    })
+    }
   )
 end)
 
 -- Grep (:Rg) for the current word (normal mode) or the current selection (visual mode)
 vim.keymap.set({ 'n', 'x' }, '<Leader>gw', function()
   local query
+  local header
   if vim.fn.mode() == 'v' then
     local saved_reg = vim.fn.getreg('v')
     vim.cmd([[noautocmd sil norm "vy]])
@@ -320,15 +495,56 @@ vim.keymap.set({ 'n', 'x' }, '<Leader>gw', function()
   else
     query = vim.fn.expand('<cword>')
   end
+  header = query
   query = vim.fn.escape(query, '.*+?()[]{}\\|^$')
   local rg = rg_prefix .. ' -- ' .. vim.fn['fzf#shellescape'](query)
   vim.fn['fzf#vim#grep'](
     rg,
-    vim.fn['fzf#vim#with_preview']({
-      options = {
+    {
+      options = merge_default({
         '--prompt',
-        'Word> ',
-      },
-    })
+        'Word [Rg]> ',
+        '--preview-window',
+        'up,70%,border-down,+{2}-/2',
+        '--preview',
+        'bat --style=numbers,changes --color=always --pager=never --highlight-line {2} -- {1}',
+        -- Show the current query in header. Set its style to bold, red foreground via ANSI color
+        -- code.
+        '--header',
+        ':: Query: \x1b[1;31m' .. header .. '\x1b[m',
+      }),
+    }
   )
+end)
+
+-- Live grep in current buffer
+vim.keymap.set('n', '<Leader>gb', function()
+  local rg = rg_prefix .. ' --with-filename --'
+  local initial_query = ''
+  local filename = vim.api.nvim_buf_get_name(0)
+  if #filename == 0 or not vim.uv.fs_stat(filename) then
+    print("Live grep in current buffer requires a valid buffer!")
+    return
+  end
+  vim.fn['fzf#vim#grep2'](rg, initial_query, {
+    options = merge_default({
+      '--ansi',
+      '--query',
+      initial_query,
+      '--with-nth',
+      '2..',
+      '--prompt',
+      'Buffer [Rg]> ',
+      '--bind',
+      'start:reload(' .. rg .. " '' " .. filename .. ')',
+      '--bind',
+      'change:reload:' .. rg .. ' {q} ' .. filename .. '|| true',
+      '--preview-window',
+      'up,70%,border-down,+{2}-/2',
+      '--preview',
+      'bat --style=numbers,changes --color=always --pager=never --highlight-line {2} -- {1}',
+      '--header',
+      ':: Current buffer: ' .. vim.fn.expand('%:~:.'),
+    }),
+  })
 end)

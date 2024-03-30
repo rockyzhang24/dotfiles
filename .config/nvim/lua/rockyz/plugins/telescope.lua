@@ -9,8 +9,16 @@ telescope.setup({
     prompt_prefix = 'Telescope> ',
     selection_caret = ' ',
     multi_icon = ' ',
-    -- winblend = 5,
-    -- layout_strategy = "flex",
+    layout_strategy = 'vertical',
+    layout_config = {
+      prompt_position = 'bottom',
+      -- Make layout consistent with fzf.vim
+      height = 0.83,
+      width = 0.5,
+      preview_height = 0.35,
+    },
+    results_title = false,
+    sorting_strategy = "ascending",
     file_ignore_patterns = { '%.jpg', '%.jpeg', '%.png', '%.avi', '%.mp4' },
     mappings = {
       i = {
@@ -78,63 +86,67 @@ telescope.setup({
 telescope.load_extension('fzf')
 telescope.load_extension('projects')
 
+--
 -- Mappings
+--
 
-function M.get_ivy(extra_opts)
-  extra_opts = extra_opts or {}
-  -- The default opts for ivy theme can be found here https://github.com/nvim-telescope/telescope.nvim/blob/master/lua/telescope/themes.lua
-  local opts = {
-    results_title = false,
-    prompt_title = false,
-    previewer = true,
-    preview_title = '',
-    borderchars = {
-      -- Left border only
-      preview = { '', '', '', '│', '│', '', '', '│' },
-    },
-    layout_config = {
-      height = 0.6,
-    },
-  }
-  return require('telescope.themes').get_ivy(vim.tbl_deep_extend('force', opts, extra_opts))
-end
-
-vim.keymap.set('n', '<Leader>fh', function()
-  builtin.help_tags(M.get_ivy({
-    prompt_prefix = 'HelpTags> ',
-  }))
-end)
-vim.keymap.set('n', '<Leader>fg', function() -- g for groups
-  builtin.highlights(M.get_ivy({
+-- Highlight groups
+vim.keymap.set('n', '<Leader>fg', function()
+  builtin.highlights({
     prompt_prefix = 'Highlights> ',
-  }))
+    preview_title = false,
+  })
 end)
+
+-- Help tags
+vim.keymap.set('n', '<Leader>fh', function()
+  builtin.help_tags({
+    prompt_prefix = 'HelpTags> ',
+    preview_title = false,
+  })
+end)
+
+-- Marks
 vim.keymap.set('n', '<Leader>fm', function()
-  builtin.marks(M.get_ivy({
+  builtin.marks({
     prompt_prefix = 'Marks> ',
-  }))
+    preview_title = false,
+  })
 end)
+
+-- Items in quickfix
 vim.keymap.set('n', '<Leader>fq', function()
-  builtin.quickfix(M.get_ivy({
+  builtin.quickfix({
     prompt_prefix = 'Quickfix> ',
-  }))
+    preview_title = false,
+  })
 end)
+
+-- Items in location list
 vim.keymap.set('n', '<Leader>fl', function()
-  builtin.loclist(M.get_ivy({
+  builtin.loclist({
     prompt_prefix = 'LocationList> ',
-  }))
+    preview_title = false,
+  })
 end)
-vim.keymap.set('n', '<Leader>fr', builtin.resume)
--- LSP symbols
+
+-- LSP symbols in current buffer
 vim.keymap.set('n', '<Leader>fs', function()
-  builtin.lsp_document_symbols(M.get_ivy({
-    prompt_prefix = 'Symbols(document)> ',
-  }))
+  builtin.lsp_document_symbols({
+    prompt_prefix = 'Symbols [document]> ',
+    preview_title = false,
+  })
 end)
+
+-- LSP symbols in current workspace
 vim.keymap.set('n', '<Leader>fS', function()
-  builtin.lsp_workspace_symbols(M.get_ivy({
-    prompt_prefix = 'Symbols(workspace)> ',
-  }))
+  builtin.lsp_workspace_symbols({
+    prompt_prefix = 'Symbols [workspace]> ',
+    preview_title = false,
+  })
 end)
+
+-- Picker resume
+vim.keymap.set('n', '<Leader>fr', builtin.resume)
 
 return M

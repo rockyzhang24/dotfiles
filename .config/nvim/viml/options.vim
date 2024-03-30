@@ -6,7 +6,6 @@ set noshowmode
 set noshowcmd
 set wildmode=longest:full,full
 set textwidth=100
-set colorcolumn=100
 set fillchars=fold:\ ,foldopen:,foldclose:,foldsep:\ ,eob:\ ,msgsep:‾,
 set foldcolumn=1
 set foldlevel=99

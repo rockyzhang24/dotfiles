@@ -42,6 +42,7 @@ local indent_guide_fg = '#404040'
 local indent_guide_scope_fg = '#707070'
 local label_fg = '#c8c8c8'
 local tab_border_fg = '#2b2b2b'
+local statusline_blue = '#0078d4'
 
 local groups = {
 
@@ -89,7 +90,8 @@ local groups = {
   InlayHint = { fg = '#969696', bg = '#242424' }, -- editorInlayHint.foreground/background
   InlayHintType = "InlayHint", -- editorInlayHint.typeBackground/typeForeground
   -- Winbar
-  WinbarFolder = { fg = dark_blue, underline = true, sp = pure_black }, -- the folder icon right after the window number in winbar
+  WinbarHeader = { fg = white, bg = statusline_blue }, -- the very beginning part of winbar
+  WinbarTriangleSep = { fg = statusline_blue, underline = true, sp = pure_black }, -- the triangle separator in winbar
 
   --
   -- Editor

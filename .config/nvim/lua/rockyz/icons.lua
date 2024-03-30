@@ -48,14 +48,6 @@ icons.symbol_kinds = {
 icons.lightbulb = ''
 
 icons.winbar = {
-  folder = ' ',
-  delimiter = '',
-  ellipsis = ' ',
-  quickfix = ' ',
-  source_control = ' ',
-  outline = ' ',
-  explorer = ' ',
-  term = ' ',
 }
 
 icons.diagnostics = {
@@ -80,12 +72,19 @@ icons.separators = {
 }
 
 icons.misc = {
-  logo = '󰀘 ',
-  search = ' ',
+  delimiter = '',
   disconnect = ' ',
   edit = ' ',
-  indent = ' ',
   ellipsis = ' ',
+  explorer = ' ',
+  folder = ' ',
+  indent = ' ',
+  logo = '󰀘 ',
+  outline = ' ',
+  quickfix = ' ',
+  search = ' ',
+  source_control = ' ',
+  term = ' ',
 }
 
 return icons

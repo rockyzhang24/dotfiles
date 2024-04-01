@@ -106,14 +106,6 @@ vim.keymap.set('n', '<Leader>fh', function()
   })
 end)
 
--- Marks
-vim.keymap.set('n', '<Leader>fm', function()
-  builtin.marks({
-    prompt_prefix = 'Marks> ',
-    preview_title = false,
-  })
-end)
-
 -- LSP symbols in current buffer
 vim.keymap.set('n', '<Leader>fs', function()
   builtin.lsp_document_symbols({

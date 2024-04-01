@@ -272,6 +272,22 @@ vim.keymap.set('n', '<Leader>f~', function()
   )
 end)
 
+-- Marks
+vim.keymap.set('n', '<Leader>fm', function()
+  local filename = '$([[ -f {4} ]] && echo {4} || echo ' .. vim.api.nvim_buf_get_name(0) .. ')'
+  vim.fn['fzf#vim#marks'](vim.fn['fzf#vim#with_preview']({
+    placeholder = '',
+    options = merge_default({
+      '--prompt',
+      'Marks> ',
+      '--preview-window',
+      '+{2}-/2',
+      '--preview',
+      bat_prefix .. ' --highlight-line {2} -- ' .. filename,
+    })
+  }))
+end)
+
 -- Path completion in normal mode
 vim.keymap.set('i', '<C-x><C-f>', function()
   vim.fn['fzf#vim#complete#path']('fd')

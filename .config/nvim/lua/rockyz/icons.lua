@@ -69,6 +69,7 @@ icons.separators = {
   chevron_right = '',
   triangle_left = '',
   triangle_right = '',
+  bar = '│',
 }
 
 icons.misc = {

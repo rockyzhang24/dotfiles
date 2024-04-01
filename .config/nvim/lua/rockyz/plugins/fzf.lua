@@ -18,8 +18,10 @@
 
 local uv = require('luv')
 local qf = require('rockyz.qf')
+local bar_icon = require('rockyz.icons').separators.bar
 
 local rg_prefix = 'rg --column --line-number --no-heading --color=always --smart-case'
+local bat_prefix = 'bat --color=always --paging=never --style=numbers'
 
 vim.g.fzf_layout = {
   window = {
@@ -276,6 +278,63 @@ vim.keymap.set('i', '<C-x><C-f>', function()
 end)
 
 --
+-- Find entries in quickfix and location list
+--
+
+local function fzf_qf(win_local)
+  local what = { items = 0 }
+  local list = win_local and vim.fn.getloclist(0, what) or vim.fn.getqflist(what)
+  local entries = {}
+  for _, item in ipairs(list.items) do
+    local bufnr = item.bufnr
+    local bufname = vim.api.nvim_buf_get_name(bufnr)
+    local lnum = item.lnum
+    -- The formatted entries will be fed to fzf.
+    -- Each entry is like "bufnr bufname lnum path/to/the/file   |134:20| E error".
+    -- The first three parts are used for fzf itself and won't be presented in fzf window.
+    -- * bufnr is used for sink of fzf.vim
+    -- * bufname and lnum are used for preview
+    table.insert(entries, bufnr .. ' ' .. bufname .. ' ' .. lnum .. ' ' .. qf.format_qf_item(item))
+  end
+  -- fzf
+  local prompt = win_local and 'LocationList' or 'QuickfixList'
+  vim.fn['fzf#run'](vim.fn['fzf#wrap']({
+    source = entries,
+    ['sink'] = function(line)
+      local bufnr = string.match(line, "%d+")
+      local lnum = string.match(line, "%S+%s+%S+%s+(%S+)")
+      vim.cmd('buffer ' .. bufnr)
+      vim.cmd('execute ' .. lnum)
+      vim.cmd('normal! zvzz')
+    end,
+    placeholder = '',
+    options = merge_default({
+      '--no-multi',
+      '--prompt',
+      prompt .. '> ',
+      '--header',
+      ':: ENTER (open the file)',
+      '--with-nth',
+      '4..',
+      '--preview-window',
+      'up,70%,border-down,+{3}-/2',
+      '--preview',
+      bat_prefix .. ' --highlight-line {3} -- {2}',
+    }),
+  }))
+end
+
+-- Quickfix list
+vim.keymap.set('n', '<Leader>fq', function()
+  fzf_qf(false)
+end)
+
+-- Location list
+vim.keymap.set('n', '<Leader>fl', function()
+  fzf_qf(true)
+end)
+
+--
 -- Quickfix list history and location list history
 --
 
@@ -441,7 +500,7 @@ local function get_fzf_opts_for_RG(rg, query, name)
     '--preview-window',
     'up,70%,border-down,+{2}-/2',
     '--preview',
-    'bat --style=numbers,changes --color=always --pager=never --highlight-line {2} -- {1}',
+    bat_prefix .. ' --highlight-line {2} -- {1}',
   })
 end
 
@@ -507,7 +566,7 @@ vim.keymap.set({ 'n', 'x' }, '<Leader>gw', function()
         '--preview-window',
         'up,70%,border-down,+{2}-/2',
         '--preview',
-        'bat --style=numbers,changes --color=always --pager=never --highlight-line {2} -- {1}',
+        bat_prefix .. ' --highlight-line {2} -- {1}',
         -- Show the current query in header. Set its style to bold, red foreground via ANSI color
         -- code.
         '--header',
@@ -542,7 +601,7 @@ vim.keymap.set('n', '<Leader>gb', function()
       '--preview-window',
       'up,70%,border-down,+{2}-/2',
       '--preview',
-      'bat --style=numbers,changes --color=always --pager=never --highlight-line {2} -- {1}',
+      bat_prefix .. ' --highlight-line {2} -- {1}',
       '--header',
       ':: Current buffer: ' .. vim.fn.expand('%:~:.'),
     }),

@@ -114,22 +114,6 @@ vim.keymap.set('n', '<Leader>fm', function()
   })
 end)
 
--- Items in quickfix
-vim.keymap.set('n', '<Leader>fq', function()
-  builtin.quickfix({
-    prompt_prefix = 'Quickfix> ',
-    preview_title = false,
-  })
-end)
-
--- Items in location list
-vim.keymap.set('n', '<Leader>fl', function()
-  builtin.loclist({
-    prompt_prefix = 'LocationList> ',
-    preview_title = false,
-  })
-end)
-
 -- LSP symbols in current buffer
 vim.keymap.set('n', '<Leader>fs', function()
   builtin.lsp_document_symbols({

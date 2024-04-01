@@ -1,5 +1,6 @@
 local M = {}
 local fn = vim.fn
+local bar = require('rockyz.icons').separators.bar
 
 --
 -- Change the appearance for the texts displayed in quickfix
@@ -9,7 +10,7 @@ local fn = vim.fn
 -- The length limit of the file name
 local limit = 35
 local fname_fmt1, fname_fmt2 = '%-' .. limit .. 's', ' %.' .. (limit - 2) .. 's'
-local valid_fmt = '%s │%5d:%-3d│%s %s'
+local valid_fmt = '%s ' .. bar .. '%5d:%-3d' .. bar .. '%s %s'
 
 function M.format_qf_item(item)
   local fname = ''

@@ -39,6 +39,11 @@ cmp.setup({
       max_width = math.floor(vim.o.columns * 0.4),
     },
   },
+  view = {
+    entries = {
+      follow_cursor = true,
+    },
+  },
   -- Mappings
   -- Default mappings can be found here: https://github.com/hrsh7th/nvim-cmp/blob/main/lua/cmp/config/mapping.lua
   -- Ref: https://github.com/hrsh7th/nvim-cmp/issues/1027

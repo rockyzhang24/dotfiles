@@ -73,7 +73,7 @@ M.get_winbar = function()
   local path = vim.fn.expand('%:~:.:h')
   -- For the window of fugitive diff (it's a regular buffer but with 'diff' set)
   if string.find(path, '^fugitive:') then
-    local fugitive_git_path, fugitive_file_path = string.match(path, '^fugitive://(%S+//%d+/)(.*)')
+    local fugitive_git_path, fugitive_file_path = string.match(path, '^fugitive://(%S+//%w+)/(.*)')
     fugitive_git_path = vim.fn.fnamemodify(fugitive_git_path, ':~:.')
     path = fugitive_file_path
     winbar = winbar .. ' Fugitive [' .. fugitive_git_path .. '] ' .. icons.delimiter

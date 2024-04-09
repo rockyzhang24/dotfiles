@@ -10,34 +10,44 @@ function M.tabline()
       table.insert(tl, '%#TabLine#')
     end
     table.insert(tl, ' ' .. i .. ':')
+
+    -- Buffer name
     local winid = vim.api.nvim_tabpage_get_win(tp)
     local bufnr = vim.api.nvim_win_get_buf(winid)
     local bufname = vim.api.nvim_buf_get_name(bufnr)
+    local ft = vim.bo[bufnr].filetype
     local name = ''
-    if not bufname or bufname == '' then
-      local winType = vim.fn.win_gettype(winid)
-      if winType == 'loclist' then
-        name = '[Location]'
-      elseif winType == 'quickfix' then
-        name = '[Quickfix]'
-      else
-        name = '[No Name]'
-      end
-    elseif string.match(bufname, '%d;#FZF') then
-      name = '[FZF]'
-    elseif string.match(bufname, 'fugitive:///') then
-      name = '[Fugitive]'
-    elseif string.match(bufname, 'oil:///') then
-      name = '[Oil]'
-    elseif string.match(bufname, 'term:.*/bin/zsh') then
-      name = '[Zsh]'
+    if ft == 'qf' then
+      name = vim.fn.win_gettype(winid) == 'loclist' and '[Location List]' or '[Quickfix]'
+    elseif ft == 'fzf' then
+      name = 'FZF'
+    elseif ft == 'fugitive' then
+      name = 'Fugitive'
+    elseif ft == 'term' then
+      name = 'Term'
+    elseif ft == 'help' then
+      name = 'Vim Help'
+    elseif ft == 'oil' then
+      name = 'Oil'
+    elseif vim.fn.win_gettype(winid) == 'command' then
+      name = 'Cmdwin'
     else
-      name = vim.fn.fnamemodify(bufname, ':t')
-      if not string.match(name, '%[.+%]$') then
-        name = '[' .. name .. ']'
+      if bufname == '' then
+        name = 'No Name'
+      else
+        name = vim.fn.fnamemodify(bufname, ':t')
+        -- For diff
+        if vim.wo[winid].diff then
+          name = name .. ' (diff)'
+        end
       end
     end
+    if not string.match(name, '%[.+%]$') then
+      name = '[' .. name .. ']'
+    end
     table.insert(tl, name .. ' ')
+
+    -- "Modified" indicator
     local bufmodified = vim.fn.getbufvar(bufnr, '&mod')
     if bufmodified ~= 0 then
       table.insert(tl, '[+] ')

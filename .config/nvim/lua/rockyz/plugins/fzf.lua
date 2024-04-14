@@ -1,4 +1,6 @@
--- Configurations for fzf.vim
+--------------------------------------------------
+-- This is the configurations for junegunn/fzf.vim
+--------------------------------------------------
 
 -- Notes about fzf#vim#with_preview()
 --
@@ -16,12 +18,44 @@
 --    option in the `options` table in the spec dictionary (e.g., see the BCommits keymap below). If
 --    --preview option is not set anywhere, the one defined in FZF_DEFAULT_OPTS will be used.
 
+-----------------------------------
+-- The support finders are as below
+-----------------------------------
+
+-- Files
+-- Old files
+-- Git files
+-- Git commits
+-- Git commits for current buffer
+-- Search history
+-- Command history
+-- Buffers
+-- Buffer delete
+-- Files for my dotfiles
+-- Files under HOME
+-- Tabs
+-- Quickfix/Location list items
+-- Quickfix/Location list history
+-- Ultimate grep (:RGU)
+-- Live grep in my nvim config
+-- Grep for the current word/selection
+-- Live grep in current buffer
+
 local uv = require('luv')
 local qf = require('rockyz.qf')
-local bar_icon = require('rockyz.icons').separators.bar
+local caret = require('rockyz.icons').caret
 
 local rg_prefix = 'rg --column --line-number --no-heading --color=always --smart-case'
 local bat_prefix = 'bat --color=always --paging=never --style=numbers'
+
+-- ANSI escape codes for colors
+local colors = {
+  red = '\x1b[31m',
+  red_bold = '\x1b[1;31m',
+  green = '\x1b[32m',
+  yellow = '\x1b[33m',
+  reset = '\x1b[m'
+}
 
 vim.g.fzf_layout = {
   window = {
@@ -41,7 +75,7 @@ vim.g.fzf_action = {
 -- effective.
 vim.g.fzf_vim = {
   preview_window = {
-    'up,40%,border-down',
+    'up,50%,border-down',
     'ctrl-/',
   },
 }
@@ -55,6 +89,11 @@ local function merge_default(opts)
   }
   return vim.list_extend(opts, extra_default_opts)
 end
+
+-- Path completion in normal mode
+vim.keymap.set('i', '<C-x><C-f>', function()
+  vim.fn['fzf#vim#complete#path']('fd')
+end)
 
 -- Files
 vim.keymap.set('n', '<Leader>ff', function()
@@ -288,9 +327,82 @@ vim.keymap.set('n', '<Leader>fm', function()
   }))
 end)
 
--- Path completion in normal mode
-vim.keymap.set('i', '<C-x><C-f>', function()
-  vim.fn['fzf#vim#complete#path']('fd')
+-- Tabs
+vim.keymap.set('n', '<Leader>ft', function()
+  local entries = {}
+  local cur_tab = vim.api.nvim_get_current_tabpage()
+  for idx, tid in ipairs(vim.api.nvim_list_tabpages()) do
+    local filenames = {}
+    -- Store winids in each tab. They are used for closing the tab via CTRL-D.
+    local winids = {}
+    local cur_winid = vim.api.nvim_tabpage_get_win(tid)
+    local cur_bufname
+    local cur_lnum
+    for _, winid in ipairs(vim.api.nvim_tabpage_list_wins(tid)) do
+      -- Only consider the normal windows and ignore the floating windows
+      if vim.api.nvim_win_get_config(winid).relative == '' then
+        table.insert(winids, winid)
+        local bufnr = vim.api.nvim_win_get_buf(winid)
+        local bufname = vim.api.nvim_buf_get_name(bufnr)
+        if bufname == '' then
+          bufname = '[No Name]'
+        end
+        local filename = vim.fn.fnamemodify(bufname, ':t')
+        -- Handle current window in each tab
+        if winid == cur_winid then
+          -- Space is the default delimiter in fzf, so temporarily replacing it with a special
+          -- string such as "@@@@". When the bufname is needed in the preview later on, replace it
+          -- back.
+          cur_bufname = bufname:gsub(" ", "@@@@")
+          cur_lnum = vim.api.nvim_win_get_cursor(winid)[1]
+          -- Use green color to mark the current window in a tab
+          filename = colors.green .. filename .. colors.reset
+        end
+        table.insert(filenames, filename)
+      end
+    end
+    -- prefix is used by fzf itself for preview and sink, and it won't be presented in each entry
+    local prefix = cur_bufname .. ' ' .. cur_lnum .. ' ' .. tid .. ' ' .. table.concat(winids, ',')
+    local entry = prefix .. ' ' .. idx .. ': ' .. table.concat(filenames, ', ')
+    -- Indicator for current tab
+    if tid == cur_tab then
+      entry = entry .. ' ' .. caret.caret_left
+    end
+    table.insert(entries, entry)
+  end
+  vim.fn['fzf#run'](vim.fn['fzf#wrap']({
+    source = entries,
+    ['sink*'] = function(lines)
+      local key = lines[1]
+      if key == 'ctrl-d' and #vim.api.nvim_list_tabpages() > 1 then
+        for i = 2, #lines do
+          for winid in lines[i]:match('%S+%s%S+%s%S+%s(%S+)'):gmatch('[^,]+') do
+            vim.api.nvim_win_close(tonumber(winid), false)
+          end
+        end
+      else
+        if #lines == 2 then
+          local tid = string.match(lines[2], '%S+%s%S+%s(%S+)')
+          vim.api.nvim_set_current_tabpage(tonumber(tid))
+        end
+      end
+    end,
+    options = merge_default({
+      '--ansi',
+      '--with-nth',
+      '5..',
+      '--prompt',
+      'Tabs> ',
+      '--header',
+      ':: ENTER (switch to the tab), CTRL-D (close selected tabs)',
+      '--expect',
+      'ctrl-d',
+      '--preview-window',
+      'up,50%,border-down,+{2}-/2',
+      '--preview',
+      'file=$(echo {1} | sed "s/@@@@/ /g"); [[ -f $file ]] && ' .. bat_prefix .. ' --highlight-line {2} -- $file || echo "No preview support!"',
+    }),
+  }))
 end)
 
 --
@@ -400,7 +512,7 @@ local function fzf_qf_history(win_local)
     -- Each entry presented in fzf is like: "[3] 1 items    Diagnostics".
     local entry = list.id .. ' [' .. cnt .. '] ' .. list.size .. ' items    ' .. list.title
     if list.nr == cur_nr then
-      entry = entry .. ' '
+      entry = entry .. ' ' .. caret.caret_left
     end
     table.insert(entries, entry)
     cnt = cnt + 1
@@ -586,7 +698,7 @@ vim.keymap.set({ 'n', 'x' }, '<Leader>gw', function()
         -- Show the current query in header. Set its style to bold, red foreground via ANSI color
         -- code.
         '--header',
-        ':: Query: \x1b[1;31m' .. header .. '\x1b[m',
+        ':: Query: ' .. colors.red_bold .. header .. colors.reset,
       }),
     }
   )

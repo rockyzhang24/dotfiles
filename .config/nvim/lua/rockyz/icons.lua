@@ -72,6 +72,11 @@ icons.separators = {
   bar = '│',
 }
 
+icons.caret = {
+  caret_left = '',
+  caret_right = '',
+}
+
 icons.misc = {
   delimiter = '',
   disconnect = ' ',

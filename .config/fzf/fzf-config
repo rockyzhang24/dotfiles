@@ -1,5 +1,5 @@
 #!/usr/bin/env zsh
- 
+
 # Terminal background is transparent or not
 export TRANSPARENT=false
 
@@ -55,7 +55,7 @@ export FZF_DEFAULT_OPTS=" \
     `hl:#2aaaff,fg+:#ffffff,bg+:#04395e,gutter:$bg,hl+:#2aaaff,query:#cccccc,`
     `disabled:#808080,info:#8b949e,border:#454545,separator:#454545,`
     `scrollbar:#424242,label:#454545,preview-label:#454545,prompt:#cccccc,`
-    `pointer:#ffffff,marker:#4ec9b0,spinner:#0078d4,header:#3794ff:italic:underline"
+    `pointer:#ffffff,marker:#4ec9b0,spinner:#0078d4,header:#3794ff:underline"
 
 # Use fd for FZF completion
 # 1). listing files and dirs ($1 is the base path to start search) such as "vim ~/.config/**<TAB>"

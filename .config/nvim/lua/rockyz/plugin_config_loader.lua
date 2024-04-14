@@ -28,7 +28,6 @@ local modules = {
   'treesitter-textobjects',
   'treesj',
   'telescope',
-  'telescope-tabs',
   'undotree',
   'vim-asterisk',
   'vim-flog',

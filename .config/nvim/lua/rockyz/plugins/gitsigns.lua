@@ -4,6 +4,7 @@ gitsigns.setup({
   -- Hidden features (probably not stable)
   _signs_staged_enable = true,
   _extmark_signs = true,
+  _inline2 = true,
 
   signs = {
     add = { show_count = false },
@@ -17,6 +18,7 @@ gitsigns.setup({
   numhl = false,
   linehl = false,
   word_diff = false,
+  attach_to_untracked = true,
   sign_priority = 6,
   preview_config = {
     -- Options passed to nvim_open_win
@@ -39,9 +41,7 @@ gitsigns.setup({
     ['+'] = '₊',
   },
 
-  -- Keymaps
   on_attach = function(bufnr)
-    local gs = package.loaded.gitsigns
 
     local function buf_map(mode, l, r, opts)
       opts = opts or {}
@@ -49,62 +49,66 @@ gitsigns.setup({
       vim.keymap.set(mode, l, r, opts)
     end
 
-    -- Navigation
+    -- Hunk navigation
     buf_map('n', ']h', function()
       if vim.wo.diff then
-        return ']c'
+        vim.cmd.normal({']c', bang = true})
+      else
+        gitsigns.nav_hunk('next')
       end
-      vim.schedule(function()
-        gs.next_hunk()
-      end)
-      return '<Ignore>'
-    end, { expr = true })
+    end)
+
     buf_map('n', '[h', function()
       if vim.wo.diff then
-        return '[c'
+        vim.cmd.normal({'[c', bang = true})
+      else
+        gitsigns.nav_hunk('prev')
       end
-      vim.schedule(function()
-        gs.prev_hunk()
-      end)
-      return '<Ignore>'
-    end, { expr = true })
+    end)
 
     -- Stage hunk or buffer
-    buf_map('n', '<Leader>hs', gs.stage_hunk)
+    buf_map('n', '<Leader>hs', gitsigns.stage_hunk)
     buf_map('v', '<Leader>hs', function()
-      gs.stage_hunk({ vim.fn.line('.'), vim.fn.line('v') })
+      gitsigns.stage_hunk({ vim.fn.line('.'), vim.fn.line('v') })
     end)
-    buf_map('n', '<Leader>hS', gs.stage_buffer)
+    buf_map('n', '<Leader>hS', gitsigns.stage_buffer)
 
     -- Reset
-    buf_map('n', '<Leader>hr', gs.reset_hunk)
+    buf_map('n', '<Leader>hr', gitsigns.reset_hunk)
     buf_map('v', '<Leader>hr', function()
-      gs.reset_hunk({ vim.fn.line('.'), vim.fn.line('v') })
+      gitsigns.reset_hunk({ vim.fn.line('.'), vim.fn.line('v') })
     end)
-    buf_map('n', '<Leader>hR', gs.reset_buffer)
+    buf_map('n', '<Leader>hR', gitsigns.reset_buffer)
 
-    -- Undo the last gs.stage_hunk call
-    buf_map('n', '<Leader>hu', gs.undo_stage_hunk)
+    -- Undo the last gitsigns.stage_hunk call
+    buf_map('n', '<Leader>hu', gitsigns.undo_stage_hunk)
 
     -- Discard changes
     buf_map({ 'n', 'v' }, '<Leader>hr', ':Gitsigns reset_hunk<CR>')
-    buf_map('n', '<Leader>hR', gs.reset_buffer)
+    buf_map('n', '<Leader>hR', gitsigns.reset_buffer)
 
-    -- Others
-    buf_map('n', '<Leader>hp', gs.preview_hunk)
+    -- Hunk preview
+    buf_map('n', '<Leader>hp', gitsigns.preview_hunk)
+
+    -- Blame
     buf_map('n', '<Leader>hb', function()
-      gs.blame_line({ full = true })
+      gitsigns.blame_line({ full = true })
     end)
-    buf_map('n', '<Leader>hd', gs.toggle_deleted) -- toggle showing deleted/changed lines via virtual lines
-    buf_map('n', '<Leader>hw', gs.toggle_word_diff) -- toggle the word_diff in the buffer
+
+    -- Toggle
+    buf_map('n', '<BS>d', gitsigns.toggle_deleted) -- toggle showing deleted/changed lines via virtual lines
+    buf_map('n', '<BS>w', gitsigns.toggle_word_diff) -- toggle the word_diff in the buffer
+    buf_map('n', '<BS>b', gitsigns.toggle_current_line_blame) -- toggle displaying the blame for the current line
 
     -- Text object
     buf_map({ 'o', 'x' }, 'ih', ':<C-U>Gitsigns select_hunk<CR>')
 
-    -- Put hunks into quickfix list
-    buf_map('n', '<leader>hQ', function()
-      gitsigns.setqflist('all')
-    end) -- all modified files for git dir
+    -- Populate quickfix with hunks
     buf_map('n', '<leader>hq', gitsigns.setqflist)
+
+    buf_map('n', '<leader>hQ', function()
+      -- all modified files for git dir
+      gitsigns.setqflist('all')
+    end)
   end,
 })

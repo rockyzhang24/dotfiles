@@ -14,7 +14,7 @@ local opts = {
   virt_text = {
     { bulb_icon, 'LightBulb' },
   },
-  virt_text_pos = 'overlay',
+  virt_text_win_col = 0,
   scoped = true,
 }
 

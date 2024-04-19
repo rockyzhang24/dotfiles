@@ -3,105 +3,74 @@
 -- Like VSCode, the lightbulb is displayed at the beginning (the first column) of the same line, or
 -- the previous line if the space is not enough.
 --
--- I implement the lightbulb using a floating window and for simplicity it's only displayed in the
--- active window.
---
--- TODO: the extmark currently is buffer local. If multiple windows open a same buffer, the
--- lightbulb will be displayed in sync. After this issue
--- (https://github.com/neovim/neovim/issues/19654) is solved, we can display the lightbulb using
--- extmark.
+-- This is implemented by using extmarks and it's window-local.
 
 local lsp_utils = require('rockyz.lsp.utils')
-local icon = require('rockyz.icons').lightbulb
+local bulb_icon = require('rockyz.icons').lightbulb
 
-local bulb_bufnr
-local prev_winid
-local prev_bulb_linenr
 local method = 'textDocument/codeAction'
 
--- Calculate the row offset relative to the cursor line
-local function get_row_offset()
-  local offset = 0
-  local cur_indent = vim.fn.indent('.')
-  if cur_indent <= 2 then
-    if vim.fn.line('.') == vim.fn.line('w0') then
-      offset = 1
+local opts = {
+  virt_text = {
+    { bulb_icon, 'LightBulb' },
+  },
+  virt_text_pos = 'overlay',
+  scoped = true,
+}
+
+-- Get the line number where the bulb should be displayed
+local function get_bulb_linenr()
+  local linenr = vim.fn.line('.')
+  if vim.fn.indent('.') <= 2 then
+    if linenr == vim.fn.line('w0') then
+      return linenr + 1
     else
-      offset = -1
+      return linenr - 1
     end
   end
-  return offset
+  return linenr
 end
 
--- Calculate the col offset relative to the cursor column
-local function get_col_offset()
-  -- We want to get how many columns (characters) before the cursor that will be the offset for
-  -- placing the bulb. If the indent is TAB, each indent level is counted as a single one character
-  -- no matter how many spaces the TAB has. We need to convert it to the number of spaces.
-  local cur_indent = vim.fn.indent('.')
-  local cursor_col = vim.fn.col('.')
-  local col = -cursor_col + 1
-  if not vim.api.nvim_get_option_value('expandtab', {}) then
-    local tabstop = vim.api.nvim_get_option_value('tabstop', {})
-    local tab_cnt = cur_indent / tabstop
-    if cursor_col <= tab_cnt then
-      col = -(cursor_col - 1) * tabstop
-    else
-      col = -(cursor_col - tab_cnt + cur_indent) + 1
-    end
-  end
-  return col
-end
-
--- Create a floating window showing a lightbulb
-local function lightbulb_create(row, col)
-  bulb_bufnr = vim.api.nvim_create_buf(false, true)
-  local winid = vim.api.nvim_open_win(bulb_bufnr, false, {
-    relative = 'cursor',
-    width = 1,
-    height = 1,
-    row = row,
-    col = col,
-    style = 'minimal',
-    noautocmd = true,
-    focusable = false,
-    zindex = 1,
-  })
-  vim.wo[winid].winhl = 'Normal:LightBulb'
-  vim.api.nvim_buf_set_lines(bulb_bufnr, 0, 1, false, { icon })
-end
-
--- Remove the bulb floating window
-local function lightbulb_remove()
-  if bulb_bufnr ~= nil then
-    vim.cmd(('noautocmd bwipeout %d'):format(bulb_bufnr))
-    bulb_bufnr = nil
-  end
-end
-
--- Update the lightbulb, i.e., removing the old one and create a new one
-local function lightbulb_update(scrolled)
-  local row_offset = get_row_offset()
-  local col_offset = get_col_offset()
-  local bulb_linenr = vim.fn.line('.') + row_offset
-  -- To avoid bulb flickering: don't refresh the bulb when moving the cursor within a same line
-  if bulb_bufnr ~= nil and bulb_linenr == prev_bulb_linenr and not scrolled then
+-- Remove the lightbulb
+local function lightbulb_remove(winid, bufnr)
+  if vim.w[winid].bulb_ns_id == nil and vim.w[winid].bulb_mark_id == nil then
     return
   end
-  lightbulb_remove()
-  lightbulb_create(row_offset, col_offset)
-  prev_bulb_linenr = bulb_linenr
+  vim.api.nvim_buf_del_extmark(bufnr, vim.w[winid].bulb_ns_id, vim.w[winid].bulb_mark_id)
+  vim.w[winid].prev_bulb_line = nil
 end
 
--- Display the lightbulb
+-- Create or update the lightbulb
+local function lightbulb_update(winid, bufnr)
+  local bulb_line = get_bulb_linenr() - 1 -- 0-based
+
+  -- No need to update the bulb if its position does not change
+  if bulb_line == vim.w[winid].prev_bulb_line then
+    return
+  end
+
+  -- Create a window-local namespace for the extmark
+  if vim.w[winid].bulb_ns_id == nil then
+    local ns_id = vim.api.nvim_create_namespace('bulb_ns_id_' .. winid)
+    vim.api.nvim_win_add_ns(winid, ns_id)
+    vim.w[winid].bulb_ns_id = ns_id
+  end
+  -- Create an extmark or update the existing one
+  if vim.w[winid].bulb_mark_id == nil then
+    vim.w[winid].bulb_mark_id = vim.api.nvim_buf_set_extmark(bufnr, vim.w[winid].bulb_ns_id, bulb_line, 0, opts)
+    vim.w[winid].bulb_mark_opts = vim.tbl_extend('keep', opts, {
+      id = vim.w[winid].bulb_mark_id,
+    })
+  else
+    vim.api.nvim_buf_set_extmark(bufnr, vim.w[winid].bulb_ns_id, bulb_line, 0, vim.w[winid].bulb_mark_opts)
+  end
+
+  vim.w[winid].prev_bulb_line = bulb_line
+end
+
 -- Ref: the source code of vim.lsp.buf.code_action()
 local function lightbulb()
   local winid = vim.api.nvim_get_current_win()
-  -- Remove lightbulb first after switching to another window
-  if winid ~= prev_winid then
-    lightbulb_remove()
-    prev_winid = winid
-  end
   local bufnr = vim.api.nvim_get_current_buf()
   local context = {
     -- Get the diagnostics under the cursor
@@ -112,7 +81,7 @@ local function lightbulb()
   for _, client in ipairs(clients) do
     local params = vim.lsp.util.make_range_params(winid, client.offset_encoding)
     params.context = context
-    client.request(method, params, function(err, result, ctx)
+    client.request(method, params, function(_, result, _)
       if has_action then
         return
       end
@@ -122,9 +91,9 @@ local function lightbulb()
         end
       end
       if has_action then
-        lightbulb_update()
+        lightbulb_update(winid, bufnr)
       else
-        lightbulb_remove()
+        lightbulb_remove(winid, bufnr)
       end
     end, bufnr)
   end
@@ -134,23 +103,4 @@ vim.api.nvim_create_augroup('lightbulb', { clear = true })
 vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
   group = 'lightbulb',
   callback = lightbulb,
-})
--- The bulb should be updated when scrolling the window
-vim.api.nvim_create_autocmd({ 'WinScrolled' }, {
-  group = 'lightbulb',
-  callback = function()
-    local winid = vim.api.nvim_get_current_win()
-    local event = vim.v.event[tostring(winid)]
-    if bulb_bufnr ~= nil and event ~= nil and event.topline ~= 0 then
-      lightbulb_update(true)
-    end
-  end,
-})
--- If we open a terminal (:term) and automatically enters INSERT mode, the bulb won't be removed. So
--- if the terminal is opened in the current buffer, the bulb will show in the terminal.
-vim.api.nvim_create_autocmd({ 'TermOpen' }, {
-  group = 'lightbulb',
-  callback = function()
-    lightbulb_remove()
-  end
 })

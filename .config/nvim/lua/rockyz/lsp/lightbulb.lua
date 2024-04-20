@@ -41,9 +41,7 @@ local function lightbulb_remove(winid, bufnr)
 end
 
 -- Create or update the lightbulb
-local function lightbulb_update(winid, bufnr)
-  local bulb_line = get_bulb_linenr() - 1 -- 0-based
-
+local function lightbulb_update(winid, bufnr, bulb_line)
   -- No need to update the bulb if its position does not change
   if bulb_line == vim.w[winid].prev_bulb_line then
     return
@@ -72,6 +70,7 @@ end
 local function lightbulb()
   local winid = vim.api.nvim_get_current_win()
   local bufnr = vim.api.nvim_get_current_buf()
+  local bulb_line = get_bulb_linenr() - 1 -- 0-based for extmark
   local context = {
     -- Get the diagnostics under the cursor
     diagnostics = lsp_utils.get_diagnostics_under_cursor(),
@@ -91,7 +90,7 @@ local function lightbulb()
         end
       end
       if has_action then
-        lightbulb_update(winid, bufnr)
+        lightbulb_update(winid, bufnr, bulb_line)
       else
         lightbulb_remove(winid, bufnr)
       end

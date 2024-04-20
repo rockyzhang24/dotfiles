@@ -66,8 +66,15 @@ local function lightbulb_update(winid, bufnr, bulb_line)
   vim.w[winid].prev_bulb_line = bulb_line
 end
 
--- Ref: the source code of vim.lsp.buf.code_action()
+-- Handle the lightbulb
+--
+-- The part of code for checking code actions is referenced from the source code of
+-- vim.lsp.buf.code_action()
 local function lightbulb()
+  -- Don't display the bulb in diff window
+  if vim.wo.diff then
+    return
+  end
   local winid = vim.api.nvim_get_current_win()
   local bufnr = vim.api.nvim_get_current_buf()
   local bulb_line = get_bulb_linenr() - 1 -- 0-based for extmark

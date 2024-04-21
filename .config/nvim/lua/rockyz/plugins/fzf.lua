@@ -10,8 +10,7 @@
 --    {FILENAME} and {LINENO} are placeholders of fzf. In this case, {FILENAME} will be the file
 --    name for bat and {LINENO} the line number to be highlighted for bat's --highlight-line option.
 -- 3. The placeholders in fzf's --preview option can be specified through the placeholder field in
---    the table passed to this function. This table is the spec dictionary similar to vim#wrap. The
---    "Deleted selected buffers" keymap below illustrate how to set the placeholders.
+--    the table passed to this function. This table is the spec dictionary similar to vim#wrap.
 -- 4. If the placeholder is assigned to an empty string, fzf#vim#with_preview won't set --preview
 --    option for fzf. The outer function calling fzf#vim#with_preview may set --preview instead
 --    (e.g., fzf#vim#commits set --preview to use delta), or we can explicitly set the --preview
@@ -67,8 +66,7 @@ vim.g.fzf_layout = {
 vim.g.fzf_action = {
   ['ctrl-x'] = 'split',
   ['ctrl-v'] = 'vsplit',
-  ['ctrl-t'] = 'tab drop',
-  ['enter'] = 'drop',
+  ['ctrl-t'] = 'tab split',
 }
 
 -- The layout of the preview window. vim#fzf#with_preview must be used to make this option
@@ -218,66 +216,37 @@ vim.keymap.set('n', '<Leader>f:', function()
 end)
 
 -- Buffers
+-- Enter to switch and CTRL-D to delete
 vim.keymap.set('n', '<Leader>fb', function()
-  vim.fn['fzf#vim#buffers'](
-  '',
-  vim.fn['fzf#vim#with_preview']({
-    placeholder = '{1}',
-    options = merge_default({
-      '--prompt',
-      'Buffers> ',
-    }),
-  })
-  )
-end)
-
--- Delete the selected buffers
--- Ref: https://github.com/junegunn/fzf.vim/pull/733#issuecomment-559720813
-vim.keymap.set('n', '<Leader>bD', function()
-  -- :ls returns a multiple lines string containing infos of all buffers (each
-  -- line is one buffer)
-  local bufs = vim.fn.execute('ls')
-  local buflist = {}
-  -- Get a list of buffers: split the string by \n.
-  -- Each buffer info is like ` 7 h "path/to/the/buffer" line 10`. It has 5
-  -- parts: bufnr, indicators (may have multiple), buffer path, literal word line and the line number
-  -- of of cursor.
-  for item in string.gmatch(bufs, '([^\n]+)\n?') do
-    -- Remove the doulbe quotes in the buffer path
-    local buf = string.gsub(item, '"', '')
-    table.insert(buflist, buf)
-  end
-  vim.fn['fzf#run'](vim.fn['fzf#wrap'](vim.fn['fzf#vim#with_preview']({
-    source = buflist,
-    -- lines is a table containing all the selections (each selection is a
-    -- buffer info)
+  vim.fn['fzf#vim#buffers']('', vim.fn['fzf#vim#with_preview']({
     ['sink*'] = function(lines)
-      local bufnrs = {}
-      for _, line in ipairs(lines) do
-        -- Extract the bufnr, i.e., the first part in the buffer info, and
-        -- insert it into bufnrs
-        table.insert(bufnrs, string.match(line, '^%s+(%d+)'))
-      end
-      if next(bufnrs) ~= nil then
+      local key = lines[1]
+      if key == 'ctrl-d' then
+        local bufnrs = {}
+        for i = 2, #lines do
+          table.insert(bufnrs, string.match(lines[i], '%[(%d+)%]'))
+        end
         vim.cmd('bwipeout ' .. table.concat(bufnrs, ' '))
+      elseif #lines == 2 then
+        local action = vim.g.fzf_action[key]
+        vim.cmd(action)
+        local bufnr = string.match(lines[2], '%[(%d+)%]')
+        vim.cmd('buffer ' .. bufnr)
       end
     end,
+    placeholder = '{1}',
     options = merge_default({
       '--multi',
+      '--header-lines',
+      '0',
       '--prompt',
-      'DelBufs> ',
+      'Buffers> ',
       '--header',
-      ':: ENTER (delete all selected buffers)',
-      -- Set SCROLL in the preview window, {-1} is the line numbrer
-      '--preview-window',
-      '+{-1}-/2',
+      ':: ENTER (switch to the buffer), CTRL-D (delete selected buffers)',
+      '--expect',
+      'ctrl-d,ctrl-x,ctrl-v,ctrl-t',
     }),
-    -- {FILENAME}:{LINENO}
-    -- In each buffer info, the 3rd to last part is the buffer path that will be the
-    -- FILENAME for bat and the last part is the line number that is for bat's
-    -- --highlight-line option
-    placeholder = '{-3}:{-1}',
-  })))
+  }))
 end)
 
 -- Find files for my dotfiles

@@ -8,7 +8,6 @@ function! s:PackInit() abort
   call minpac#add('nvim-lua/plenary.nvim')  " lua library required by other plugins
   call minpac#add('rockyzhang24/lualine.nvim')
   call minpac#add('rockyzhang24/harpoon')
-  call minpac#add('numToStr/Comment.nvim')
   call minpac#add('tpope/vim-surround')
   call minpac#add('tpope/vim-sleuth')
   call minpac#add('tpope/vim-repeat')
@@ -57,7 +56,6 @@ function! s:PackInit() abort
   " Treesitter
   call minpac#add('nvim-treesitter/nvim-treesitter', {'do': 'TSUpdate'})
   call minpac#add('nvim-treesitter/nvim-treesitter-textobjects')
-  call minpac#add('JoosepAlviste/nvim-ts-context-commentstring')
   call minpac#add('mizlan/iswap.nvim')
   call minpac#add('m-demare/hlargs.nvim')
 

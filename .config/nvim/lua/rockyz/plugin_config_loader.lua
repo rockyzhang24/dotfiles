@@ -2,7 +2,6 @@
 local modules = {
   'bqf',
   'cmp',
-  'comment',
   'conform',
   'eregex',
   'flatten',
@@ -20,7 +19,6 @@ local modules = {
   'nvim-colorizer',
   'nvim-navic',
   'nvim-navbuddy',
-  'nvim-ts-context-commentstring',
   'project',
   'quick-scope',
   'targets',

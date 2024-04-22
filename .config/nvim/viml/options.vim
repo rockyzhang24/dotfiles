@@ -14,7 +14,7 @@ set foldtext=
 set completeopt=menu,menuone,noselect
 set timeoutlen=500
 set shortmess+=a shortmess+=c shortmess+=I
-set updatetime=200
+set updatetime=250
 set laststatus=3
 set matchpairs+=<:>
 set splitbelow

@@ -50,11 +50,11 @@ function! s:PackInit() abort
   call minpac#add('hrsh7th/cmp-cmdline')
 
   " Snippets
-  call minpac#add('L3MON4D3/LuaSnip')
+  call minpac#add('L3MON4D3/LuaSnip', { 'do': 'make install_jsregexp' })
   call minpac#add('saadparwaiz1/cmp_luasnip')
 
   " Treesitter
-  call minpac#add('nvim-treesitter/nvim-treesitter', {'do': 'TSUpdate'})
+  call minpac#add('nvim-treesitter/nvim-treesitter', { 'do': 'TSUpdate' })
   call minpac#add('nvim-treesitter/nvim-treesitter-textobjects')
   call minpac#add('mizlan/iswap.nvim')
   call minpac#add('m-demare/hlargs.nvim')

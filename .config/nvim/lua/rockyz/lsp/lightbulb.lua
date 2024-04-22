@@ -43,7 +43,7 @@ end
 -- Create or update the lightbulb
 local function lightbulb_update(winid, bufnr, bulb_line)
   -- No need to update the bulb if its position does not change
-  if bulb_line == vim.w[winid].prev_bulb_line then
+  if not vim.api.nvim_win_is_valid(winid) or bulb_line == vim.w[winid].prev_bulb_line then
     return
   end
 

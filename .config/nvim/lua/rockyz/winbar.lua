@@ -5,9 +5,13 @@ local navic = require('nvim-navic')
 local icons = require('rockyz.icons').misc
 local tri_sep = require('rockyz.icons').separators.triangle_right
 
-local function get_win_num()
-  local win_num = vim.api.nvim_win_get_number(0)
-  return '[' .. win_num .. ']'
+local function get_winnr()
+  local winnr = vim.api.nvim_win_get_number(0)
+  return '[' .. winnr .. ']'
+end
+
+local function get_maximize_status()
+  return vim.w.maximized == 1 and '  ' or ''
 end
 
 local function get_file_icon_and_name()
@@ -26,8 +30,9 @@ end
 M.get_winbar = function()
   local winbar = ''
 
-  -- Winbar header: a window number with powerline style
-  winbar = winbar .. '%#WinbarHeader# ' .. get_win_num() .. ' %#WinbarTriangleSep#' .. tri_sep .. '%*'
+  -- Winbar header: showing key information with powerline style.
+  local header = get_winnr() .. get_maximize_status()
+  winbar = winbar .. '%#WinbarHeader# ' .. header .. ' %#WinbarTriangleSep#' .. tri_sep .. '%*'
 
   -- Deal with the special buffers
   local ft = vim.bo.filetype

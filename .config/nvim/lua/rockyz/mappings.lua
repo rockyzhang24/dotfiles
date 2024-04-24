@@ -318,11 +318,14 @@ function M.other_win_scroll(mode)
   end
   vim.cmd('noautocmd silent! wincmd p')
 end
-
 vim.keymap.set('n', '<M-u>', "<Cmd>lua require('rockyz.mappings').other_win_scroll(1)<CR>")
 vim.keymap.set('n', '<M-d>', "<Cmd>lua require('rockyz.mappings').other_win_scroll(2)<CR>")
 vim.keymap.set('i', '<M-u>', "<C-\\><C-o><Cmd>lua require('rockyz.mappings').other_win_scroll(1)<CR>")
 vim.keymap.set('i', '<M-d>', "<C-\\><C-o><Cmd>lua require('rockyz.mappings').other_win_scroll(2)<CR>")
+-- Maximize and restore the current window
+vim.keymap.set('n', '<BS>m', function()
+  require('rockyz.utils').win_maximize_toggle()
+end)
 
 --
 -- Terminal

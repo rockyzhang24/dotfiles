@@ -18,8 +18,7 @@ function M.close_wins(win_nums)
     local winid = vim.fn.win_getid(tonumber(win_num))
     table.insert(winids, winid)
   end
-  for _, winid in ipairs(winids) do
-    vim.api.nvim_win_close(winid, false)
+  for _, winid in ipairs(winids) do vim.api.nvim_win_close(winid, false)
   end
 end
 
@@ -110,6 +109,49 @@ function M.md_table_bar_align()
     vim.cmd('Tabularize/|/l1')
     vim.cmd('normal! 0')
     vim.fn.search(('[^|]*|'):rep(col) .. ('\\s\\{-\\}'):rep(pos), 'ce', line)
+  end
+end
+
+-- Maximizes and restores the current window
+-- Ref: https://github.com/szw/vim-maximizer
+local function win_maximize()
+  vim.t.maximizer_sizes = {
+    before = vim.fn.winrestcmd(),
+  }
+  vim.cmd('vert resize | resize')
+  vim.t.maximizer_sizes.after = vim.fn.winrestcmd()
+  vim.cmd('normal! ze')
+  vim.w.maximized = 1
+end
+
+local function win_restore()
+  if vim.t.maximizer_sizes ~= nil then
+    vim.cmd('silent! execute ' .. vim.t.maximizer_sizes.before)
+    if vim.t.maximizer_sizes ~= vim.fn.winrestcmd() then
+      vim.cmd('wincmd =')
+    end
+    vim.t.maximizer_sizes = nil
+    vim.cmd('normal! ze')
+    vim.w.maximized = 0
+  end
+end
+
+function M.win_maximize_toggle()
+  if vim.t.maximizer_sizes ~= nil then
+    win_restore()
+  else
+    -- The current window can be maximized only if there are more than one non-floating windows in
+    -- the tab
+    local win_cnt = 0
+    for _, winid in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+      if vim.api.nvim_win_get_config(winid).relative == '' then
+        win_cnt = win_cnt + 1
+      end
+      if win_cnt > 1 then
+        win_maximize()
+        return
+      end
+    end
   end
 end
 

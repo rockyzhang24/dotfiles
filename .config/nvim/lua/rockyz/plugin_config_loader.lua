@@ -18,7 +18,6 @@ local modules = {
   'neogen',
   'nvim-colorizer',
   'nvim-navic',
-  'nvim-navbuddy',
   'project',
   'quick-scope',
   'targets',

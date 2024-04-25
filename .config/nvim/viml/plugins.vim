@@ -20,7 +20,6 @@ function! s:PackInit() abort
   call minpac#add('tommcdo/vim-exchange') " cx{motion}, cxx (line), X (visual), cxc (clear), and `.` is supported
   call minpac#add('kevinhwang91/nvim-bqf')
   call minpac#add('othree/eregex.vim')
-  call minpac#add('MunifTanjim/nui.nvim') " required by other plugins like nvim-navbuddy
   call minpac#add('wellle/targets.vim')
   call minpac#add('unblevable/quick-scope')
   call minpac#add('danymat/neogen')
@@ -38,7 +37,6 @@ function! s:PackInit() abort
   " LSP
   call minpac#add('neovim/nvim-lspconfig')
   call minpac#add('SmiteshP/nvim-navic')
-  call minpac#add('SmiteshP/nvim-navbuddy')
   call minpac#add('smjonas/inc-rename.nvim')
   call minpac#add('b0o/SchemaStore.nvim')
 

@@ -4,8 +4,7 @@ local symbol_kinds = require('rockyz.icons').symbol_kinds
 
 navbuddy.setup({
   window = {
-    size = { height = '60%', width = '100%' },
-    position = { row = '100%', col = '0%' },
+    border = vim.g.border_style,
   },
   node_markers = {
     enabled = true,

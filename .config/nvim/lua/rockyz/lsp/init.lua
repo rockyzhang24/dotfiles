@@ -72,13 +72,11 @@ local function on_attach(client, bufnr)
   vim.keymap.set('n', 'go', vim.diagnostic.open_float, opts)
   vim.keymap.set('n', '[d', function()
     vim.diagnostic.goto_prev({
-      float = { scope = 'cursor' },
       severity = { min = vim.diagnostic.severity.HINT },
     })
   end, opts)
   vim.keymap.set('n', ']d', function()
     vim.diagnostic.goto_next({
-      float = { scope = 'cursor' },
       severity = { min = vim.diagnostic.severity.HINT },
     })
   end, opts)

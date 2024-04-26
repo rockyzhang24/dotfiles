@@ -1,4 +1,4 @@
--- Use conform for gq
+-- Make gq use conform to format lines
 vim.o.formatexpr = "v:lua.require('conform').formatexpr()"
 
 local conform = require('conform')

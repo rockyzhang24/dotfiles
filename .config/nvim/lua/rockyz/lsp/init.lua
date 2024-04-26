@@ -46,28 +46,34 @@ local function on_attach(client, bufnr)
       border = vim.g.border_style,
     })
   end
+  --
   -- Mappings
+  --
+  -- Nvim creates the following default maps:
+  -- * crr in NORMAL and VISUAL mode maps to vim.lsp.buf.code_action()
+  -- * crn in NORMAL mode maps to vim.lsp.buf.rename()
+  -- * gr in NORMAL maps to vim.lsp.buf.references()
+  -- * <C-s> in INSERT maps to vim.lsp.buf.signature_help()
+  -- * K in NORMAL mode maps vim.lsp.buf.hover()
+  -- * ]d and [d in NORMAL mode map to vim.diagnostic.goto_next() and vim.diagnostic.goto_prev()
+  -- * <C-w>d and <C-w><C-d> map to vim.diagnostic.open_float()
   local opts = { buffer = bufnr }
   vim.keymap.set('n', 'gd', vim.lsp.buf.definition, opts)
   vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, opts)
   vim.keymap.set('n', 'gy', vim.lsp.buf.type_definition, opts)
   vim.keymap.set('n', 'gI', vim.lsp.buf.implementation, opts)
-  vim.keymap.set('n', 'gr', vim.lsp.buf.references, opts)
-  vim.keymap.set('n', '<Leader>rn', vim.lsp.buf.rename, opts)
   -- Code actions under the cursor
   -- TODO: so far vim.lsp.buf.code_action() returns code actions on the entire cursor line, not
   -- just right under the cursor. So I extracted only those diagnostics overlapping the cursor and
   -- use them to get code actions. Once this issue https://github.com/neovim/neovim/issues/21985
   -- is solved, we just need to directly call vim.lsp.buf.code_action().
-  vim.keymap.set({ 'n', 'x' }, '<Leader>ca', function()
+  vim.keymap.set({ 'n', 'x' }, 'crr', function()
     vim.lsp.buf.code_action({
       context = {
         diagnostics = require('rockyz.lsp.utils').get_diagnostics_under_cursor(),
       },
     })
   end, opts)
-  vim.keymap.set('n', 'K', vim.lsp.buf.hover, opts)
-  vim.keymap.set('i', '<C-s>', vim.lsp.buf.signature_help, opts)
   -- Diagnostics
   vim.keymap.set('n', 'go', vim.diagnostic.open_float, opts)
   vim.keymap.set('n', '[d', function()
@@ -86,8 +92,7 @@ local function on_attach(client, bufnr)
   vim.keymap.set('n', ']e', function()
     vim.diagnostic.goto_next({ severity = vim.diagnostic.severity.ERROR })
   end, opts)
-  -- Feed all diagnostics to quickfix list, or buffer diagnostics to location
-  -- list
+  -- Feed all diagnostics to quickfix list, or buffer diagnostics to location list
   vim.keymap.set('n', '<Leader>dq', vim.diagnostic.setqflist, opts)
   vim.keymap.set('n', '<Leader>dl', vim.diagnostic.setloclist, opts)
   -- Format

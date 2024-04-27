@@ -88,9 +88,18 @@ local function merge_default(opts)
   return vim.list_extend(opts, extra_default_opts)
 end
 
--- Path completion in normal mode
+-- Path completion in INSERT mode
 vim.keymap.set('i', '<C-x><C-f>', function()
-  vim.fn['fzf#vim#complete#path']('fd')
+  vim.fn['fzf#vim#complete#path'](
+    'fd',
+    vim.fn['fzf#wrap'](vim.fn['fzf#vim#with_preview']({
+      placeholder = '',
+      options = merge_default({
+        '--prompt',
+        'Paths> ',
+      }),
+    }))
+  )
 end)
 
 -- Files

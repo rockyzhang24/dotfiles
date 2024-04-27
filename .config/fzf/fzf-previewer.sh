@@ -38,7 +38,7 @@ if [[ $mime =~ video/|audio/ ]]; then
   exit
 fi
 
-(bat --color=always --style=numbers,changes,header "$1" \
+(bat --color=always --style=numbers "$1" \
   || highlight --out-format truecolor --style darkplus --force --line-numbers "$1" \
   || cat "$1") | head -200 \
   || echo -e " No preview supported for the current selection:\n\n $1"

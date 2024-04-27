@@ -67,7 +67,7 @@ local function on_attach(client, bufnr)
   -- just right under the cursor. So I extracted only those diagnostics overlapping the cursor and
   -- use them to get code actions. Once this issue https://github.com/neovim/neovim/issues/21985
   -- is solved, we just need to directly call vim.lsp.buf.code_action().
-  vim.keymap.set({ 'n', 'x' }, 'crr', function()
+  vim.keymap.set({ 'n', 'x' }, '<Leader>ca', function()
     vim.lsp.buf.code_action({
       context = {
         diagnostics = require('rockyz.lsp.utils').get_diagnostics_under_cursor(),

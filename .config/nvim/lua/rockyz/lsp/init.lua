@@ -50,18 +50,21 @@ local function on_attach(client, bufnr)
   -- Mappings
   --
   -- Nvim creates the following default maps:
-  -- * crr in NORMAL and VISUAL mode maps to vim.lsp.buf.code_action()
-  -- * crn in NORMAL mode maps to vim.lsp.buf.rename()
+  -- * crr in NORMAL maps to vim.lsp.buf.code_action()
+  -- * <C-r><C-r> (also <C-r>r) in VISUAL maps to vim.lsp.buf.code_action()
+  -- * crn in NORMAL maps to vim.lsp.buf.rename()
   -- * gr in NORMAL maps to vim.lsp.buf.references()
   -- * <C-s> in INSERT maps to vim.lsp.buf.signature_help()
-  -- * K in NORMAL mode maps vim.lsp.buf.hover()
-  -- * ]d and [d in NORMAL mode map to vim.diagnostic.goto_next() and vim.diagnostic.goto_prev()
+  -- * K in NORMAL maps vim.lsp.buf.hover()
+  -- * ]d and [d in NORMAL map to vim.diagnostic.goto_next() and vim.diagnostic.goto_prev()
   -- * <C-w>d and <C-w><C-d> map to vim.diagnostic.open_float()
   local opts = { buffer = bufnr }
   vim.keymap.set('n', 'gd', vim.lsp.buf.definition, opts)
   vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, opts)
   vim.keymap.set('n', 'gy', vim.lsp.buf.type_definition, opts)
   vim.keymap.set('n', 'gI', vim.lsp.buf.implementation, opts)
+  -- Rename
+  vim.keymap.set('n', '<Leader>rn', vim.lsp.buf.rename, opts)
   -- Code actions under the cursor
   -- TODO: so far vim.lsp.buf.code_action() returns code actions on the entire cursor line, not
   -- just right under the cursor. So I extracted only those diagnostics overlapping the cursor and

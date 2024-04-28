@@ -1,18 +1,57 @@
 local lspconfig = require('lspconfig')
 local util = require('lspconfig/util')
-local capabilities = require('rockyz.lsp').client_capabilities()
+local capabilities = require('rockyz.lsp').client_capabilities
 
 -- Set border for LspInfo window
 require('lspconfig.ui.windows').default_options.border = vim.g.border_style
 
--- Vimscript
-lspconfig.vimls.setup({
-  capabilities = capabilities,
+-- Bash
+lspconfig.bashls.setup({
+  capabilities = capabilities(),
+})
+
+-- C/C++
+lspconfig.clangd.setup({
+  capabilities = capabilities(),
+  cmd = {
+    'clangd',
+    '--clang-tidy',
+    '--header-insertion=iwyu',
+    '--completion-style=detailed',
+    '--function-arg-placeholders',
+    '--fallback-style=none',
+  },
+})
+
+-- Golang
+lspconfig.gopls.setup({
+  capabilities = capabilities(),
+  root_dir = util.root_pattern('go.work', 'go.mod', '.git'),
+  settings = {
+    gopls = {
+      analyses = {
+        unusedparams = true,
+      },
+      staticcheck = true,
+    },
+  },
+})
+
+-- Json/Jsonc
+lspconfig.jsonls.setup({
+  capabilities = capabilities(),
+  settings = {
+    json = {
+      -- Use JSON Schema Store (SchemaStore.nvim)
+      schemas = require('schemastore').json.schemas(),
+      validate = { enable = true },
+    }
+  },
 })
 
 -- Lua
 lspconfig.lua_ls.setup({
-  capabilities = capabilities,
+  capabilities = capabilities(),
   settings = {
     Lua = {
       runtime = {
@@ -57,91 +96,60 @@ lspconfig.lua_ls.setup({
   },
 })
 
--- C/C++
-lspconfig.clangd.setup({
-  capabilities = capabilities,
-  cmd = {
-    'clangd',
-    '--clang-tidy',
-    '--header-insertion=iwyu',
-    '--completion-style=detailed',
-    '--function-arg-placeholders',
-    '--fallback-style=none',
-  },
-})
-
--- TypeScript/JavaScript
-lspconfig.tsserver.setup({
-  capabilities = capabilities,
-})
-
--- Golang
-lspconfig.gopls.setup({
-  capabilities = capabilities,
-  root_dir = util.root_pattern('go.work', 'go.mod', '.git'),
-  settings = {
-    gopls = {
-      analyses = {
-        unusedparams = true,
-      },
-      staticcheck = true,
-    },
-  },
-})
-
 -- Python
-lspconfig.pylsp.setup({
-  capabilities = capabilities,
-  settings = {
-    --
-    -- Pylsp configuration doc: https://github.com/python-lsp/python-lsp-server.
-    --
-    -- To config the formatter and linter, we can use a specific configuration
-    -- file (e.g., pyproject.toml) in the project dir. To find all the available
-    -- configuration options for the formatter and linter, check the specific
-    -- repo.
-    -- 1) To config black, see https://black.readthedocs.io/en/stable/usage_and_configuration/the_basics.html
-    -- 2) To config ruff, see https://beta.ruff.rs/docs/configuration/
-    pylsp = {
-      plugins = {
-        -- Formatter
-        black = { enabled = true },
-        autopep8 = { enabled = false },
-        yapf = { enabled = false },
-        -- Linter
-        ruff = { enabled = true },
-        pyflakes = { enabled = false },
-        pycodestyle = { enabled = false },
-        mccabe = { enabled = false },
-        -- type checker
-        pylsp_mypy = { enabled = true },
-        -- Autocomplete
-        jedi_comletion = { fuzzy = true },
-      },
-    },
-  },
+-- lspconfig.pylsp.setup({
+--   capabilities = capabilities(),
+--   settings = {
+--     --
+--     -- Pylsp configuration doc: https://github.com/python-lsp/python-lsp-server.
+--     --
+--     -- To config the formatter and linter, we can use a specific configuration
+--     -- file (e.g., pyproject.toml) in the project dir. To find all the available
+--     -- configuration options for the formatter and linter, check the specific
+--     -- repo.
+--     -- 1) To config black, see https://black.readthedocs.io/en/stable/usage_and_configuration/the_basics.html
+--     -- 2) To config ruff, see https://beta.ruff.rs/docs/configuration/
+--     pylsp = {
+--       plugins = {
+--         -- Formatter
+--         black = { enabled = true },
+--         autopep8 = { enabled = false },
+--         yapf = { enabled = false },
+--         -- Linter
+--         ruff = { enabled = true },
+--         pyflakes = { enabled = false },
+--         pycodestyle = { enabled = false },
+--         mccabe = { enabled = false },
+--         -- type checker
+--         pylsp_mypy = { enabled = true },
+--         -- Autocomplete
+--         jedi_comletion = { fuzzy = true },
+--       },
+--     },
+--   },
+-- })
+
+lspconfig.pyright.setup({
 })
 
 -- Rust
 lspconfig.rust_analyzer.setup({
-  capabilities = capabilities,
+  capabilities = capabilities(),
 })
 
--- Json/Jsonc
-lspconfig.jsonls.setup({
-  capabilities = capabilities,
-  settings = {
-    json = {
-      -- Use JSON Schema Store (SchemaStore.nvim)
-      schemas = require('schemastore').json.schemas(),
-      validate = { enable = true },
-    }
-  },
+-- TOML
+lspconfig.taplo.setup({
+  capabilities = capabilities(),
+})
+
+-- Vimscript
+lspconfig.vimls.setup({
+  capabilities = capabilities(),
 })
 
 -- Yaml
 lspconfig.yamlls.setup({
-  capabilities = capabilities,
+  capabilities = capabilities(),
   settings = {
     yaml = {
       schemaStore = {
@@ -154,9 +162,4 @@ lspconfig.yamlls.setup({
       schemas = require('schemastore').yaml.schemas(),
     },
   },
-})
-
--- TOML
-lspconfig.taplo.setup({
-  capabilities = capabilities,
 })

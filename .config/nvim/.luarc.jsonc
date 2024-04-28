@@ -41,6 +41,7 @@
   ],
   "workspace": {
     "library": [
+      // Runtime and builtin libraries
       "$VIMRUNTIME",
       "${3rd}/luv/library"
     ],

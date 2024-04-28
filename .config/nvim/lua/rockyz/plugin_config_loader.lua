@@ -1,6 +1,7 @@
 -- Load plugin configs
 local modules = {
   'bqf',
+  'ccc',
   'cmp',
   'conform',
   'eregex',
@@ -16,7 +17,6 @@ local modules = {
   'luasnip',
   'lspconfig',
   'neogen',
-  'nvim-colorizer',
   'nvim-navic',
   'project',
   'quick-scope',

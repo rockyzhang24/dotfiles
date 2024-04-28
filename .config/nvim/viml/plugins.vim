@@ -12,7 +12,7 @@ function! s:PackInit() abort
   call minpac#add('tpope/vim-sleuth')
   call minpac#add('tpope/vim-repeat')
   call minpac#add('RRethy/vim-illuminate')
-  call minpac#add('NvChad/nvim-colorizer.lua')
+  call minpac#add('uga-rosa/ccc.nvim')
   call minpac#add('godlygeek/tabular')
   call minpac#add('mbbill/undotree')
   call minpac#add('mhinz/vim-grepper')

@@ -36,8 +36,6 @@ set spelllang=en_us
 set pumheight=15
 set pumwidth=20
 set winminwidth=10
-set grepprg=rg\ --vimgrep\ --smart-case\ $*
-set grepformat=%f:%l:%c:%m
 set breakindent
 set breakindentopt=shift:2
 let &showbreak = '↪ '

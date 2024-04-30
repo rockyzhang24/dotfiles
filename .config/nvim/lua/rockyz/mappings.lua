@@ -185,7 +185,8 @@ vim.keymap.set('c', '<M-f>', '<S-Right>')
 vim.keymap.set('c', '<C-k>', '<C-\\>egetcmdline()[:getcmdpos() - 2]<CR>')
 -- Delete the previous word
 vim.keymap.set('c', '<M-BS>', '<C-w>')
--- Open the command-line window using <C-o> instead of q:
+-- Open the command-line window
+vim.keymap.set('n', '<Leader><C-o>', 'q:')
 vim.o.cedit = '<C-o>'
 -- Use %% to get the absolute filepath of the current buffer in command-line
 -- mode
@@ -293,13 +294,13 @@ vim.keymap.set('n', '<Leader>wl', function()
   -- pos is {row, col}
   local pos1 = vim.api.nvim_win_get_position(norm_wins[1])
   local pos2 = vim.api.nvim_win_get_position(norm_wins[2])
-  local key_codes = ''
+  local key = ''
   if pos1[1] == pos2[1] then
-    key_codes = vim.api.nvim_replace_termcodes('<C-w>t<C-w>K', true, false, true)
+    key = vim.api.nvim_replace_termcodes('<C-w>t<C-w>K', true, false, true)
   else
-    key_codes = vim.api.nvim_replace_termcodes('<C-w>t<C-w>H', true, false, true)
+    key = vim.api.nvim_replace_termcodes('<C-w>t<C-w>H', true, false, true)
   end
-  vim.api.nvim_feedkeys(key_codes, 'm', false)
+  vim.api.nvim_feedkeys(key, 'm', false)
 end)
 -- Close all other windows (not including float windows)
 vim.keymap.set('n', '<Leader>wo', function()

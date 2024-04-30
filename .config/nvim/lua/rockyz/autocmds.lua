@@ -39,6 +39,7 @@ vim.api.nvim_create_autocmd({
 })
 
 -- Automatically toggle relative number
+-- Ref: https://github.com/MariaSolOs/dotfiles
 local exclude_ft = {
   'qf',
 }
@@ -51,9 +52,9 @@ local function tbl_contains(t, value)
   return false
 end
 local relative_number_group = vim.api.nvim_create_augroup('toggle_relative_number', {})
+-- Toggle relative number on
 vim.api.nvim_create_autocmd({ 'BufEnter', 'FocusGained', 'InsertLeave', 'CmdlineLeave', 'WinEnter' }, {
   group = relative_number_group,
-  desc = 'Toggle relative line numbers on',
   callback = function()
     if tbl_contains(exclude_ft, vim.bo.filetype) then
       return
@@ -63,9 +64,9 @@ vim.api.nvim_create_autocmd({ 'BufEnter', 'FocusGained', 'InsertLeave', 'Cmdline
     end
   end,
 })
+-- Toggle relative number off
 vim.api.nvim_create_autocmd({ 'BufLeave', 'FocusLost', 'InsertEnter', 'CmdlineEnter', 'WinLeave' }, {
   group = relative_number_group,
-  desc = 'Toggle relative line numbers off',
   callback = function(args)
     if tbl_contains(exclude_ft, vim.bo.filetype) then
       return
@@ -137,5 +138,17 @@ vim.api.nvim_create_autocmd({ 'VimEnter' }, {
   group = 'indent_line',
   callback = function()
     update(false)
+  end,
+})
+
+-- Command-lien window
+vim.api.nvim_create_autocmd('CmdWinEnter', {
+  group = vim.api.nvim_create_augroup('execute_cmd_and_stay', { clear = true }),
+  callback = function(args)
+    -- Delete <CR> mapping (defined in treesitter for incremental selection and not work in
+    -- command-line window)
+    vim.keymap.del('n', '<CR>', { buffer = args.buf })
+    -- Create a keymap to execute command and stay in the command-line window
+    vim.keymap.set({ 'n', 'i' }, '<S-CR>', '<CR>q:', { buffer = args.buf })
   end,
 })

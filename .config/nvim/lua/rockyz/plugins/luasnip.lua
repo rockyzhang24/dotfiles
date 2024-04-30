@@ -14,27 +14,27 @@ luasnip.setup({
   ext_opts = {
     [types.choiceNode] = {
       -- active = {
-      --   virt_text = { { '●', 'Operator' } },
+      --   virt_text = { { '|', 'Operator' } },
       --   virt_text_pos = 'inline',
       -- },
       unvisited = {
-        virt_text = { { '●', 'Conceal' } },
+        virt_text = { { '|', 'Conceal' } },
         virt_text_pos = 'inline',
       },
     },
     [types.insertNode] = {
     --   active = {
-    --     virt_text = { { '●', 'Keyword' } },
+    --     virt_text = { { '|', 'Keyword' } },
     --     virt_text_pos = 'inline',
     --   },
       unvisited = {
-        virt_text = { { '●', 'Conceal' } },
+        virt_text = { { '|', 'Conceal' } },
         virt_text_pos = 'inline',
       },
     },
     [types.exitNode] = {
       unvisited = {
-        virt_text = { { '●', 'Conceal' } },
+        virt_text = { { '|', 'Conceal' } },
         virt_text_pos = 'inline',
       },
     },
@@ -72,6 +72,23 @@ vim.keymap.set({ 'i', 's' }, '<C-c>', function()
     require('luasnip.extras.select_choice')()
   end
 end)
+
+-- Cancel the snippet session when leaving insert mode
+-- Ref: https://github.com/L3MON4D3/LuaSnip/issues/656#issuecomment-1313310146
+vim.api.nvim_create_autocmd('ModeChanged', {
+  group = vim.api.nvim_create_augroup('unlink_snippet', { clear = true }),
+  pattern = { 's:n', 'i:*' },
+  callback = function(args)
+    if
+      luasnip.session
+      and luasnip.session.current_nodes[args.buf]
+      and not luasnip.session.jump_active
+      and not luasnip.choice_active()
+    then
+      luasnip.unlink_current()
+    end
+  end,
+})
 
 -- Snippets are stored in separate files.
 -- Ref: https://github.com/L3MON4D3/LuaSnip/blob/master/DOC.md#lua

@@ -274,6 +274,7 @@ function M.fileinfo_component(trunc_width)
     OverseerList = { icons.misc.task, 'Special' },
     qf = { icons.misc.quickfix, 'Conditional' },
     term = { icons.misc.term, 'Special' },
+    TelescopePrompt = { icons.misc.search, 'Special' },
   }
   local filetype = vim.bo.filetype
   local size = ''

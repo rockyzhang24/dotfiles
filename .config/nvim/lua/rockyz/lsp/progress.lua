@@ -46,16 +46,16 @@
 --
 -- When each progress notification sent by the server is received, $/process handler will be invoked
 -- to process the notification. See its source code in runtime/lua/vim/lsp/handler.lua. The pramas
--- part will be passed to the handler function as the result. The handler pushes the result (i.e.,
+-- part will be passed to the handler function as the params. The handler pushes the params (i.e.,
 -- the pramas) into the ring buffer of the corresponding client (i.e., client.progress) and then
 -- trigger LspProgress autocmd event. When LspProgress is triggered, its callback will be invoked
 -- with a table argument. The argument has a data table with two fields:
 -- 1. data.client_id
--- 2. data.result: the pramas part
--- For details, see the source code in runtime/lua/vim/lsp/handler.lua
+-- 2. data.params: the pramas part
+-- For details, see the source code `M[ms.dollar_progress]` in runtime/lua/vim/lsp/handler.lua
 --
 -- So we can use the callback function of LspProgress to get the progress information we need.
--- 1. Directly from the args passed into the callback such as args.data.result.value.title for the
+-- 1. Directly from the args passed into the callback such as args.data.params.value.title for the
 --    the title of the progress notification. Each time we can print one progress message.
 -- 2. Call vim.lsp.status() in the callback. It gets the progress message in the ring buffer and
 --    emptys the ring buffer, and it is called for each arrived notification, so in each call of
@@ -328,7 +328,7 @@ local function handler(args)
   end
 
   -- Get the formatted progress message
-  cur_client.message = process_message(cur_client, vim.lsp.get_client_by_id(client_id).name, args.data.result)
+  cur_client.message = process_message(cur_client, vim.lsp.get_client_by_id(client_id).name, args.data.params)
 
   -- Show progress message in floating window
   show_message(cur_client)

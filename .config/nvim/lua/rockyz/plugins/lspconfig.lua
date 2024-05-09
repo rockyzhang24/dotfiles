@@ -33,6 +33,7 @@ lspconfig.gopls.setup({
         unusedparams = true,
       },
       staticcheck = true,
+      semanticTokens = true,
     },
   },
 })

@@ -13,7 +13,7 @@ set foldlevelstart=99
 set foldtext=
 set completeopt=menu,menuone,noselect
 set timeoutlen=500
-set shortmess+=a shortmess+=c shortmess+=I
+set shortmess+=a shortmess+=c shortmess+=S
 set updatetime=250
 set laststatus=3
 set matchpairs+=<:>

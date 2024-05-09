@@ -35,6 +35,10 @@ local info_blue = '#3794ff'
 local hint_gray = '#B0B0B0'
 local ok_green = '#89d185' -- color for success, so I use notebookStatusSuccessIcon.foreground
 
+local gutter_git_added = '#2ea043'
+local gutter_git_deleted = '#f85149'
+local gutter_git_modified = '#0078d4'
+
 local selection_blue = '#04395e'
 local folded_blue = '#212d3a' -- editor.foldBackground
 local float_border_fg = '#454545'
@@ -42,7 +46,16 @@ local indent_guide_fg = '#404040'
 local indent_guide_scope_fg = '#707070'
 local label_fg = '#c8c8c8'
 local tab_border_fg = '#2b2b2b'
-local statusline_blue = '#0078d4'
+
+local statusline_blue = '#007acc'
+local statusline_orange = '#cc6633'
+local statusline_purple = '#68217a'
+local statusline_pink = '#c586c0'
+local statusline_green = '#16825d'
+local statusline_violet = '#646695'
+local statusline_red = '#c72e0f'
+local statusline_yellow = '#E8AB53'
+local statusline_gray = '#858585'
 
 local groups = {
 
@@ -53,9 +66,9 @@ local groups = {
   SelectionHighlightBackground = { bg = '#343a41' }, -- editor.selectionHighlightBackground
   LightBulb = { fg = '#ffcc00' }, -- editorLightBulb.foreground
   CodeLens = { fg = '#999999' }, -- editorCodeLens.foreground
-  GutterGitAdded = { fg = '#2ea043' }, -- editorGutter.addedBackground
-  GutterGitDeleted = { fg = '#f85149' }, -- editorGutter.deletedBackground
-  GutterGitModified = { fg = '#0078d4' }, -- editorGutter.modifiedBackground
+  GutterGitAdded = { fg = gutter_git_added }, -- editorGutter.addedBackground
+  GutterGitDeleted = { fg = gutter_git_deleted }, -- editorGutter.deletedBackground
+  GutterGitModified = { fg = gutter_git_modified }, -- editorGutter.modifiedBackground
   Breadcrumb = { fg = '#a9a9a9', bg = norm_bg, underline = true, sp = pure_black }, -- breadcrumb.foreground/background
   ScrollbarSlider = { bg = '#434343' }, -- the slider on the scrollbar (scrollbarSlider.activeBackground)
   ScrollbarSliderHover = { bg = '#4f4f4f' }, -- scrollbarSlider.hoverBackground
@@ -156,6 +169,53 @@ local groups = {
   WildMenu = "PmenuSel",
   Winbar = "Breadcrumb",
   WinbarNC = "Breadcrumb",
+
+  --
+  -- Statusline
+  --
+  StlModeNormal = { fg = white, bg = statusline_blue },
+  StlModeInsert = { fg = white, bg = statusline_orange },
+  StlModeVisual = { fg = white, bg = statusline_purple },
+  StlModeReplace = { fg = white, bg = statusline_pink },
+  StlModeCommand = { fg = white, bg = statusline_green },
+  StlModeTerminal = { fg = white, bg = statusline_violet },
+  StlModePending = { fg = white, bg = statusline_red },
+
+  StlModeSepNormal = { fg = statusline_blue, bg = black4 },
+  StlModeSepInsert = { fg = statusline_orange, bg = black4 },
+  StlModeSepVisual = { fg = statusline_purple, bg = black4 },
+  StlModeSepReplace = { fg = statusline_pink, bg = black4 },
+  StlModeSepCommand = { fg = statusline_green, bg = black4 },
+  StlModeSepTerminal = { fg = statusline_violet, bg = black4 },
+  StlModeSepPending = { fg = statusline_red, bg = black4 },
+
+  StlIcon = { fg = statusline_yellow, bg = black4 },
+
+  -- The status of the component. E.g., for treesitter component
+  -- * the current buffer has no treesitter parser: StlComponentInactive
+  -- * it has treesitter parser, but treesitter highlight is on/off: StlComponentOn/StlComponentOff
+  StlComponentInactive = { fg = statusline_gray, bg = black4 },
+  StlComponentOn = { fg = statusline_green, bg = black4 },
+  StlComponentOff = { fg = statusline_red, bg = black4 },
+
+  StlGitadded = { fg = gutter_git_added, bg = black4 },
+  StlGitdeleted = { fg = gutter_git_deleted, bg = black4 },
+  StlGitmodified = { fg = gutter_git_modified, bg = black4 },
+
+  StlDiagnosticERROR = "DiagnosticError",
+  StlDiagnosticWARN = "DiagnosticWarn",
+  StlDiagnosticINFO = "DiagnosticInfo",
+  StlDiagnosticHINT = "DiagnosticHint",
+
+  StlSearchCnt = { fg = statusline_orange, bg = black4 },
+
+  StlMacroRecording = "StlComponentOff",
+  StlMacroRecorded = "StlComponentOn",
+
+  StlFiletype = { fg = white, bg = black4, bold = true },
+
+  StlLocComponent = "StlModeNormal",
+  StlLocComponentSep = "StlModeSepNormal",
 
   --
   -- Syntax

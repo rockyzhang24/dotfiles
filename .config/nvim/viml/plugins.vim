@@ -6,7 +6,6 @@ function! s:PackInit() abort
   call minpac#add('editorconfig/editorconfig-vim')
   call minpac#add('dstein64/vim-startuptime')
   call minpac#add('nvim-lua/plenary.nvim')  " lua library required by other plugins
-  call minpac#add('rockyzhang24/lualine.nvim')
   call minpac#add('rockyzhang24/harpoon')
   call minpac#add('tpope/vim-surround')
   call minpac#add('tpope/vim-sleuth')

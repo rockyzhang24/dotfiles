@@ -13,7 +13,6 @@ local modules = {
   'harpoon',
   'inc-rename',
   'iswap',
-  'lualine',
   'luasnip',
   'lspconfig',
   'neogen',

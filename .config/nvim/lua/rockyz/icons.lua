@@ -47,9 +47,6 @@ icons.symbol_kinds = {
 
 icons.lightbulb = ''
 
-icons.winbar = {
-}
-
 icons.diagnostics = {
   ERROR = ' ',
   WARN = ' ',
@@ -61,7 +58,8 @@ icons.git = {
   branch = ' ',
   added = ' ',
   modified = ' ',
-  removed = ' ',
+  deleted = ' ',
+  diff = ' ',
 }
 
 icons.separators = {
@@ -78,18 +76,27 @@ icons.caret = {
 }
 
 icons.misc = {
+  book = ' ',
+  check = ' ',
+  color = ' ',
   delimiter = '',
   disconnect = ' ',
   edit = ' ',
   ellipsis = ' ',
   explorer = ' ',
+  file = ' ',
+  file_code = ' ',
   folder = ' ',
+  graph = ' ',
+  help = ' ',
   indent = ' ',
   logo = '󰀘 ',
+  note = ' ',
   outline = ' ',
   quickfix = ' ',
   search = ' ',
   source_control = ' ',
+  task = ' ',
   term = ' ',
 }
 

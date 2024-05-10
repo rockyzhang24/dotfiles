@@ -670,11 +670,12 @@ local groups = {
   TelescopePromptBorder = "TelescopeBorder",
   TelescopeResultsBorder = "TelescopePromptBorder",
   TelescopePreviewBorder = "TelescopePromptBorder",
+  TelescopeNormal = "Normal",
   TelescopeSelection = { fg = white, bg = selection_blue, bold = true },  -- fg and bg are the same as PmenuSel
   TelescopeSelectionCaret = "TelescopeSelection",
+  TelescopeMultiSelection = "TelescopeNormal",
   TelescopeMultiIcon = { fg = blue_green },
   TelescopeMatching = "CmpItemAbbrMatch",
-  TelescopeNormal = "Normal",
   TelescopePromptPrefix = { fg = '#cccccc', bold = true }, -- Same as Icon but bold
 
   --

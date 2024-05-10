@@ -1,9 +1,11 @@
 local M = {}
 
-local devicon = require('nvim-web-devicons')
 local navic = require('nvim-navic')
-local icons = require('rockyz.icons').misc
-local tri_sep = require('rockyz.icons').separators.triangle_right
+local icons  = require('rockyz.icons')
+local delimiter = icons.misc.delimiter
+
+-- Cache the highlight groups created for different icons
+local cached_hls = {}
 
 local function get_winnr()
   local winnr = vim.api.nvim_win_get_number(0)
@@ -11,28 +13,39 @@ local function get_winnr()
 end
 
 local function get_maximize_status()
-  return vim.w.maximized == 1 and '  ' or ''
+  return vim.w.maximized == 1 and ' ' .. icons.misc.maximized or ''
 end
 
 local function get_file_icon_and_name()
   local filename = vim.fn.expand('%:t')
+  if filename == '' then
+    filename = '[No Name]'
+  end
   local ft = vim.bo.filetype
-  local file_icon, file_icon_color = devicon.get_icon_color_by_filetype(ft, { default = true })
-  vim.api.nvim_set_hl(0, 'WinbarFileIcon', { fg = file_icon_color, underline = true, sp = '#000000' })
-  return '%#WinbarFileIcon#' .. file_icon .. '%* ' .. (filename == '' and '[No Name]' or filename)
+  local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
+  if has_devicons then
+    local icon, icon_color = devicons.get_icon_color_by_filetype(ft, { default = true })
+    local icon_hl = 'WinbarFileIconFor' .. ft
+    if not cached_hls[icon_hl] then
+      vim.api.nvim_set_hl(0, icon_hl, { fg = icon_color, underline = true, sp = '#000000' })
+      cached_hls[icon_hl] = true
+    end
+    return string.format('%%#%s#%s%%* %s', icon_hl, icon, filename)
+  end
+  return icons.misc.file .. filename
 end
 
 local function get_modified()
   local modified = vim.api.nvim_eval_statusline('%m', {}).str
-  return modified == '' and '' or ' %#Normal#' .. modified .. '%*'
+  return modified ~= '' and string.format(' %%#Normal#%s%%*', modified) or ''
 end
 
-M.get_winbar = function()
+M.render = function()
   local winbar = ''
 
   -- Winbar header: showing key information with powerline style.
   local header = get_winnr() .. get_maximize_status()
-  winbar = winbar .. '%#WinbarHeader# ' .. header .. ' %#WinbarTriangleSep#' .. tri_sep .. '%*'
+  winbar = string.format('%%#WinbarHeader# %s %%#WinbarTriangleSep#%s%%*', header, icons.separators.triangle_right)
 
   -- Deal with the special buffers
   local ft = vim.bo.filetype
@@ -46,7 +59,7 @@ M.get_winbar = function()
     local list_title = list.title
     winbar = winbar .. ' ' .. list_type -- show type (quickfix or location list)
     if list_title ~= '' then
-      winbar = winbar .. ' ' .. icons.delimiter .. ' ' .. list_title -- show title
+      winbar = winbar .. ' ' .. delimiter .. ' ' .. list_title -- show title
     end
     winbar = winbar .. ' [' .. list.idx .. '/' .. list.size .. ']' -- show size of the list and current focused idx
     return winbar
@@ -66,9 +79,9 @@ M.get_winbar = function()
   elseif ft == 'term' then
     -- Terminal
     return winbar .. ' ' .. vim.fn.expand('%')
-  elseif ft == 'aerial' then
+  elseif ft == 'aerial' or ft == 'Outline' then
     -- Aerial
-    return winbar .. ' Outline (Aerial)'
+    return winbar .. ' Outline'
   elseif vim.fn.win_gettype(winid) == 'command' then
     -- Command-line window
     return winbar .. ' Command-line window'
@@ -81,15 +94,15 @@ M.get_winbar = function()
     local fugitive_git_path, fugitive_file_path = string.match(path, '^fugitive://(%S+//%w+)/(.*)')
     fugitive_git_path = vim.fn.fnamemodify(fugitive_git_path, ':~:.')
     path = fugitive_file_path
-    winbar = winbar .. ' Fugitive [' .. fugitive_git_path .. '] ' .. icons.delimiter
+    winbar = winbar .. ' Fugitive [' .. fugitive_git_path .. '] ' .. delimiter
   end
   if path ~= '' and path ~= '.' then
     if vim.api.nvim_win_get_width(0) < math.floor(vim.o.columns / 3) then
       path = vim.fn.pathshorten(path)
     else
-      path = path:gsub('^~', 'HOME'):gsub('^/', 'ROOT/'):gsub('/', ' ' .. icons.delimiter .. ' ')
+      path = path:gsub('^~', 'HOME'):gsub('^/', 'ROOT/'):gsub('/', ' ' .. delimiter .. ' ')
     end
-    winbar = winbar .. ' ' .. path .. ' ' .. icons.delimiter
+    winbar = winbar .. ' ' .. path .. ' ' .. delimiter
   end
 
   -- File name and modified indicator
@@ -103,12 +116,12 @@ M.get_winbar = function()
   -- Breadcrumbs
   if navic.is_available() then
     local context = navic.get_location()
-    winbar = winbar .. icons.delimiter .. ' ' .. (context == '' and icons.ellipsis or context)
+    winbar = winbar .. delimiter .. ' ' .. (context == '' and icons.misc.ellipsis or context)
   end
 
   return winbar
 end
 
-vim.o.winbar = "%{%v:lua.require('rockyz.winbar').get_winbar()%}"
+vim.o.winbar = "%{%v:lua.require('rockyz.winbar').render()%}"
 
 return M

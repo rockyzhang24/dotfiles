@@ -91,6 +91,7 @@ icons.misc = {
   help = ' ',
   indent = ' ',
   logo = '󰀘 ',
+  maximized = ' ',
   note = ' ',
   outline = ' ',
   quickfix = ' ',

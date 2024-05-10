@@ -6,7 +6,6 @@ function! s:PackInit() abort
   call minpac#add('editorconfig/editorconfig-vim')
   call minpac#add('dstein64/vim-startuptime')
   call minpac#add('nvim-lua/plenary.nvim')  " lua library required by other plugins
-  call minpac#add('rockyzhang24/harpoon')
   call minpac#add('tpope/vim-surround')
   call minpac#add('tpope/vim-sleuth')
   call minpac#add('tpope/vim-repeat')
@@ -25,6 +24,7 @@ function! s:PackInit() abort
   call minpac#add('stevearc/conform.nvim')
   call minpac#add('Wansmer/treesj')
   call minpac#add('willothy/flatten.nvim')
+  call minpac#add('ThePrimeagen/harpoon', { 'branch': 'harpoon2' })
 
   " Fuzzy Finder
   call minpac#add('junegunn/fzf', { 'do': 'packloadall! | call fzf#install()' })

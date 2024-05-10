@@ -43,6 +43,7 @@ export FZF_DEFAULT_OPTS=" \
   --marker ' ' \
   --border horizontal \
   --tabstop=4 \
+  --highlight-line \
   --bind 'ctrl-d:half-page-down,ctrl-u:half-page-up,alt-d:preview-half-page-down,`
     `alt-u:preview-half-page-up,ctrl-a:toggle-all,`
     `ctrl-/:toggle-preview,ctrl-o:execute(open {+}),`

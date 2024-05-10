@@ -33,7 +33,10 @@ end
 
 -- Remove the lightbulb
 local function lightbulb_remove(winid, bufnr)
-  if vim.w[winid].bulb_ns_id == nil and vim.w[winid].bulb_mark_id == nil then
+  if
+    not vim.api.nvim_win_is_valid(winid)
+    or vim.w[winid].bulb_ns_id == nil and vim.w[winid].bulb_mark_id == nil
+  then
     return
   end
   vim.api.nvim_buf_del_extmark(bufnr, vim.w[winid].bulb_ns_id, vim.w[winid].bulb_mark_id)

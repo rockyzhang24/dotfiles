@@ -31,7 +31,6 @@ function! s:PackInit() abort
   call minpac#add('junegunn/fzf.vim')
   call minpac#add('nvim-telescope/telescope.nvim')
   call minpac#add('nvim-telescope/telescope-fzf-native.nvim', { 'do': 'make' })  " sorter for telescope
-  call minpac#add('ahmedkhalf/project.nvim')
 
   " LSP
   call minpac#add('neovim/nvim-lspconfig')

@@ -44,6 +44,15 @@ local uv = require('luv')
 local qf = require('rockyz.qf')
 local caret = require('rockyz.icons').caret
 
+-- Use the globally set statusline
+vim.api.nvim_create_autocmd('User', {
+  group = vim.api.nvim_create_augroup('fzf-statusline', { clear = true }),
+  pattern = 'FzfStatusLine',
+  callback = function()
+    vim.wo.statusline = ''
+  end,
+})
+
 local rg_prefix = 'rg --column --line-number --no-heading --color=always --smart-case'
 local bat_prefix = 'bat --color=always --paging=never --style=numbers'
 
@@ -713,12 +722,3 @@ vim.keymap.set('n', '<Leader>gb', function()
     }),
   })
 end)
-
--- Use the globally set statusline
-vim.api.nvim_create_autocmd('User', {
-  group = vim.api.nvim_create_augroup('fzf-statusline', { clear = true }),
-  pattern = 'FzfStatusLine',
-  callback = function()
-    vim.wo.statusline = ''
-  end,
-})

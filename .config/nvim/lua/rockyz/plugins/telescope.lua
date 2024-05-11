@@ -15,7 +15,7 @@ telescope.setup({
       -- Make layout consistent with fzf.vim
       height = 0.83,
       width = 0.5,
-      preview_height = 0.35,
+      preview_height = 0.5,
     },
     results_title = false,
     sorting_strategy = "ascending",
@@ -84,7 +84,6 @@ telescope.setup({
 
 -- Extensions
 telescope.load_extension('fzf')
-telescope.load_extension('projects')
 
 --
 -- Mappings
@@ -105,24 +104,5 @@ vim.keymap.set('n', '<Leader>fh', function()
     preview_title = false,
   })
 end)
-
--- LSP symbols in current buffer
-vim.keymap.set('n', '<Leader>fs', function()
-  builtin.lsp_document_symbols({
-    prompt_prefix = 'Symbols [document]> ',
-    preview_title = false,
-  })
-end)
-
--- LSP symbols in current workspace
-vim.keymap.set('n', '<Leader>fS', function()
-  builtin.lsp_workspace_symbols({
-    prompt_prefix = 'Symbols [workspace]> ',
-    preview_title = false,
-  })
-end)
-
--- Picker resume
-vim.keymap.set('n', '<Leader>fr', builtin.resume)
 
 return M

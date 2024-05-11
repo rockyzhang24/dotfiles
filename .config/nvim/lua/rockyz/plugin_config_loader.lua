@@ -17,7 +17,6 @@ local modules = {
   'lspconfig',
   'neogen',
   'nvim-navic',
-  'project',
   'quick-scope',
   'targets',
   'treesitter',

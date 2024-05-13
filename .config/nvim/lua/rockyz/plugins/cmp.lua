@@ -1,7 +1,9 @@
 local cmp = require('cmp')
 local feedkeys = require('cmp.utils.feedkeys')
 local keymap = require('cmp.utils.keymap')
+
 local symbol_kinds = require('rockyz.icons').symbol_kinds
+local ellipsis = require('rockyz.icons').misc.ellipsis
 
 -- Disable buffer source for large file
 local large_file_disable = function()
@@ -109,7 +111,6 @@ cmp.setup({
   formatting = {
     format = function(entry, vim_item)
       local MAX_ABBR_WIDTH, MAX_MENU_WIDTH = 25, 30
-      local ellipsis = require('rockyz.icons').misc.ellipsis
       -- Prepend icons to item.kind
       -- For kind from path source (i.e., all kinds of files), use devicons to get icons and
       -- highlight groups. For other kinds, use codicons.
@@ -183,4 +184,16 @@ cmp.setup.cmdline(':', {
   }, {
     { name = 'cmdline' },
   }),
+  formatting = {
+    format = function(_, vim_item)
+      local MAX_ABBR_WIDTH = 50
+      if vim.api.nvim_strwidth(vim_item.abbr) > MAX_ABBR_WIDTH then
+        vim_item.abbr = vim.fn.strcharpart(vim_item.abbr, 0, MAX_ABBR_WIDTH) .. ellipsis
+      end
+      return vim_item
+    end,
+    fields = {
+      'abbr',
+    },
+  },
 })

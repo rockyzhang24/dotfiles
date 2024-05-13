@@ -53,7 +53,7 @@ local function lightbulb_update(winid, bufnr, bulb_line)
   -- Create a window-local namespace for the extmark
   if vim.w[winid].bulb_ns_id == nil then
     local ns_id = vim.api.nvim_create_namespace('bulb_ns_id_' .. winid)
-    vim.api.nvim_win_add_ns(winid, ns_id)
+    vim.api.nvim__win_add_ns(winid, ns_id)
     vim.w[winid].bulb_ns_id = ns_id
   end
   -- Create an extmark or update the existing one

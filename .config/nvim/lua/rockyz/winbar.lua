@@ -59,7 +59,7 @@ M.render = function()
     local list_title = list.title
     winbar = winbar .. ' ' .. list_type -- show type (quickfix or location list)
     if list_title ~= '' then
-      winbar = winbar .. ' ' .. delimiter .. ' ' .. list_title -- show title
+      winbar = winbar .. ' ' .. delimiter .. list_title -- show title
     end
     winbar = winbar .. ' [' .. list.idx .. '/' .. list.size .. ']' -- show size of the list and current focused idx
     return winbar
@@ -100,7 +100,7 @@ M.render = function()
     if vim.api.nvim_win_get_width(0) < math.floor(vim.o.columns / 3) then
       path = vim.fn.pathshorten(path)
     else
-      path = path:gsub('^~', 'HOME'):gsub('^/', 'ROOT/'):gsub('/', ' ' .. delimiter .. ' ')
+      path = path:gsub('^~', 'HOME'):gsub('^/', 'ROOT/'):gsub('/', ' ' .. delimiter)
     end
     winbar = winbar .. ' ' .. path .. ' ' .. delimiter
   end
@@ -108,7 +108,7 @@ M.render = function()
   -- File name and modified indicator
   local file_icon_and_name = get_file_icon_and_name()
   local modified = get_modified()
-  winbar = winbar .. ' ' .. file_icon_and_name .. modified
+  winbar = winbar .. file_icon_and_name .. modified
 
   -- Truncate if too long
   winbar = winbar .. ' %<'
@@ -116,7 +116,7 @@ M.render = function()
   -- Breadcrumbs
   if navic.is_available() then
     local context = navic.get_location()
-    winbar = winbar .. delimiter .. ' ' .. (context == '' and icons.misc.ellipsis or context)
+    winbar = winbar .. delimiter .. (context == '' and icons.misc.ellipsis or context)
   end
 
   return winbar

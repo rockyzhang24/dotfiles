@@ -12,7 +12,7 @@ icons.symbol_kinds = {
   Interface = ' ',
   Module = ' ',
   Property = ' ',
-  Unit = '',
+  Unit = ' ',
   Value = ' ',
   Enum = ' ',
   Keyword = ' ',
@@ -45,7 +45,7 @@ icons.symbol_kinds = {
   Package = ' ',
 }
 
-icons.lightbulb = ''
+icons.lightbulb = ' '
 
 icons.diagnostics = {
   ERROR = ' ',
@@ -71,15 +71,15 @@ icons.separators = {
 }
 
 icons.caret = {
-  caret_left = '',
-  caret_right = '',
+  caret_left = ' ',
+  caret_right = ' ',
 }
 
 icons.misc = {
   book = ' ',
   check = ' ',
   color = ' ',
-  delimiter = '',
+  delimiter = ' ',
   disconnect = ' ',
   edit = ' ',
   ellipsis = ' ',

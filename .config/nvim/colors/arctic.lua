@@ -203,10 +203,10 @@ local groups = {
   StlGitdeleted = { fg = gutter_git_deleted, bg = black4 },
   StlGitmodified = { fg = gutter_git_modified, bg = black4 },
 
-  StlDiagnosticERROR = "DiagnosticError",
-  StlDiagnosticWARN = "DiagnosticWarn",
-  StlDiagnosticINFO = "DiagnosticInfo",
-  StlDiagnosticHINT = "DiagnosticHint",
+  StlDiagnosticERROR = { fg = error_red, bg = black4 },
+  StlDiagnosticWARN = { fg = warn_yellow, bg = black4 },
+  StlDiagnosticINFO = { fg = info_blue, bg = black4 },
+  StlDiagnosticHINT = { fg = hint_gray, bg = black4 },
 
   StlSearchCnt = { fg = statusline_orange, bg = black4 },
 

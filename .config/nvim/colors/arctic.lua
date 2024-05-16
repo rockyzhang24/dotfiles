@@ -105,6 +105,7 @@ local groups = {
   -- Winbar
   WinbarHeader = { fg = white, bg = statusline_blue }, -- the very beginning part of winbar
   WinbarTriangleSep = { fg = statusline_blue, underline = true, sp = pure_black }, -- the triangle separator in winbar
+  WinbarModified = { fg = norm_fg, bg = norm_bg, underline = true, sp = pure_black }, -- the modification indicator
 
   --
   -- Editor

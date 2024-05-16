@@ -37,7 +37,7 @@ end
 
 local function get_modified()
   local modified = vim.api.nvim_eval_statusline('%m', {}).str
-  return modified ~= '' and string.format(' %%#Normal#%s%%*', modified) or ''
+  return modified ~= '' and string.format(' %%#WinbarModified#%s%%*', modified) or ''
 end
 
 M.render = function()

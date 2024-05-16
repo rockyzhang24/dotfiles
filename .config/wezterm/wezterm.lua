@@ -10,12 +10,12 @@ config.window_decorations = "RESIZE"
 
 -- Font
 config.font = wezterm.font('IosevkaTerm Nerd Font', { weight = 'Medium' })
-config.font_size = 15
+config.font_size = 16
 -- Disable ligatures
 config.harfbuzz_features = { 'calt=0', 'clig=0', 'liga=0' }
 
 -- Adjust underline style
-config.underline_position = -6
+config.underline_position = -8
 config.underline_thickness = 2
 
 -- Remove extra space

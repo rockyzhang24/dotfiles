@@ -21,16 +21,11 @@ require('bqf').setup({
   },
   filter = {
     fzf = {
-      action_for = {
-        ['enter'] = 'drop',
-        ['ctrl-t'] = 'tab drop',
-      },
       extra_opts = {
         '--delimiter',
         '│',
         '--preview-window',
         'default',
-        '--reverse',
       },
     },
   },

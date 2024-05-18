@@ -149,7 +149,11 @@ cmd copy-absolute-path ${{
 cmd fzf-select ${{
   IFS=' '
   exclude=$(cat $HOME/exclude | sed 's/^/--exclude /' | tr '\n' ' ')
-  selections=$(fd --hidden --follow $exclude | fzf --multi --header ':: ENTER (toggle the selections)' --prompt 'Files> ') || true
+  selections=$(fd --max-depth 1 --hidden --follow $exclude | fzf \
+      --multi \
+      --header ':: ENTER (toggle the selections), CTRL-R (recursively, no depth limit), CTRL-L (limited to depth 1)' \
+      --bind "ctrl-r:reload(fd --hidden --follow $exclude),ctrl-l:reload(fd --max-depth 1 --hidden --follow $exclude)" \
+      --prompt 'Files> ') || true
   if [[ -n $selections ]]; then
     # Escape white spaces and format multi-line string to a single line one
     targets=$(echo "$selections" | sed 's/ /\\ /g' | tr '\n' ' ')

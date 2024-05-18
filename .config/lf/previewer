@@ -3,15 +3,11 @@
 FILE_PATH="${1}"
 FILE_EXTENSION="${FILE_PATH##*.}"
 FILE_EXTENSION_LOWER="$(printf "%s" "${FILE_EXTENSION}" | tr '[:upper:]' '[:lower:]')"
+
 PV_WIDTH="${2}"
 PV_HEIGHT="${3}"
-PV_HEIGHT_IMAGE="$(( ${PV_HEIGHT} / 3 ))"
 HORIZONTAL_POS="${4}"
 VERTICAL_POS="${5}"
-
-exiftool() {
-  command exiftool '--ExifTool*' '--Directory' '--File*' '--ProfileDescription*' "$@"
-}
 
 bat() {
   command bat \
@@ -23,8 +19,11 @@ bat() {
 }
 
 image_preview_by_kitty() {
-  local place="${PV_WIDTH}x${PV_HEIGHT_IMAGE}@${HORIZONTAL_POS}x${VERTICAL_POS}"
-  kitty icat --clear --transfer-mode memory --stdin no --align left --place "${place}" "${1}" < /dev/null > /dev/tty
+  kitty icat --clear --transfer-mode memory --stdin no --align left --place "${1}" "${2}" < /dev/null > /dev/tty
+}
+
+get_video_dimensions() {
+  ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=s=x:p=0 "${1}"
 }
 
 handle_extension() {
@@ -59,11 +58,7 @@ handle_extension() {
       hdiutil imageinfo "${FILE_PATH}" | bat -l yaml && exit 1;;
     # Music
     mp3|flac|wav|m4a)
-      exiftool -b -CoverArt -Picture "${FILE_PATH}"
-      exiftool -Title -SortName -TitleSort -TitleSortOrder -Artist -SortArtist -ArtistSort -PerformerSortOrder \
-        -Album -SortAlbum -AlbumSort -AlbumSortOrder -AlbumArtist -SortAlbumArtist -AlbumArtistSort -AlbumArtistSortOrder \
-        -Genre -TrackNumber -Year -Duration -SampleRate -AudioSampleRate -AudioBitrate -AvgBitrate -Channels \
-        -AudioChannels "${FILE_PATH}" | bat -l yaml
+      exiftool "${FILE_PATH}" | bat -l yaml
       exit 1;;
     # CSV and TSV
     csv|tsv)
@@ -87,24 +82,39 @@ handle_mime() {
     # Image
     image/*)
       if [[ $TERM == "xterm-kitty" ]]; then
-        image_preview_by_kitty "${FILE_PATH}"
-        for (( i = 0; i < PV_HEIGHT_IMAGE; ++i )); do
-          echo
-        done
-      elif [[ $TERM == "tmux-256color" ]]; then
-        echo -e "Image preview is NOT supported in lf running in tmux!\n"
-        echo -e "Use CTRL-F to invoke fzf for image preview and file toggle.\n"
+        # For kitty
+        echo "Resolution: $(identify -format "%w×%h" "${FILE_PATH}")"
+        local place="${PV_WIDTH}x$(( PV_HEIGHT - 1 ))@${HORIZONTAL_POS}x$(( VERTICAL_POS + 1 ))"
+        image_preview_by_kitty "${place}" "${FILE_PATH}"
+      elif [[ $TERM == "tmux-256color" && -n $KITTY_WINDOW_ID ]]; then
+        # For tmux running in kitty
+        echo -e "Image preview is NOT supported in lf running in tmux!"
+        echo -e "Instead preview images in fzf (CTRL-F).\n"
+        exiftool "${FILE_PATH}" | bat -l yaml
+      else
+        # For others
+        echo -e "Image preview is NOT supported!\n"
+        exiftool "${FILE_PATH}" | bat -l yaml
       fi
-      exiftool '-ImageSize' '-*' "${FILE_PATH}" | bat -l yaml
       exit 1;;
     # Video
     video/*)
       if [[ $TERM == "xterm-kitty" ]]; then
+        # For kitty
+        local dimensions=$(get_video_dimensions "${FILE_PATH}")
+        echo "Dimensions: $dimensions"
         local thumbnail=$($HOME/.config/lf/vidthumb "${FILE_PATH}")
-        image_preview_by_kitty "${thumbnail}"
-      elif [[ $TERM =~ "tmux-256color" ]]; then
-        echo -e "Video's thumbnail preview is NOT supported in lf running in tmux!\n"
-        echo "Use CTRL-F to invoke fzf for thumbnail preview and file toggle."
+        local place="${PV_WIDTH}x$(( PV_HEIGHT - 1 ))@${HORIZONTAL_POS}x$(( VERTICAL_POS + 1 ))"
+        image_preview_by_kitty "${place}" "${thumbnail}"
+      elif [[ $TERM =~ "tmux-256color" && -n $KITTY_WINDOW_ID ]]; then
+        # For tmux running in kitty
+        echo -e "Previewing video's thumbnail is NOT supported in lf running in tmux!"
+        echo -e "Instead preview the thumbnail in fzf (CTRL-F).\n"
+        mediainfo "${FILE_PATH}" | bat -l yaml
+      else
+        # For others
+        echo -e "Previewing video's thumbnail is NOT supported!\n"
+        mediainfo "${FILE_PATH}" | bat -l yaml
       fi
       exit 1;;
     # Text

@@ -64,65 +64,79 @@ Using a bare repository. The dotfiles can reside where they are. No symlinks nee
 
 ## Initial setup
 
-Create a bare repository to store the history.
+Create a bare repository to store the history:
 
 ```bash
 git init --bare $HOME/dotfiles
 ```
 
-Create an alias in zshrc, tell Git where the history and the working tree (snapshot) live.
+Create an alias in zshrc, tell Git where the history and the working tree live:
 
 ```bash
-alias cfg='git --git-dir=$HOME/dotfiles/ --work-tree=$HOME'
+alias dot='git --git-dir=$HOME/dotfiles/ --work-tree=$HOME'
 ```
 
-Tell Git not to show all the untracked files, otherwise all files under `$HOME` will be shown when running `git status`.
+Tell Git not to show all the untracked files, otherwise all files under `$HOME` will be shown when running `git status`:
 
 ```bash
-cfg config status.showUntrackedFiles no
+dot config status.showUntrackedFiles no
 ```
 
-Set up the remote repository for syncing
+Set up the remote repository for syncing:
 
 ```bash
-cfg remote add origin https://github.com/xxx/dotfiles.git
+dot remote add origin https://github.com/rockyzhang24/dotfiles.git
 ```
 
 Done! Now we can manage our dotfiles.
 
 ```bash
-cfg status
-cfg add ~/.config/zsh
-cfg commit -m "zsh config"
-cfg push origin master
+dot status
+dot add ~/.config/zsh
+dot commit -m "update zsh config"
+dot push origin master
 ```
 
 ## Clone to another machine
 
-Clone the dotfiles into a bare repository.
+Clone the dotfiles into a bare repository:
 
 ```bash
-git clone --bare https://github.com/xxx/dotfiles.git $HOME/dotfiles
+git clone --bare https://github.com/rockyzhang24/dotfiles.git $HOME/dotfiles
 ```
 
-Checkout the actual content from the bare repository to `$HOME`.
+Define the alias in the current shell scope:
 
 ```bash
-git --git-dir=$HOME/dotfiles/ --work-tree=$HOME checkout
+alias dot='git --git-dir=$HOME/dotfiles/ --work-tree=$HOME'
+```
+
+Backup the stock configuration files that will be overwritten:
+
+```bash
+mkdir -p .config-backup
+config checkout 2>&1 | egrep "\s+\." | awk {'print $1'} | xargs -I{} mv {} .config-backup/{}
+```
+
+Checkout the actual content from the bare repository to `$HOME`:
+
+```bash
+dot checkout
+```
+
+Don't show untracked files and directories:
+
+```bash
+dot config status.showUntrackedFiles no
 ```
 
 Done!
 
 ## Notes
 
-If using [vim-fugitive](https://github.com/tpope/vim-fugitive) in Neovim, to make it work with this bare repo correctly, we should modify `~/dotfiles/config` as below
+In order for [vim-fugitive](https://github.com/tpope/vim-fugitive) to recognize this bare repo, the following additional configurations are required:
 
-```
-...
-
-[core]
-  bare = false
-  worktree = /Users/rockyzhang/
-
-...
+```bash
+dot config core.bare 'false'
+dot config core.worktree "$HOME"
 ```

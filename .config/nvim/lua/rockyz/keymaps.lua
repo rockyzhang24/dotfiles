@@ -78,8 +78,6 @@ vim.keymap.set('n', ']<Space>', 'm`' .. vim.v.count .. 'o<Esc>``')
 -- Time travel
 vim.keymap.set('n', 'U', "<Cmd>execute 'earlier ' .. vim.v.count1 .. 'f'<CR>")
 vim.keymap.set('n', '<M-r>', "<Cmd>execute 'later ' .. vim.v.count1 .. 'f'<CR>")
--- Macro
-vim.keymap.set({ 'n', 'x' }, '<Leader>m', 'q')
 -- Toggle the quickfix window
 vim.keymap.set('n', '<BS>q', function()
   if vim.fn.getqflist({ winid = 0 }).winid ~= 0 then
@@ -100,22 +98,10 @@ vim.keymap.set('n', '<BS>l', function()
 end)
 -- Format the whole buffer and preserve the cursor position
 vim.keymap.set('n', 'gQ', 'mzgggqG`z<Cmd>delmarks z<CR>')
-
---
--- Quit and close
---
-
-vim.keymap.set({ 'n', 'x' }, 'q', '<NOP>')
-vim.keymap.set('n', 'Q', '<NOP>')
-vim.keymap.set('n', 'qq', '<Cmd>q<CR>')
-vim.keymap.set('n', 'qa', '<Cmd>qa<CR>')
-vim.keymap.set('n', 'qt', '<Cmd>tabclose<CR>')
--- close quickfix or location list window
-vim.keymap.set('n', 'qc', require('rockyz.qf').close)
 -- close diff windows
-vim.keymap.set('n', 'qd', require('rockyz.utils').close_diff)
+vim.keymap.set('n', '<Leader>dq', require('rockyz.utils').close_diff)
 -- close diff windows in all tabs
-vim.keymap.set('n', 'qD', [[<Cmd>tabdo lua require("rockyz.utils").close_diff()<CR>]])
+vim.keymap.set('n', '<Leader>dQ', [[<Cmd>tabdo lua require("rockyz.utils").close_diff()<CR>]])
 
 --
 -- Search
@@ -239,12 +225,14 @@ vim.keymap.set('n', '][', ":<C-u>silent! eval search('}')<CR>b99]}", { silent = 
 --
 
 -- Open a new tab with an empty window
-vim.keymap.set('n', '<Leader>tn', ':$tabnew<CR>', { silent = true })
+vim.keymap.set('n', '<Leader>tn', '<Cmd>$tabnew<CR>')
+-- Close the current tab
+vim.keymap.set('n', '<Leader>tq', '<Cmd>tabclose<CR>')
 -- Close all other tabs
-vim.keymap.set('n', '<Leader>to', ':tabonly<CR>', { silent = true })
+vim.keymap.set('n', '<Leader>to', '<Cmd>tabonly<CR>')
 -- Move the current tab to the left or right
-vim.keymap.set('n', '<Leader>t,', ':-tabmove<CR>', { silent = true })
-vim.keymap.set('n', '<Leader>t.', ':+tabmove<CR>', { silent = true })
+vim.keymap.set('n', '<Leader>t,', '<Cmd>-tabmove<CR>')
+vim.keymap.set('n', '<Leader>t.', '<Cmd>+tabmove<CR>')
 
 --
 -- Window
@@ -276,7 +264,7 @@ vim.keymap.set('n', '<Leader><Right>', '<C-w>5>')
 -- Balance size
 vim.keymap.set('n', '<Leader>w=', '<C-w>=')
 -- Close windows by giving the window numbers
-vim.keymap.set('n', '<Leader>wc', ':CloseWin<Space>')
+vim.keymap.set('n', '<Leader>wq', ':CloseWin<Space>')
 -- Switch the layout (horizontal and vertical) of the TWO windows
 vim.keymap.set('n', '<Leader>wl', function()
   local wins = vim.api.nvim_tabpage_list_wins(0)

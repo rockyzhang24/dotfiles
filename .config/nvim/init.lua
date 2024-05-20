@@ -31,7 +31,7 @@ vim.cmd('source ~/.config/nvim/viml/options.vim')
 vim.cmd('source ~/.config/nvim/viml/autocmds.vim')
 vim.cmd('source ~/.config/nvim/viml/plugins.vim')
 
-require('rockyz.mappings')
+require('rockyz.keymaps')
 require('rockyz.plugin_config_loader')
 require('rockyz.color')
 require('rockyz.autocmds')

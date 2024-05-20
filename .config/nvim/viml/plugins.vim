@@ -3,9 +3,9 @@ function! s:PackInit() abort
   call minpac#init({'progress_open': 'vertical', 'status_open': 'vertical', 'status_auto': 'TRUE'})
 
   call minpac#add('k-takata/minpac', {'type': 'opt'})
-  call minpac#add('editorconfig/editorconfig-vim')
-  call minpac#add('dstein64/vim-startuptime')
   call minpac#add('nvim-lua/plenary.nvim')  " lua library required by other plugins
+  call minpac#add('kyazdani42/nvim-web-devicons')
+  call minpac#add('dstein64/vim-startuptime')
   call minpac#add('tpope/vim-surround')
   call minpac#add('tpope/vim-sleuth')
   call minpac#add('tpope/vim-repeat')
@@ -60,9 +60,6 @@ function! s:PackInit() abort
   call minpac#add('tpope/vim-fugitive')
   call minpac#add('tpope/vim-rhubarb')  " vim-fugitive's companion for :GBrowse
   call minpac#add('rbong/vim-flog')
-
-  " Icons
-  call minpac#add('kyazdani42/nvim-web-devicons')
 
 endfunction
 

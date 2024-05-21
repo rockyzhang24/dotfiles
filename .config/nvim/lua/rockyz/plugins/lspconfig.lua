@@ -131,6 +131,7 @@ lspconfig.lua_ls.setup({
 -- })
 
 lspconfig.pyright.setup({
+  capabilities = capabilities(),
 })
 
 -- Rust

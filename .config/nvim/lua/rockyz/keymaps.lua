@@ -171,8 +171,6 @@ vim.keymap.set('c', '<M-f>', '<S-Right>')
 vim.keymap.set('c', '<C-k>', '<C-\\>egetcmdline()[:getcmdpos() - 2]<CR>')
 -- Delete the previous word
 vim.keymap.set('c', '<M-BS>', '<C-w>')
--- Open the command-line window
-vim.keymap.set('n', '<Leader><C-o>', 'q:')
 vim.o.cedit = '<C-o>'
 -- Use %% to get the absolute filepath of the current buffer in command-line
 -- mode

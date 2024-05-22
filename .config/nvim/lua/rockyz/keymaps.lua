@@ -99,9 +99,9 @@ end)
 -- Format the whole buffer and preserve the cursor position
 vim.keymap.set('n', 'gQ', 'mzgggqG`z<Cmd>delmarks z<CR>')
 -- close diff windows
-vim.keymap.set('n', '<Leader>dq', require('rockyz.utils').close_diff)
+vim.keymap.set('n', 'dq', require('rockyz.utils').close_diff)
 -- close diff windows in all tabs
-vim.keymap.set('n', '<Leader>dQ', [[<Cmd>tabdo lua require("rockyz.utils").close_diff()<CR>]])
+vim.keymap.set('n', 'dQ', [[<Cmd>tabdo lua require("rockyz.utils").close_diff()<CR>]])
 
 --
 -- Search

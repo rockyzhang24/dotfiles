@@ -15,7 +15,8 @@ function! s:PackInit() abort
   call minpac#add('mbbill/undotree')
   call minpac#add('mhinz/vim-grepper')
   call minpac#add('haya14busa/vim-asterisk')
-  call minpac#add('tommcdo/vim-exchange') " cx{motion}, cxx (line), X (visual), cxc (clear), and `.` is supported
+  call minpac#add('tommcdo/vim-exchange') " See comment below
+  " tommcdo/vim-exchange: cx{motion}, cxx (line), X (visual), cxc (clear), and `.` is supported
   call minpac#add('kevinhwang91/nvim-bqf')
   call minpac#add('othree/eregex.vim')
   call minpac#add('wellle/targets.vim')
@@ -25,6 +26,9 @@ function! s:PackInit() abort
   call minpac#add('Wansmer/treesj')
   call minpac#add('willothy/flatten.nvim')
   call minpac#add('ThePrimeagen/harpoon', { 'branch': 'harpoon2' })
+  call minpac#add('michaeljsmith/vim-indent-object') " See comment below
+  " michaeljsmith/vim-indent-object: ii for inner indentation, ai for indentation and one line
+  " above, aI for indentation and lines above and below
 
   " Fuzzy Finder
   call minpac#add('junegunn/fzf', { 'do': 'packloadall! | call fzf#install()' })

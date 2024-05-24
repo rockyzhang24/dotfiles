@@ -157,8 +157,6 @@ end, { expr = true })
 -- Command line
 --
 
-vim.keymap.set('c', '<C-p>', '<Up>')
-vim.keymap.set('c', '<C-n>', '<Down>')
 vim.keymap.set('c', '<C-b>', '<Left>')
 vim.keymap.set('c', '<C-f>', '<Right>')
 vim.keymap.set('c', '<C-a>', '<Home>')
@@ -180,6 +178,7 @@ end)
 
 --
 -- Navigation
+-- vim-unimpaired style mappings. Ref: See: https://github.com/tpope/vim-unimpaired
 --
 
 -- Misspelled words ([s and ]s are occupied by lsp symbol navigation)

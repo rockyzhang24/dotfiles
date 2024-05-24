@@ -1,6 +1,4 @@
 local cmp = require('cmp')
-local feedkeys = require('cmp.utils.feedkeys')
-local keymap = require('cmp.utils.keymap')
 
 local symbol_kinds = require('rockyz.icons').symbol_kinds
 local ellipsis = require('rockyz.icons').misc.ellipsis
@@ -51,10 +49,22 @@ cmp.setup({
   -- Ref: https://github.com/hrsh7th/nvim-cmp/issues/1027
   mapping = {
     ['<C-n>'] = {
-      i = cmp.mapping.select_next_item({ behavior = cmp.SelectBehavior.Insert }),
+      i = function()
+        if cmp.visible() then
+          cmp.select_next_item({ behavior = cmp.SelectBehavior.Insert })
+        else
+          cmp.complete()
+        end
+      end,
     },
     ['<C-p>'] = {
-      i = cmp.mapping.select_prev_item({ behavior = cmp.SelectBehavior.Insert }),
+      i = function()
+        if cmp.visible() then
+          cmp.select_prev_item({ behavior = cmp.SelectBehavior.Insert })
+        else
+          cmp.complete()
+        end
+      end,
     },
     ['<C-b>'] = {
       i = cmp.mapping.scroll_docs(-4),
@@ -65,9 +75,9 @@ cmp.setup({
     ['<C-Enter>'] = {
       i = cmp.mapping.complete(),
     },
-    ['<C-e>'] = cmp.mapping({
+    ['<C-e>'] = {
       i = cmp.mapping.abort(),
-    }),
+    },
     ['<C-y>'] = {
       i = cmp.mapping.confirm({ select = true }),
     },
@@ -76,7 +86,7 @@ cmp.setup({
         if cmp.visible() then
           cmp.select_next_item({ behavior = cmp.SelectBehavior.Insert })
         else
-          feedkeys.call(keymap.t('<C-z>'), 'n')
+          cmp.complete()
         end
       end,
     },
@@ -85,7 +95,7 @@ cmp.setup({
         if cmp.visible() then
           cmp.select_prev_item({ behavior = cmp.SelectBehavior.Insert })
         else
-          feedkeys.call(keymap.t('<C-z>'), 'n')
+          cmp.complete()
         end
       end,
     },

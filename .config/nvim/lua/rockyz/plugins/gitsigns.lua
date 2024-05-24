@@ -1,9 +1,10 @@
 local gitsigns = require('gitsigns')
 
 gitsigns.setup({
-  -- Hidden features (probably not stable)
+  -- Experimental features
+  -- See https://github.com/lewis6991/gitsigns.nvim/blob/main/lua/gitsigns/config.lua. The
+  -- experimental features start with an underscore.
   _signs_staged_enable = true,
-  _extmark_signs = true,
   _inline2 = true,
 
   signs = {

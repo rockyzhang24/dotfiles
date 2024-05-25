@@ -79,7 +79,7 @@ vim.keymap.set('n', ']<Space>', 'm`' .. vim.v.count .. 'o<Esc>``')
 vim.keymap.set('n', 'U', "<Cmd>execute 'earlier ' .. vim.v.count1 .. 'f'<CR>")
 vim.keymap.set('n', '<M-r>', "<Cmd>execute 'later ' .. vim.v.count1 .. 'f'<CR>")
 -- Toggle the quickfix window
-vim.keymap.set('n', '<BS>q', function()
+vim.keymap.set('n', 'yoq', function()
   if vim.fn.getqflist({ winid = 0 }).winid ~= 0 then
     vim.cmd.cclose()
   elseif #vim.fn.getqflist() > 0 then
@@ -88,7 +88,7 @@ vim.keymap.set('n', '<BS>q', function()
   end
 end)
 -- Toggle the location list window
-vim.keymap.set('n', '<BS>l', function()
+vim.keymap.set('n', 'yol', function()
   if vim.fn.getloclist(0, { winid = 0 }).winid ~= 0 then
     vim.cmd.lclose()
   elseif #vim.fn.getloclist(0) > 0 then
@@ -157,6 +157,8 @@ end, { expr = true })
 -- Command line
 --
 
+vim.keymap.set('c', '<C-p>', '<Up>')
+vim.keymap.set('c', '<C-n>', '<Down>')
 vim.keymap.set('c', '<C-b>', '<Left>')
 vim.keymap.set('c', '<C-f>', '<Right>')
 vim.keymap.set('c', '<C-a>', '<Home>')
@@ -309,7 +311,7 @@ vim.keymap.set('n', '<M-d>', "<Cmd>lua require('rockyz.mappings').other_win_scro
 vim.keymap.set('i', '<M-u>', "<C-\\><C-o><Cmd>lua require('rockyz.mappings').other_win_scroll(1)<CR>")
 vim.keymap.set('i', '<M-d>', "<C-\\><C-o><Cmd>lua require('rockyz.mappings').other_win_scroll(2)<CR>")
 -- Maximize and restore the current window
-vim.keymap.set('n', '<BS>m', function()
+vim.keymap.set('n', 'yom', function()
   require('rockyz.utils').win_maximize_toggle()
 end)
 

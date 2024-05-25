@@ -97,9 +97,9 @@ gitsigns.setup({
     end)
 
     -- Toggle
-    buf_map('n', '<BS>d', gitsigns.toggle_deleted) -- toggle showing deleted/changed lines via virtual lines
-    buf_map('n', '<BS>w', gitsigns.toggle_word_diff) -- toggle the word_diff in the buffer
-    buf_map('n', '<BS>b', gitsigns.toggle_current_line_blame) -- toggle displaying the blame for the current line
+    buf_map('n', 'yod', gitsigns.toggle_deleted) -- toggle showing deleted/changed lines via virtual lines
+    buf_map('n', 'yow', gitsigns.toggle_word_diff) -- toggle the word_diff in the buffer
+    buf_map('n', 'yob', gitsigns.toggle_current_line_blame) -- toggle displaying the blame for the current line
 
     -- Text object
     buf_map({ 'o', 'x' }, 'ih', ':<C-U>Gitsigns select_hunk<CR>')

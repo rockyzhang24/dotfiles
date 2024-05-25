@@ -102,7 +102,7 @@ local function on_attach(client, bufnr)
   -- end, opts)
   -- Toggle inlay hints
   if client and client.server_capabilities.inlayHintProvider then
-    vim.keymap.set('n', '<BS>h', function()
+    vim.keymap.set('n', 'yoh', function()
       vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled())
     end, opts)
   end

@@ -49,18 +49,24 @@ local function on_attach(client, bufnr)
   --
   -- Mappings
   --
-  -- Nvim creates the following default LSP mappings:
-  --   * K in NORMAL maps vim.lsp.buf.hover()
+  -- Nvim creates the following default LSP mappings but as a reference I still redefined the ones
+  -- I'm using, e,g., grr and K.
+  --  * K in NORMAL maps vim.lsp.buf.hover()
+  --  * grr in NORMAL maps vim.lsp.buf.references()
+  --  * grn in NORMAL maps vim.lsp.buf.rename()
+  --  * gra in NORMAL and VISUAL maps vim.lsp.buf.code_action()
+  --  * <C-s> in INSERT maps vim.lsp.buf.signature_help()
   -- Also, the following default diagnostic mappings are creataed:
-  --   * ]d and [d in NORMAL map to vim.diagnostic.goto_next() and vim.diagnostic.goto_prev()
-  --   * <C-w>d and <C-w><C-d> map to vim.diagnostic.open_float()
+  --  * ]d and [d in NORMAL map to vim.diagnostic.goto_next() and vim.diagnostic.goto_prev()
+  --  * <C-w>d and <C-w><C-d> map to vim.diagnostic.open_float()
   local opts = { buffer = bufnr }
   vim.keymap.set('n', 'gd', vim.lsp.buf.definition, opts)
   vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, opts)
   vim.keymap.set('n', 'gy', vim.lsp.buf.type_definition, opts)
   vim.keymap.set('n', 'gI', vim.lsp.buf.implementation, opts)
-  vim.keymap.set('n', 'gr', vim.lsp.buf.references, opts)
+  vim.keymap.set('n', 'grr', vim.lsp.buf.references, opts)
   vim.keymap.set('i', '<C-s>', vim.lsp.buf.signature_help, opts)
+  vim.keymap.set('n', 'K', vim.lsp.buf.hover, opts)
   -- Rename
   vim.keymap.set('n', '<Leader>rn', vim.lsp.buf.rename, opts)
   -- Code actions under the cursor

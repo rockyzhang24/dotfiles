@@ -13,7 +13,7 @@ end
 
 -- Close windows by giving window numbers, e.g., :CloseWin 1 2 3
 vim.api.nvim_create_user_command('CloseWin', function(opts)
-  require('rockyz.utils').close_wins(opts.args)
+  require('rockyz.utils.win_utils').close_wins(opts.args)
 end, { nargs = '+' })
 
 -- Change indentation for the current buffer

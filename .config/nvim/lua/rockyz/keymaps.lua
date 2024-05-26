@@ -99,9 +99,9 @@ end)
 -- Format the whole buffer and preserve the cursor position
 vim.keymap.set('n', 'gQ', 'mzgggqG`z<Cmd>delmarks z<CR>')
 -- close diff windows
-vim.keymap.set('n', 'dq', require('rockyz.utils').close_diff)
+vim.keymap.set('n', 'dq', require('rockyz.utils.win_utils').close_diff)
 -- close diff windows in all tabs
-vim.keymap.set('n', 'dQ', [[<Cmd>tabdo lua require("rockyz.utils").close_diff()<CR>]])
+vim.keymap.set('n', 'dQ', [[<Cmd>tabdo lua require("rockyz.utils.win_utils").close_diff()<CR>]])
 
 --
 -- Search
@@ -297,7 +297,7 @@ vim.keymap.set('n', '<Leader>wo', function()
 end, { expr = true })
 -- Scroll the other window
 -- 1:half-page up, 2:half-page down
-function M.other_win_scroll(mode)
+local function other_win_scroll(mode)
   vim.cmd('noautocmd silent! wincmd p')
   if mode == 1 then
     vim.cmd('exec "normal! \\<c-u>"')
@@ -306,13 +306,15 @@ function M.other_win_scroll(mode)
   end
   vim.cmd('noautocmd silent! wincmd p')
 end
-vim.keymap.set('n', '<M-u>', "<Cmd>lua require('rockyz.mappings').other_win_scroll(1)<CR>")
-vim.keymap.set('n', '<M-d>', "<Cmd>lua require('rockyz.mappings').other_win_scroll(2)<CR>")
-vim.keymap.set('i', '<M-u>', "<C-\\><C-o><Cmd>lua require('rockyz.mappings').other_win_scroll(1)<CR>")
-vim.keymap.set('i', '<M-d>', "<C-\\><C-o><Cmd>lua require('rockyz.mappings').other_win_scroll(2)<CR>")
+vim.keymap.set({ 'n', 'i' }, '<M-u>', function()
+  other_win_scroll(1)
+end)
+vim.keymap.set({ 'n', 'i' }, '<M-d>', function()
+  other_win_scroll(2)
+end)
 -- Maximize and restore the current window
 vim.keymap.set('n', 'yom', function()
-  require('rockyz.utils').win_maximize_toggle()
+  require('rockyz.utils.win_utils').win_maximize_toggle()
 end)
 
 --

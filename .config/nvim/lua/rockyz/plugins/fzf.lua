@@ -41,7 +41,7 @@
 -- Live grep in current buffer
 
 local uv = require('luv')
-local qf = require('rockyz.qf')
+local qf_utils = require('rockyz.utils.qf_utils')
 local caret = require('rockyz.icons').caret
 
 -- Use the globally set statusline
@@ -409,7 +409,7 @@ local function fzf_qf(win_local)
     -- The first three parts are used for fzf itself and won't be presented in fzf window.
     -- * bufnr is used for sink of fzf.vim
     -- * bufname and lnum are used for preview
-    table.insert(entries, bufnr .. ' ' .. bufname .. ' ' .. lnum .. ' ' .. qf.format_qf_item(item))
+    table.insert(entries, bufnr .. ' ' .. bufname .. ' ' .. lnum .. ' ' .. qf_utils.format_qf_item(item))
   end
   -- fzf
   local prompt = win_local and 'LocationList' or 'QuickfixList'
@@ -524,7 +524,7 @@ local function fzf_qf_history(win_local)
         if item == nil then
           break
         end
-        local str = qf.format_qf_item(item)
+        local str = qf_utils.format_qf_item(item)
         table.insert(errors, str)
       end
       write_file(hist_path, table.concat(errors, '\n'))

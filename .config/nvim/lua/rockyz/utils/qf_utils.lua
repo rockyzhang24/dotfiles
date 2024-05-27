@@ -1,5 +1,5 @@
 local M = {}
-local fn = vim.fn
+
 local bar = require('rockyz.icons').separators.bar
 
 --
@@ -8,7 +8,7 @@ local bar = require('rockyz.icons').separators.bar
 --
 
 -- The length limit of the file name
-local limit = 35
+local limit = vim.o.columns / 4
 local fname_fmt1, fname_fmt2 = '%-' .. limit .. 's', ' %.' .. (limit - 2) .. 's'
 local valid_fmt = '%s ' .. bar .. '%5d:%-3d' .. bar .. '%s %s'
 
@@ -17,7 +17,7 @@ function M.format_qf_item(item)
   local str
   if item.valid == 1 then
     if item.bufnr > 0 then
-      fname = fn.bufname(item.bufnr)
+      fname = vim.fn.bufname(item.bufnr)
       if fname == '' then
         fname = '[No Name]'
       else
@@ -39,23 +39,5 @@ function M.format_qf_item(item)
   end
   return str
 end
-
-function M.qftf(info)
-  local items
-  local ret = {}
-  if info.quickfix == 1 then
-    items = fn.getqflist({ id = info.id, items = 0 }).items
-  else
-    items = fn.getloclist(info.winid, { id = info.id, items = 0 }).items
-  end
-  for i = info.start_idx, info.end_idx do
-    local e = items[i]
-    local str = M.format_qf_item(e)
-    table.insert(ret, str)
-  end
-  return ret
-end
-
-vim.o.quickfixtextfunc = [[{info -> v:lua.require('rockyz.qf').qftf(info)}]]
 
 return M

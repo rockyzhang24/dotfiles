@@ -47,8 +47,11 @@ function M.close_diff()
   end
 end
 
+--
 -- Maximizes and restores the current window
 -- Ref: https://github.com/szw/vim-maximizer
+--
+
 local function win_maximize()
   vim.t.maximizer_sizes = {
     before = vim.fn.winrestcmd(),

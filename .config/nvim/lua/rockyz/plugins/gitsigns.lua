@@ -52,19 +52,11 @@ gitsigns.setup({
 
     -- Hunk navigation
     buf_map('n', ']h', function()
-      if vim.wo.diff then
-        vim.cmd.normal({']c', bang = true})
-      else
-        gitsigns.nav_hunk('next')
-      end
+      gitsigns.nav_hunk('next')
     end)
 
     buf_map('n', '[h', function()
-      if vim.wo.diff then
-        vim.cmd.normal({'[c', bang = true})
-      else
-        gitsigns.nav_hunk('prev')
-      end
+      gitsigns.nav_hunk('prev')
     end)
 
     -- Stage hunk or buffer
@@ -97,8 +89,8 @@ gitsigns.setup({
     end)
 
     -- Toggle
-    buf_map('n', 'yod', gitsigns.toggle_deleted) -- toggle showing deleted/changed lines via virtual lines
-    buf_map('n', 'yow', gitsigns.toggle_word_diff) -- toggle the word_diff in the buffer
+    buf_map('n', 'yodl', gitsigns.toggle_deleted) -- toggle showing deleted/changed lines via virtual lines
+    buf_map('n', 'yodw', gitsigns.toggle_word_diff) -- toggle the word_diff in the buffer
     buf_map('n', 'yob', gitsigns.toggle_current_line_blame) -- toggle displaying the blame for the current line
 
     -- Text object

@@ -71,7 +71,7 @@ function M.mode_component()
   local hl = 'Normal'
   if mode:find('INSERT') or mode:find('SELECT') then
     hl = 'Insert'
-  elseif mode:find('VISUAL') then
+  elseif mode:find('VISUAL') or mode:find('V-LINE') or mode:find('V-BLOCK') then
     hl = 'Visual'
   elseif mode:find('REPLACE') then
     hl = 'Replace'

@@ -78,6 +78,12 @@ vim.keymap.set('n', ']<Space>', 'm`' .. vim.v.count .. 'o<Esc>``')
 -- Time travel
 vim.keymap.set('n', 'U', "<Cmd>execute 'earlier ' .. vim.v.count1 .. 'f'<CR>")
 vim.keymap.set('n', '<M-r>', "<Cmd>execute 'later ' .. vim.v.count1 .. 'f'<CR>")
+-- Format the whole buffer and preserve the cursor position
+vim.keymap.set('n', 'gQ', 'mzgggqG`z<Cmd>delmarks z<CR>')
+-- close diff windows
+vim.keymap.set('n', 'dq', require('rockyz.utils.win_utils').close_diff)
+-- close diff windows in all tabs
+vim.keymap.set('n', 'dQ', [[<Cmd>tabdo lua require("rockyz.utils.win_utils").close_diff()<CR>]])
 -- Toggle the quickfix window
 vim.keymap.set('n', 'yoq', function()
   if vim.fn.getqflist({ winid = 0 }).winid ~= 0 then
@@ -96,12 +102,18 @@ vim.keymap.set('n', 'yol', function()
     vim.cmd.wincmd('p')
   end
 end)
--- Format the whole buffer and preserve the cursor position
-vim.keymap.set('n', 'gQ', 'mzgggqG`z<Cmd>delmarks z<CR>')
--- close diff windows
-vim.keymap.set('n', 'dq', require('rockyz.utils.win_utils').close_diff)
--- close diff windows in all tabs
-vim.keymap.set('n', 'dQ', [[<Cmd>tabdo lua require("rockyz.utils.win_utils").close_diff()<CR>]])
+-- Toggle spell
+vim.keymap.set('n', 'yos', function()
+  vim.wo.spell = not vim.wo.spell
+end)
+-- Toggle diffthis for each window in the current tab page
+vim.keymap.set('n', 'yodd', function()
+  if vim.wo.diff then
+    vim.cmd('windo diffoff')
+  else
+    vim.cmd('windo diffthis')
+  end
+end)
 
 --
 -- Search
@@ -144,7 +156,7 @@ vim.keymap.set('n', '<Leader>Y', '"+y$')
 -- Paste and format
 vim.keymap.set('n', 'p', 'p=`]')
 -- Paste over the selected text
-vim.keymap.set('x', 'p', '_c<ESC>p')
+vim.keymap.set('x', 'p', '"_c<ESC>p')
 -- Paste non-linewise text above or below current cursor and format
 vim.keymap.set('n', '<Leader>p', 'm`o<Esc>p==``')
 vim.keymap.set('n', '<Leader>P', 'm`O<Esc>p==``')
@@ -183,36 +195,108 @@ end)
 -- vim-unimpaired style mappings. Ref: See: https://github.com/tpope/vim-unimpaired
 --
 
--- Misspelled words ([s and ]s are occupied by lsp symbol navigation)
-vim.keymap.set('n', '[x', '[s')
-vim.keymap.set('n', ']x', ']s')
 -- Argument list
-vim.keymap.set('n', '[a', ':<C-u>previous<CR>', { silent = true })
-vim.keymap.set('n', ']a', ':<C-u>next<CR>', { silent = true })
-vim.keymap.set('n', '[A', ':<C-u>first<CR>', { silent = true })
-vim.keymap.set('n', ']A', ':<C-u>last<CR>', { silent = true })
+vim.keymap.set('n', '[a', function()
+  vim.cmd.previous({ count = vim.v.count1 })
+end)
+vim.keymap.set('n', ']a', function()
+  vim.cmd.next({ count = vim.v.count1 })
+end)
+vim.keymap.set('n', '[A', function()
+  if vim.v.count ~= 0 then
+    vim.cmd.argument({ count = vim.v.count })
+  else
+    vim.cmd.first()
+  end
+end)
+vim.keymap.set('n', ']A', function()
+  if vim.v.count ~= 0 then
+    vim.cmd.argument({ count = vim.v.count })
+  else
+    vim.cmd.last()
+  end
+end)
 -- Buffers
-vim.keymap.set('n', '[b', ':<C-u>bprevious<CR>', { silent = true })
-vim.keymap.set('n', ']b', ':<C-u>bnext<CR>', { silent = true })
-vim.keymap.set('n', '<Left>', ':<C-u>bprevious<CR>', { silent = true })
-vim.keymap.set('n', '<Right>', ':<C-u>bnext<CR>', { silent = true })
-vim.keymap.set('n', '[B', ':<C-u>bfirst<CR>', { silent = true })
-vim.keymap.set('n', ']B', ':<C-u>blast<CR>', { silent = true })
+vim.keymap.set('n', '[b', function()
+  vim.cmd.bprevious({ count = vim.v.count1 })
+end)
+vim.keymap.set('n', ']b', function()
+  vim.cmd.bnext({ count = vim.v.count1 })
+end)
+vim.keymap.set('n', '<Left>', function()
+  vim.cmd.bprevious({ count = vim.v.count1 })
+end)
+vim.keymap.set('n', '<Right>', function()
+  vim.cmd.bnext({ count = vim.v.count1 })
+end)
+vim.keymap.set('n', '[B', function()
+  if vim.v.count ~= 0 then
+    vim.cmd.buffer({ count = vim.v.count })
+  else
+    vim.cmd.bfirst()
+  end
+end)
+vim.keymap.set('n', ']B', function()
+  if vim.v.count ~= 0 then
+    vim.cmd.buffer({ count = vim.v.count })
+  else
+    vim.cmd.blast()
+  end
+end)
 -- Quickfix
-vim.keymap.set('n', '[q', ':<C-u>cprevious<CR>zv', { silent = true })
-vim.keymap.set('n', ']q', ':<C-u>cnext<CR>zv', { silent = true })
-vim.keymap.set('n', '[Q', ':<C-u>cfirst<CR>zv', { silent = true })
-vim.keymap.set('n', ']Q', ':<C-u>clast<CR>zv', { silent = true })
+vim.keymap.set('n', '[q', function()
+  vim.cmd.cprevious({ count = vim.v.count1 })
+end)
+vim.keymap.set('n', ']q', function()
+  vim.cmd.cnext({ count = vim.v.count1 })
+end)
+vim.keymap.set('n', '[Q', function()
+  if vim.v.count ~= 0 then
+    vim.cmd.cc({ count = vim.v.count })
+  else
+    vim.cmd.cfirst()
+  end
+end)
+vim.keymap.set('n', ']Q', function()
+  if vim.v.count ~= 0 then
+    vim.cmd.cc({ count = vim.v.count })
+  else
+    vim.cmd.clast()
+  end
+end)
+vim.keymap.set('n', '[<C-Q>', function()
+  vim.cmd.cpfile({ count = vim.v.count1 })
+end)
+vim.keymap.set('n', ']<C-Q>', function()
+  vim.cmd.cnfile({ count = vim.v.count1 })
+end)
 -- Location List
-vim.keymap.set('n', '[l', ':<C-u>lprevious<CR>zv', { silent = true })
-vim.keymap.set('n', ']l', ':<C-u>lnext<CR>zv', { silent = true })
-vim.keymap.set('n', '[L', ':<C-u>lfirst<CR>zv', { silent = true })
-vim.keymap.set('n', ']L', ':<C-u>llast<CR>zv', { silent = true })
--- Tabs
-vim.keymap.set('n', '[t', ':<C-u>tabprevious<CR>', { silent = true })
-vim.keymap.set('n', ']t', ':<C-u>tabnext<CR>', { silent = true })
-vim.keymap.set('n', '[T', ':<C-u>tabfirst<CR>', { silent = true })
-vim.keymap.set('n', ']T', ':<C-u>tablast<CR>', { silent = true })
+vim.keymap.set('n', '[l', function()
+  vim.cmd.lprevious({ count = vim.v.count1 })
+end)
+vim.keymap.set('n', ']l', function()
+  vim.cmd.lnext({ count = vim.v.count1 })
+end)
+vim.keymap.set('n', '[L', function()
+  if vim.v.count ~= 0 then
+    vim.cmd.ll({ count = vim.v.count })
+  else
+    vim.cmd.lfirst()
+  end
+end)
+vim.keymap.set('n', ']L', function()
+  if vim.v.count ~= 0 then
+    vim.cmd.ll({ count = vim.v.count })
+  else
+    vim.cmd.llast()
+  end
+end)
+vim.keymap.set('n', '[<C-l>', function()
+  vim.cmd.lpfile({ count = vim.v.count })
+end)
+vim.keymap.set('n', ']<C-l>', function()
+  vim.cmd.lnfile({ count = vim.v.count })
+end)
 -- Make section-jump work if '{' or '}' are not in the first column (see :h [[)
 vim.keymap.set('n', '[[', ":<C-u>eval search('{', 'b')<CR>w99[{", { silent = true })
 vim.keymap.set('n', '[]', "k$][%:<C-u>silent! eval search('}', 'b')<CR>", { silent = true })

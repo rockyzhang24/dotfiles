@@ -44,7 +44,8 @@ require('nvim-treesitter.configs').setup({
     keymaps = {
       init_selection = '<Enter>',
       node_incremental = '<Enter>',
-      node_decremental = '<Backspace>',
+      node_decremental = '<BS>',
+      scope_incremental = '<S-Enter>',
     },
   },
 })

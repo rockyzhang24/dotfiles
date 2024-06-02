@@ -65,4 +65,17 @@ function M.md_table_bar_align()
   end
 end
 
+---Paste the selection below or above the current line
+---@param how string e.g., ]p for below, [p for above
+function M.putline(how)
+  local body, type = vim.fn.getreg(vim.v.register), vim.fn.getregtype(vim.v.register)
+  if type == 'V' then
+    vim.cmd('normal! "' .. vim.v.register .. how)
+  else
+    vim.fn.setreg(vim.v.register, body, 'l')
+    vim.cmd('normal! "' .. vim.v.register .. how)
+    vim.fn.setreg(vim.v.register, body, type)
+  end
+end
+
 return M

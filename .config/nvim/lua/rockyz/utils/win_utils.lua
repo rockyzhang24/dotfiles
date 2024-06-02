@@ -47,6 +47,38 @@ function M.close_diff()
   end
 end
 
+-- Switch window layout between horizontal and vertical (only works in a tab page with two windows)
+function M.switch_layout()
+  local wins = vim.api.nvim_tabpage_list_wins(0)
+  -- Filter out the floating windows
+  local norm_wins = {}
+  for _, win in ipairs(wins) do
+    if vim.api.nvim_win_get_config(win).relative == '' then
+      table.insert(norm_wins, win)
+    end
+  end
+  if #norm_wins ~= 2 then
+    print('Layout switching only works for a tab page with TWO open windows.')
+    return
+  end
+  local cur_win = vim.api.nvim_get_current_win()
+  -- pos is {row, col}
+  local pos1 = vim.api.nvim_win_get_position(norm_wins[1])
+  local pos2 = vim.api.nvim_win_get_position(norm_wins[2])
+  local key = ''
+  if pos1[1] == pos2[1] then
+    key = vim.api.nvim_replace_termcodes('<C-w>t<C-w>K', true, false, true)
+  else
+    key = vim.api.nvim_replace_termcodes('<C-w>t<C-w>H', true, false, true)
+  end
+  vim.api.nvim_feedkeys(key, 'm', false)
+  -- nvim_feedkeys is a blocking call and nvim_set_current_win doesn't work when textlock is active,
+  -- so vim.schedule is necessary.
+  vim.schedule(function()
+    vim.api.nvim_set_current_win(cur_win)
+  end)
+end
+
 --
 -- Maximizes and restores the current window
 -- Ref: https://github.com/szw/vim-maximizer

@@ -5,21 +5,19 @@ vim.g.mapleader = ' '
 vim.keymap.set({ 'n', 'x' }, '<Leader>', '<Nop>')
 vim.keymap.set('n', '<Leader>,', ',')
 vim.keymap.set({ 'n', 'x' }, '_', '"_')
-vim.keymap.set({ 'n', 'x', 'o' }, 'H', '^')
-vim.keymap.set({ 'n', 'x', 'o' }, 'L', '$')
 vim.keymap.set('x', '<', '<gv')
 vim.keymap.set('x', '>', '>gv')
 -- Move the current line or selections up and down with corresponding indentation
 -- vim.keymap.set('n', '<M-j>', ':m .+1<CR>==', { silent = true })
 -- vim.keymap.set('n', '<M-k>', ':m .-2<CR>==', { silent = true })
-vim.keymap.set('i', '<M-j>', '<Esc>:m .+1<CR>==a', { silent = true })
-vim.keymap.set('i', '<M-k>', '<Esc>:m .-2<CR>==a', { silent = true })
 vim.keymap.set('x', 'J', ":m '>+1<CR>gv=gv", { silent = true })
 vim.keymap.set('x', 'K', ":m '<-2<CR>gv=gv", { silent = true })
+vim.keymap.set('i', '<M-j>', '<Esc>:m .+1<CR>==a', { silent = true })
+vim.keymap.set('i', '<M-k>', '<Esc>:m .-2<CR>==a', { silent = true })
 -- Join lines but retain the cursor position
 vim.keymap.set('n', 'J', 'mzJ`z')
 -- Make dot work over visual line selections
-vim.keymap.set('n', '.', ':norm.<CR>', { silent = true })
+vim.keymap.set('n', '.', ':normal.<CR>', { silent = true })
 -- Clone current paragraph
 vim.keymap.set('n', 'cp', 'yap<S-}>p')
 -- Move the view horizontally when nowrap is set
@@ -131,11 +129,11 @@ vim.keymap.set('n', '<Esc>', function()
 end, { expr = true, silent = true })
 
 --
--- Replace
+-- Substitute
 --
--- Replace visually selected word, or word under cursor
-vim.keymap.set('x', '<Leader>rw', '"hy:%s/<C-r>h/<C-r>h/gc<Left><Left><Left>')
-vim.keymap.set('n', '<Leader>rw', ':%s/\\<<C-r><C-w>\\>/<C-r><C-w>/gI<Left><Left><Left>')
+-- Substitute the visually selected text, or the word under cursor
+vim.keymap.set('x', '<Leader>sw', '"hy:%s/<C-r>h/<C-r>h/gc<Left><Left><Left>')
+vim.keymap.set('n', '<Leader>sw', ':%s/\\<<C-r><C-w>\\>/<C-r><C-w>/gI<Left><Left><Left>')
 
 --
 -- Buffer
@@ -150,19 +148,21 @@ vim.keymap.set('n', '<Leader>bo', ':call utils#BufsDel()<CR>', { silent = true }
 -- Copy and paste
 --
 
-vim.keymap.set('n', 'Y', 'y$')
 vim.keymap.set({ 'n', 'x' }, '<Leader>y', '"+y')
 vim.keymap.set('n', '<Leader>Y', '"+y$')
--- Paste and format
-vim.keymap.set('n', 'p', 'p=`]')
+vim.keymap.set('n', '<Leader>Y', '"+y$')
 -- Paste over the selected text
 vim.keymap.set('x', 'p', '"_c<ESC>p')
--- Paste non-linewise text above or below current cursor and format
-vim.keymap.set('n', '<Leader>p', 'm`o<Esc>p==``')
-vim.keymap.set('n', '<Leader>P', 'm`O<Esc>p==``')
+-- Paste below or above the current cursor
+vim.keymap.set('n', '<Leader>p', function()
+  require('rockyz.utils.misc_utils').putline(vim.v.count1 .. ']p')
+end)
+vim.keymap.set('n', '<Leader>P', function()
+  require('rockyz.utils.misc_utils').putline(vim.v.count1 .. '[p')
+end)
 -- Select the last changed (or pasted) text
 vim.keymap.set('n', 'gp', function()
-  return '`[' .. vim.fn.strpart(vim.fn.getregtype(), 0, 1) .. '`]'
+  return '`[' .. vim.fn.strpart(vim.fn.getregtype(vim.v.register), 0, 1) .. '`]'
 end, { expr = true })
 
 --
@@ -349,57 +349,28 @@ vim.keymap.set('n', '<Leader>w=', '<C-w>=')
 -- Close windows by giving the window numbers
 vim.keymap.set('n', '<Leader>wq', ':CloseWin<Space>')
 -- Switch the layout (horizontal and vertical) of the TWO windows
-vim.keymap.set('n', '<Leader>wl', function()
-  local wins = vim.api.nvim_tabpage_list_wins(0)
-  -- Filter out the floating windows
-  local norm_wins = {}
-  for _, win in ipairs(wins) do
-    if vim.api.nvim_win_get_config(win).relative == '' then
-      table.insert(norm_wins, win)
-    end
-  end
-  if #norm_wins ~= 2 then
-    print('Layout toggling only works for two windows.')
-    return
-  end
-  -- pos is {row, col}
-  local pos1 = vim.api.nvim_win_get_position(norm_wins[1])
-  local pos2 = vim.api.nvim_win_get_position(norm_wins[2])
-  local key = ''
-  if pos1[1] == pos2[1] then
-    key = vim.api.nvim_replace_termcodes('<C-w>t<C-w>K', true, false, true)
-  else
-    key = vim.api.nvim_replace_termcodes('<C-w>t<C-w>H', true, false, true)
-  end
-  vim.api.nvim_feedkeys(key, 'm', false)
-end)
--- Close all other windows (not including float windows)
+vim.keymap.set('n', '<Leader>wl', require('rockyz.utils.win_utils').switch_layout)
+-- Close all other windows (not including floating ones)
 vim.keymap.set('n', '<Leader>wo', function()
   return vim.fn.len(vim.fn.filter(vim.api.nvim_tabpage_list_wins(0), function(_, v)
     return vim.api.nvim_win_get_config(v).relative == ''
   end)) > 1 and '<C-w>o' or ''
 end, { expr = true })
--- Scroll the other window
--- 1:half-page up, 2:half-page down
-local function other_win_scroll(mode)
+---Scroll the other window
+---@param dir string direction, u for up and d for down
+local function scroll_other_win(dir)
   vim.cmd('noautocmd silent! wincmd p')
-  if mode == 1 then
-    vim.cmd('exec "normal! \\<c-u>"')
-  elseif mode == 2 then
-    vim.cmd('exec "normal! \\<c-d>"')
-  end
+  vim.cmd('exec "normal! \\<C-' .. dir .. '>"')
   vim.cmd('noautocmd silent! wincmd p')
 end
 vim.keymap.set({ 'n', 'i' }, '<M-u>', function()
-  other_win_scroll(1)
+  scroll_other_win('u')
 end)
 vim.keymap.set({ 'n', 'i' }, '<M-d>', function()
-  other_win_scroll(2)
+  scroll_other_win('d')
 end)
 -- Maximize and restore the current window
-vim.keymap.set('n', 'yom', function()
-  require('rockyz.utils.win_utils').win_maximize_toggle()
-end)
+vim.keymap.set('n', 'yom', require('rockyz.utils.win_utils').win_maximize_toggle)
 
 --
 -- Terminal

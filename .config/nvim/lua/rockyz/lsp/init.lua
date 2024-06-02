@@ -5,7 +5,7 @@ local M = {}
 -- Config diagnostic globally
 vim.diagnostic.config({
   float = {
-    source = 'always',
+    source = true,
     border = vim.g.border_style,
     severity_sort = true,
     prefix = function(diag)
@@ -24,6 +24,11 @@ vim.diagnostic.config({
   },
   signs = false,
   severity_sort = true,
+  jump = {
+    float = {
+      scope = 'cursor',
+    },
+  },
 })
 
 M.client_capabilities = function()
@@ -57,7 +62,8 @@ local function on_attach(client, bufnr)
   --  * gra in NORMAL and VISUAL maps vim.lsp.buf.code_action()
   --  * <C-s> in INSERT maps vim.lsp.buf.signature_help()
   -- Also, the following default diagnostic mappings are creataed:
-  --  * ]d and [d in NORMAL map to vim.diagnostic.goto_next() and vim.diagnostic.goto_prev()
+  --  * ]d and [d: jump to the next or previous diagnostic
+  --  * ]D and [D: jump to the last or first diagnostic
   --  * <C-w>d and <C-w><C-d> map to vim.diagnostic.open_float()
   local opts = { buffer = bufnr }
   vim.keymap.set('n', 'gd', vim.lsp.buf.definition, opts)
@@ -83,21 +89,23 @@ local function on_attach(client, bufnr)
   end, opts)
   -- Diagnostics
   vim.keymap.set('n', 'go', vim.diagnostic.open_float, opts)
-  vim.keymap.set('n', '[d', function()
-    vim.diagnostic.goto_prev({
-      float = { scope = 'cursor' },
-    })
+  vim.keymap.set('n', '[d', function() -- previous
+    vim.diagnostic.jump({ count = -vim.v.count1 })
   end, opts)
-  vim.keymap.set('n', ']d', function()
-    vim.diagnostic.goto_next({
-      float = { scope = 'cursor' },
-    })
+  vim.keymap.set('n', ']d', function() -- next
+    vim.diagnostic.jump({ count = vim.v.count1 })
   end, opts)
-  vim.keymap.set('n', '[e', function()
-    vim.diagnostic.goto_prev({ severity = vim.diagnostic.severity.ERROR })
+  vim.keymap.set('n', '[D', function() -- first
+    vim.diagnostic.jump({ count = -math.huge, wrap = false, })
+  end)
+  vim.keymap.set('n', ']D', function() -- last
+    vim.diagnostic.jump({ count = math.huge, wrap = false, })
+  end)
+  vim.keymap.set('n', '[e', function() -- previous error
+    vim.diagnostic.jump({ count = -vim.v.count1, severity = vim.diagnostic.severity.ERROR })
   end, opts)
-  vim.keymap.set('n', ']e', function()
-    vim.diagnostic.goto_next({ severity = vim.diagnostic.severity.ERROR })
+  vim.keymap.set('n', ']e', function() -- next error
+    vim.diagnostic.jump({ count = vim.v.count1, severity = vim.diagnostic.severity.ERROR })
   end, opts)
   -- Feed all diagnostics to quickfix list, or buffer diagnostics to location list
   vim.keymap.set('n', '<Leader>dq', vim.diagnostic.setqflist, opts)

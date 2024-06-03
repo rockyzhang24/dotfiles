@@ -27,7 +27,7 @@ local function get_file_icon_and_name()
     local icon, icon_color = devicons.get_icon_color_by_filetype(ft, { default = true })
     local icon_hl = 'WinbarFileIconFor' .. ft
     if not cached_hls[icon_hl] then
-      vim.api.nvim_set_hl(0, icon_hl, { fg = icon_color, underline = true, sp = '#000000' })
+      vim.api.nvim_set_hl(0, icon_hl, { fg = icon_color })
       cached_hls[icon_hl] = true
     end
     return string.format('%%#%s#%s%%* %s', icon_hl, icon, filename)

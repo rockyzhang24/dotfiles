@@ -68,6 +68,7 @@ icons.separators = {
   triangle_left = '',
   triangle_right = '',
   bar = '│',
+  bar_right = '▕',
 }
 
 icons.caret = {
@@ -78,6 +79,7 @@ icons.caret = {
 icons.misc = {
   book = ' ',
   check = ' ',
+  circle_filled = '',
   color = ' ',
   delimiter = ' ',
   disconnect = ' ',

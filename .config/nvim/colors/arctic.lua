@@ -109,6 +109,8 @@ local groups = {
   -- Tabline
   TabBorderRight = { fg = tab_bottom_border, bg = black4, underline = true, sp = tab_bottom_border }, -- the right border of inactive tab
   TabBorderRightActive = { fg = tab_bottom_border, bg = norm_bg, underline = true, sp = tab_bottom_border_active }, -- the right border of active tab
+  TabDefaultIcon = { fg = statusline_yellow, bg = black4, underline = true, sp = tab_bottom_border }, -- icon for special filetype on inactive tab
+  TabDefaultIconActive = { fg = statusline_yellow, bg = norm_bg, underline = true, sp = tab_bottom_border_active }, -- icon for special filetype on active tab
 
   --
   -- Editor

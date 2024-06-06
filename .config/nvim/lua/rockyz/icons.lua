@@ -97,6 +97,7 @@ icons.misc = {
   note = ' ',
   outline = ' ',
   quickfix = ' ',
+  rocket = ' ',
   search = ' ',
   source_control = ' ',
   task = ' ',

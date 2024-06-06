@@ -9,6 +9,7 @@
 local icons = require('rockyz.icons')
 local powerline_left = ' ' .. icons.separators.chevron_right
 local powerline_right = icons.separators.chevron_left .. ' '
+local special_filetypes = require('rockyz.special_filetypes')
 
 local M = {}
 
@@ -84,7 +85,7 @@ function M.mode_component()
   end
   return table.concat({
     string.format('%%#StlMode%s# %s ', hl, mode),
-    string.format('%%#StlModeSep%s#%s', hl, icons.separators.triangle_right),
+    string.format('%%#StlModeSep%s#%s%%*', hl, icons.separators.triangle_right),
   })
 end
 
@@ -205,7 +206,7 @@ end
 -- * green : has parser and highlight is enabled
 -- * red   : has parser but highlight is disabled
 function M.treesitter_component()
-  local res = 'TS'
+  local res = icons.misc.tree
   local buf = vim.api.nvim_get_current_buf()
   local hl_enabled = vim.treesitter.highlighter.active[buf]
   local has_parser = require('nvim-treesitter.parsers').has_parser()
@@ -259,23 +260,6 @@ end
 
 -- Icon, filetype and filesize
 function M.fileinfo_component(trunc_width)
-  local specials = {
-    aerial = { icons.misc.outline, 'Directory' },
-    ['ccc-ui'] = { icons.misc.color, 'Comment' },
-    DiffviewFileHistory = { icons.git.diff, 'Number' },
-    DiffviewFiles = { icons.git.diff, 'Number' },
-    floggraph = { icons.misc.graph, 'Special' },
-    fugitive = { icons.git.branch, 'Special' },
-    fzf = { icons.misc.search, 'Special' },
-    help = { icons.misc.help, 'Special' },
-    man = { icons.misc.book, 'Special' },
-    Outline = { icons.misc.outline, 'Directory' },
-    OverseerForm = { icons.misc.task, 'Special' },
-    OverseerList = { icons.misc.task, 'Special' },
-    qf = { icons.misc.quickfix, 'Conditional' },
-    term = { icons.misc.term, 'Special' },
-    TelescopePrompt = { icons.misc.search, 'Special' },
-  }
   local filetype = vim.bo.filetype
   local size = ''
   -- Only display size when not truncated
@@ -288,14 +272,15 @@ function M.fileinfo_component(trunc_width)
   if filetype == '' then
     return string.format('%%#StlComponentInactive#%s%s%%*%s ', icons.misc.file, '[No File]', size)
   end
-  if specials[filetype] then
-    local icon, icon_hl = unpack(specials[filetype])
-    return string.format('%%#%s#%s%%#StlFiletype#%s%%*%s ', icon_hl, icon, filetype, size)
+  local sp_ft = special_filetypes[filetype]
+  if sp_ft then
+    local icon = sp_ft.icon
+    return string.format('%%#StlIcon#%s %%#StlFiletype#%s%%*%s ', icon, filetype, size)
   end
   local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
   if has_devicons then
     local icon, icon_color = devicons.get_icon_color_by_filetype(filetype, { default = true })
-    local icon_hl = 'StlIconFor' .. filetype
+    local icon_hl = 'StlIcon-' .. filetype
     if not cached_hls[icon_hl] then
       local bg_color = vim.api.nvim_get_hl(0, { name = 'StatusLine' }).bg
       vim.api.nvim_set_hl(0, icon_hl, { fg = icon_color, bg = bg_color })
@@ -327,7 +312,6 @@ function M.render()
 
   return table.concat({
     M.mode_component(),
-    '%#StatusLine#',
     concat_components({
       M.git_branch_component(120),
       M.git_diff_component(120),

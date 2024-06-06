@@ -1,21 +1,66 @@
 local M = {}
 
 local icons = require('rockyz.icons')
+local special_filetypes = require('rockyz.special_filetypes')
 
-local special_fts = {
-  qf = '',
-  fzf = 'FZF',
-  fugitive = 'Fugitive',
-  term = 'Term',
-  help = 'Vim Help',
-  oil = 'Oil',
-}
+local cached_hls = {}
+
+---Get get the icon of the filetype and the title (e.g, file name)
+---@param winid number The winid of the current window in the tabpage
+---@param is_cur boolean If it's the current tabpage. It's used to set the highlight group in the
+---active tab and inactive tab.
+---@return string
+local function get_icon_and_tile(winid, is_cur)
+  local tab_hl = is_cur and 'TabLineSel' or 'TabLine'
+  local bufnr = vim.api.nvim_win_get_buf(winid)
+  local bufname = vim.api.nvim_buf_get_name(bufnr)
+  local filetype = vim.bo[bufnr].filetype
+  -- Adjust title for location list
+  if vim.fn.win_gettype(winid) == 'loclist' then
+    special_filetypes.qf.title = 'Location List'
+  end
+  -- For special filetypes, e.g., fzf or term
+  local sp_ft = special_filetypes[filetype]
+    or vim.fn.win_gettype(winid) == 'command' and special_filetypes['CmdWin']
+    or bufname == '' and special_filetypes['noname']
+  if sp_ft then
+    local icon = sp_ft.icon
+    local icon_hl = is_cur and 'TabDefaultIconActive' or 'TabDefaultIcon'
+    local title = sp_ft.title
+    return string.format('%%#%s#%s%%#%s# [%s]', icon_hl, icon, tab_hl, title)
+  end
+  -- For normal files
+  local title = vim.fn.fnamemodify(bufname, ':t')
+  if vim.wo[winid].diff then
+    title = title .. ' (diff)'
+  end
+  local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
+  if has_devicons then
+    local icon, icon_color = devicons.get_icon_color_by_filetype(filetype, { default = true })
+    local icon_hl = string.format('TabIcon%s-%s', is_cur and 'Active' or '', filetype)
+    if not cached_hls[icon_hl] then
+      local tab_hl_def = vim.api.nvim_get_hl(0, { name = tab_hl })
+      vim.api.nvim_set_hl(
+        0,
+        icon_hl,
+        { fg = icon_color, bg = tab_hl_def.bg, underline = tab_hl_def.underline, sp = tab_hl_def.sp }
+      )
+      cached_hls[icon_hl] = true
+    end
+    return string.format('%%#%s#%s%%#%s# %s', icon_hl, icon, tab_hl, title)
+  end
+  return icons.misc.file .. title
+end
 
 function M.render()
   local tabs = {}
 
+  -- Render each tab
   for i, tabpage in ipairs(vim.api.nvim_list_tabpages()) do
+    local winid = vim.api.nvim_tabpage_get_win(tabpage)
+    local bufnr = vim.api.nvim_win_get_buf(winid)
     local is_cur = tabpage == vim.api.nvim_get_current_tabpage()
+
     local items = {}
 
     -- Tab number
@@ -23,26 +68,8 @@ function M.render()
     local num = string.format('%%%sT %s.', i, i)
     table.insert(items, num)
 
-    -- Title
-    local winid = vim.api.nvim_tabpage_get_win(tabpage)
-    local bufnr = vim.api.nvim_win_get_buf(winid)
-    local bufname = vim.api.nvim_buf_get_name(bufnr)
-    local filetype = vim.bo[bufnr].filetype
-    local tab_title = ''
-    special_fts.qf = vim.fn.win_gettype(winid) == 'loclist' and 'Location List' or 'Quickfix List'
-    if special_fts[filetype] ~= nil then
-      tab_title = string.format('[%s]', special_fts[filetype])
-    elseif vim.fn.win_gettype(winid) == 'command' then
-      tab_title = '[Command Window]'
-    elseif bufname == '' then
-      tab_title = '[No Name]'
-    else
-      tab_title = vim.fn.fnamemodify(bufname, ':t')
-      -- For diff
-      if vim.wo[winid].diff then
-        tab_title = tab_title .. ' (diff)'
-      end
-    end
+    -- Icon and title
+    local tab_title = get_icon_and_tile(winid, is_cur)
     table.insert(items, tab_title)
 
     -- "Modified" indicator
@@ -51,20 +78,20 @@ function M.render()
       table.insert(items, icons.misc.circle_filled)
     end
 
-    local tab = table.concat(items, ' ') .. ' '
-    -- Highlight the current tab page
-    if is_cur then
-      tab = string.format('%%#TabLineSel#%s%%*', tab)
-    end
-    -- Add right border
-    local fmt_str = '%s%%#TabBorderRight' .. (is_cur and 'Active' or '') .. '#%s%%*'
-    tab = string.format(fmt_str, tab, icons.separators.bar_right)
+    -- Right border
+    local border_hl = is_cur and 'TabBorderRightActive' or 'TabBorderRight'
+    local border = string.format('%%#%s#%s', border_hl, icons.separators.bar_right)
+    table.insert(items, border)
 
+    -- Assemble tabline for this tab
+    local tab = is_cur and '%#TabLineSel#' or '%#TabLine#'
+    tab = tab .. table.concat(items, ' ')
     table.insert(tabs, tab)
   end
 
+  -- Assemble the complete tabline for all tabs
   local tabline = table.concat(tabs)
-  tabline = string.format('%%#TabLine#%s%%#TabLineFill%%T', tabline)
+  tabline = string.format('%s%%#TabLineFill#%%T', tabline)
   return tabline
 end
 

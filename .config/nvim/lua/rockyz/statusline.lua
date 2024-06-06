@@ -126,6 +126,7 @@ function M.git_diff_component(trunc_width)
 end
 
 -- LSP clients of all buffers
+-- Mark (e.g., using green color) the clients attaching to the current buffer
 function M.lsp_component(trunc_width)
   if is_truncated(trunc_width) then
     return ''
@@ -134,13 +135,18 @@ function M.lsp_component(trunc_width)
   local client_names = {}
   for _, client in ipairs(clients) do
     if client and client.name ~= '' then
-      table.insert(client_names, client.name)
+      local attached_buffers = client.attached_buffers
+      if attached_buffers[vim.api.nvim_get_current_buf()] then
+        table.insert(client_names, string.format('%%#StlComponentOn#%s%%*', client.name))
+      else
+        table.insert(client_names, client.name)
+      end
     end
   end
   if next(client_names) == nil then
-    return string.format(' %%#StlComponentInactive#%s%%*', '[LS Inactive]')
+    return ' %#StlComponentInactive#[LS Inactive]%*'
   end
-  return ' [' .. table.concat(client_names, ', ') .. ']'
+  return string.format(' [%s]', table.concat(client_names, ', '))
 end
 
 ----------------

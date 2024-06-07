@@ -33,7 +33,6 @@ vim.cmd('source ~/.config/nvim/viml/plugins.vim')
 
 require('rockyz.indentline')
 require('rockyz.keymaps')
-require('rockyz.plugin_config_loader')
 require('rockyz.color')
 require('rockyz.autocmds')
 require('rockyz.commands')

@@ -2,7 +2,7 @@
 -- This is the configurations for junegunn/fzf.vim
 --------------------------------------------------
 
--- Notes about fzf#vim#with_preview()
+-- fzf#vim#with_preview()
 --
 -- 1. It uses the value of g:fzf_vim.preview_window to set the preview window of fzf through its
 --    --preview-window option.
@@ -16,6 +16,10 @@
 --    (e.g., fzf#vim#commits set --preview to use delta), or we can explicitly set the --preview
 --    option in the `options` table in the spec dictionary (e.g., see the BCommits keymap below). If
 --    --preview option is not set anywhere, the one defined in FZF_DEFAULT_OPTS will be used.
+--
+-- sink and sink*
+-- The implementation of sink and sink* in fzf.vim handles fzf_action. If we overwrite sink or
+-- sink*, we need to handle fzf_action by ourselves.
 
 -----------------------------------
 -- The support finders are as below
@@ -39,6 +43,7 @@
 -- Live grep in my nvim config
 -- Grep for the current word/selection
 -- Live grep in current buffer
+-- LSP references
 
 local uv = require('luv')
 local qf_utils = require('rockyz.utils.qf_utils')
@@ -422,7 +427,6 @@ local function fzf_qf(win_local)
       vim.cmd('execute ' .. lnum)
       vim.cmd('normal! zvzz')
     end,
-    placeholder = '',
     options = merge_default({
       '--no-multi',
       '--prompt',
@@ -721,4 +725,84 @@ vim.keymap.set('n', '<Leader>gb', function()
       ':: Current buffer: ' .. vim.fn.expand('%:~:.'),
     }),
   })
+end)
+
+--
+-- LSP
+--
+-- Ref:
+-- * https://github.com/neovim/neovim/blob/master/runtime/lua/vim/lsp.lua
+-- * https://github.com/neovim/neovim/blob/master/runtime/lua/vim/lsp/handlers.lua
+-- * nvim-telescope/telescope.nvim
+--
+-- Support sending selections to quickfix list by CTRL-Q
+--
+
+local function request_and_fzf(method, title, params)
+end
+
+-- References
+vim.keymap.set('n', '<Leader>fr', function()
+  local params = vim.lsp.util.make_position_params()
+  params.context = {
+    includeDeclaration = true,
+  }
+  -- The results are the combination of results for all the active clients attached to the buffer
+  -- and indexed by client_id
+  vim.lsp.buf_request_all(0, 'textDocument/references', params, function(results)
+    -- This is the source for fzf
+    local entries = {}
+    local total_items = {}
+    local idx = 1
+    for client_id, result in pairs(results) do
+      local client = vim.lsp.get_client_by_id(client_id)
+      -- Convert lsp.Location[] to quickfix items
+      local items = vim.lsp.util.locations_to_items(result.result, client.offset_encoding)
+      vim.list_extend(total_items, items)
+      for _, item in ipairs(items) do
+        local filename = vim.fn.fnamemodify(item.filename, ':p:~:.')
+        -- Presentation of each line in fzf. Use : as delimiter. The first item, idx, is used for
+        -- sending selections to quickfix and idx won't be presented.
+        -- E.g., 1:~/gitrepos/fzf/main.go:80:19: code, err := fzf.Run(options)
+        local entry = string.format('%s:%s:%s:%s: %s', idx, filename, item.lnum, item.col, item.text)
+        table.insert(entries, entry)
+        idx = idx + 1
+      end
+    end
+    vim.fn['fzf#run'](vim.fn['fzf#wrap']({
+      source = entries,
+      ['sink*'] = function(lines)
+        local key = lines[1]
+        if key == 'ctrl-q' then
+          local qf_items = {}
+          for i = 2, #lines do
+            local num = lines[i]:match('^(%d+):')
+            local item = total_items[tonumber(num)]
+            table.insert(qf_items, item)
+          end
+          vim.fn.setqflist({}, ' ', { title = 'LSP References', items = qf_items })
+          vim.cmd('botright copen')
+        elseif #lines == 2 then
+          local action = vim.g.fzf_action[key]
+          vim.cmd(action)
+        end
+      end,
+      options = merge_default({
+        '--delimiter',
+        ':',
+        '--with-nth',
+        '2..',
+        '--prompt',
+        '[LSP] References> ',
+        '--header',
+        ':: ENTER (jump to the file), CTRL-Q (send selections to quickfix list)',
+        '--preview-window',
+        'up,50%,border-down,+{3}-/2',
+        '--preview',
+        bat_prefix .. " --highlight-line {3} -- '{2}'",
+        '--expect',
+        'ctrl-x,ctrl-v,ctrl-t,ctrl-q',
+      }),
+    }))
+  end)
 end)

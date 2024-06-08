@@ -6,12 +6,15 @@ set noshowmode
 set noshowcmd
 set wildmode=longest:full,full
 set textwidth=100
+set list
+set listchars=trail:•,extends:#,nbsp:.,precedes:❮,extends:❯
 set fillchars=fold:\ ,foldopen:,foldclose:,foldsep:\ ,eob:\ ,msgsep:‾,
 set foldcolumn=1
 set foldlevel=99
 set foldlevelstart=99
+" Transparent foldtext (https://github.com/neovim/neovim/pull/20750)
 set foldtext=
-set completeopt=menu,menuone,noselect
+set completeopt=menu,menuone,noselect,popup
 set timeoutlen=500
 set shortmess+=a shortmess+=c shortmess+=S
 set updatetime=250
@@ -42,41 +45,14 @@ let &showbreak = '↪ '
 " Presistent undo (use set undodir=... to change the undodir, default is ~/.local/share/nvim/undo)
 set undofile
 set nrformats=octal,bin,hex,unsigned,alpha
-set sessionoptions+=terminal,globals,winpos
+set sessionoptions+=globals,localoptions,winpos
 set isfname-==
 set shada=!,'500,<50,s10,h
 set synmaxcol=300
 set cindent
 set cinoptions+=g-1
-set mouse=
+set mouse=a
 set mousemodel=extend
-set list
-"
-" Set the listchars
-"
-" I use tab and leadmultispace in listchars to display the indent line. If the file is
-" * using tab as indentation: set tab to the indent line character and leadmultispace to a
-" special character for denotation.
-" * using space as indentation: set leadmultispace to the indent line character followed by spaces
-" (the number of the spaces depends on how many spaces for each step of indent)
-"
-" listchars should be updated based on the indentation setting of the current buffer, see the
-" autocmd in ../lua/rockyz/autocmds.lua
-function! s:set_listchars() abort
-  let l:set_listchars = 'set listchars=trail:•,extends:#,nbsp:.,precedes:❮,extends:❯,'
-  if &expandtab
-    " Space indentation
-    " If shiftwidth is 0, vim will use tabstop value
-    let l:spaces = &shiftwidth == 0 ? &tabstop : &shiftwidth
-    let l:set_listchars = l:set_listchars . 'tab:›\ ,leadmultispace:' . escape(g:indentline_char, '|') . repeat('\ ', l:spaces - 1)
-  else
-    " Tab indentation
-    let l:set_listchars = l:set_listchars . 'tab:' . escape(g:indentline_char, '|') . '\ ,leadmultispace:␣'
-  endif
-  exec l:set_listchars
-endfunction
-call s:set_listchars()
-
 " Avoid highlighting the last search when sourcing vimrc
 exec 'nohlsearch'
 " Latex

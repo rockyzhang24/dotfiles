@@ -46,26 +46,3 @@ function! utils#BufsDel() abort
     endif
   endfor
 endfunction
-
-" Change indentation for the current buffer
-" It needs two arguments, one is the curren indentation and the other is the new
-" indentation
-function utils#Reindent(...)
-  if a:0 != 2
-    echoerr "Two arguments are required"
-  endif
-  let save_et = &expandtab
-  let save_ts = &tabstop
-  try
-    let &tabstop = a:1
-    set noexpandtab
-    retab!
-    let &tabstop = a:2
-    set expandtab
-    retab!
-    let &l:shiftwidth = a:2
-  finally
-    let &expandtab = save_et
-    let &tabstop = save_ts
-  endtry
-endfunction

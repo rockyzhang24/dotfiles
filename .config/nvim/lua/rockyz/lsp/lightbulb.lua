@@ -3,7 +3,7 @@
 -- Like VSCode, the lightbulb is displayed at the beginning (the first column) of the same line, or
 -- the previous line if the space is not enough.
 --
--- This is implemented by using extmarks and it's window-local.
+-- This is implemented by using window-local extmark
 
 local lsp_utils = require('rockyz.lsp.utils')
 local bulb_icon = require('rockyz.icons').lightbulb
@@ -15,7 +15,6 @@ local opts = {
     { bulb_icon, 'LightBulb' },
   },
   virt_text_win_col = 0,
-  scoped = true,
 }
 
 -- Get the line number where the bulb should be displayed
@@ -53,7 +52,7 @@ local function lightbulb_update(winid, bufnr, bulb_line)
   -- Create a window-local namespace for the extmark
   if vim.w[winid].bulb_ns_id == nil then
     local ns_id = vim.api.nvim_create_namespace('bulb_ns_id_' .. winid)
-    vim.api.nvim__win_add_ns(winid, ns_id)
+    vim.api.nvim__ns_set(ns_id, { wins = { winid } })
     vim.w[winid].bulb_ns_id = ns_id
   end
   -- Create an extmark or update the existing one

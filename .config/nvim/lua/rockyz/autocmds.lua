@@ -1,3 +1,38 @@
+-- Dotfiles mangement
+-- My dotfiles are managed via a bare repository. To make Vim recognize them and git related plugins
+-- work on them, the git-dir and work-tree should be set (via GIT_DIR and GIT_WORK_TREE env) when
+-- the current buffer contains dotfile. We should also reset them when entering other buffers so
+-- that the normal repository will be recognized.
+local dotfiles_under_HOME = {
+  'exclude',
+  'README.md',
+  '.gitignore',
+  '.gitignore_global',
+  '.zshenv',
+}
+local function update_git_env()
+  local bufname = vim.api.nvim_buf_get_name(0)
+  local ok, inside_config = pcall(vim.startswith, bufname, vim.env.XDG_CONFIG_HOME)
+  if
+    ok and inside_config
+    or vim.list_contains(dotfiles_under_HOME, vim.fn.fnamemodify(bufname, ':t'))
+  then
+    -- Set git env
+    vim.env.GIT_DIR = vim.env.HOME .. '/dotfiles'
+    vim.env.GIT_WORK_TREE = vim.env.HOME
+    return
+  end
+  -- Reset
+  vim.env.GIT_DIR = nil
+  vim.env.GIT_WORK_TREE = nil
+end
+vim.api.nvim_create_autocmd({ 'BufNewFile', 'BufRead', 'BufEnter' }, {
+  group = vim.api.nvim_create_augroup('rockyz/dotfiles', { clear = true }),
+  callback = function()
+    update_git_env()
+  end
+})
+
 -- Auto-create dir when saving a file, in case some intermediate directory does not exist
 vim.api.nvim_create_autocmd({ 'BufWritePre' }, {
   pattern = '*',
@@ -81,7 +116,7 @@ vim.api.nvim_create_autocmd({ 'BufLeave', 'FocusLost', 'InsertEnter', 'CmdlineEn
   end,
 })
 
--- Command-lien window
+-- Command-line window
 vim.api.nvim_create_autocmd('CmdWinEnter', {
   group = vim.api.nvim_create_augroup('execute_cmd_and_stay', { clear = true }),
   callback = function(args)

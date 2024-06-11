@@ -60,6 +60,7 @@ export BAT_THEME="arctic"
 #
 # User-defined
 #
+
 # Build --exclude parameters for fd (i.e., --exclude .git --exclude .Trash
 # --exclude ...)
 export FD_EXCLUDE="$(cat $HOME/exclude | sed 's/^/--exclude /' | tr '\n' ' ')"

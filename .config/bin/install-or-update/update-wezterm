@@ -1,4 +1,0 @@
-#!/usr/bin/env bash
-
-# Update the nightly build
-brew upgrade --cask wezterm-nightly --no-quarantine --greedy-latest

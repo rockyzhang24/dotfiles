@@ -90,7 +90,7 @@ cmp.setup({
         end
       end,
     },
-    ['<S-Tab>'] = {
+    ['<M-Tab>'] = {
       c = function()
         if cmp.visible() then
           cmp.select_prev_item({ behavior = cmp.SelectBehavior.Insert })

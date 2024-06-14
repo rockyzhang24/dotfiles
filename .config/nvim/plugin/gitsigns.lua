@@ -4,7 +4,6 @@ gitsigns.setup({
   -- Experimental features
   -- See https://github.com/lewis6991/gitsigns.nvim/blob/main/lua/gitsigns/config.lua. The
   -- experimental features start with an underscore.
-  _signs_staged_enable = true,
   _inline2 = true,
 
   signs = {

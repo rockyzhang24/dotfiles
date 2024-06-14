@@ -250,11 +250,21 @@ vim.keymap.set('n', '<Leader>fb', function()
           table.insert(bufnrs, string.match(lines[i], '%[(%d+)%]'))
         end
         vim.cmd('bwipeout ' .. table.concat(bufnrs, ' '))
-      elseif #lines == 2 then
-        local action = vim.g.fzf_action[key]
-        vim.cmd(action)
+      elseif key == '' then
+        -- ENTER (only works when a single buffer is selected)
+        if #lines ~= 2 then
+          return
+        end
         local bufnr = string.match(lines[2], '%[(%d+)%]')
         vim.cmd('buffer ' .. bufnr)
+      else
+        -- CTRL-X/V/T (works for multiple selected buffers)
+        local action = vim.g.fzf_action[key]
+        for i = 2, #lines do
+          vim.cmd(action)
+          local bufnr = string.match(lines[i], '%[(%d+)%]')
+          vim.cmd('buffer ' .. bufnr)
+        end
       end
     end,
     placeholder = '{1}',
@@ -265,7 +275,7 @@ vim.keymap.set('n', '<Leader>fb', function()
       '--prompt',
       'Buffers> ',
       '--header',
-      ':: ENTER (switch to the buffer), CTRL-D (delete selected buffers)',
+      ':: ENTER (switch to selected buffer), CTRL-D (delete selected buffers)',
       '--expect',
       'ctrl-d,ctrl-x,ctrl-v,ctrl-t',
     }),

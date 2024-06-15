@@ -65,6 +65,7 @@
                     },
                     {
                         "description": "Double left Shift to caps_lock",
+                        "Ref": "https://github.com/pqrs-org/Karabiner-Elements/issues/346#issuecomment-1920990353",
                         "manipulators": [
                             {
                                 "type": "basic",
@@ -78,16 +79,30 @@
                                 },
                                 "to": [
                                     {
+                                        "key_code": "left_shift"
+                                    }
+                                ],
+                                "to_if_alone": [
+                                    {
                                         "key_code": "caps_lock"
+                                    },
+                                    {
+                                        "set_variable": {
+                                            "name": "left_shift_pressed",
+                                            "value": 0
+                                        }
                                     }
                                 ],
                                 "conditions": [
                                     {
                                         "type": "variable_if",
-                                        "name": "left_shift pressed",
+                                        "name": "left_shift_pressed",
                                         "value": 1
                                     }
-                                ]
+                                ],
+                                "parameters": {
+                                    "basic.to_if_alone_timeout_milliseconds": 500
+                                }
                             },
                             {
                                 "type": "basic",
@@ -101,8 +116,13 @@
                                 },
                                 "to": [
                                     {
+                                        "key_code": "left_shift"
+                                    }
+                                ],
+                                "to_if_alone": [
+                                    {
                                         "set_variable": {
-                                            "name": "left_shift pressed",
+                                            "name": "left_shift_pressed",
                                             "value": 1
                                         }
                                     },
@@ -114,7 +134,7 @@
                                     "to_if_invoked": [
                                         {
                                             "set_variable": {
-                                                "name": "left_shift pressed",
+                                                "name": "left_shift_pressed",
                                                 "value": 0
                                             }
                                         }
@@ -122,11 +142,15 @@
                                     "to_if_canceled": [
                                         {
                                             "set_variable": {
-                                                "name": "left_shift pressed",
+                                                "name": "left_shift_pressed",
                                                 "value": 0
                                             }
                                         }
                                     ]
+                                },
+                                "parameters": {
+                                    "basic.to_delayed_action_delay_milliseconds": 500,
+                                    "basic.to_if_alone_timeout_milliseconds": 500
                                 }
                             }
                         ]

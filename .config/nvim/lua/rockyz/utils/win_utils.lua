@@ -91,18 +91,21 @@ local function win_maximize()
   vim.cmd('vert resize | resize')
   vim.t.maximizer_sizes.after = vim.fn.winrestcmd()
   vim.cmd('normal! ze')
+  -- Record whetehr the current window is maximized. This is used to display the "maximized" status
+  -- in winbar.
   vim.w.maximized = 1
+  vim.t.maximized_win = vim.api.nvim_get_current_win()
 end
 
 local function win_restore()
   if vim.t.maximizer_sizes ~= nil then
     vim.cmd('silent! execute ' .. vim.t.maximizer_sizes.before)
-    if vim.t.maximizer_sizes ~= vim.fn.winrestcmd() then
+    if vim.t.maximizer_sizes.before ~= vim.fn.winrestcmd() then
       vim.cmd('wincmd =')
     end
     vim.t.maximizer_sizes = nil
     vim.cmd('normal! ze')
-    vim.w.maximized = 0
+    vim.w[vim.t.maximized_win].maximized = 0
   end
 end
 

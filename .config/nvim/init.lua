@@ -28,7 +28,6 @@ vim.loader.enable()
 require('rockyz.globals')
 
 vim.cmd('source ~/.config/nvim/viml/options.vim')
-vim.cmd('source ~/.config/nvim/viml/autocmds.vim')
 vim.cmd('source ~/.config/nvim/viml/plugins.vim')
 
 require('rockyz.indentline')

@@ -27,16 +27,50 @@ local function update_git_env()
   vim.env.GIT_WORK_TREE = nil
 end
 vim.api.nvim_create_autocmd({ 'BufNewFile', 'BufRead', 'BufEnter' }, {
-  group = vim.api.nvim_create_augroup('rockyz/dotfiles', { clear = true }),
+  group = vim.api.nvim_create_augroup('rockyz/dotfiles', {}),
   callback = function()
     update_git_env()
   end
 })
 
+-- Overwrite default settings in runtime/ftplugin
+vim.api.nvim_create_autocmd('FileType', {
+  group = vim.api.nvim_create_augroup('rockyz/overwrite_default_sets', {}),
+  pattern = '*',
+  callback = function()
+    vim.opt.formatoptions:remove('t')
+    vim.opt.formatoptions:remove('o')
+    vim.opt.formatoptions:append('r')
+    vim.opt.formatoptions:append('n')
+  end,
+})
+
+-- Jump to the position where you last quit (:h last-position-jump)
+vim.api.nvim_create_autocmd('BufRead', {
+  group = vim.api.nvim_create_augroup('rockyz/last_position_restore', {}),
+  callback = function()
+    vim.api.nvim_create_autocmd('FileType', {
+      buffer = 0,
+      once = true,
+      callback = function()
+        local line = vim.fn.line('\'"')
+        if
+          line >= 1
+          and line <= vim.fn.line('$')
+          and string.find(vim.bo.filetype, 'commit') == nil
+          and vim.fn.index({ 'xxd', 'gitrebase' }, vim.bo.filetype) == -1
+        then
+          vim.cmd([[normal! g`"]])
+        end
+      end,
+    })
+  end,
+})
+
 -- Auto-create dir when saving a file, in case some intermediate directory does not exist
 vim.api.nvim_create_autocmd({ 'BufWritePre' }, {
   pattern = '*',
-  group = vim.api.nvim_create_augroup('auto_create_dir', { clear = true }),
+  group = vim.api.nvim_create_augroup('rockyz/auto_create_dir', {}),
   callback = function(ctx)
     -- Prevent oil.nivm from creating an extra oil:/ dir when we create a
     -- file/dir
@@ -53,7 +87,7 @@ vim.api.nvim_create_autocmd({ 'BufWritePre' }, {
 
 -- Highlight the selections on yank
 vim.api.nvim_create_autocmd({ 'TextYankPost' }, {
-  group = vim.api.nvim_create_augroup('highlight_yank', { clear = true }),
+  group = vim.api.nvim_create_augroup('rockyz/highlight_yank', {}),
   callback = function()
     vim.highlight.on_yank({ timeout = 300 })
   end,
@@ -65,7 +99,7 @@ vim.api.nvim_create_autocmd({
   'BufEnter',
   'CursorHold',
 }, {
-  group = vim.api.nvim_create_augroup('buffer_reload', { clear = true }),
+  group = vim.api.nvim_create_augroup('rockyz/buffer_reload', {}),
   callback = function()
     if vim.fn.getcmdwintype() == '' then
       vim.cmd('checktime')
@@ -86,10 +120,10 @@ local function tbl_contains(t, value)
   end
   return false
 end
-local relative_number_group = vim.api.nvim_create_augroup('toggle_relative_number', {})
+local rnu_augroup = vim.api.nvim_create_augroup('rockyz/toggle_relative_number', {})
 -- Toggle relative number on
 vim.api.nvim_create_autocmd({ 'BufEnter', 'FocusGained', 'InsertLeave', 'CmdlineLeave', 'WinEnter' }, {
-  group = relative_number_group,
+  group = rnu_augroup,
   callback = function()
     if tbl_contains(exclude_ft, vim.bo.filetype) then
       return
@@ -101,7 +135,7 @@ vim.api.nvim_create_autocmd({ 'BufEnter', 'FocusGained', 'InsertLeave', 'Cmdline
 })
 -- Toggle relative number off
 vim.api.nvim_create_autocmd({ 'BufLeave', 'FocusLost', 'InsertEnter', 'CmdlineEnter', 'WinLeave' }, {
-  group = relative_number_group,
+  group = rnu_augroup,
   callback = function(args)
     if tbl_contains(exclude_ft, vim.bo.filetype) then
       return
@@ -118,7 +152,7 @@ vim.api.nvim_create_autocmd({ 'BufLeave', 'FocusLost', 'InsertEnter', 'CmdlineEn
 
 -- Command-line window
 vim.api.nvim_create_autocmd('CmdWinEnter', {
-  group = vim.api.nvim_create_augroup('execute_cmd_and_stay', { clear = true }),
+  group = vim.api.nvim_create_augroup('rockyz/cmdwin', {}),
   callback = function(args)
     -- Delete <CR> mapping (defined in treesitter for incremental selection and not work in
     -- command-line window)
@@ -126,4 +160,17 @@ vim.api.nvim_create_autocmd('CmdWinEnter', {
     -- Create a keymap to execute command and stay in the command-line window
     vim.keymap.set({ 'n', 'i' }, '<S-CR>', '<CR>q:', { buffer = args.buf })
   end,
+})
+
+-- Terminal
+vim.api.nvim_create_autocmd({ 'TermOpen', 'BufWinEnter', 'WinEnter' }, {
+  group = vim.api.nvim_create_augroup('rockyz/terminal', {}),
+  pattern = 'term://*',
+  command = 'startinsert',
+})
+
+-- Automatically equalize splits when Vim is resized
+vim.api.nvim_create_autocmd('VimResized', {
+  group = vim.api.nvim_create_augroup('rockyz/balance_splits', {}),
+  command = 'wincmd =',
 })

@@ -84,9 +84,9 @@ function M.mode_component()
     hl = 'Pending'
   end
   return table.concat({
-    string.format('%%#StlMode%s# %s ', hl, mode),
+    string.format('%%#StlMode%s# %s', hl, mode),
     string.format('%%#StlModeSep%s#%s%%*', hl, icons.separators.triangle_right),
-  })
+  }, ' ')
 end
 
 function M.git_branch_component(trunc_width)
@@ -337,10 +337,19 @@ function M.render()
   })
 end
 
--- Refresh statusline right after gitsigns update
+-- Refresh the statusline and winbar of the current window
+local group = vim.api.nvim_create_augroup('rockyz/status_redraw', {})
+-- After gitsigns update
 vim.api.nvim_create_autocmd('User', {
-  group = vim.api.nvim_create_augroup('statusline_redraw', { clear = true }),
+  group = group,
   pattern = 'GitSignsUpdate',
+  callback = function()
+    vim.cmd.redrawstatus()
+  end,
+})
+-- After diagnostics have changed
+vim.api.nvim_create_autocmd('DiagnosticChanged', {
+  group = group,
   callback = function()
     vim.cmd.redrawstatus()
   end,

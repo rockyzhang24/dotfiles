@@ -12,6 +12,7 @@ illuminate.configure({
     'qf',
     'startify',
   },
+  large_file_cutoff = 10000,
 })
 
 -- Go to closest reference before/after the cursor

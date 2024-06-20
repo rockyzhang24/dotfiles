@@ -1,5 +1,9 @@
 #!/usr/bin/env zsh
 
+# Uncomment lines below if not using the completion module in zimfw
+# autoload -Uz compinit
+# compinit
+
 # Use menu selection for completion
 zstyle ':completion:*' menu select
 zmodload zsh/complist
@@ -9,9 +13,6 @@ _comp_options+=(globdots)
 
 # Completion for other programs
 fpath=($HOME/.config/zsh/completions $fpath)
-
-autoload -Uz compinit
-compinit
 
 # For kitty kitten: hyperlinked grep (defined in ~/.config/zsh/functions/hg)
 # Delegate its completion to rg

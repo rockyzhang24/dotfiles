@@ -34,6 +34,9 @@ local info_blue = '#3794ff'
 local hint_gray = '#B0B0B0'
 local ok_green = '#89d185' -- color for success, so I use notebookStatusSuccessIcon.foreground
 
+local error_list = '#f88070' -- list.errorForeground, for list items (like files in file explorer) containing errors
+local warn_list = '#cca700' -- list.warningForeground, for list items containing warnings
+
 local gutter_git_added = '#2ea043'
 local gutter_git_deleted = '#f85149'
 local gutter_git_modified = '#0078d4'
@@ -106,6 +109,8 @@ local groups = {
   WinbarHeader = { fg = white, bg = statusline_blue }, -- the very beginning part of winbar
   WinbarTriangleSep = { fg = statusline_blue }, -- the triangle separator in winbar
   WinbarModified = { fg = norm_fg, bg = norm_bg }, -- the modification indicator
+  WinbarError = { fg = error_list, bg = norm_bg }, -- the filename color if the current buffer has errors
+  WinbarWarn = { fg = warn_list, bg = norm_bg }, -- the filename color if the current buffer has warnings
   -- Tabline
   TabBorderRight = { fg = tab_bottom_border, bg = black4, underline = true, sp = tab_bottom_border }, -- the right border of inactive tab
   TabBorderRightActive = { fg = tab_bottom_border, bg = norm_bg, underline = true, sp = tab_bottom_border_active }, -- the right border of active tab

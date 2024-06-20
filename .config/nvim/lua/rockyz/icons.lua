@@ -72,8 +72,8 @@ icons.separators = {
 }
 
 icons.caret = {
-  caret_left = ' ',
-  caret_right = ' ',
+  caret_left = '',
+  caret_right = '',
 }
 
 icons.misc = {
@@ -81,7 +81,7 @@ icons.misc = {
   check = ' ',
   circle_filled = '',
   color = ' ',
-  delimiter = ' ',
+  delimiter = '',
   disconnect = ' ',
   edit = ' ',
   ellipsis = ' ',
@@ -102,6 +102,7 @@ icons.misc = {
   source_control = ' ',
   task = ' ',
   term = ' ',
+  tree = '󰐅 ',
 }
 
 return icons

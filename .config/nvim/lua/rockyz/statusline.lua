@@ -337,19 +337,12 @@ function M.render()
   })
 end
 
--- Refresh the statusline and winbar of the current window
+-- Refresh
 local group = vim.api.nvim_create_augroup('rockyz/status_redraw', {})
 -- After gitsigns update
 vim.api.nvim_create_autocmd('User', {
   group = group,
   pattern = 'GitSignsUpdate',
-  callback = function()
-    vim.cmd.redrawstatus()
-  end,
-})
--- After diagnostics have changed
-vim.api.nvim_create_autocmd('DiagnosticChanged', {
-  group = group,
   callback = function()
     vim.cmd.redrawstatus()
   end,

@@ -51,11 +51,11 @@ gitsigns.setup({
 
     -- Hunk navigation
     buf_map('n', ']h', function()
-      gitsigns.nav_hunk('next')
+      gitsigns.nav_hunk('next', { target = 'all' })
     end)
 
     buf_map('n', '[h', function()
-      gitsigns.nav_hunk('prev')
+      gitsigns.nav_hunk('prev', { target = 'all' })
     end)
 
     -- Stage hunk or buffer

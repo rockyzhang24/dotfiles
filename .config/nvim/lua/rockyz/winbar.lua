@@ -33,8 +33,17 @@ local function special_buffer_component()
   if ft == 'aerial' or ft == 'Outline' then
     return 'Outline'
   elseif ft == 'fugitive' then
-    return 'Fugitive: ' .. string.match(path, 'fugitive://(.*)//')
+    local git_path = string.match(path, 'fugitive://(.*)//')
+    git_path = vim.fn.fnamemodify(git_path, ':~:.')
+    return string.format('Fugitive [%s]', git_path)
+  elseif ft == 'fugitiveblame' then
+    return 'Fugitive Blame'
   elseif ft == 'git' then
+    if string.find(path, '^fugitive://') then
+      local git_path = string.match(path, 'fugitive://(.*)')
+      git_path = vim.fn.fnamemodify(git_path, ':~:.')
+      return string.format('Fugitive [%s]', git_path)
+    end
     return path
   elseif ft == 'oil' then
     return 'Oil: ' .. string.match(path, 'oil://(.*)')

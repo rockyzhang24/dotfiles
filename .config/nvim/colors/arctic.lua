@@ -231,7 +231,7 @@ local groups = {
   --
   -- Syntax
   --
-  Comment = { fg = green, italic = true },
+  Comment = { fg = green },
 
   Constant = { fg = dark_blue },
   String = { fg = brown },

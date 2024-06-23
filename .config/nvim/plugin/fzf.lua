@@ -72,8 +72,8 @@ local colors = {
 
 vim.g.fzf_layout = {
   window = {
-    height = 0.8,
-    width = 0.5,
+    width = 0.8,
+    height = 0.85,
   },
 }
 
@@ -87,7 +87,7 @@ vim.g.fzf_action = {
 -- effective.
 vim.g.fzf_vim = {
   preview_window = {
-    'up,50%,border-down',
+    'right,60%,border-left',
     'ctrl-/',
   },
 }
@@ -96,8 +96,6 @@ local function merge_default(opts)
   local extra_default_opts = {
     '--border',
     'rounded',
-    '--layout',
-    'reverse-list',
   }
   return vim.list_extend(opts, extra_default_opts)
 end
@@ -122,8 +120,6 @@ vim.keymap.set('n', '<Leader>ff', function()
     '',
     vim.fn['fzf#vim#with_preview']({
       options = merge_default({
-        '--preview-window',
-        'hidden',
       }),
     })
   )
@@ -135,8 +131,6 @@ vim.keymap.set('n', '<Leader>fo', function()
     options = merge_default({
       '--prompt',
       'OldFiles> ',
-      '--preview-window',
-      'hidden',
     }),
   }))
 end)
@@ -147,8 +141,6 @@ vim.keymap.set('n', '<C-p>', function()
     '',
     vim.fn['fzf#vim#with_preview']({
       options = merge_default({
-        '--preview-window',
-        'hidden',
       }),
     })
   )
@@ -160,26 +152,16 @@ vim.cmd([[
     \ "options": [
     \   "--border",
     \   "rounded",
-    \   "--layout",
-    \   "reverse-list",
     \   "--prompt",
     \   "Commits> ",
     \   "--preview-window",
-    \   "up,70%,border-down",
+    \   "down,45%,border-up",
     \   "--header",
     \   ":: CTRL-S (toggle sort), CTRL-Y (yank commmit hashes), CTRL-D (diff)",
     \ ]}, <bang>0)
 ]])
 vim.keymap.set({ 'n', 'x' }, '<Leader>fC', function()
-  local original_layout = vim.g.fzf_layout
-  vim.g.fzf_layout = {
-    window = {
-      height = 0.8,
-      width = 0.8,
-    }
-  }
   vim.cmd('GitCommits')
-  vim.g.fzf_layout = original_layout
 end)
 
 -- Git commits for current buffer or visual-select lines
@@ -188,26 +170,16 @@ vim.cmd([[
     \ "options": [
     \   "--border",
     \   "rounded",
-    \   "--layout",
-    \   "reverse-list",
     \   "--prompt",
     \   "BufCommits> ",
     \   "--preview-window",
-    \   "up,70%,border-down",
+    \   "down,45%,border-up",
     \   "--header",
     \   ":: CTRL-S (toggle sort), CTRL-Y (yank commmit hashes), CTRL-D (diff)",
     \ ]}, <bang>0)
 ]])
 vim.keymap.set({ 'n', 'x' }, '<Leader>fc', function()
-  local original_layout = vim.g.fzf_layout
-  vim.g.fzf_layout = {
-    window = {
-      height = 0.8,
-      width = 0.8,
-    }
-  }
   vim.cmd('GitBufCommits')
-  vim.g.fzf_layout = original_layout
 end)
 
 -- Search history
@@ -275,7 +247,7 @@ vim.keymap.set('n', '<Leader>fb', function()
       '--prompt',
       'Buffers> ',
       '--header',
-      ':: ENTER (switch to selected buffer), CTRL-D (delete selected buffers)',
+      ':: CTRL-D (delete buffers)',
       '--expect',
       'ctrl-d,ctrl-x,ctrl-v,ctrl-t',
     }),
@@ -291,8 +263,6 @@ vim.keymap.set('n', '<Leader>f.', function()
       options = merge_default({
         '--prompt',
         'Dotfiles> ',
-        '--preview-window',
-        'hidden',
       }),
     })
   )
@@ -306,8 +276,6 @@ vim.keymap.set('n', '<Leader>f~', function()
       options = merge_default({
         '--prompt',
         'HomeFiles> ',
-        '--preview-window',
-        'hidden',
       }),
     })
   )
@@ -396,11 +364,9 @@ vim.keymap.set('n', '<Leader>ft', function()
       '--prompt',
       'Tabs> ',
       '--header',
-      ':: ENTER (switch to the tab), CTRL-D (close selected tabs)',
+      ':: CTRL-D (close tabs)',
       '--expect',
       'ctrl-d',
-      '--preview-window',
-      'up,50%,border-down,+{2}-/2',
       '--preview',
       'file=$(echo {1} | sed "s/@@@@/ /g"); [[ -f $file ]] && ' .. bat_prefix .. ' --highlight-line {2} -- $file || echo "No preview support!"',
     }),
@@ -411,6 +377,7 @@ end)
 -- Find entries in quickfix and location list
 --
 
+---@param win_local boolean true for location list and false for quickfix
 local function fzf_qf(win_local)
   local what = { items = 0 }
   local list = win_local and vim.fn.getloclist(0, what) or vim.fn.getqflist(what)
@@ -446,7 +413,7 @@ local function fzf_qf(win_local)
       '--with-nth',
       '4..',
       '--preview-window',
-      'up,70%,border-down,+{3}-/2',
+      'down,40%,border-up,+{3}-/2',
       '--preview',
       bat_prefix .. ' --highlight-line {3} -- {2}',
     }),
@@ -568,9 +535,9 @@ local function fzf_qf_history(win_local)
       '--prompt',
       prompt.. '> ',
       '--header',
-      ':: ENTER (switch to the selected quickfix list)',
+      ':: ENTER (switch to selected quickfix list)',
       '--preview-window',
-      'up,70%,border-down',
+      'down,45%,border-up',
       '--preview',
       preview,
     }),
@@ -627,7 +594,7 @@ local function get_fzf_opts_for_RG(rg, query, name)
     '--header',
     ':: CTRL-R (RG mode), CTRL-F (FZF mode)',
     '--preview-window',
-    'up,70%,border-down,+{2}-/2',
+    'down,45%,border-up,+{2}-/2',
     '--preview',
     bat_prefix .. ' --highlight-line {2} -- {1}',
   })
@@ -693,7 +660,7 @@ vim.keymap.set({ 'n', 'x' }, '<Leader>gw', function()
         '--prompt',
         'Word [Rg]> ',
         '--preview-window',
-        'up,70%,border-down,+{2}-/2',
+        'down,45%,border-up,+{2}-/2',
         '--preview',
         bat_prefix .. ' --highlight-line {2} -- {1}',
         -- Show the current query in header. Set its style to bold, red foreground via ANSI color
@@ -728,7 +695,7 @@ vim.keymap.set('n', '<Leader>gb', function()
       '--bind',
       'change:reload:' .. rg .. ' {q} ' .. filename .. '|| true',
       '--preview-window',
-      'up,70%,border-down,+{2}-/2',
+      'down,45%,border-up,+{2}-/2',
       '--preview',
       bat_prefix .. ' --highlight-line {2} -- {1}',
       '--header',

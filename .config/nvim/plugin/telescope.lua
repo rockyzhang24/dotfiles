@@ -7,15 +7,15 @@ local M = {}
 telescope.setup({
   defaults = {
     prompt_prefix = 'Telescope> ',
-    selection_caret = ' ',
-    multi_icon = ' ',
-    layout_strategy = 'vertical',
+    selection_caret = '▌ ',
+    multi_icon = '┃',
+    layout_strategy = 'horizontal',
     layout_config = {
-      prompt_position = 'bottom',
+      prompt_position = 'top',
       -- Make layout consistent with fzf.vim
-      height = 0.83,
-      width = 0.5,
-      preview_height = 0.5,
+      width = 0.8,
+      height = 0.88,
+      preview_width = 0.6
     },
     results_title = false,
     sorting_strategy = "ascending",

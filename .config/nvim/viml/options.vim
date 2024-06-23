@@ -51,6 +51,7 @@ set shada=!,'500,<50,s10,h
 set synmaxcol=300
 set cindent
 set cinoptions+=g-1
+set scrolloff=3
 set mouse=a
 set mousemodel=extend
 " Avoid highlighting the last search when sourcing vimrc

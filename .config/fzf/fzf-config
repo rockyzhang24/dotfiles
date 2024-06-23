@@ -39,8 +39,6 @@ export FZF_DEFAULT_OPTS=" \
   --scrollbar '█' \
   --history /tmp/fzfhistory \
   --prompt 'FZF> ' \
-  --pointer '' \
-  --marker ' ' \
   --border horizontal \
   --tabstop=4 \
   --highlight-line \
@@ -51,7 +49,7 @@ export FZF_DEFAULT_OPTS=" \
     `ctrl-e:execute(\$EDITOR {+} < /dev/tty > /dev/tty 2>&1),`
     `change:first' \
   --preview '~/.config/fzf/fzf-previewer.sh {}' \
-  --preview-window 'right,50%,border-left' \
+  --preview-window 'right,60%,border-left' \
   --color=dark,fg:#cccccc,preview-fg:#cccccc,bg:$bg,preview-bg:$bg,`
     `hl:#2aaaff,fg+:#ffffff,bg+:#04395e,gutter:$bg,hl+:#2aaaff,query:#cccccc,`
     `disabled:#808080,info:#8b949e,border:#454545,separator:#454545,`

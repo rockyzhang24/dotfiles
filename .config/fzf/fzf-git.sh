@@ -127,8 +127,8 @@ _fzf_git_fzf() {
   fzf --multi \
     --min-height=20 \
     --color='header:italic:underline' \
-    --preview-window='nohidden,right,50%,border-left' \
-    --bind='ctrl-/:change-preview-window(down,50%|hidden|)' "$@"
+    --preview-window='nohidden,right,60%,border-left' \
+    --bind='ctrl-/:change-preview-window(down,45%,border-up|hidden|)' "$@"
 }
 
 # Check git repository

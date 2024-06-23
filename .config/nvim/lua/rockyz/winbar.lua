@@ -60,7 +60,7 @@ local function special_buffer_component()
       table.insert(items, list.title)
     end
     table.insert(items, string.format('[%s/%s]', list.idx, list.size))
-    return table.concat(items, delimiter)
+    return table.concat(items, ' ' .. delimiter .. ' ')
   elseif ft == 'term' then
     return path
   elseif vim.fn.win_gettype(winid) == 'command' then

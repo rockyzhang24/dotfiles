@@ -56,10 +56,6 @@ handle_extension() {
     # Dmg
     dmg)
       hdiutil imageinfo "${FILE_PATH}" | bat -l yaml && exit 1;;
-    # Music
-    mp3|flac|wav|m4a)
-      exiftool "${FILE_PATH}" | bat -l yaml
-      exit 1;;
     # CSV and TSV
     csv|tsv)
       mlr --icsv --opprint -C --key-color darkcyan --value-color grey70 head -n 500 "${FILE_PATH}" && exit 1;;
@@ -81,40 +77,36 @@ handle_mime() {
       pandoc -s -t markdown -- "${FILE_PATH}" | glow -s dark --width "${PV_WIDTH}" && exit 1;;
     # Image
     image/*)
+      printf "Resolution: %s\n\n" "$(identify -format "%w×%h" "${FILE_PATH}")"
       if [[ $TERM == "xterm-kitty" ]]; then
         # For kitty
-        echo "Resolution: $(identify -format "%w×%h" "${FILE_PATH}")"
         local place="${PV_WIDTH}x$(( PV_HEIGHT - 1 ))@${HORIZONTAL_POS}x$(( VERTICAL_POS + 1 ))"
         image_preview_by_kitty "${place}" "${FILE_PATH}"
       elif [[ $TERM == "tmux-256color" && -n $KITTY_WINDOW_ID ]]; then
         # For tmux running in kitty
-        echo -e "Image preview is NOT supported in lf running in tmux!"
-        echo -e "Instead preview images in fzf (CTRL-F).\n"
-        exiftool "${FILE_PATH}" | bat -l yaml
+        printf "Image preview is NOT supported in lf running in tmux!\n"
+        printf "Instead preview images in fzf (CTRL-F)."
       else
         # For others
-        echo -e "Image preview is NOT supported!\n"
-        exiftool "${FILE_PATH}" | bat -l yaml
+        printf "Image preview is NOT supported!"
       fi
       exit 1;;
     # Video
     video/*)
+      local dimensions=$(get_video_dimensions "${FILE_PATH}")
+      printf "Dimensions: %s\n\n" "$dimensions"
       if [[ $TERM == "xterm-kitty" ]]; then
         # For kitty
-        local dimensions=$(get_video_dimensions "${FILE_PATH}")
-        echo "Dimensions: $dimensions"
         local thumbnail=$($HOME/.config/lf/vidthumb "${FILE_PATH}")
         local place="${PV_WIDTH}x$(( PV_HEIGHT - 1 ))@${HORIZONTAL_POS}x$(( VERTICAL_POS + 1 ))"
         image_preview_by_kitty "${place}" "${thumbnail}"
       elif [[ $TERM =~ "tmux-256color" && -n $KITTY_WINDOW_ID ]]; then
         # For tmux running in kitty
-        echo -e "Previewing video's thumbnail is NOT supported in lf running in tmux!"
-        echo -e "Instead preview the thumbnail in fzf (CTRL-F).\n"
-        mediainfo "${FILE_PATH}" | bat -l yaml
+        printf "Previewing video's thumbnail is NOT supported in lf running in tmux!\n"
+        printf "Instead preview the thumbnail in fzf (CTRL-F)."
       else
         # For others
-        echo -e "Previewing video's thumbnail is NOT supported!\n"
-        mediainfo "${FILE_PATH}" | bat -l yaml
+        printf "Previewing video's thumbnail is NOT supported!"
       fi
       exit 1;;
     # Text

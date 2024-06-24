@@ -1,28 +1,9 @@
 "$schema" = 'https://starship.rs/config-schema.json'
 
-[character]
-success_symbol = '[➜](bold #50fa7b) '
-error_symbol = '[!](bold #ff5555) '
-
-[cmd_duration]
-style = "bold #f1fa8c"
-
 [directory]
 truncation_length = 10
 truncation_symbol = ' /'
-style = "bold #50fa7b"
 
 [git_branch]
 symbol = ' '
 truncation_symbol = ' '
-style = "bold #ff79c6"
-
-[git_status]
-style = "bold #ff5555"
-
-[hostname]
-style = "bold #bd93f9"
-
-[username]
-format = "[$user]($style) on "
-style_user = "bold #8be9fd"

@@ -4,16 +4,16 @@
 live_config_reload = true
 
 [window]
-decorations = "none"
+decorations = "None"
 opacity = 1
-option_as_alt = "OnlyRight"
+option_as_alt = "OnlyLeft"
 
 [font]
-normal = { family = "IosevkaTerm Nerd Font", style = "Regular" }
-bold = { family = "IosevkaTerm Nerd Font", style = "Bold" }
-bold_italic = { family = "IosevkaTerm Nerd Font", style = "Bold Italic" }
-italic = { family = "IosevkaTerm Nerd Font", style = "Italic" }
-size = 15
+normal = { family = "PragmataProMono Nerd Font", style = "Regular" }
+bold = { family = "PragmataProMono Nerd Font", style = "Bold" }
+bold_italic = { family = "PragmataProMono Nerd Font", style = "Bold Italic" }
+italic = { family = "PragmataProMono Nerd Font", style = "Italic" }
+size = 16
 
 [colors]
 cursor = { text = "#000000", cursor = "#52ad70" } # stolen from wezterm

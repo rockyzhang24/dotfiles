@@ -55,7 +55,7 @@ selections="$(: | fzf \
   --delimiter : \
   --header ':: ENTER (open selections in vim), CTRL-R (ripgrep mode), CTRL-F (fzf mode)' \
   --preview 'bat --color=always --style=numbers,changes,header --highlight-line {2} {1}' \
-  --preview-window 'down,nohidden,border-up,+{2}+1/3,~1' \
+  --preview-window 'down,45%,+{2}+1/3,~1' \
 )"
 
 if [[ -n $selections ]]; then

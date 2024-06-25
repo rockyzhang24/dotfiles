@@ -18,6 +18,7 @@ telescope.setup({
       preview_width = 0.6
     },
     results_title = false,
+    dynamic_preview_title = true,
     sorting_strategy = "ascending",
     file_ignore_patterns = { '%.jpg', '%.jpeg', '%.png', '%.avi', '%.mp4' },
     mappings = {
@@ -93,7 +94,6 @@ telescope.load_extension('fzf')
 vim.keymap.set('n', '<Leader>fg', function()
   builtin.highlights({
     prompt_prefix = 'Highlights> ',
-    preview_title = false,
   })
 end)
 
@@ -101,7 +101,6 @@ end)
 vim.keymap.set('n', '<Leader>fh', function()
   builtin.help_tags({
     prompt_prefix = 'HelpTags> ',
-    preview_title = false,
   })
 end)
 

@@ -87,18 +87,10 @@ vim.g.fzf_action = {
 -- effective.
 vim.g.fzf_vim = {
   preview_window = {
-    'right,60%,border-left',
+    'right,60%',
     'ctrl-/',
   },
 }
-
-local function merge_default(opts)
-  local extra_default_opts = {
-    '--border',
-    'rounded',
-  }
-  return vim.list_extend(opts, extra_default_opts)
-end
 
 -- Path completion in INSERT mode
 vim.keymap.set('i', '<C-x><C-f>', function()
@@ -106,10 +98,10 @@ vim.keymap.set('i', '<C-x><C-f>', function()
     'fd',
     vim.fn['fzf#wrap'](vim.fn['fzf#vim#with_preview']({
       placeholder = '',
-      options = merge_default({
+      options = {
         '--prompt',
         'Paths> ',
-      }),
+      },
     }))
   )
 end)
@@ -119,8 +111,8 @@ vim.keymap.set('n', '<Leader>ff', function()
   vim.fn['fzf#vim#files'](
     '',
     vim.fn['fzf#vim#with_preview']({
-      options = merge_default({
-      }),
+      options = {
+      },
     })
   )
 end)
@@ -128,10 +120,10 @@ end)
 -- Old files
 vim.keymap.set('n', '<Leader>fo', function()
   vim.fn['fzf#vim#history'](vim.fn['fzf#vim#with_preview']({
-    options = merge_default({
+    options = {
       '--prompt',
       'OldFiles> ',
-    }),
+    },
   }))
 end)
 
@@ -140,8 +132,8 @@ vim.keymap.set('n', '<C-p>', function()
   vim.fn['fzf#vim#gitfiles'](
     '',
     vim.fn['fzf#vim#with_preview']({
-      options = merge_default({
-      }),
+      options = {
+      },
     })
   )
 end)
@@ -150,12 +142,10 @@ end)
 vim.cmd([[
   command! -bar -bang -nargs=* -range=% GitCommits <line1>,<line2>call fzf#vim#commits(<q-args>, {
     \ "options": [
-    \   "--border",
-    \   "rounded",
     \   "--prompt",
     \   "Commits> ",
     \   "--preview-window",
-    \   "down,45%,border-up",
+    \   "down,45%",
     \   "--header",
     \   ":: CTRL-S (toggle sort), CTRL-Y (yank commmit hashes), CTRL-D (diff)",
     \ ]}, <bang>0)
@@ -168,12 +158,10 @@ end)
 vim.cmd([[
   command! -bar -bang -nargs=* -range=% GitBufCommits <line1>,<line2>call fzf#vim#buffer_commits(<q-args>, {
     \ "options": [
-    \   "--border",
-    \   "rounded",
     \   "--prompt",
     \   "BufCommits> ",
     \   "--preview-window",
-    \   "down,45%,border-up",
+    \   "down,45%",
     \   "--header",
     \   ":: CTRL-S (toggle sort), CTRL-Y (yank commmit hashes), CTRL-D (diff)",
     \ ]}, <bang>0)
@@ -185,28 +173,28 @@ end)
 -- Search history
 vim.keymap.set('n', '<Leader>f/', function()
   vim.fn['fzf#vim#search_history'](vim.fn['fzf#vim#with_preview']({
-    options = merge_default({
+    options = {
       '--prompt',
       'SearchHist> ',
       '--bind',
       'start:unbind(ctrl-/)',
       '--preview-window',
       'hidden',
-    }),
+    },
   }))
 end)
 
 -- Command history
 vim.keymap.set('n', '<Leader>f:', function()
   vim.fn['fzf#vim#command_history'](vim.fn['fzf#vim#with_preview']({
-    options = merge_default({
+    options = {
       '--prompt',
       'CommandHist> ',
       '--bind',
       'start:unbind(ctrl-/)',
       '--preview-window',
       'hidden',
-    }),
+    },
   }))
 end)
 
@@ -240,7 +228,7 @@ vim.keymap.set('n', '<Leader>fb', function()
       end
     end,
     placeholder = '{1}',
-    options = merge_default({
+    options = {
       '--multi',
       '--header-lines',
       '0',
@@ -250,7 +238,7 @@ vim.keymap.set('n', '<Leader>fb', function()
       ':: CTRL-D (delete buffers)',
       '--expect',
       'ctrl-d,ctrl-x,ctrl-v,ctrl-t',
-    }),
+    },
   }))
 end)
 
@@ -260,10 +248,10 @@ vim.keymap.set('n', '<Leader>f.', function()
     '',
     vim.fn['fzf#vim#with_preview']({
       source = 'ls-dotfiles',
-      options = merge_default({
+      options = {
         '--prompt',
         'Dotfiles> ',
-      }),
+      },
     })
   )
 end)
@@ -273,10 +261,10 @@ vim.keymap.set('n', '<Leader>f~', function()
   vim.fn['fzf#vim#files'](
     '~',
     vim.fn['fzf#vim#with_preview']({
-      options = merge_default({
+      options = {
         '--prompt',
         'HomeFiles> ',
-      }),
+      },
     })
   )
 end)
@@ -286,14 +274,14 @@ vim.keymap.set('n', '<Leader>fm', function()
   local filename = '$([[ -f {4} ]] && echo {4} || echo ' .. vim.api.nvim_buf_get_name(0) .. ')'
   vim.fn['fzf#vim#marks'](vim.fn['fzf#vim#with_preview']({
     placeholder = '',
-    options = merge_default({
+    options = {
       '--prompt',
       'Marks> ',
       '--preview-window',
       '+{2}-/2',
       '--preview',
       bat_prefix .. ' --highlight-line {2} -- ' .. filename,
-    })
+    },
   }))
 end)
 
@@ -357,7 +345,7 @@ vim.keymap.set('n', '<Leader>ft', function()
         end
       end
     end,
-    options = merge_default({
+    options = {
       '--ansi',
       '--with-nth',
       '5..',
@@ -369,7 +357,7 @@ vim.keymap.set('n', '<Leader>ft', function()
       'ctrl-d',
       '--preview',
       'file=$(echo {1} | sed "s/@@@@/ /g"); [[ -f $file ]] && ' .. bat_prefix .. ' --highlight-line {2} -- $file || echo "No preview support!"',
-    }),
+    },
   }))
 end)
 
@@ -404,19 +392,19 @@ local function fzf_qf(win_local)
       vim.cmd('execute ' .. lnum)
       vim.cmd('normal! zvzz')
     end,
-    options = merge_default({
+    options = {
       '--no-multi',
       '--prompt',
       prompt .. '> ',
       '--header',
-      ':: ENTER (open the file)',
+      ':: ENTER (jump to the file)',
       '--with-nth',
       '4..',
       '--preview-window',
-      'down,40%,border-up,+{3}-/2',
+      'down,45%,+{3}-/2',
       '--preview',
       bat_prefix .. ' --highlight-line {3} -- {2}',
-    }),
+    },
   }))
 end
 
@@ -528,19 +516,19 @@ local function fzf_qf_history(win_local)
       vim.cmd(open_cmd)
     end,
     placeholder = '',
-    options = merge_default({
+    options = {
       '--with-nth',
       '2..',
       '--no-multi',
       '--prompt',
       prompt.. '> ',
       '--header',
-      ':: ENTER (switch to selected quickfix list)',
+      ':: ENTER (switch to selected list)',
       '--preview-window',
-      'down,45%,border-up',
+      'down,45%',
       '--preview',
       preview,
-    }),
+    },
   }))
 end
 
@@ -568,7 +556,7 @@ end)
 ---@return table
 local function get_fzf_opts_for_RG(rg, query, name)
   name = name or ''
-  return merge_default({
+  return {
     '--ansi',
     '--disabled',
     '--query',
@@ -594,10 +582,10 @@ local function get_fzf_opts_for_RG(rg, query, name)
     '--header',
     ':: CTRL-R (RG mode), CTRL-F (FZF mode)',
     '--preview-window',
-    'down,45%,border-up,+{2}-/2',
+    'down,45%,+{2}-/2',
     '--preview',
     bat_prefix .. ' --highlight-line {2} -- {1}',
-  })
+  }
 end
 
 -- Define a new command :RGU (U for Ultimate) that supports rg options and two modes
@@ -656,18 +644,18 @@ vim.keymap.set({ 'n', 'x' }, '<Leader>gw', function()
   vim.fn['fzf#vim#grep'](
     rg,
     {
-      options = merge_default({
+      options = {
         '--prompt',
         'Word [Rg]> ',
         '--preview-window',
-        'down,45%,border-up,+{2}-/2',
+        'down,45%,+{2}-/2',
         '--preview',
         bat_prefix .. ' --highlight-line {2} -- {1}',
         -- Show the current query in header. Set its style to bold, red foreground via ANSI color
         -- code.
         '--header',
         ':: Query: ' .. colors.red_bold .. header .. colors.reset,
-      }),
+      },
     }
   )
 end)
@@ -682,7 +670,7 @@ vim.keymap.set('n', '<Leader>gb', function()
     return
   end
   vim.fn['fzf#vim#grep2'](rg, initial_query, {
-    options = merge_default({
+    options = {
       '--ansi',
       '--query',
       initial_query,
@@ -695,11 +683,11 @@ vim.keymap.set('n', '<Leader>gb', function()
       '--bind',
       'change:reload:' .. rg .. ' {q} ' .. filename .. '|| true',
       '--preview-window',
-      'down,45%,border-up,+{2}-/2',
+      'down,45%,+{2}-/2',
       '--preview',
       bat_prefix .. ' --highlight-line {2} -- {1}',
       '--header',
       ':: Current buffer: ' .. vim.fn.expand('%:~:.'),
-    }),
+    },
   })
 end)

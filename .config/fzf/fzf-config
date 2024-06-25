@@ -15,8 +15,6 @@ eval "$(fzf --zsh)"
 export FZF_DEFAULT_COMMAND="fd --type f --hidden --follow $FD_EXCLUDE"
 
 # Default options when running fzf
-# Colors are consistent with my neovim colorscheme (see
-# https://github.com/rockyzhang24/arctic.nvim inspired by VSCode Dark+)
 # Keybindings:
 # - ctrl-d: move cursor half page down
 # - ctrl-u: move cursor halp page up
@@ -24,37 +22,41 @@ export FZF_DEFAULT_COMMAND="fd --type f --hidden --follow $FD_EXCLUDE"
 # - alt-u: move preview half page up
 # - ctrl-a: toggle all
 # - ctrl-/: toggle preview window
+# - alt-/: toggle preview word wrap
 # - ctrl-o: open the selections via default application
 # - ctrl-y: copy the selections to system clipboard
 # - ctrl-e: edit the selections via $EDITOR
+# Colors: default colors defined in https://github.com/junegunn/fzf/blob/master/src/tui/tui.go
+# (search for Dark256)
 bg='#1f1f1f'
+fg='#cccccc'
 if $TRANSPARENT; then
   bg=-1
 fi
 export FZF_DEFAULT_OPTS=" \
   --reverse \
-  --height 50% \
+  --height 85% \
   --multi \
   --no-mouse \
   --scrollbar '█' \
   --history /tmp/fzfhistory \
   --prompt 'FZF> ' \
-  --border horizontal \
+  --border rounded \
   --tabstop=4 \
   --highlight-line \
+  --tmux 80%,85% \
   --bind 'ctrl-d:half-page-down,ctrl-u:half-page-up,alt-d:preview-half-page-down,`
     `alt-u:preview-half-page-up,ctrl-a:toggle-all,`
-    `ctrl-/:toggle-preview,ctrl-o:execute(open {+}),`
+    `ctrl-/:toggle-preview,alt-/:toggle-preview-wrap,`
+    `ctrl-o:execute(open {+}),`
     `ctrl-y:execute-silent(echo -n {+} | pbcopy),`
     `ctrl-e:execute(\$EDITOR {+} < /dev/tty > /dev/tty 2>&1),`
     `change:first' \
+  --bind 'focus:transform-preview-label:echo [ {} ]' \
   --preview '~/.config/fzf/fzf-previewer.sh {}' \
-  --preview-window 'right,60%,border-left' \
-  --color=dark,fg:#cccccc,preview-fg:#cccccc,bg:$bg,preview-bg:$bg,`
-    `hl:#2aaaff,fg+:#ffffff,bg+:#04395e,gutter:$bg,hl+:#2aaaff,query:#cccccc,`
-    `disabled:#808080,info:#8b949e,border:#454545,separator:#454545,`
-    `scrollbar:#424242,label:#454545,preview-label:#454545,prompt:#cccccc,`
-    `pointer:#ffffff,marker:#4ec9b0,spinner:#0078d4,header:#3794ff:underline"
+  --preview-window 'right,60%' \
+  --color=dark,fg:$fg,bg:$bg,hl:#2aaaff,fg+:#ffffff,bg+:#04395e,gutter:$bg,hl+:#2aaaff,query:$fg,`
+    `disabled:#808080,border:$fg,separator:#454545,label:$fg,header:#3794ff:underline"
 
 # Use fd for FZF completion
 # 1). listing files and dirs ($1 is the base path to start search) such as "vim ~/.config/**<TAB>"
@@ -74,16 +76,15 @@ export FZF_CTRL_T_OPTS=" \
 # CTRL-r to search the command history
 export FZF_CTRL_R_OPTS=" \
   --preview 'echo {}' \
-  --preview-window down:3:wrap,border-up \
   --bind 'ctrl-y:execute-silent(echo -n {2..} | pbcopy)' \
-  --header ':: CTRL-Y (copy command into clipboard)'"
+  --header ':: CTRL-Y (copy to clipboard)'"
 
 # CTRL-j to cd into the selected dir
 bindkey '^j' fzf-cd-widget
 export FZF_ALT_C_COMMAND="fd --type d --hidden --follow $FD_EXCLUDE"
 export FZF_ALT_C_OPTS=" \
   --preview 'tree -C {} | head -200' \
-  --header ':: ENTER (cd into the selected dir)'"
+  --header ':: ENTER (cd to the dir)'"
 
 # fzf + git
 # Reference: https://github.com/junegunn/fzf-git.sh

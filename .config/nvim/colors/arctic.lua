@@ -41,14 +41,16 @@ local gutter_git_added = '#2ea043'
 local gutter_git_deleted = '#f85149'
 local gutter_git_modified = '#0078d4'
 
-local selection_blue = '#04395e'
-local folded_blue = '#212d3a' -- editor.foldBackground
-local float_border_fg = '#454545'
+local selected_entry_bg = '#04395e' -- editorSuggestWidget.selectedBackground
+local folded_line_bg = '#212d3a' -- editor.foldBackground
+local floatwin_border = '#454545' -- fg for the border of any floating window
+local scrollbar = '#434343' -- scrollbarSlider.activeBackground
 local indent_guide_fg = '#404040'
 local indent_guide_scope_fg = '#707070'
-local label_fg = '#c8c8c8'
+local label_fg = '#c8c8c8' -- entity.name.label
 local tab_bottom_border = '#2b2b2b' -- editorGroupHeader.tabsBorder, tab.border
 local tab_bottom_border_active = '#0078d4' -- tab.activeBorderTop
+local win_separator = '#333333' -- editorGroup.border
 
 local statusline_blue = '#007acc'
 local statusline_orange = '#cc6633'
@@ -60,12 +62,23 @@ local statusline_red = '#c72e0f'
 local statusline_yellow = '#E8AB53'
 local statusline_gray = '#858585'
 
+-- 256 colros
+local lightsky_blue = '#87afd7' -- 110
+local navajo_white = '#afaf87' -- 144
+local deep_pink = '#d7005f' -- 161
+local hot_pink = '#d75f87' -- 168
+
 local groups = {
 
   --
   -- Preset
   --
-  FloatBorder = { fg = float_border_fg },
+
+  -- Use a more noticeable color for the floating window border because the edges of floating
+  -- windows in Neovim don't have shadows. Using the same border color as in VSCode is too subtle.
+  -- And for aesthetics, set the scrollbar to the same color as the border.
+  FloatBorder = { fg = norm_fg }, -- VSCode uses color floatwin_border
+  ScrollbarSlider = { bg = norm_fg }, -- VSCode uses color scrollbar
   SelectionHighlightBackground = { bg = '#343a41' }, -- editor.selectionHighlightBackground
   LightBulb = { fg = '#ffcc00' }, -- editorLightBulb.foreground
   CodeLens = { fg = '#999999' }, -- editorCodeLens.foreground
@@ -73,7 +86,6 @@ local groups = {
   GutterGitDeleted = { fg = gutter_git_deleted }, -- editorGutter.deletedBackground
   GutterGitModified = { fg = gutter_git_modified }, -- editorGutter.modifiedBackground
   Breadcrumb = { fg = '#a9a9a9', bg = norm_bg }, -- breadcrumb.foreground/background
-  ScrollbarSlider = { bg = '#434343' }, -- the slider on the scrollbar (scrollbarSlider.activeBackground)
   ScrollbarSliderHover = { bg = '#4f4f4f' }, -- scrollbarSlider.hoverBackground
   PeekViewBorder = { fg = '#3794ff' },
   PeekViewNormal = { bg = norm_bg }, -- peekViewEditor.background
@@ -136,11 +148,11 @@ local groups = {
   -- TermCursor = { },
   -- TermCursorNC = { },
   ErrorMsg = { fg = error_red },
-  WinSeparator = { fg = '#333333' }, -- editorGroup.border
+  WinSeparator = { fg = norm_fg }, -- VSCode uses color win_separator
   VirtSplit = "WinSeparator", -- deprecated and use WinSeparator instead
   LineNr = { fg = gray2 }, -- editorLineNumber.foreground
   CursorLineNr = { fg = '#cccccc' }, -- editorLineNumber.activeForeground
-  Folded = { bg = folded_blue },
+  Folded = { bg = folded_line_bg },
   CursorLineFold = "CursorLineNr",
   FoldColumn = "LineNr", -- #c5c5c5 in VSCode (editorGutter.foldingControlForeground) and it's too bright
   SignColumn = { bg = norm_bg },
@@ -155,7 +167,7 @@ local groups = {
   Normal = { fg = norm_fg, bg = norm_bg },
   -- NormalNC = { },
   Pmenu = { fg = norm_fg, bg = norm_bg }, -- editorSuggestWidget.background/foreground
-  PmenuSel = { fg = white, bg = selection_blue },
+  PmenuSel = { fg = white, bg = selected_entry_bg },
   PmenuSbar = { bg = norm_bg },
   PmenuThumb = "ScrollbarSlider",
   NormalFloat = "Pmenu",
@@ -579,7 +591,7 @@ local groups = {
   CmpItemKindPackage = "CmpItemKindText",
   -- Predefined for the winhighlight config of cmp float window
   SuggestWidgetBorder = "FloatBorder",
-  SuggestWidgetSelect = { bg = selection_blue },
+  SuggestWidgetSelect = { bg = selected_entry_bg },
 
   --
   -- Aerial
@@ -676,18 +688,22 @@ local groups = {
 
   --
   -- Telescope
+  -- Consistent with fzf
+  -- Find all the default highlight groups
+  -- https://github.com/nvim-telescope/telescope.nvim/blob/master/plugin/telescope.lua
   --
   TelescopeBorder = "FloatBorder",
   TelescopePromptBorder = "TelescopeBorder",
   TelescopeResultsBorder = "TelescopePromptBorder",
   TelescopePreviewBorder = "TelescopePromptBorder",
   TelescopeNormal = "Normal",
-  TelescopeSelection = { fg = white, bg = selection_blue, bold = true },  -- fg and bg are the same as PmenuSel
-  TelescopeSelectionCaret = "TelescopeSelection",
+  TelescopeSelection = { fg = white, bg = selected_entry_bg, bold = true },
+  TelescopeSelectionCaret = { fg = deep_pink },
   TelescopeMultiSelection = "TelescopeNormal",
-  TelescopeMultiIcon = { fg = blue_green },
+  TelescopeMultiIcon = { fg = hot_pink },
   TelescopeMatching = "CmpItemAbbrMatch",
-  TelescopePromptPrefix = { fg = '#cccccc', bold = true }, -- Same as Icon but bold
+  TelescopePromptPrefix = { fg = lightsky_blue, bold = true },
+  TelescopePromptCounter = { fg = navajo_white },
 
   --
   -- Harpoon
@@ -721,7 +737,7 @@ local groups = {
   UfoPreviewNormal = "PeekViewNormal",
   UfoPreviewCursorLine = "PeekViewCursorLine",
   UfoFoldedFg = { fg = norm_fg },
-  UfoFoldedBg = { bg = folded_blue },
+  UfoFoldedBg = { bg = folded_line_bg },
   UfoCursorFoldedLine = { bg = '#2F3C48', bold = true, italic = true },
   UfoPreviewSbar = "PeekViewNormal",
   UfoPreviewThumb = "ScrollbarSlider",
@@ -755,7 +771,7 @@ local groups = {
   --
   -- TreesitterContext = { bg = black4 },
   TreesitterContextLineNumber = { fg = '#4d535a' }, -- 30% darker based on LineNr
-  TreesitterContextBottom = { underline = true, sp = float_border_fg },
+  TreesitterContextBottom = { underline = true, sp = floatwin_border },
 
   --
   -- nvim-scrollview

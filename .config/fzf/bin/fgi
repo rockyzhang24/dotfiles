@@ -4,18 +4,16 @@
 # SYNOPSIS: fgi [PARAM]
 #   [PARAM] is a comma separated list of ignore profiles. (ref: https://docs.gitignore.io/use/command-line)
 #   If [PARAM] is ommited choose interactively.
-# DESCRIPTION: Create useful gitignore files
+# DESCRIPTION: Create a gitignore file from gitignore.io
 
-function __gi() {
-  curl -sLw "\n" https://www.toptal.com/developers/gitignore/api/"$@"
-}
+api="curl -sL https://www.toptal.com/developers/gitignore/api"
 
 if  [ "$#" -eq 0 ]; then
   IFS+=","
-  for item in $(__gi list); do
+  for item in $($api/list); do
     echo "$item"
-  done | fzf --multi --ansi --prompt="GitIgnore> " --preview-window="hidden,<9999(hidden)" | paste -s -d "," - |
-  { read result && __gi "$result"; }
+  done | fzf --multi --ansi --prompt="GitIgnore> " --preview "$api/{}" | paste -s -d "," - |
+  { read result && $api/"$result"; }
 else
-  __gi "$@"
+  $api/"$@"
 fi

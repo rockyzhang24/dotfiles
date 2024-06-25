@@ -126,9 +126,9 @@ if [[ $- =~ i ]]; then
 _fzf_git_fzf() {
   fzf --multi \
     --min-height=20 \
-    --color='header:italic:underline' \
-    --preview-window='nohidden,right,60%,border-left' \
-    --bind='ctrl-/:change-preview-window(down,45%,border-up|hidden|)' "$@"
+    --color='header:underline' \
+    --preview-window='nohidden,right,60%' \
+    --bind='ctrl-/:change-preview-window(down,45%|hidden|)' "$@"
 }
 
 # Check git repository

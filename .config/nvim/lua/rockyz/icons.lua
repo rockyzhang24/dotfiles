@@ -91,6 +91,7 @@ icons.misc = {
   folder = ' ',
   graph = ' ',
   help = ' ',
+  list = ' ',
   indent = ' ',
   logo = '󰀘 ',
   maximized = ' ',

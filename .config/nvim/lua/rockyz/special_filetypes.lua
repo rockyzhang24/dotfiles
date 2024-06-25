@@ -27,6 +27,10 @@ local special_filetypes = {
     icon = icons.misc.search,
     title = 'FZF',
   },
+  harpoon = {
+    icon = icons.misc.list,
+    title = 'Harpoon List',
+  },
   help = {
     icon = icons.misc.help,
     title = 'Vim Help',

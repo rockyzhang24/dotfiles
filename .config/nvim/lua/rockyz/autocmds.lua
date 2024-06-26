@@ -10,21 +10,35 @@ local dotfiles_under_HOME = {
   '.gitignore_global',
   '.zshenv',
 }
+local old_git_dir = nil
+local old_work_tree = nil
+local dot_git_dir = vim.env.HOME .. '/dotfiles'
+local dot_work_tree = vim.env.HOME
+
 local function update_git_env()
   local bufname = vim.api.nvim_buf_get_name(0)
-  local ok, inside_config = pcall(vim.startswith, bufname, vim.env.XDG_CONFIG_HOME)
+  local inside_config = vim.startswith(bufname, vim.env.XDG_CONFIG_HOME)
+  local inside_pack = vim.startswith(bufname, vim.env.XDG_CONFIG_HOME .. '/nvim/pack')
   if
-    ok and inside_config
+    inside_config
+    and not inside_pack
     or vim.list_contains(dotfiles_under_HOME, vim.fn.fnamemodify(bufname, ':t'))
   then
-    -- Set git env
-    vim.env.GIT_DIR = vim.env.HOME .. '/dotfiles'
-    vim.env.GIT_WORK_TREE = vim.env.HOME
+    -- Store the old envs
+    if vim.env.GIT_DIR ~= '' and vim.env.GIT_DIR ~= dot_git_dir then
+      old_git_dir = vim.env.GIT_DIR
+    end
+    if vim.env.GIT_WORK_TREE ~= '' and vim.env.GIT_WORK_TREE ~= dot_work_tree then
+      old_work_tree = vim.env.GIT_WORK_TREE
+    end
+    -- Set envs
+    vim.env.GIT_DIR = dot_git_dir
+    vim.env.GIT_WORK_TREE = dot_work_tree
     return
   end
-  -- Reset
-  vim.env.GIT_DIR = nil
-  vim.env.GIT_WORK_TREE = nil
+  -- Restore envs
+  vim.env.GIT_DIR = old_git_dir
+  vim.env.GIT_WORK_TREE = old_work_tree
 end
 vim.api.nvim_create_autocmd({ 'BufNewFile', 'BufRead', 'BufEnter' }, {
   group = vim.api.nvim_create_augroup('rockyz/dotfiles', {}),

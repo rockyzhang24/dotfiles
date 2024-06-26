@@ -30,6 +30,7 @@ require('rockyz.globals')
 vim.cmd('source ~/.config/nvim/viml/options.vim')
 
 require('rockyz.minpac')
+require('rockyz.options')
 require('rockyz.keymaps')
 require('rockyz.color')
 require('rockyz.autocmds')

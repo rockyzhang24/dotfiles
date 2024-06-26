@@ -54,8 +54,7 @@ vim.api.nvim_create_autocmd('FileType', {
   callback = function()
     vim.opt.formatoptions:remove('t')
     vim.opt.formatoptions:remove('o')
-    vim.opt.formatoptions:append('r')
-    vim.opt.formatoptions:append('n')
+    vim.opt.formatoptions:append('rn')
   end,
 })
 

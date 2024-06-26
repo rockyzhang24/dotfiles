@@ -2,8 +2,6 @@ local telescope = require('telescope')
 local builtin = require('telescope.builtin')
 local actions = require('telescope.actions')
 
-local M = {}
-
 telescope.setup({
   defaults = {
     prompt_prefix = 'Telescope> ',
@@ -103,5 +101,3 @@ vim.keymap.set('n', '<Leader>fh', function()
     prompt_prefix = 'HelpTags> ',
   })
 end)
-
-return M

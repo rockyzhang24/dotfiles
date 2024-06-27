@@ -26,8 +26,7 @@ export FZF_DEFAULT_COMMAND="fd --type f --hidden --follow $FD_EXCLUDE"
 # - ctrl-o: open the selections via default application
 # - ctrl-y: copy the selections to system clipboard
 # - ctrl-e: edit the selections via $EDITOR
-# Colors: default colors defined in https://github.com/junegunn/fzf/blob/master/src/tui/tui.go
-# (search for Dark256)
+# Colors: default colors are defined in https://github.com/junegunn/fzf/blob/master/src/tui/tui.go
 bg='#1f1f1f'
 fg='#cccccc'
 if $TRANSPARENT; then
@@ -68,23 +67,28 @@ _fzf_compgen_dir() {
   fd --type d --hidden --follow ${(z)FD_EXCLUDE} . "$1"
 }
 
-# CTRL-t to paste the selected files and directories onto the command-line
+# CTRL-T to paste the selected files and directories onto the command-line
 export FZF_CTRL_T_COMMAND="fd --hidden --follow $FD_EXCLUDE"
-export FZF_CTRL_T_OPTS=" \
-  --header ':: ENTER (paste selected files and dirs onto command-line)'"
+# export FZF_CTRL_T_OPTS=""
 
-# CTRL-r to search the command history
+# CTRL-R to search the command history
 export FZF_CTRL_R_OPTS=" \
   --preview 'echo {}' \
   --bind 'ctrl-y:execute-silent(echo -n {2..} | pbcopy)' \
   --header ':: CTRL-Y (copy to clipboard)'"
 
-# CTRL-j to cd into the selected dir
+# CTRL-J to cd into the selected dir
+# - ALT-P: show parent dirs
+# - ALT-S: show sub dirs
+fd_command="fd --type d --hidden --follow $FD_EXCLUDE"
 bindkey '^j' fzf-cd-widget
-export FZF_ALT_C_COMMAND="fd --type d --hidden --follow $FD_EXCLUDE"
+export FZF_ALT_C_COMMAND=$fd_command
 export FZF_ALT_C_OPTS=" \
   --preview 'tree -C {} | head -200' \
-  --header ':: ENTER (cd to the dir)'"
+  --header ':: ALT-P (show parent dirs)' \
+  --prompt 'SubDirs> ' \
+  --bind 'alt-p:reload(print-parent-dirs)+change-header(:: ALT-S (show subdirs))+change-prompt(ParentDirs> )' \
+  --bind 'alt-s:reload($fd_command)+change-header(:: ALT-P (show parent dirs))+change-prompt(SubDirs> )'"
 
 # fzf + git
 # Reference: https://github.com/junegunn/fzf-git.sh

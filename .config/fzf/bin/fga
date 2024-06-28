@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+
+# MNEMONIC: [F]uzzy search for [G]it [A]dd
+# SYNOPSIS: fga
+# DESCRIPTION: Fuzzy finder for the files to be git added
+
+# Reference: the _forgit_add() implementation in forgit, see
+# https://github.com/wfxr/forgit/blob/master/bin/git-forgit
+
+__fda=${BASH_SOURCE[0]}
+
+git_cmd="git"
+# Handle my dotfile bare repo
+if [[ $PWD == $HOME/.config/* && $PWD != $HOME/.config/nvim/pack* || $PWD == $HOME ]]; then
+  git_cmd="git --git-dir=$HOME/dotfiles/ --work-tree=$HOME"
+fi
+
+# Entries listed by 'git status -s' look like this:
+# [ M] original/path/for/a/file -> new/path/for/the/file
+# This is function is used to extract the file path
+# remove indicators | remove original path for rename case | remove surrounding quotes
+cleaner() {
+  sed 's/^.*]  //' |
+  sed 's/.* -> //' |
+  sed -e 's/^\"//' -e 's/\"$//'
+}
+
+# This script file is also used for fzf preview by passing in the current item
+if [[ $# -eq 1 ]]; then
+  delta_cmd="delta --width ${FZF_PREVIEW_COLUMNS:-$COLUMNS} --file-style omit"
+  file=$(echo "$1" | cleaner)
+  if ($git_cmd status -s -- "$file" | grep '^??') &>/dev/null; then  # diff with /dev/null for untracked files
+    $git_cmd diff --color=always --no-index -- /dev/null "$file" | eval "$delta_cmd"
+  else
+    $git_cmd diff --color=always -- "$file" | eval "$delta_cmd"
+  fi
+  exit 0
+fi
+
+changed=$(eval "$git_cmd config --get-color color.status.changed red")
+unmerged=$(eval "$git_cmd config --get-color color.status.unmerged red")
+untracked=$(eval "$git_cmd config --get-color color.status.untracked red")
+
+# Create an array to store the selections
+while IFS= read -r file; do
+  files+=("$file")
+done < <(
+  $git_cmd -c color.status=always -c status.relativePaths=true -c core.quotePath=false status -s |
+    grep -F -e "$changed" -e "$unmerged" -e "$untracked" |
+    sed -E 's/^(..[^[:space:]]*)[[:space:]]+(.*)$/[\1]  \2/' |
+    fzf --ansi --exit-0 --preview "$__fda {}" --preview-window down,60% --prompt="GitAdd> " --header ":: ENTER (git add files)" |
+    cleaner
+)
+
+if [[ ${#files[@]} -gt 0 ]]; then
+  $git_cmd add "${files[@]}" && $git_cmd status -s
+fi

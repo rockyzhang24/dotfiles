@@ -98,5 +98,7 @@ export FZF_ALT_C_OPTS=" \
 # CTRL-G R for remotes
 # CTRL-G H for commit hashes
 # CTRL-G S for stashes
+# CTRL-G L for Reflogs
 # CTRL-G E for Each ref (git for-each-ref)
+# CTRL-G W for Worktrees
 source ~/.config/fzf/fzf-git.sh

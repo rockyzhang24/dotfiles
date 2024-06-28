@@ -27,8 +27,6 @@ vim.loader.enable()
 -- Global variables may be needed by other file, so load it first.
 require('rockyz.globals')
 
-vim.cmd('source ~/.config/nvim/viml/options.vim')
-
 require('rockyz.minpac')
 require('rockyz.options')
 require('rockyz.keymaps')

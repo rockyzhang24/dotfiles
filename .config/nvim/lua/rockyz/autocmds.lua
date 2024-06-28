@@ -1,8 +1,7 @@
 -- Dotfiles mangement
 -- My dotfiles are managed via a bare repository. To make Vim recognize them and git related plugins
--- work on them, the git-dir and work-tree should be set (via GIT_DIR and GIT_WORK_TREE env) when
--- the current buffer contains dotfile. We should also reset them when entering other buffers so
--- that the normal repository will be recognized.
+-- work on them, two envs GIT_DIR and GIT_WORK_TREE should be set when the current buffer holds a
+-- dotfile.
 local dotfiles_under_HOME = {
   'exclude',
   'README.md',

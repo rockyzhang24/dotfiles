@@ -6,14 +6,14 @@
 #   If [PARAM] is ommited choose interactively.
 # DESCRIPTION: Create a gitignore file from gitignore.io
 
-api="curl -sL https://www.toptal.com/developers/gitignore/api"
+api="command curl -sL https://www.toptal.com/developers/gitignore/api"
 
 if  [ "$#" -eq 0 ]; then
   IFS+=","
   for item in $($api/list); do
     echo "$item"
-  done | fzf --multi --ansi --prompt="GitIgnore> " --preview "$api/{}" | paste -s -d "," - |
+  done | fzf --multi --ansi --prompt="GitIgnore> " --preview "$api/{} | bat -p -l gitignore --color=always" | paste -s -d "," - |
   { read result && $api/"$result"; }
 else
-  $api/"$@"
+  eval "$api/$@"
 fi

@@ -5,13 +5,11 @@
 # DESCRIPTION: Open neovim and execute vim-fugitive's `:Git difftool -y [args]`
 # command to open each changed file in a new tab.
 
-git rev-parse >/dev/null 2>&1
-
-if [[ $? -eq 0 ]]; then
+if git rev-parse >/dev/null 2>&1; then
   nvim -c "Git difftool -y $*" -c "bwipeout 1" -c "let: g:from_script = 1"
 else
   # If not in a git repo, use my dotfiles git bare repo
   nvim -c "let \$GIT_DIR = '$HOME/dotfiles'" \
-      -c "let \$GIT_WORK_TREE = '$HOME'" \
-      -c "Git difftool -y $*" -c "bwipeout 1" -c "let g:from_script = 1"
+    -c "let \$GIT_WORK_TREE = '$HOME'" \
+    -c "Git difftool -y $*" -c "bwipeout 1" -c "let g:from_script = 1"
 fi

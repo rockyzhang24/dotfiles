@@ -61,12 +61,11 @@ selections="$(: | fzf \
 if [[ -n $selections ]]; then
   cnt=$(echo "$selections" | wc -l)
   if [[ $cnt -eq 1 ]]; then
-    read -r file line <<<$(echo "$selections" | awk -F: '{print $1, $2}')
+    read -r file line <<<"$(echo "$selections" | awk -F: '{print $1, $2}')"
     nvim "$file" -c "$line"
   else
     echo "$selections" >| "$errorfile_path"/frg-errorfile && nvim -q "$errorfile_path"/frg-errorfile \
       -c "copen" \
-      -c "call setqflist([], 'r', {'context': {'bqf': {'pattern_hl': '\%#' . '${@: -1}'}}})" \
       -c "bwipeout 1"
   fi
 fi

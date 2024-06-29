@@ -2,18 +2,19 @@
 
 # MNEMONIC: [F]uzzy search [G]it [I]gnore
 # SYNOPSIS: fgi [PARAM]
-#   [PARAM] is a comma separated list of ignore profiles. (ref: https://docs.gitignore.io/use/command-line)
-#   If [PARAM] is ommited choose interactively.
+#   [PARAM]: a comma separated (or space separated) list of languages, e.g., fgi c,c++ or fgi c c++
+#   If [PARAM] is ommited, choose interactively via fzf.
 # DESCRIPTION: Create a gitignore file from gitignore.io
 
 api="command curl -sL https://www.toptal.com/developers/gitignore/api"
 
 if  [ "$#" -eq 0 ]; then
   IFS+=","
-  for item in $($api/list); do
+  for item in $(eval "$api/list"); do
     echo "$item"
   done | fzf --multi --ansi --prompt="GitIgnore> " --preview "$api/{} | bat -p -l gitignore --color=always" | paste -s -d "," - |
-  { read result && $api/"$result"; }
+  { read -r result && eval "$api/$result"; }
 else
-  eval "$api/$@"
+  IFS=","
+  eval "$api/$*"
 fi

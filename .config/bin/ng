@@ -4,9 +4,7 @@
 # DESCRIPTION: Open neovim and run fugitive's `:Git` command to open a summary
 # window akin to `git status`
 
-git rev-parse >/dev/null 2>&1
-
-if [[ $? -eq 0 ]]; then
+if git rev-parse >/dev/null 2>&1; then
   nvim -c "Git" -c "bwipeout #"
 else
   # If not in a git repo, use my dotfiles git bare repo

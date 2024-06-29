@@ -2,6 +2,6 @@
 
 path=$HOME/gitrepos/fzf
 
-[[ -d $path ]] && rm -rf $path
-git clone --depth 1 https://github.com/junegunn/fzf.git $path
-$path/install
+[[ -d $path ]] && rm -rf "$path"
+git clone --depth 1 https://github.com/junegunn/fzf.git "$path"
+"$path"/install

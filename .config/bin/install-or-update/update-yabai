@@ -25,7 +25,7 @@ sudo yabai --install-sa
 
 # start yabai or not
 while true; do
-  read -p "Do you want to start yabai service (y/n) ? " yn
+  read -rp "Do you want to start yabai service (y/n) ? " yn
   case $yn in
     [Yy]* ) printf "\n************** Start yabai ... ****************\n"
             brew services start koekeishiya/formulae/yabai

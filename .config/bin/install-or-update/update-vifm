@@ -12,7 +12,7 @@ if [[ -n $(git --no-pager log HEAD..origin/master) ]]; then
   git --no-pager log HEAD..origin/master
 
   echo -e "\n"
-  read -p "Press ENTER to continue to merge and build..."
+  read -rp "Press ENTER to continue to merge and build..."
 
   # Merge
   echo -e "\nMerging...\n"

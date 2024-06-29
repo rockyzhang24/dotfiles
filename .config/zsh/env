@@ -61,11 +61,18 @@ export BAT_THEME="arctic"
 # User-defined
 #
 
-# Build --exclude parameters for fd (i.e., --exclude .git --exclude .Trash
-# --exclude ...)
-export FD_EXCLUDE="$(cat $HOME/exclude | sed 's/^/--exclude /' | tr '\n' ' ')"
-# Build -g parameters for rg (i.e., -g !.git -g !.Trash -g ...)
-export RG_EXCLUDE="$(cat $HOME/exclude | sed 's/^/-g !/' | tr '\n' ' ')"
+# Build options to exclude specified files for some search commands like fd, rg
+export EXCLUDE_FILE="$HOME/exclude"
+FD_EXCLUDE=""
+RG_EXCLUDE=""
+while IFS= read -r line; do
+  # Build --exclude options for fd (i.e., --exclude .git --exclude .Trash --exclude ...)
+  FD_EXCLUDE+="--exclude $line "
+  # Build -g options for rg (i.e., -g !.git -g !.Trash -g ...)
+  RG_EXCLUDE+="-g !$line "
+done < "$EXCLUDE_FILE"
+export FD_EXCLUDE
+export RG_EXCLUDE
 
 #
 # Configs below are taken from zimfw utility: https://github.com/zimfw/utility/blob/master/init.zsh

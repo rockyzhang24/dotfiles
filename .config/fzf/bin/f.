@@ -4,8 +4,14 @@
 # SYNOPSIS: f. [QUERY]
 # DESCRIPTION: Fuzzy search for the dotfiles and open the selected files via vim
 
-selections=($(git --git-dir=$HOME/dotfiles/ --work-tree=$HOME ls-files $HOME --full-name | sed "s~^~$HOME/~" | fzf --query="$1" --prompt="Dotfiles> "))
+while IFS= read -r file; do
+  files+=("${file/#~/$HOME}") # replace the leading ~ to $HOME
+done < <(
+  git --git-dir="$HOME/dotfiles/" --work-tree="$HOME" ls-files "$HOME" --full-name |
+  sed "s:^:~/:" | # prepend ~/
+  fzf --query="$1" --prompt=".dotfiles> "
+)
 
-if [[ -n $selections ]]; then
-  ${EDITOR:-vim} "${selections[@]}"
+if [[ ${#files[@]} -gt 0 ]]; then
+  ${EDITOR:-vim} "${files[@]}"
 fi

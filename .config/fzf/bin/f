@@ -7,5 +7,5 @@
 if [[ $# == 0 ]] || [[ $1 =~ ^--\|^- ]]; then
   fzf "$@"
 else
-  fd --type f --hidden --follow $FD_EXCLUDE '.*' "$1" 2> /dev/null | ( shift && fzf "$@" )
+  eval "fd --type f --hidden --follow $FD_EXCLUDE '.*' $1 2> /dev/null" | ( shift && fzf "$@" )
 fi

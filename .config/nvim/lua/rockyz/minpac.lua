@@ -100,14 +100,8 @@ end
 
 -- Install/update plugins
 vim.api.nvim_create_user_command('PluginUpdate', function()
-  local old_git_dir = vim.env.GIT_DIR
-  local old_work_tree = vim.env.GIT_WORK_TREE
-  vim.env.GIT_DIR = nil
-  vim.env.GIT_WORK_TREE = nil
   pack_init()
   vim.fn['minpac#update']()
-  vim.env.GIT_DIR = old_git_dir
-  vim.env.GIT_WORK_TREE = old_work_tree
 end, { bang = true })
 
 -- Delete plugins

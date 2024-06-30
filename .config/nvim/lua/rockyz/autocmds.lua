@@ -1,45 +1,17 @@
--- Dotfiles mangement
--- My dotfiles are managed via a bare repository. To make Vim recognize them and git related plugins
--- work on them, two envs GIT_DIR and GIT_WORK_TREE should be set when the current buffer holds a
--- dotfile.
-local dotfiles_under_HOME = {
-  'exclude',
-  'README.md',
-  '.gitignore',
-  '.gitignore_global',
-  '.zshenv',
-}
-local old_git_dir = nil
-local old_work_tree = nil
-local dot_git_dir = vim.env.HOME .. '/dotfiles'
-local dot_work_tree = vim.env.HOME
-
+-- Dotfiles setup
 local function update_git_env()
-  local bufname = vim.api.nvim_buf_get_name(0)
-  local inside_config = vim.startswith(bufname, vim.env.XDG_CONFIG_HOME)
-  local inside_pack = vim.startswith(bufname, vim.env.XDG_CONFIG_HOME .. '/nvim/pack')
+  local cwd = vim.fn.getcwd()
+  local inside_config = vim.startswith(cwd, vim.env.XDG_CONFIG_HOME)
+  local inside_pack = vim.startswith(cwd, vim.env.XDG_CONFIG_HOME .. '/nvim/pack')
   if
     inside_config
     and not inside_pack
-    or vim.list_contains(dotfiles_under_HOME, vim.fn.fnamemodify(bufname, ':t'))
   then
-    -- Store the old envs
-    if vim.env.GIT_DIR ~= '' and vim.env.GIT_DIR ~= dot_git_dir then
-      old_git_dir = vim.env.GIT_DIR
-    end
-    if vim.env.GIT_WORK_TREE ~= '' and vim.env.GIT_WORK_TREE ~= dot_work_tree then
-      old_work_tree = vim.env.GIT_WORK_TREE
-    end
-    -- Set envs
-    vim.env.GIT_DIR = dot_git_dir
-    vim.env.GIT_WORK_TREE = dot_work_tree
-    return
+    vim.env.GIT_DIR = vim.env.HOME .. '/dotfiles'
+    vim.env.GIT_WORK_TREE = vim.env.HOME
   end
-  -- Restore envs
-  vim.env.GIT_DIR = old_git_dir
-  vim.env.GIT_WORK_TREE = old_work_tree
 end
-vim.api.nvim_create_autocmd({ 'BufNewFile', 'BufRead', 'BufEnter' }, {
+vim.api.nvim_create_autocmd('VimEnter', {
   group = vim.api.nvim_create_augroup('rockyz/dotfiles', {}),
   callback = function()
     update_git_env()

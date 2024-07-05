@@ -109,11 +109,8 @@ local groups = {
   DiffLineAdded = { bg = '#203424' }, -- diffEditor.insertedLineBackground
   DiffLineDeleted = { bg = '#442423' }, -- diffEditor.removedLineBackground
   DiffLineChanged = { bg = '#0e2f44' },
-  -- Quickfix list (can be used to define qf syntax, e.g.,
-  -- ~/.config/nvim/syntax/qf.vim)
-  QfFileName = { fg = white },
-  QfSelection = { bg = '#3a3d41' }, -- terminal.inactiveSelectionBackground
-  QfText = { fg = '#bbbbbb' }, -- normal text in quickfix list (peekViewResult.lineForeground)
+  -- Quickfix list
+  QfSelection = { bg = '#3a3d41', bold = true }, -- terminal.inactiveSelectionBackground
   -- Inline hints
   InlayHint = { fg = '#969696', bg = '#242424' }, -- editorInlayHint.foreground/background
   InlayHintType = "InlayHint", -- editorInlayHint.typeBackground/typeForeground

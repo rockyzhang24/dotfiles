@@ -1,43 +1,76 @@
 local M = {}
 
-local bar = require('rockyz.icons').separators.bar
+local icons = require('rockyz.icons')
 
---
--- Change the appearance for the texts displayed in quickfix
--- Ref: https://github.com/kevinhwang91/nvim-bqf#customize-quickfix-window-easter-egg
---
+local MAX_FILENAME_LEN = 50 -- threshold for filename length. 0 means no limit.
+local TRUNCATE_PREFIX = icons.misc.ellipsis
 
--- The length limit of the file name
-local limit = vim.o.columns / 4
-local fname_fmt1, fname_fmt2 = '%-' .. limit .. 's', ' %.' .. (limit - 2) .. 's'
-local valid_fmt = '%s ' .. bar .. '%5d:%-3d' .. bar .. '%s %s'
+local signs = {
+  E = { text = icons.diagnostics.ERROR, hl = 'DiagnosticSignError' },
+  W = { text = icons.diagnostics.WARN, hl = 'DiagnosticSignWarn' },
+  I = { text = icons.diagnostics.INFO, hl = 'DiagnosticSignInfo' },
+  H = { text = icons.diagnostics.HINT, hl = 'DiagnosticSignHint' },
+  undefined = { text = icons.misc.circle_filled, hl = 'DiagnosticSignOk' },
+}
+local fname_hl = 'Directory'
+local lnum_col_hl = 'Number'
 
-function M.format_qf_item(item)
-  local fname = ''
-  local str
-  if item.valid == 1 then
-    if item.bufnr > 0 then
-      fname = vim.fn.bufname(item.bufnr)
-      if fname == '' then
-        fname = '[No Name]'
-      else
-        fname = fname:gsub('^' .. vim.env.HOME, '~')
-      end
-      -- char in fname may occur more than 1 width, ignore this issue in order to keep performance
-      if #fname <= limit then
-        fname = fname_fmt1:format(fname)
-      else
-        fname = fname_fmt2:format(fname:sub(1 - limit))
-      end
-    end
-    local lnum = item.lnum > 99999 and -1 or item.lnum
-    local col = item.col > 999 and -1 or item.col
-    local qtype = item.type == '' and '' or ' ' .. item.type:sub(1, 1):upper()
-    str = valid_fmt:format(fname, lnum, col, qtype, item.text)
-  else
-    str = item.text
+-- Truncate the filename from the beginnign if its length exceeds the threshold
+local function trim_path(path)
+  local fname = vim.fn.fnamemodify(path, ':p:.:~')
+  if fname == '' then
+    fname = '[No Name]'
   end
-  return str
+  if MAX_FILENAME_LEN > 0 and #fname > MAX_FILENAME_LEN then
+    fname = TRUNCATE_PREFIX .. fname:sub(-MAX_FILENAME_LEN)
+  end
+  return fname
+end
+
+---Format qf list item and return a transformed one with necessary information for constructing the
+---entry in qf.
+---@param raw table qf item, see :h getqflist
+---@return table
+function M.format_qf_item(raw)
+  local item = {
+    sign = '',
+    fname = '', -- filename
+    lnum = '', -- <lnum>-<end_lnum>
+    col = '', -- <col>-<end_col>
+    type = raw.type,
+    text = raw.text,
+    sign_hl = '',
+    fname_hl = fname_hl,
+    lnum_col_hl = lnum_col_hl,
+  }
+  -- Sign
+  local sign = signs[item.type] or signs.undefined
+  item.sign = sign.text
+  item.sign_hl = sign.hl
+  --Filename
+  if raw.bufnr > 0 then
+    local fname = trim_path(vim.fn.bufname(raw.bufnr))
+    item.fname = fname
+  end
+  -- Process line number, <lnum>-<end_lnum>
+  if raw.lnum and raw.lnum > 0 then
+    local lnum = raw.lnum
+    local end_lnum = raw.end_lnum
+    if end_lnum and end_lnum > 0 and end_lnum ~= lnum then
+      lnum = lnum .. '-' .. end_lnum
+    end
+    item.lnum = lnum
+    -- Handle col only if lnum exists, <col>-<end_col>
+    if raw.col and raw.col > 0 then
+      local col = raw.col
+      local end_col = raw.end_col
+      if end_col and end_col > 0 and end_col ~= col then
+        col = col .. '-' .. end_col
+      end
+      item.col = col
+    end
+  end
+  return item
 end
 
 return M

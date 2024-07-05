@@ -1,23 +1,119 @@
+-- Setting quickfixtextfunc to decorate the quickfix is inspired by yorickpeterse/nvim-pqf
+-- (yorickpeterse/nvim-pqf)
+
 local M = {}
 
 local qf_utils = require('rockyz.utils.qf_utils')
 
-function M.qftf(info)
-  local items
-  local ret = {}
+local ns = vim.api.nvim_create_namespace('quickfix-highlight')
+
+local function list_items(info)
+  local what = { id = info.id, items = 0, qfbufnr = 0 }
   if info.quickfix == 1 then
-    items = vim.fn.getqflist({ id = info.id, items = 0 }).items
+    return vim.fn.getqflist(what)
   else
-    items = vim.fn.getloclist(info.winid, { id = info.id, items = 0 }).items
+    return vim.fn.getloclist(info.winid, what)
   end
+end
+
+local function apply_highlights(bufnr, highlights)
+  for _, hl in ipairs(highlights) do
+    vim.highlight.range(bufnr, ns, hl.group, { hl.line, hl.col }, { hl.line, hl.end_col })
+  end
+end
+
+function M.qftf(info)
+  local list = list_items(info)
+  local qf_bufnr = list.qfbufnr
+  local raw_items = list.items
+
+  local highlights = {}
+  local entries = {}
+
+  -- If we're adding a new list rather than appending to an existing one, we
+  -- need to clear existing highlights.
+  if info.start_idx == 1 then
+    vim.api.nvim_buf_clear_namespace(qf_bufnr, ns, 0, -1)
+  end
+
+  -- Construct an entry for each list item in the format below and apply highlights
+  -- <sign> <filename> <lnum>-<end_lnum>:<col>-<end_col> [<type>] <text>
   for i = info.start_idx, info.end_idx do
-    local e = items[i]
-    local str = qf_utils.format_qf_item(e)
-    table.insert(ret, str)
+    local raw_item = raw_items[i]
+    if raw_item then
+      local item = qf_utils.format_qf_item(raw_item)
+      local entry = {}
+      local line_idx = i - 1
+      -- Sign
+      local sign = item.sign
+      table.insert(entry, sign)
+      local hl_col_start = 0
+      local hl_col_end = #sign
+      table.insert(
+        highlights,
+        { group = item.sign_hl, line = line_idx, col = hl_col_start, end_col = hl_col_end }
+      )
+      -- Filename
+      local fname = item.fname
+      if fname ~= '' then
+        table.insert(entry, fname)
+        hl_col_start = hl_col_end + 1
+        hl_col_end = hl_col_start + #fname
+        table.insert(
+          highlights,
+          {
+            group = item.fname_hl,
+            line = line_idx,
+            col = hl_col_start,
+            end_col = hl_col_end
+          }
+        )
+      end
+      -- Line number and column number
+      local lnum_col = item.lnum
+      if item.lnum ~= '' and item.col ~= '' then
+        lnum_col = item.lnum .. ':' .. item.col
+      end
+      if lnum_col ~= '' then
+        table.insert(entry, lnum_col)
+        hl_col_start = hl_col_end + 1
+        hl_col_end = hl_col_start + #lnum_col
+        table.insert(
+          highlights,
+          {
+            group = item.lnum_col_hl,
+            line = line_idx,
+            col = hl_col_start,
+            end_col = hl_col_end,
+          }
+        )
+      end
+      -- Type
+      local type = item.type ~= '' and '[' .. item.type .. ']' or ''
+      if type ~= '' then
+        table.insert(entry, type)
+      end
+      -- Text
+      local text = item.text
+      if text ~= '' then
+        table.insert(entry, text)
+      end
+
+      table.insert(entries, table.concat(entry, ' '))
+    end
   end
-  return ret
+
+  -- Apply highlights
+  vim.schedule(function()
+    apply_highlights(qf_bufnr, highlights)
+  end)
+
+  return entries
 end
 
 vim.o.quickfixtextfunc = [[{info -> v:lua.require('rockyz.quickfix').qftf(info)}]]
+-- NOTE: if we use a normal function as the value of quickfixtextfunc instead of this lambda, only
+-- single quote form to get the package is allowed:
+-- vim.o.quickfixtextfunc = "v:lua.require'rockyz.quickfix'.qftf"
 
 return M

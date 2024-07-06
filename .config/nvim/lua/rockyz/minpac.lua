@@ -25,10 +25,6 @@ local function pack_init()
     'stevearc/conform.nvim',
     'Wansmer/treesj',
     'willothy/flatten.nvim',
-    {
-      'ThePrimeagen/harpoon',
-      { branch = 'harpoon2' },
-    },
     'michaeljsmith/vim-indent-object',
       -- ii for inner indentation, ai for indentation and one line above, aI for indentation and
       -- lines above and below

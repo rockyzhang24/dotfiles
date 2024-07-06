@@ -136,7 +136,7 @@ _fzf_git_check() {
   git rev-parse HEAD > /dev/null 2>&1 && return
   [[ -n $TMUX ]] && tmux display-message "Not in a git repository"
   # Handle my dotfiles
-  if [[ $PWD == $HOME/.config/* && $PWD != $HOME/.config/nvim/pack* || $PWD == $HOME ]]; then
+  if [[ $PWD == $HOME || $PWD == $HOME/.config || $PWD == $HOME/.config/* && $PWD != $HOME/.config/nvim/pack* ]]; then
     export GIT_DIR=$HOME/dotfiles
     export GIT_WORK_TREE=$HOME
     return

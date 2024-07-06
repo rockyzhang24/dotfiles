@@ -13,8 +13,7 @@
 #   1) ENTER: open the selections via neovim: if only one entry is selected,
 #      open it directly; if multiple entrys are selected, open the first one and
 #      dump all into the quickfix.
-#   2) CTRL-R: switch to rg mode
-#   3) CTRL-F: switch to fzf mode
+#   3) ALT-F: toggle between fzf mode and riggrep mode
 # NOTE:
 #   -e/--regex is not supported
 # EXAMPLES:
@@ -24,7 +23,13 @@
 
 # Temp file to store the query when switch to another mode so that the query can
 # be restored when switch back.
-rm -f /tmp/rg-fzf-{r,f}
+rg_query="/tmp/frg-rg-mode-query"
+fzf_query="/tmp/frg-fzf-mode-query"
+rm -f $rg_query $fzf_query
+
+# Temp file to mark if the current mode is fzf mode
+fzf_mode_enabled="/tmp/frg-fzf-mode-enabled"
+rm -f $fzf_mode_enabled
 
 # Path for the file where all selected entries are saved and they will be fed to
 # the quickfix.
@@ -47,13 +52,18 @@ selections="$(: | fzf \
   --ansi \
   --disabled \
   --query "$initial_query" \
-  --bind "start:reload($rg_prefix {q})+unbind(ctrl-r)" \
+  --bind "start:reload($rg_prefix {q})" \
   --bind "change:reload:sleep 0.1; $rg_prefix {q} || true" \
-  --bind 'ctrl-f:unbind(change,ctrl-f)+change-prompt(2. fzf> )+enable-search+rebind(ctrl-r)+transform-query(echo {q} > /tmp/rg-fzf-r; cat /tmp/rg-fzf-f)' \
-  --bind "ctrl-r:unbind(ctrl-r)+change-prompt(1. rg> )+disable-search+reload($rg_prefix {q} || true)+rebind(change,ctrl-f)+transform-query(echo {q} > /tmp/rg-fzf-f; cat /tmp/rg-fzf-r)" \
-  --prompt '1. rg> ' \
+  --bind "alt-f:transform: \
+    [[ ! -e $fzf_mode_enabled ]] && { \
+      touch $fzf_mode_enabled; \
+      echo \"unbind(change)+change-prompt(2. FZF> )+enable-search+transform-query({ echo {q} > $rg_query; cat $fzf_query })\"; \
+    } || { \
+      rm $fzf_mode_enabled; echo \"change-prompt(1. RG> )+disable-search+reload($rg_prefix {q} || true)+rebind(change)+transform-query({ echo {q} > $fzf_query; cat $rg_query })\" \
+    }" \
+  --prompt '1. RG> ' \
   --delimiter : \
-  --header ':: ENTER (open selections in vim), CTRL-R (ripgrep mode), CTRL-F (fzf mode)' \
+  --header ':: ENTER (open selections in vim), ALT-F (toggle FZF mode and RG mode)' \
   --preview 'bat --color=always --style=numbers,changes,header --highlight-line {2} {1}' \
   --preview-window 'down,45%,+{2}+1/3,~1' \
 )"

@@ -549,13 +549,22 @@ end)
 -- * FZF mode (fzf will be the fuzzy finder for the results of RG)
 --
 
+-- Temp files for query restore and mode toggle
+local rg_query = '/tmp/fzfvim-grep-rg-mode-query'
+local fzf_query = '/tmp/fzfvim-grep-fzf-mode-query'
+local fzf_mode_enabled = '/tmp/fzfvim-grep-fzf-mode-enabled'
+
+-- Remove temp files
+local function rm_temp_files()
+  os.execute(string.format('rm -f %s %s %s', rg_query, fzf_query, fzf_mode_enabled))
+end
+
 ---Generate the fzf options for rg and fzf integration
 ---@param rg string The final rg command
 ---@param query string The initial query for rg
 ---@param name string The name of that keymap
 ---@return table
 local function get_fzf_opts_for_RG(rg, query, name)
-  name = name or ''
   return {
     '--ansi',
     '--disabled',
@@ -564,23 +573,22 @@ local function get_fzf_opts_for_RG(rg, query, name)
     '--prompt',
     name .. ' [RG]> ',
     '--bind',
-    'start:reload(' .. rg .. ' ' .. vim.fn.shellescape(query) .. ')+unbind(ctrl-r)',
+    'start:reload(' .. rg .. ' ' .. vim.fn.shellescape(query) .. ')',
     '--bind',
     'change:reload:' .. rg .. ' {q} || true',
     '--bind',
-    'ctrl-f:unbind(change,ctrl-f)+change-prompt('
-      .. name
-      .. ' [FZF]> )+enable-search+rebind(ctrl-r)+transform-query(echo {q} > /tmp/rg-fzf-vim-r; cat /tmp/rg-fzf-vim-f)',
-    '--bind',
-    'ctrl-r:unbind(ctrl-r)+change-prompt('
-      .. name
-      .. ' [RG]> )+disable-search+reload('
-      .. rg
-      .. ' {q} || true)+rebind(change,ctrl-f)+transform-query(echo {q} > /tmp/rg-fzf-vim-f; cat /tmp/rg-fzf-vim-r)',
+    'alt-f:transform:\
+      [[ ! -e ' .. fzf_mode_enabled .. ' ]] && { \
+        touch ' .. fzf_mode_enabled .. '; \
+        echo "unbind(change)+change-prompt(' .. name .. ' [FZF]> )+enable-search+transform-query({ echo {q} > ' .. rg_query .. '; cat ' .. fzf_query .. ' })"; \
+      } || { \
+        rm ' .. fzf_mode_enabled .. '; \
+        echo "change-prompt(' .. name .. ' [RG]> )+disable-search+reload(' .. rg .. ' {q} || true)+rebind(change)+transform-query({ echo {q} > ' .. fzf_query .. '; cat ' .. rg_query .. ' })"\
+      }',
     '--delimiter',
     ':',
     '--header',
-    ':: CTRL-R (RG mode), CTRL-F (FZF mode)',
+    ':: ALT-F (toggle FZF mode and RG mode)',
     '--preview-window',
     'down,45%,+{2}-/2',
     '--preview',
@@ -590,7 +598,7 @@ end
 
 -- Define a new command :RGU (U for Ultimate) that supports rg options and two modes
 vim.api.nvim_create_user_command('RGU', function(opts)
-  os.execute('rm -f /tmp/rg-fzf-vim-{r,f}')
+  rm_temp_files()
   local extra_flags = {}
   local query = ''
   for _, arg in ipairs(opts.fargs) do
@@ -611,9 +619,9 @@ vim.api.nvim_create_user_command('RGU', function(opts)
 end, { bang = true, nargs = '*' })
 vim.keymap.set('n', '<Leader>gg', ':RGU ')
 
--- Live grep (:RG) in nvim config
+-- Live grep in nvim config
 vim.keymap.set('n', '<Leader>gv', function()
-  os.execute('rm -f /tmp/rg-fzf-vim-{r,f}')
+  rm_temp_files()
   local rg = rg_prefix .. ' --glob=!minpac -- '
   local query = ''
   vim.fn['fzf#vim#grep2'](
@@ -626,7 +634,7 @@ vim.keymap.set('n', '<Leader>gv', function()
   )
 end)
 
--- Grep (:Rg) for the current word (normal mode) or the current selection (visual mode)
+-- Grep for the current word (normal mode) or the current selection (visual mode)
 vim.keymap.set({ 'n', 'x' }, '<Leader>gw', function()
   local query
   local header

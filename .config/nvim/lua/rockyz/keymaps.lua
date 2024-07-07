@@ -334,7 +334,7 @@ end
 vim.keymap.set('n', '<Leader>wp', '<C-w>p')
 -- Split
 vim.keymap.set('n', '<Leader>-', ':split<CR>', { silent = true })
-vim.keymap.set('n', '<Leader><BS>', ':vsplit<CR>', { silent = true })
+vim.keymap.set('n', '<Leader><BSlash>', ':vsplit<CR>', { silent = true })
 -- Move current window to new tab
 vim.keymap.set('n', '<Leader>wt', '<C-w>T')
 -- Duplicate the current window in a new tab

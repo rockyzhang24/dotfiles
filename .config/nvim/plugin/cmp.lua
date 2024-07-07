@@ -109,7 +109,6 @@ cmp.setup({
       -- end,
     },
     { name = 'luasnip' },
-  }, {
     {
       name = 'buffer',
       option = {

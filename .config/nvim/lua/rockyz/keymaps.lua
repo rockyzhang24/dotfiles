@@ -133,7 +133,7 @@ end, { expr = true, silent = true })
 --
 -- Substitute the visually selected text, or the word under cursor
 vim.keymap.set('x', '<Leader>sw', '"hy:%s/<C-r>h/<C-r>h/gc<Left><Left><Left>')
-vim.keymap.set('n', '<Leader>sw', ':%s/\\<<C-r><C-w>\\>/<C-r><C-w>/gI<Left><Left><Left>')
+vim.keymap.set('n', '<Leader>sw', ':%s/\\<<C-r><C-w>\\>//gI<Left><Left><Left>')
 
 --
 -- Buffer

@@ -635,7 +635,7 @@ vim.keymap.set('n', '<Leader>gv', function()
 end)
 
 -- Grep for the current word (normal mode) or the current selection (visual mode)
-vim.keymap.set({ 'n', 'x' }, '<Leader>gw', function()
+vim.keymap.set({ 'n', 'x' }, '<Leader>g*', function()
   local query
   local header
   if vim.fn.mode() == 'v' then

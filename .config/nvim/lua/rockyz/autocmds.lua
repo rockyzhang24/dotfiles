@@ -3,10 +3,7 @@ local function update_git_env()
   local cwd = vim.fn.getcwd()
   local inside_config = vim.startswith(cwd, vim.env.XDG_CONFIG_HOME)
   local inside_pack = vim.startswith(cwd, vim.env.XDG_CONFIG_HOME .. '/nvim/pack')
-  if
-    inside_config
-    and not inside_pack
-  then
+  if inside_config and not inside_pack or cwd == vim.env.HOME then
     vim.env.GIT_DIR = vim.env.HOME .. '/dotfiles'
     vim.env.GIT_WORK_TREE = vim.env.HOME
   end

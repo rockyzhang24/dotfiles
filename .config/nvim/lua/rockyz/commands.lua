@@ -74,3 +74,16 @@ vim.api.nvim_create_user_command('CopyCodeBlock', function(opts)
   vim.fn.setreg('+', result)
   vim.notify 'Text copied to clipboard'
 end, { range = true })
+
+-- Reorder numbered list
+-- Works for the list where the numbers are followed by ". ", "). ", or "]. "
+-- '<,'>s/\d\+\(\(\.\|)\.\|\]\.\)\s\)\@=/\=line('.')-line("'<")+1/
+--                             ^
+--                             |
+--                             ----- add more cases here
+--                             E.g., "\|>\." for the list like "1>. foobar"
+vim.api.nvim_create_user_command(
+  'ReorderList',
+  [['<,'>s/\d\+\(\(\.\|)\.\|\]\.\)\s\)\@=/\=line('.')-line("'<")+1/]],
+  { range = true }
+)

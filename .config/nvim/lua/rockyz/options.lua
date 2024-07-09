@@ -1,3 +1,5 @@
+local icons = require('rockyz.icons')
+
 vim.o.number = true
 vim.o.relativenumber = true
 vim.o.laststatus = 3
@@ -14,8 +16,8 @@ vim.opt.listchars = {
 }
 vim.opt.fillchars = {
   fold = ' ',
-  foldopen = '',
-  foldclose = '',
+  foldopen = icons.caret.caret_down,
+  foldclose = icons.caret.caret_right,
   foldsep = ' ',
   eob = ' ',
   msgsep = '‾',

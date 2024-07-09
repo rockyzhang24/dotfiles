@@ -72,6 +72,7 @@ icons.separators = {
 }
 
 icons.caret = {
+  caret_down = '',
   caret_left = '',
   caret_right = '',
 }

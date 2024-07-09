@@ -28,6 +28,7 @@ local function pack_init()
     'michaeljsmith/vim-indent-object',
       -- ii for inner indentation, ai for indentation and one line above, aI for indentation and
       -- lines above and below
+    'preservim/tagbar',
 
     -- Fuzzy Finder
     {

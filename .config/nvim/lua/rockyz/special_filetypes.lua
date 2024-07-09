@@ -59,6 +59,10 @@ local special_filetypes = {
     icon = icons.misc.quickfix,
     title = 'Quickfix List',
   },
+  tagbar = {
+    icon = icons.misc.outline,
+    title = 'Tagbar',
+  },
   term = {
     icon = icons.misc.term,
     title = 'Term',

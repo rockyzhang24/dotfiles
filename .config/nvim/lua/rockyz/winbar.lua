@@ -61,6 +61,8 @@ local function special_buffer_component()
     end
     table.insert(items, string.format('[%s/%s]', list.idx, list.size))
     return table.concat(items, ' ' .. delimiter .. ' ')
+  elseif ft == 'tagbar' then
+    return 'Tagbar'
   elseif ft == 'term' then
     return path
   elseif vim.fn.win_gettype(winid) == 'command' then

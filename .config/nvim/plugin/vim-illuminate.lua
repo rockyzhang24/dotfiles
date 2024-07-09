@@ -9,6 +9,7 @@ illuminate.configure({
     'help',
     'neo-tree',
     'NvimTree',
+    'tagbar',
     'qf',
     'startify',
   },

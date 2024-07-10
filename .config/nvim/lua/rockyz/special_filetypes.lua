@@ -1,4 +1,6 @@
--- This is used to set the icon and title for special buffers in statusline, winbar and tabline
+-- Define icons and titles for special filetypes
+-- icons are used by tabline, winbar and statusline
+-- titles are used by tabline
 
 local icons = require('rockyz.icons')
 
@@ -11,8 +13,8 @@ local special_filetypes = {
     icon = icons.misc.color,
     title = 'Color Picker',
   },
-  CmdWin = { -- for Command-line window
-    icon = icons.misc.rocket,
+  cmdwin = { -- for Command-line window
+    icon = icons.misc.command,
     title = 'Command-line Window',
   },
   floggraph = {
@@ -23,9 +25,17 @@ local special_filetypes = {
     icon = icons.git.branch,
     title = 'Fugitive',
   },
+  fugitiveblame = {
+    icon = icons.git.commit,
+    title = 'Fugitive Blame',
+  },
   fzf = {
     icon = icons.misc.search,
     title = 'FZF',
+  },
+  git = {
+    icon = icons.git.git,
+    title = 'Git',
   },
   harpoon = {
     icon = icons.misc.list,
@@ -42,6 +52,10 @@ local special_filetypes = {
   noname = { -- for nvim_buf_get_name() is empty
     icon = icons.misc.file,
     title = 'No Name',
+  },
+  oil = {
+    icon = icons.misc.explorer,
+    title = 'Oil',
   },
   Outline = {
     icon = icons.misc.outline,

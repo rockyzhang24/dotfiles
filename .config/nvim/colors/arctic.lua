@@ -120,6 +120,7 @@ local groups = {
   WinbarModified = { fg = norm_fg, bg = norm_bg }, -- the modification indicator
   WinbarError = { fg = error_list, bg = norm_bg }, -- the filename color if the current buffer has errors
   WinbarWarn = { fg = warn_list, bg = norm_bg }, -- the filename color if the current buffer has warnings
+  WinbarSpecialIcon = { fg = statusline_yellow, bg = norm_bg }, -- icon for special filetype
   -- Tabline
   TabBorderRight = { fg = tab_bottom_border, bg = black4, underline = true, sp = tab_bottom_border }, -- the right border of inactive tab
   TabBorderRightActive = { fg = tab_bottom_border, bg = norm_bg, underline = true, sp = tab_bottom_border_active }, -- the right border of active tab

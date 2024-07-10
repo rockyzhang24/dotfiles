@@ -275,14 +275,17 @@ function M.fileinfo_component(trunc_width)
       size = string.format(' [%s]', size)
     end
   end
+  -- No file
   if filetype == '' then
     return string.format('%%#StlComponentInactive#%s%s%%*%s ', icons.misc.file, '[No File]', size)
   end
+  -- Handle special filetype
   local sp_ft = special_filetypes[filetype]
   if sp_ft then
     local icon = sp_ft.icon
     return string.format('%%#StlIcon#%s %%#StlFiletype#%s%%*%s ', icon, filetype, size)
   end
+  -- Normal filetype
   local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
   if has_devicons then
     local icon, icon_color = devicons.get_icon_color_by_filetype(filetype, { default = true })

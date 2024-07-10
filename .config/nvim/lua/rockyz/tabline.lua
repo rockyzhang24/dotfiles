@@ -21,7 +21,7 @@ local function get_icon_and_tile(winid, is_cur)
   end
   -- For special filetypes, e.g., fzf or term
   local sp_ft = special_filetypes[filetype]
-    or vim.fn.win_gettype(winid) == 'command' and special_filetypes['CmdWin']
+    or vim.fn.win_gettype(winid) == 'command' and special_filetypes['cmdwin']
     or bufname == '' and special_filetypes['noname']
   if sp_ft then
     local icon = sp_ft.icon

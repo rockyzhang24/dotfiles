@@ -55,11 +55,13 @@ icons.diagnostics = {
 }
 
 icons.git = {
-  branch = ' ',
   added = ' ',
-  modified = ' ',
+  branch = ' ',
+  commit = '',
   deleted = ' ',
   diff = ' ',
+  git = '󰊢 ',
+  modified = ' ',
 }
 
 icons.separators = {
@@ -82,6 +84,7 @@ icons.misc = {
   check = ' ',
   circle_filled = '',
   color = ' ',
+  command = ' ',
   delimiter = '',
   disconnect = ' ',
   edit = ' ',

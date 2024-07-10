@@ -3,6 +3,7 @@ local M = {}
 local navic = require('nvim-navic')
 local icons  = require('rockyz.icons')
 local delimiter = icons.misc.delimiter
+local special_filetypes = require('rockyz.special_filetypes')
 
 -- Cache the highlight groups created for different icons
 local cached_hls = {}
@@ -29,24 +30,37 @@ local function special_buffer_component()
   local ft = vim.bo.filetype
   local winid = vim.api.nvim_get_current_win()
   local path = vim.fn.expand('%')
+  local icon = ''
+  local sp_ft = special_filetypes[ft]
+  if not sp_ft and vim.fn.win_gettype(winid) == 'command' then
+    sp_ft = special_filetypes['cmdwin']
+    ft = 'cmdwin'
+  end
+  if sp_ft then
+    icon = sp_ft.icon
+  end
+  local ret = ''
 
   if ft == 'aerial' or ft == 'Outline' then
-    return 'Outline'
+    ret = 'Outline'
   elseif ft == 'fugitive' then
     local git_path = string.match(path, 'fugitive://(.*)//')
     git_path = vim.fn.fnamemodify(git_path, ':~:.')
-    return string.format('Fugitive [%s]', git_path)
+    ret = string.format('Fugitive [%s]', git_path)
   elseif ft == 'fugitiveblame' then
-    return 'Fugitive Blame'
+    ret = 'Fugitive Blame'
   elseif ft == 'git' then
     if string.find(path, '^fugitive://') then
       local git_path = string.match(path, 'fugitive://(.*)')
       git_path = vim.fn.fnamemodify(git_path, ':~:.')
-      return string.format('Fugitive [%s]', git_path)
+      ret = string.format('Fugitive [%s]', git_path)
+    else
+      ret = path
     end
-    return path
+  elseif ft == 'floggraph' then
+    ret = path
   elseif ft == 'oil' then
-    return 'Oil: ' .. string.match(path, 'oil://(.*)')
+    ret = 'Oil: ' .. string.match(path, 'oil://(.*)')
   elseif ft == 'qf' then
     local is_loclist = vim.fn.getloclist(0, { filewinid = 0 }).filewinid ~= 0
     local list_type = is_loclist and 'Location List' or 'Quickfix List'
@@ -60,16 +74,16 @@ local function special_buffer_component()
       table.insert(items, list.title)
     end
     table.insert(items, string.format('[%s/%s]', list.idx, list.size))
-    return table.concat(items, ' ' .. delimiter .. ' ')
+    ret = table.concat(items, ' ' .. delimiter .. ' ')
   elseif ft == 'tagbar' then
-    return 'Tagbar'
+    ret = 'Tagbar'
   elseif ft == 'term' then
-    return path
-  elseif vim.fn.win_gettype(winid) == 'command' then
-    return 'Command-line Window'
+    ret = path
+  elseif ft == 'cmdwin' then
+    ret = 'Command-line Window'
   end
 
-  return ''
+  return ret ~= '' and string.format('%%#WinbarSpecialIcon#%s%%* %s', icon, ret) or ret
 end
 
 local function path_component()

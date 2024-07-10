@@ -47,7 +47,7 @@ fi
 
 rg_prefix="rg --line-number --column --color=always --smart-case --vimgrep $RG_EXCLUDE $extra_opts "
 
-selections="$(: | fzf \
+selections="$(fzf \
   --height 80% \
   --ansi \
   --disabled \

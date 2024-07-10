@@ -22,7 +22,8 @@ export FZF_DEFAULT_COMMAND="fd --type f --hidden --follow $FD_EXCLUDE"
 # - alt-u: move preview half page up
 # - ctrl-a: toggle all
 # - ctrl-/: toggle preview window
-# - alt-/: toggle preview word wrap
+# - ctrl-w: toggle wrap
+# - alt-w: toggle preview wrap
 # - ctrl-o: open the selections via default application
 # - ctrl-y: copy the selections to system clipboard
 # - ctrl-e: edit the selections via $EDITOR
@@ -46,7 +47,9 @@ export FZF_DEFAULT_OPTS=" \
   --tmux 80%,85% \
   --bind 'ctrl-d:half-page-down,ctrl-u:half-page-up,alt-d:preview-half-page-down,`
     `alt-u:preview-half-page-up,ctrl-a:toggle-all,`
-    `ctrl-/:toggle-preview,alt-/:toggle-preview-wrap,`
+    `ctrl-/:toggle-preview,`
+    `ctrl-w:toggle-wrap,`
+    `alt-w:toggle-preview-wrap,`
     `ctrl-o:execute(open {+}),`
     `ctrl-y:execute-silent(echo -n {+} | pbcopy),`
     `ctrl-e:execute(\$EDITOR {+} < /dev/tty > /dev/tty 2>&1),`

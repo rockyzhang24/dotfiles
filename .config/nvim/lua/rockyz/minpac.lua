@@ -48,6 +48,7 @@ local function pack_init()
     'SmiteshP/nvim-navic',
     'smjonas/inc-rename.nvim',
     'b0o/SchemaStore.nvim',
+    'stevearc/aerial.nvim',
 
     -- Autocomplete
     'hrsh7th/nvim-cmp',

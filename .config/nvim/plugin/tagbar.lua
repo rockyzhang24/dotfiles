@@ -1,12 +1,19 @@
-vim.g.tagbar_width = 60
+local icons = require('rockyz.icons')
+
+vim.g.tagbar_width = 50
+vim.g.tagbar_autofocus = 1
 vim.g.tagbar_sort = 0 -- sorted by order
 vim.g.tagbar_compact = 2 -- don't show the help at the top
 vim.g.tagbar_show_data_type = 1
 vim.g.tagbar_scrolloff = 3
+vim.g.tagbar_iconchars = {
+  icons.caret.caret_right,
+  icons.caret.caret_down,
+}
 
 vim.keymap.set('n', 'yot', '<Cmd>TagbarToggle<CR>')
-vim.keymap.set('n', '[t', '<Cmd>TagbarJumpPrev')
-vim.keymap.set('n', ']t', '<Cmd>TagbarJumpNext')
+vim.keymap.set('n', '[t', '<Cmd>TagbarJumpPrev<CR>')
+vim.keymap.set('n', ']t', '<Cmd>TagbarJumpNext<CR>')
 
 -- Usages:
 -- 1. Show help: ?

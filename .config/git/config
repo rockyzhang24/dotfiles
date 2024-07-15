@@ -13,7 +13,7 @@
 [branch]
   sort = -committerdate
 [alias]
-  tree = log --all --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr, %ad) %C(bold blue)<%an>%Creset' --abbrev-commit --date=short
+  lg = log --all --color --graph --abbrev-commit --date=short --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold dim blue)<%an>%Creset'
 [interactive]
   diffFilter = delta --color-only
 [delta]

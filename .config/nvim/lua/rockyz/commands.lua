@@ -87,3 +87,24 @@ vim.api.nvim_create_user_command(
   [['<,'>s/\d\+\(\(\.\|)\.\|\]\.\)\s\)\@=/\=line('.')-line("'<")+1/]],
   { range = true }
 )
+
+-- Change indentation of the current buffer
+-- Usage:
+-- :Reindent cur_indent new_indent
+vim.api.nvim_create_user_command('Reindent', function(opts)
+  if #opts.fargs < 2 then
+    vim.notify("Two arguments are required!")
+    return
+  end
+  local cur_indent, new_indent = tonumber(opts.fargs[1]), tonumber(opts.fargs[2])
+  local prev_et = vim.o.expandtab
+  vim.o.expandtab = false
+  vim.o.tabstop = cur_indent
+  vim.cmd('retab!')
+  vim.o.tabstop = new_indent
+  if prev_et then
+    vim.o.expandtab = true
+    vim.cmd('retab!')
+  end
+  vim.o.shiftwidth = new_indent
+end, { nargs = '+' })

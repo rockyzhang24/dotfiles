@@ -48,7 +48,6 @@ vim.o.spelllang = 'en_us'
 vim.o.pumheight = 15
 vim.o.pumwidth = 20
 vim.o.breakindent = true
-vim.o.breakindentopt = 'shift:2'
 vim.o.showbreak = '↪ '
 -- Presistent undo (use set undodir=... to change the undodir, default is ~/.local/share/nvim/undo)
 vim.o.undofile = true

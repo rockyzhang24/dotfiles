@@ -6,6 +6,7 @@ illuminate.configure({
     'aerial',
     'fugitive',
     'git',
+    'gitsigns.blame',
     'help',
     'neo-tree',
     'NvimTree',

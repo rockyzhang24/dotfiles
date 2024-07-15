@@ -10,7 +10,7 @@ local M = {}
 
 local navic = require('nvim-navic')
 local icons  = require('rockyz.icons')
-local delimiter = icons.misc.delimiter
+local delimiter = icons.caret.caret_right
 local special_filetypes = require('rockyz.special_filetypes')
 
 -- Cache the highlight groups created for different icons
@@ -133,6 +133,9 @@ local function name_component()
   if ft == 'fugitiveblame' then
     return 'Fugitive Blame'
   end
+  if ft == 'gitsigns.blame' then
+    return 'Gitsigns Blame'
+  end
   if ft == 'qf' then
     local is_loclist = vim.fn.win_gettype(winid) == 'loclist'
     local type = is_loclist and 'Location List' or 'Quickfix List'
@@ -217,6 +220,15 @@ M.render = function()
   return table.concat(items, ' ')
 end
 
-vim.o.winbar = "%{%v:lua.require('rockyz.winbar').render()%}"
+-- vim.o.winbar = "%{%v:lua.require('rockyz.winbar').render()%}"
+
+vim.api.nvim_create_autocmd('BufWinEnter', {
+  group = vim.api.nvim_create_augroup('rockyz/winbar', { clear = true }),
+  callback = function()
+    if not vim.api.nvim_win_get_config(0).zindex then
+      vim.wo.winbar = "%{%v:lua.require('rockyz.winbar').render()%}"
+    end
+  end,
+})
 
 return M

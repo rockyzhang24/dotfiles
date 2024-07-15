@@ -33,6 +33,10 @@ local special_filetypes = {
     icon = icons.misc.search,
     title = 'FZF',
   },
+  ['gitsigns.blame'] = {
+    icon = icons.git.commit,
+    title = 'Gitsigns Blame',
+  },
   harpoon = {
     icon = icons.misc.list,
     title = 'Harpoon List',

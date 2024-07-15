@@ -37,9 +37,9 @@ local ok_green = '#89d185' -- color for success, so I use notebookStatusSuccessI
 local error_list = '#f88070' -- list.errorForeground, for list items (like files in file explorer) containing errors
 local warn_list = '#cca700' -- list.warningForeground, for list items containing warnings
 
-local gutter_git_added = '#2ea043'
-local gutter_git_deleted = '#f85149'
-local gutter_git_modified = '#0078d4'
+local gutter_git_added = '#2ea043' -- editorGutter.addedBackground
+local gutter_git_deleted = '#f85149' -- editorGutter.deletedBackground
+local gutter_git_modified = '#0078d4' -- editorGutter.modifiedBackground
 
 local selected_entry_bg = '#04395e' -- editorSuggestWidget.selectedBackground
 local folded_line_bg = '#212d3a' -- editor.foldBackground
@@ -51,6 +51,7 @@ local label_fg = '#c8c8c8' -- entity.name.label
 local tab_bottom_border = '#2b2b2b' -- editorGroupHeader.tabsBorder, tab.border
 local tab_bottom_border_active = '#0078d4' -- tab.activeBorderTop
 local win_separator = '#333333' -- editorGroup.border
+local icon_fg = '#d7ba7d' -- fg for icons on tabline, winbar and statusline
 
 local statusline_blue = '#007acc'
 local statusline_orange = '#cc6633'
@@ -59,7 +60,6 @@ local statusline_pink = '#c586c0'
 local statusline_green = '#16825d'
 local statusline_violet = '#646695'
 local statusline_red = '#c72e0f'
-local statusline_yellow = '#E8AB53'
 local statusline_gray = '#858585'
 
 -- 256 colros
@@ -120,12 +120,13 @@ local groups = {
   WinbarModified = { fg = norm_fg, bg = norm_bg }, -- the modification indicator
   WinbarError = { fg = error_list, bg = norm_bg }, -- the filename color if the current buffer has errors
   WinbarWarn = { fg = warn_list, bg = norm_bg }, -- the filename color if the current buffer has warnings
-  WinbarSpecialIcon = { fg = statusline_yellow, bg = norm_bg }, -- icon for special filetype
+  WinbarSpecialIcon = { fg = icon_fg, bg = norm_bg }, -- icon for special filetype
+  WinbarPathPrefix = { fg = icon_fg, bg = norm_bg, bold = true }, -- the prefix of the path for the special folders such as CONFIG
   -- Tabline
   TabBorderRight = { fg = tab_bottom_border, bg = black4, underline = true, sp = tab_bottom_border }, -- the right border of inactive tab
   TabBorderRightActive = { fg = tab_bottom_border, bg = norm_bg, underline = true, sp = tab_bottom_border_active }, -- the right border of active tab
-  TabDefaultIcon = { fg = statusline_yellow, bg = black4, underline = true, sp = tab_bottom_border }, -- icon for special filetype on inactive tab
-  TabDefaultIconActive = { fg = statusline_yellow, bg = norm_bg, underline = true, sp = tab_bottom_border_active }, -- icon for special filetype on active tab
+  TabDefaultIcon = { fg = icon_fg, bg = black4, underline = true, sp = tab_bottom_border }, -- icon for special filetype on inactive tab
+  TabDefaultIconActive = { fg = icon_fg, bg = norm_bg, underline = true, sp = tab_bottom_border_active }, -- icon for special filetype on active tab
 
   --
   -- Editor
@@ -210,7 +211,7 @@ local groups = {
   StlModeSepTerminal = { fg = statusline_violet, bg = black4 },
   StlModeSepPending = { fg = statusline_red, bg = black4 },
 
-  StlIcon = { fg = statusline_yellow, bg = black4 },
+  StlIcon = { fg = icon_fg, bg = black4 },
 
   -- The status of the component. E.g., for treesitter component
   -- * the current buffer has no treesitter parser: StlComponentInactive

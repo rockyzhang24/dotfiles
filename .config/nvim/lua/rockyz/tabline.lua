@@ -15,9 +15,9 @@ local function get_icon_and_tile(winid, is_cur)
   local bufnr = vim.api.nvim_win_get_buf(winid)
   local bufname = vim.api.nvim_buf_get_name(bufnr)
   local filetype = vim.bo[bufnr].filetype
-  -- Adjust title for location list
+  -- Adjust filetype for location list
   if vim.fn.win_gettype(winid) == 'loclist' then
-    special_filetypes.qf.title = 'Location List'
+    filetype = 'loclist'
   end
   -- For special filetypes, e.g., fzf or term
   local sp_ft = special_filetypes[filetype]
@@ -31,6 +31,9 @@ local function get_icon_and_tile(winid, is_cur)
   end
   -- For normal files
   local title = vim.fn.fnamemodify(bufname, ':t')
+  if filetype == 'git' then
+    title = 'Git'
+  end
   if vim.wo[winid].diff then
     title = title .. ' (diff)'
   end

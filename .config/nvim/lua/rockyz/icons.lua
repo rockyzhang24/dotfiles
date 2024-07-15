@@ -50,7 +50,7 @@ icons.lightbulb = ' '
 icons.diagnostics = {
   ERROR = ' ',
   WARN = ' ',
-  HINT = ' ',
+  HINT = ' ',
   INFO = ' ',
 }
 
@@ -92,7 +92,7 @@ icons.misc = {
   explorer = ' ',
   file = ' ',
   file_code = ' ',
-  folder = ' ',
+  folder = '󰉋 ',
   graph = ' ',
   help = ' ',
   list = ' ',

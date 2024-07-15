@@ -33,10 +33,6 @@ local special_filetypes = {
     icon = icons.misc.search,
     title = 'FZF',
   },
-  git = {
-    icon = icons.git.git,
-    title = 'Git',
-  },
   harpoon = {
     icon = icons.misc.list,
     title = 'Harpoon List',
@@ -44,6 +40,10 @@ local special_filetypes = {
   help = {
     icon = icons.misc.help,
     title = 'Vim Help',
+  },
+  loclist = {
+    icon = icons.misc.quickfix,
+    title = 'Location List',
   },
   man = {
     icon = icons.misc.book,

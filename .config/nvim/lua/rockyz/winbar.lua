@@ -1,3 +1,11 @@
+-- The winbar's structure:
+-- Header | Path_prefix > Path > Icon > Name [diagnostics/modified indicator] > Breadcrumbs
+-- ^            ^          ^       ^     ^
+-- |            |__________|       |     |___ name_component()
+-- |                 |             |___ icon_component()
+-- |                 |___ path_component()
+-- |___ header_component()
+
 local M = {}
 
 local navic = require('nvim-navic')
@@ -26,105 +34,80 @@ local function header_component()
   return header
 end
 
-local function special_buffer_component()
+local function path_component()
+  -- Window with special filetype (like term, aerial, etc) does not have path component
   local ft = vim.bo.filetype
   local winid = vim.api.nvim_get_current_win()
-  local path = vim.fn.expand('%')
-  local icon = ''
-  local sp_ft = special_filetypes[ft]
-  if not sp_ft and vim.fn.win_gettype(winid) == 'command' then
-    sp_ft = special_filetypes['cmdwin']
-    ft = 'cmdwin'
+  if special_filetypes[ft] or ft == 'git' or vim.fn.win_gettype(winid) == 'command' then
+    return ''
   end
-  if sp_ft then
-    icon = sp_ft.icon
-  end
-  local ret = ''
-
-  if ft == 'aerial' or ft == 'Outline' then
-    ret = 'Outline'
-  elseif ft == 'fugitive' then
-    local git_path = string.match(path, 'fugitive://(.*)//')
-    git_path = vim.fn.fnamemodify(git_path, ':~:.')
-    ret = string.format('Fugitive [%s]', git_path)
-  elseif ft == 'fugitiveblame' then
-    ret = 'Fugitive Blame'
-  elseif ft == 'git' then
-    if string.find(path, '^fugitive://') then
-      local git_path = string.match(path, 'fugitive://(.*)')
-      git_path = vim.fn.fnamemodify(git_path, ':~:.')
-      ret = string.format('Fugitive [%s]', git_path)
-    else
-      ret = path
-    end
-  elseif ft == 'floggraph' then
-    ret = path
-  elseif ft == 'oil' then
-    ret = 'Oil: ' .. string.match(path, 'oil://(.*)')
-  elseif ft == 'qf' then
-    local is_loclist = vim.fn.getloclist(0, { filewinid = 0 }).filewinid ~= 0
-    local list_type = is_loclist and 'Location List' or 'Quickfix List'
-    local what = { title = 0, size = 0, idx = 0 }
-    local list = is_loclist and vim.fn.getloclist(0, what) or vim.fn.getqflist(what)
-    -- The output format is {list type} > {list title} > {current idx}
-    -- E.g., "Quickfix List > Diagnostics > [1/10]"
-    local items = {}
-    table.insert(items, list_type)
-    if list.title ~= '' then
-      table.insert(items, list.title)
-    end
-    table.insert(items, string.format('[%s/%s]', list.idx, list.size))
-    ret = table.concat(items, ' ' .. delimiter .. ' ')
-  elseif ft == 'tagbar' then
-    ret = 'Tagbar'
-  elseif ft == 'term' then
-    ret = path
-  elseif ft == 'cmdwin' then
-    ret = 'Command-line Window'
-  end
-
-  return ret ~= '' and string.format('%%#WinbarSpecialIcon#%s%%* %s', icon, ret) or ret
-end
-
-local function path_component()
-  local items = {}
+  -- Window with normal filetype displays the path of the file
+  -- Winbar displays the path with two parts: prefix (icon and a pre-defined name) and path
   local fullpath = vim.fn.expand('%')
+  if fullpath == '' then
+    return ''
+  end
+  local prefix = ''
   local path
-  -- Handle specials
   if string.find(fullpath, '^fugitive://') then
     -- The window of fugitive diff is a regular buffer but with 'diff' set. Its bufname is like
     -- "fugitive:///Users/xxx/demo/.git//92eb3dd/src/core.go".
-    local git_path, file_path = string.match(fullpath, '^fugitive://(%S+//%w+)/(.*)')
-    git_path = vim.fn.fnamemodify(git_path, ':~:.')
-    path = vim.fn.fnamemodify(file_path, ':~:.:h')
-    table.insert(items, string.format('Fugitive [%s]', git_path))
+    prefix, path = string.match(fullpath, '^(fugitive://%S+//%w+)/(.*)')
+    path = vim.fn.fnamemodify(path, ':h')
   elseif string.find(fullpath, '^gitsigns://') then
     -- For the window running gitsigns.diffthis, its bufname is like
     -- "gitsigns:///Users/xxx/demo/.git/HEAD~2:src/core.go", or
     -- "gitsigns:///Users/xxx/demo/.git/:0:src/core.go".
-    local git_path, file_path = string.match(fullpath, '^gitsigns://([^:]*:?%w+):(.*)')
-    git_path = vim.fn.fnamemodify(git_path, ':~:.')
-    path = vim.fn.fnamemodify(file_path, ':~:.:h')
-    table.insert(items, string.format('Gitsigns [%s]', git_path))
+    prefix, path = string.match(fullpath, '^(gitsigns://[^:]*:?%w+):(.*)')
+    path = vim.fn.fnamemodify(path, ':h')
   else
-    path = vim.fn.expand('%:~:.:h')
-  end
-  -- Normal path
-  if path ~= '' and path ~= '.' then
-    if vim.api.nvim_win_get_width(0) < math.floor(vim.o.columns / 3) then
-      path = vim.fn.pathshorten(path)
-    else
-      path = path:gsub('^~', 'HOME'):gsub('^/', 'ROOT/'):gsub('/', ' ' .. delimiter .. ' ')
+    path = vim.fn.expand('%:~:h')
+    -- For some special folders, use a prefix instead of the full path (making sure to pick the
+    -- longest prefix). E.g., ~/.config/nvim/init.lua will be NVIM/init.lua
+    local special_dirs = {
+      ROOT = '/',
+      HOME = '~',
+      CONFIG = '~/.config',
+      NVIM = '~/.config/nvim',
+      OJ = '~/oj',
+      PROJECTS = '~/projects',
+      GITREPOS = '~/gitrepos',
+    }
+    local prefix_path = ''
+    for dir_name, dir_path in pairs(special_dirs) do
+      if vim.startswith(path, dir_path) and #dir_path > #prefix_path then
+        prefix, prefix_path = dir_name, dir_path
+      end
     end
-    table.insert(items, path)
+    path = path:gsub('^' .. prefix_path, ''):gsub('^/', '')
   end
-  return table.concat(items, ' ')
+  -- Assemble the icon, prefix, and the path
+  if path == '' then
+    return '%#WinbarPathPrefix#' .. icons.misc.folder .. ' ' .. prefix .. '%*'
+  else
+    path = path:gsub('/', ' ' .. delimiter .. ' ')
+    if prefix == '' then
+      return '%#WinbarPathPrefix#' .. icons.misc.folder .. '%* ' .. path
+    else
+      return '%#WinbarPathPrefix#' .. icons.misc.folder .. ' ' .. prefix .. '%* ' .. delimiter .. ' ' .. path
+    end
+  end
 end
 
 local function icon_component()
+  local ft = vim.bo.filetype
+  local winid = vim.api.nvim_get_current_win()
+  -- Window with special filetype
+  local fmt_str = '%%#WinbarSpecialIcon#%s%%*'
+  if special_filetypes[ft] then
+    return string.format(fmt_str, special_filetypes[ft].icon)
+  end
+  if vim.fn.win_gettype(winid) == 'command' then
+    return string.format(fmt_str, special_filetypes.cmdwin)
+  end
+  -- Window with normal filetype
   local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
   if has_devicons then
-    local ft = vim.bo.filetype
     local icon, icon_color = devicons.get_icon_color_by_filetype(ft, { default = true })
     local icon_hl = 'WinbarFileIconFor' .. ft
     if not cached_hls[icon_hl] then
@@ -137,7 +120,41 @@ local function icon_component()
   return icons.misc.file
 end
 
-local function filename_component()
+local function name_component()
+  -- For window with special filetype
+  local ft = vim.bo.filetype
+  local winid = vim.api.nvim_get_current_win()
+  if ft == 'aerial' then
+    return 'Outline [Aerial]'
+  end
+  if ft == 'floggraph' or ft == 'fugitive' or ft == 'oil' or ft == 'term' then
+    return vim.fn.expand('%')
+  end
+  if ft == 'fugitiveblame' then
+    return 'Fugitive Blame'
+  end
+  if ft == 'qf' then
+    local is_loclist = vim.fn.win_gettype(winid) == 'loclist'
+    local type = is_loclist and 'Location List' or 'Quickfix List'
+    local what = { title = 0, size = 0, idx = 0 }
+    local list = is_loclist and vim.fn.getloclist(0, what) or vim.fn.getqflist(what)
+    -- The output format is like {list type} > {list title} > {current idx}
+    -- E.g., "Quickfix List > Diagnostics > [1/10]"
+    local items = {}
+    table.insert(items, type) -- type
+    if list.title ~= '' then
+      table.insert(items, list.title) -- title
+    end
+    table.insert(items, string.format('[%s/%s]', list.idx, list.size)) -- index
+    return table.concat(items, ' ' .. delimiter .. ' ')
+  end
+  if ft == 'tagbar' then
+    return 'Tagbar'
+  end
+  if vim.fn.win_gettype(winid) == 'command' then
+    return 'Command-line Window'
+  end
+  -- For window with normal filetype
   local filename = vim.fn.expand('%:t')
   if filename == '' then
     filename = '[No Name]'
@@ -152,13 +169,6 @@ M.render = function()
   -- It is the first part of the winbar with powerline style
   local header = header_component()
   table.insert(items, header)
-
-  -- Special buffer
-  local special_ft = special_buffer_component()
-  if special_ft ~= '' then
-    table.insert(items, special_ft)
-    return table.concat(items, ' ')
-  end
 
   -- Path
   local path = path_component()
@@ -176,9 +186,9 @@ M.render = function()
   local warn_cnt = diag_cnt[vim.diagnostic.severity.WARN] or 0
   local hl = error_cnt > 0 and 'WinbarError' or (warn_cnt > 0 and 'WinbarWarn' or 'Winbar')
 
-  -- Filename
-  local filename = filename_component()
-  table.insert(items, string.format('%%#%s#%s%%*', hl, filename))
+  -- Name
+  local name = name_component()
+  table.insert(items, string.format('%%#%s#%s%%*', hl, name))
 
   -- Diagnostic count
   local diag_total = error_cnt + warn_cnt

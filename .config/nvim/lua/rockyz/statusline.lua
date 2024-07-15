@@ -1,14 +1,11 @@
--- For aesthetic and stylistic consistency, add a space before each component in left section, and
--- after each component in the right section.
---
 -- Ref:
 -- MariaSolOs/dotfiles
 -- echasnovski/mini.statusline
 -- nvim-lualine/lualine.nvim
 
 local icons = require('rockyz.icons')
-local powerline_left = ' ' .. icons.separators.chevron_right
-local powerline_right = icons.separators.chevron_left .. ' '
+local powerline_left = icons.separators.chevron_right
+local powerline_right = icons.separators.chevron_left
 local special_filetypes = require('rockyz.special_filetypes')
 
 local M = {}
@@ -96,9 +93,9 @@ function M.git_branch_component(trunc_width)
   end
   -- Don't show icon when truncated
   if is_truncated(trunc_width) then
-    return ' ' .. head
+    return head
   end
-  return string.format(' %%#StlIcon#%s%%*%s', icons.git.branch, head)
+  return string.format('%%#StlIcon#%s%%*%s', icons.git.branch, head)
 end
 
 function M.git_diff_component(trunc_width)
@@ -114,12 +111,12 @@ function M.git_diff_component(trunc_width)
   local result = {}
   for _, type in ipairs({ 'added', 'deleted', 'modified' }) do
     if git_diff[type] and git_diff[type] > 0 then
-      local format_str = ' %%#StlGit' .. type .. '#%s%s%%*'
+      local format_str = '%%#StlGit' .. type .. '#%s%s%%*'
       table.insert(result, string.format(format_str, icons.git[type], git_diff[type]))
     end
   end
   if #result > 0 then
-    return table.concat(result)
+    return table.concat(result, ' ')
   else
     return ''
   end
@@ -144,9 +141,9 @@ function M.lsp_component(trunc_width)
     end
   end
   if next(client_names) == nil then
-    return ' %#StlComponentInactive#[LS Inactive]%*'
+    return '%#StlComponentInactive#[LS Inactive]%*'
   end
-  return string.format(' [%s]', table.concat(client_names, ', '))
+  return string.format('[%s]', table.concat(client_names, ', '))
 end
 
 ----------------
@@ -163,12 +160,12 @@ function M.search_component()
     return ''
   end
   if s_count.incomplete == 1 then
-    return string.format('%%#StlSearchCnt#%s%s%%* ', icons.misc.search, '[?/?]')
+    return string.format('%%#StlSearchCnt#%s%s%%*', icons.misc.search, '[?/?]')
   end
   local too_many = string.format('>%d', s_count.maxcount)
   local current = s_count.current > s_count.maxcount and too_many or s_count.current
   local total = s_count.total > s_count.maxcount and too_many or s_count.total
-  return string.format('%%#StlSearchCnt#%s[%s/%s]%%* ', icons.misc.search, current, total)
+  return string.format('%%#StlSearchCnt#%s[%s/%s]%%*', icons.misc.search, current, total)
 end
 
 -- Diagnostics
@@ -185,14 +182,14 @@ function M.diagnostic_component()
     local n = counts[vim.diagnostic.severity[level.name]] or 0
     if n > 0 then
       if vim.diagnostic.is_enabled() then
-        table.insert(res, string.format('%%#StlDiagnostic%s#%s%s%%* ', level.name, level.icon, n))
+        table.insert(res, string.format('%%#StlDiagnostic%s#%s%s%%*', level.name, level.icon, n))
       else
         -- Use gray color if diagnostic is disabled
         table.insert(res, string.format('%%#StlComponentInactive#%s%s%%* ', level.icon, n))
       end
     end
   end
-  return table.concat(res, '')
+  return table.concat(res, ' ')
 end
 
 function M.spell_component(trunc_width)
@@ -200,7 +197,7 @@ function M.spell_component(trunc_width)
     return ''
   end
   if vim.o.spell then
-    return string.format('%%#StlComponentOn#%s%%* ', icons.misc.check)
+    return string.format('%%#StlComponentOn#%s%%*', icons.misc.check)
   end
   return ''
 end
@@ -217,9 +214,9 @@ function M.treesitter_component()
   local hl_enabled = vim.treesitter.highlighter.active[buf]
   local has_parser = require('nvim-treesitter.parsers').has_parser()
   if not has_parser then
-    return string.format('%%#StlComponentInactive#%s%%* ', res)
+    return string.format('%%#StlComponentInactive#%s%%*', res)
   end
-  local format_str = hl_enabled and '%%#StlComponentOn#%s%%* ' or '%%#StlComponentOff#%s%%* '
+  local format_str = hl_enabled and '%%#StlComponentOn#%s%%*' or '%%#StlComponentOff#%s%%*'
   return string.format(format_str, res)
 end
 
@@ -234,7 +231,7 @@ function M.indent_component(trunc_width)
   local expandtab = get_local_option('expandtab')
   local spaces_cnt = expandtab and get_local_option('shiftwidth') or get_local_option('tabstop')
   local res = (expandtab and 'SP:' or 'TAB:') .. spaces_cnt
-  return string.format('%%#StlIcon#%s%%*%s ', icons.misc.indent, res)
+  return string.format('%%#StlIcon#%s%%*%s', icons.misc.indent, res)
 end
 
 function M.encoding_component(trunc_width)
@@ -242,7 +239,10 @@ function M.encoding_component(trunc_width)
     return ''
   end
   local encoding = vim.bo.fileencoding
-  return encoding ~= '' and encoding .. ' ' or ''
+  if vim.bo.bomb then
+    return encoding .. ' [BOM]'
+  end
+  return encoding
 end
 
 local function get_filesize()
@@ -277,13 +277,13 @@ function M.fileinfo_component(trunc_width)
   end
   -- No file
   if filetype == '' then
-    return string.format('%%#StlComponentInactive#%s%s%%*%s ', icons.misc.file, '[No File]', size)
+    return string.format('%%#StlComponentInactive#%s%s%%*%s', icons.misc.file, '[No File]', size)
   end
   -- Handle special filetype
   local sp_ft = special_filetypes[filetype]
   if sp_ft then
     local icon = sp_ft.icon
-    return string.format('%%#StlIcon#%s %%#StlFiletype#%s%%*%s ', icon, filetype, size)
+    return string.format('%%#StlIcon#%s %%#StlFiletype#%s%%*%s', icon, filetype, size)
   end
   -- Normal filetype
   local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
@@ -295,9 +295,9 @@ function M.fileinfo_component(trunc_width)
       vim.api.nvim_set_hl(0, icon_hl, { fg = icon_color, bg = bg_color })
       cached_hls[icon_hl] = true
     end
-    return string.format('%%#%s#%s %%#StlFiletype#%s%%*%s ', icon_hl, icon, filetype, size)
+    return string.format('%%#%s#%s %%#StlFiletype#%s%%*%s', icon_hl, icon, filetype, size)
   end
-  return string.format('%s%%#StlFiletype#%s%%*%s ', icons.misc.file, filetype, size)
+  return string.format('%s%%#StlFiletype#%s%%*%s', icons.misc.file, filetype, size)
 end
 
 function M.location_component()
@@ -325,7 +325,7 @@ function M.render()
       M.git_branch_component(120),
       M.git_diff_component(120),
       M.lsp_component(120),
-    }, powerline_left),
+    }, ' ' .. powerline_left .. ' '),
     '%=',
     concat_components({
       M.search_component(),
@@ -335,9 +335,9 @@ function M.render()
       M.indent_component(120),
       M.encoding_component(120),
       M.fileinfo_component(120),
-    }, powerline_right),
+    }, ' ' .. powerline_right .. ' '),
     M.location_component(),
-  })
+  }, ' ')
 end
 
 -- Refresh

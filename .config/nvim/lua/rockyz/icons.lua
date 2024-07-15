@@ -108,7 +108,7 @@ icons.misc = {
   source_control = ' ',
   task = ' ',
   term = ' ',
-  tree = '󰐅 ',
+  tree = ' ',
 }
 
 return icons

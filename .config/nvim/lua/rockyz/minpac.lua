@@ -96,36 +96,18 @@ local function pack_init()
   end
 end
 
-local old_git_dir = nil
-local old_work_tree = nil
-
-local function store_old_envs()
-  old_git_dir = vim.env.GIT_DIR
-  old_work_tree = vim.env.GIT_WORK_TREE
-  vim.env.GIT_DIR = nil
-  vim.env.GIT_WORK_TREE = nil
-end
-
-local function restore_envs()
-  vim.env.GIT_DIR = old_git_dir
-  vim.env.GIT_WORK_TREE = old_work_tree
-end
-
 -- Install/update plugins
 vim.api.nvim_create_user_command('PluginUpdate', function()
-  store_old_envs()
+  vim.env.GIT_DIR = nil
+  vim.env.GIT_WORK_TREE = nil
   pack_init()
-  vim.fn['minpac#update']('', {
-    ['do'] = function()
-      restore_envs()
-    end
-  })
+  vim.fn['minpac#update']()
 end, { bang = true })
 
 -- Delete plugins
 vim.api.nvim_create_user_command('PluginDelete', function()
-  store_old_envs()
+  vim.env.GIT_DIR = nil
+  vim.env.GIT_WORK_TREE = nil
   pack_init()
   vim.fn['minpac#clean']()
-  restore_envs()
 end, { bang = true })

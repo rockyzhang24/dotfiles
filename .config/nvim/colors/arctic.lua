@@ -48,8 +48,6 @@ local scrollbar = '#434343' -- scrollbarSlider.activeBackground
 local indent_guide_fg = '#404040'
 local indent_guide_scope_fg = '#707070'
 local label_fg = '#c8c8c8' -- entity.name.label
-local tab_bottom_border = '#2b2b2b' -- editorGroupHeader.tabsBorder, tab.border
-local tab_bottom_border_active = '#0078d4' -- tab.activeBorderTop
 local win_separator = '#333333' -- editorGroup.border
 local icon_fg = '#d7ba7d' -- fg for icons on tabline, winbar and statusline
 
@@ -61,6 +59,10 @@ local statusline_green = '#16825d'
 local statusline_violet = '#646695'
 local statusline_red = '#c72e0f'
 local statusline_gray = '#858585'
+
+local tab_active_bg = '#353535' -- the backgroud for the active tabpage. VSCode uses normal bg but it's too subtle in Neovim. This color is 10% lighter than the norm_bg.
+local tab_bottom_border = '#2b2b2b' -- editorGroupHeader.tabsBorder, tab.border
+local tab_bottom_border_active = '#0078d4' -- tab.activeBorderTop
 
 -- 256 colros
 local lightsky_blue = '#87afd7' -- 110
@@ -123,10 +125,13 @@ local groups = {
   WinbarSpecialIcon = { fg = icon_fg, bg = norm_bg }, -- icon for special filetype
   WinbarPathPrefix = { fg = icon_fg, bg = norm_bg, bold = true }, -- the prefix of the path for the special folders such as CONFIG
   -- Tabline
-  TabBorderRight = { fg = tab_bottom_border, bg = black4, underline = true, sp = tab_bottom_border }, -- the right border of inactive tab
-  TabBorderRightActive = { fg = tab_bottom_border, bg = norm_bg, underline = true, sp = tab_bottom_border_active }, -- the right border of active tab
+  TabBorderRight = { fg = tab_bottom_border, bg = black4, underline = true, sp = tab_bottom_border }, -- the right border of each tab
   TabDefaultIcon = { fg = icon_fg, bg = black4, underline = true, sp = tab_bottom_border }, -- icon for special filetype on inactive tab
-  TabDefaultIconActive = { fg = icon_fg, bg = norm_bg, underline = true, sp = tab_bottom_border_active }, -- icon for special filetype on active tab
+  TabDefaultIconActive = { fg = icon_fg, bg = tab_active_bg, underline = true, sp = tab_bottom_border_active }, -- icon for special filetype on active tab
+  TabError = { fg = error_list, bg = black4, underline = true, sp = tab_bottom_border },
+  TabErrorActive = { fg = error_list, bg = tab_active_bg, underline = true, sp = tab_bottom_border_active },
+  TabWarn = { fg = warn_list , bg = black4, underline = true, sp = tab_bottom_border },
+  TabWarnActive = { fg = warn_list, bg = tab_active_bg, underline = true, sp = tab_bottom_border_active },
 
   --
   -- Editor
@@ -182,7 +187,7 @@ local groups = {
   StatusLineNC = { fg = gray, bg = black4 },
   TabLine = { fg = gray4, bg = black4, underline = true, sp = tab_bottom_border }, -- tab.inactiveBackground, tab.inactiveForeground
   TabLineFill = { fg = 'NONE', bg = black4, underline = true, sp = tab_bottom_border }, -- editorGroupHeader.tabsBackground
-  TabLineSel = { fg = white, bg = norm_bg, underline = true, sp = tab_bottom_border_active }, -- tab.activeBackground, tab.activeForeground
+  TabLineSel = { fg = white, bg = tab_active_bg, underline = true, sp = tab_bottom_border_active }, -- tab.activeBackground, tab.activeForeground
   Title = { fg = dark_blue, bold = true },
   Visual = { bg = '#264F78' }, -- editor.selectionBackground
   -- VisualNOS = { },

@@ -37,22 +37,17 @@ function M.qftf(info)
   end
 
   -- Construct an entry for each list item in the format below and apply highlights
-  -- <sign> <filename> <lnum>-<end_lnum>:<col>-<end_col> [<type>] <text>
+  -- <filename> <lnum>-<end_lnum>:<col>-<end_col> [<type>] <text>
   for i = info.start_idx, info.end_idx do
     local raw_item = raw_items[i]
     if raw_item then
       local item = qf_utils.format_qf_item(raw_item)
       local entry = {}
       local line_idx = i - 1
-      -- Sign
-      local sign = item.sign
-      table.insert(entry, sign)
+      -- Initialize the start col and end col for highlighting. Update them in each section that
+      -- will be highlighted.
       local hl_col_start = 0
-      local hl_col_end = #sign
-      table.insert(
-        highlights,
-        { group = item.sign_hl, line = line_idx, col = hl_col_start, end_col = hl_col_end }
-      )
+      local hl_col_end = -1
       -- Filename
       local fname = item.fname
       if fname ~= '' then
@@ -92,11 +87,33 @@ function M.qftf(info)
       local type = item.type ~= '' and '[' .. item.type .. ']' or ''
       if type ~= '' then
         table.insert(entry, type)
+        hl_col_start = hl_col_end + 1
+        hl_col_end = hl_col_start + #type
+        table.insert(
+          highlights,
+          {
+            group = item.type_hl,
+            line = line_idx,
+            col = hl_col_start,
+            end_col = hl_col_end,
+          }
+        )
       end
       -- Text
       local text = item.text
       if text ~= '' then
         table.insert(entry, text)
+        hl_col_start = hl_col_end + 1
+        hl_col_end = hl_col_start + #text
+        table.insert(
+          highlights,
+          {
+            group = item.type_hl,
+            line = line_idx,
+            col = hl_col_start,
+            end_col = hl_col_end,
+          }
+        )
       end
 
       table.insert(entries, table.concat(entry, ' '))

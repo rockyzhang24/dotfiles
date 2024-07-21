@@ -2,15 +2,18 @@ local M = {}
 
 local icons = require('rockyz.icons')
 
+--------------
+-- Format item
+--------------
+
 local MAX_FILENAME_LEN = 50 -- threshold for filename length. 0 means no limit.
 local TRUNCATE_PREFIX = icons.misc.ellipsis
 
-local signs = {
-  E = { text = icons.diagnostics.ERROR, hl = 'DiagnosticSignError' },
-  W = { text = icons.diagnostics.WARN, hl = 'DiagnosticSignWarn' },
-  I = { text = icons.diagnostics.INFO, hl = 'DiagnosticSignInfo' },
-  H = { text = icons.diagnostics.HINT, hl = 'DiagnosticSignHint' },
-  undefined = { text = icons.misc.circle_filled, hl = 'DiagnosticSignOk' },
+local type_hl = {
+  E = 'DiagnosticSignError',
+  W = 'DiagnosticSignWarn',
+  I = 'DiagnosticSignInfo',
+  H = 'DiagnosticSignHint',
 }
 local fname_hl = 'Directory'
 local lnum_col_hl = 'Number'
@@ -33,20 +36,15 @@ end
 ---@return table
 function M.format_qf_item(raw)
   local item = {
-    sign = '',
     fname = '', -- filename
     lnum = '', -- <lnum>-<end_lnum>
     col = '', -- <col>-<end_col>
     type = raw.type,
     text = raw.text,
-    sign_hl = '',
     fname_hl = fname_hl,
     lnum_col_hl = lnum_col_hl,
+    type_hl = type_hl[raw.type],
   }
-  -- Sign
-  local sign = signs[item.type] or signs.undefined
-  item.sign = sign.text
-  item.sign_hl = sign.hl
   --Filename
   if raw.bufnr > 0 then
     local fname = trim_path(vim.fn.bufname(raw.bufnr))

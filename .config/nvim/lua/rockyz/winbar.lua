@@ -83,13 +83,13 @@ local function path_component()
   end
   -- Assemble the icon, prefix, and the path
   if path == '' then
-    return '%#WinbarPathPrefix#' .. icons.misc.folder .. ' ' .. prefix .. '%*'
+    return '%#WinbarPathPrefix#' .. icons.misc.folder .. prefix .. '%*'
   else
     path = path:gsub('/', ' ' .. delimiter .. ' ')
     if prefix == '' then
-      return '%#WinbarPathPrefix#' .. icons.misc.folder .. '%* ' .. path
+      return '%#WinbarPathPrefix#' .. icons.misc.folder .. '%*' .. path
     else
-      return '%#WinbarPathPrefix#' .. icons.misc.folder .. ' ' .. prefix .. '%* ' .. delimiter .. ' ' .. path
+      return '%#WinbarPathPrefix#' .. icons.misc.folder .. prefix .. '%* ' .. delimiter .. ' ' .. path
     end
   end
 end
@@ -103,7 +103,7 @@ local function icon_component()
     return string.format(fmt_str, special_filetypes[ft].icon)
   end
   if vim.fn.win_gettype(winid) == 'command' then
-    return string.format(fmt_str, special_filetypes.cmdwin)
+    return string.format(fmt_str, special_filetypes.cmdwin.icon)
   end
   -- Window with normal filetype
   local has_devicons, devicons = pcall(require, 'nvim-web-devicons')

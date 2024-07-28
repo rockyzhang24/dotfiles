@@ -1,33 +1,43 @@
-local norm_fg = '#cccccc'
-local norm_bg = '#1f1f1f'
+--
+-- Inspired by VSCode's Dark Modern theme
+-- Author: Rocky Zhang (@rockyzhang24)
+--
 
-local dark_red = '#D16969'
+local dark_red = '#d16969'
 local orange = '#f9ae28'
-local brown = '#CE9178'
-local yellow = '#DCDCAA'
-local yellow_orange = '#D7BA7D'
-local green = '#6A9955'
-local blue_green = '#4EC9B0'
-local light_green = '#B5CEA8'
+local brown = '#ce9178'
+local yellow = '#dcdcaa'
+local yellow_orange = '#d7ba7d'
+local green = '#6a9955'
+local blue_green = '#4ec9b0'
 local blue = '#4fc1ff'
-local blue2 = '#2aaaff'
-local light_blue = '#9CDCFE'
-local dark_blue = '#569CD6'
-local cornflower_blue = '#6796E6'
-local dark_pink = '#C586C0'
+local light_blue = '#9cdcfe'
+local dark_blue = '#569cd6'
+local dark_pink = '#c586c0'
 local bright_pink = '#f92672'
 local purple = '#ae81ff'
 
 local white = '#ffffff'
+
 local gray = '#51504f' -- StatuslineNC's fg
 local gray2 = '#6e7681' -- LineNr (editorLineNumber.foreground)
 local gray3 = '#808080'
 local gray4 = '#9d9d9d'
+
 local black = '#2d2d2d' -- TabLine
 local black2 = '#252526'
 local black3 = '#282828' -- CursorLine (editor.lineHighlightBorder). Or use #2a2d2e (list.hoverBackground) for a brighter color
 local black4 = '#181818' -- Statusline and Tabline (editorGroupHeader.tabsBackground, tab.inactiveBackground)
 
+local norm_fg = '#cccccc'
+local norm_bg = '#1f1f1f'
+
+-- Signs for git in signcolumn
+local gutter_git_added = '#2ea043' -- editorGutter.addedBackground
+local gutter_git_deleted = '#f85149' -- editorGutter.deletedBackground
+local gutter_git_modified = '#0078d4' -- editorGutter.modifiedBackground
+
+-- Undercurl for diagnostics
 local error_red = '#F14C4C'
 local warn_yellow = '#CCA700'
 local info_blue = '#3794ff'
@@ -37,11 +47,8 @@ local ok_green = '#89d185' -- color for success, so I use notebookStatusSuccessI
 local error_list = '#f88070' -- list.errorForeground, for list items (like files in file explorer) containing errors
 local warn_list = '#cca700' -- list.warningForeground, for list items containing warnings
 
-local gutter_git_added = '#2ea043' -- editorGutter.addedBackground
-local gutter_git_deleted = '#f85149' -- editorGutter.deletedBackground
-local gutter_git_modified = '#0078d4' -- editorGutter.modifiedBackground
-
-local selected_entry_bg = '#04395e' -- editorSuggestWidget.selectedBackground
+local selected_item_bg = '#04395e' -- editorSuggestWidget.selectedBackground
+local matched_chars = '#2aaaff' -- editorSuggestWidget.focusHighlightForeground, color for the matched characters in the autocomplete menu
 local folded_line_bg = '#212d3a' -- editor.foldBackground
 local floatwin_border = '#454545' -- fg for the border of any floating window
 local scrollbar = '#434343' -- scrollbarSlider.activeBackground
@@ -51,18 +58,29 @@ local label_fg = '#c8c8c8' -- entity.name.label
 local win_separator = '#333333' -- editorGroup.border
 local icon_fg = '#d7ba7d' -- fg for icons on tabline, winbar and statusline
 
-local statusline_blue = '#007acc'
-local statusline_orange = '#cc6633'
-local statusline_purple = '#68217a'
-local statusline_pink = '#c586c0'
-local statusline_green = '#16825d'
-local statusline_violet = '#646695'
-local statusline_red = '#c72e0f'
-local statusline_gray = '#858585'
+-- Tabline
 
-local tab_active_bg = '#353535' -- the backgroud for the active tabpage. VSCode uses normal bg but it's too subtle in Neovim. This color is 10% lighter than the norm_bg.
-local tab_bottom_border = '#2b2b2b' -- editorGroupHeader.tabsBorder, tab.border
+local tab_bg = black4 -- editorGroupHeader.tabsBackground
+local tab_active_fg = white -- tab.activeForeground
+local tab_active_bg = '#353535' -- tab.activeBackground, 10% lighter than the norm_bg.
+local tab_inactive_fg = '#ccccc7' -- tab.inactiveForeground
+local tab_inactive_bg = tab_bg -- tab.inactiveBackground
+local tab_border = '#2b2b2b' -- editorGroupHeader.tabsBorder, tab.border
 local tab_bottom_border_active = '#0078d4' -- tab.activeBorderTop
+
+-- Statusline
+local stl_fg = white -- statusBar.foreground
+local stl_bg = black4 -- statusBar.background
+local stl_normal = '#007acc'
+local stl_insert = '#cc6633'
+local stl_visual = '#68217a'
+local stl_replace = '#c586c0'
+local stl_command = '#16825d'
+local stl_terminal = '#646695'
+local stl_pending = '#c72e0f'
+local stl_inactive = '#858585' -- component is inactive (e.g., treesitter is inactive if no parser)
+local stl_on = '#16825d' -- component is on (e.g., treesitter highlight is on)
+local stl_off = '#c72e0f' -- component is off (e.g., treesitter highlight is off)
 
 -- 256 colros
 local lightsky_blue = '#87afd7' -- 110
@@ -89,56 +107,57 @@ local groups = {
   GutterGitModified = { fg = gutter_git_modified }, -- editorGutter.modifiedBackground
   Breadcrumb = { fg = '#a9a9a9', bg = norm_bg }, -- breadcrumb.foreground/background
   ScrollbarSliderHover = { bg = '#4f4f4f' }, -- scrollbarSlider.hoverBackground
-  PeekViewBorder = { fg = '#3794ff' },
+  PeekViewBorder = { fg = '#3794ff' }, -- peekView.border
   PeekViewNormal = { bg = norm_bg }, -- peekViewEditor.background
   PeekViewTitle = { fg = white }, -- peekViewTitleLabel.foreground
-  PeekViewCursorLine = { bg = black3 },
+  PeekViewCursorLine = { bg = black3 }, -- same with CursorLine
   PeekViewMatchHighlight = { bg ='#5d4616' }, -- peekViewEditor.matchHighlightBackground
   GhostText = { fg = '#6b6b6b' }, -- editorGhostText.foreground
   Icon = { fg = '#cccccc' }, -- icon.foreground
   Description = { fg = gray4 }, -- descriptionForeground
   ProgressBar = { fg = '#0078d4' }, -- progressBar.background
-  MatchedCharacters = { fg = blue2 }, -- editorSuggestWidget.highlightForeground
+  MatchedCharacters = { fg = matched_chars }, -- editorSuggestWidget.highlightForeground
   Hint = "MatchedCharacters", -- for the hint letter in options, e.g., the q in [q]uickfix
   -- For the unused code, use Identifier's fg (9cdcfe) as the base color,
-  -- editorUnnecessaryCode.opacity is 000000aa (the alpha value is aa),
-  -- so the color will be 9cdcfeaa. Converting hexa to hex gets 729db4.
+  -- editorUnnecessaryCode.opacity is 000000aa (the alpha value is aa), so the color will be
+  -- 9cdcfeaa. Converting hexa to hex gets 729db4.
   UnnecessaryCode = { fg = '#729db4' },
   -- Git diff
-  DiffTextAdded = { bg = '#214d29' }, -- diffEditor.insertedTextBackground (DiffLineAdded as its background)
-  DiffTextDeleted = { bg = '#712928' }, -- diffEditor.removedTextBackground (DiffLineDeleted as its background)
-  DiffTextChanged = { bg = '#0E2FDC' },
   DiffLineAdded = { bg = '#203424' }, -- diffEditor.insertedLineBackground
   DiffLineDeleted = { bg = '#442423' }, -- diffEditor.removedLineBackground
   DiffLineChanged = { bg = '#0e2f44' },
+  DiffTextAdded = { bg = '#214d29' }, -- diffEditor.insertedTextBackground (DiffLineAdded as its background)
+  DiffTextDeleted = { bg = '#712928' }, -- diffEditor.removedTextBackground (DiffLineDeleted as its background)
+  DiffTextChanged = { bg = '#0E2FDC' },
   -- Quickfix list
   QfSelection = { bg = '#3a3d41', bold = true }, -- terminal.inactiveSelectionBackground
   -- Inline hints
   InlayHint = { fg = '#969696', bg = '#242424' }, -- editorInlayHint.foreground/background
   InlayHintType = "InlayHint", -- editorInlayHint.typeBackground/typeForeground
   -- Winbar
-  WinbarHeader = { fg = white, bg = statusline_blue }, -- the very beginning part of winbar
-  WinbarTriangleSep = { fg = statusline_blue }, -- the triangle separator in winbar
+  WinbarHeader = { fg = white, bg = stl_normal }, -- the very beginning part of winbar
+  WinbarTriangleSep = { fg = stl_normal }, -- the triangle separator in winbar
   WinbarModified = { fg = norm_fg, bg = norm_bg }, -- the modification indicator
   WinbarError = { fg = error_list, bg = norm_bg }, -- the filename color if the current buffer has errors
   WinbarWarn = { fg = warn_list, bg = norm_bg }, -- the filename color if the current buffer has warnings
   WinbarSpecialIcon = { fg = icon_fg, bg = norm_bg }, -- icon for special filetype
   WinbarPathPrefix = { fg = icon_fg, bg = norm_bg, bold = true }, -- the prefix of the path for the special folders such as CONFIG
   -- Tabline
-  TabBorderRight = { fg = tab_bottom_border, bg = black4, underline = true, sp = tab_bottom_border }, -- the right border of each tab
-  TabDefaultIcon = { fg = icon_fg, bg = black4, underline = true, sp = tab_bottom_border }, -- icon for special filetype on inactive tab
+  TabBorderRight = { fg = tab_border, bg = tab_inactive_bg, underline = true, sp = tab_border }, -- the right border of each tab
+  TabDefaultIcon = { fg = icon_fg, bg = tab_inactive_bg, underline = true, sp = tab_border }, -- icon for special filetype on inactive tab
   TabDefaultIconActive = { fg = icon_fg, bg = tab_active_bg, underline = true, sp = tab_bottom_border_active }, -- icon for special filetype on active tab
-  TabError = { fg = error_list, bg = black4, underline = true, sp = tab_bottom_border },
+  TabError = { fg = error_list, bg = tab_inactive_bg, underline = true, sp = tab_border },
   TabErrorActive = { fg = error_list, bg = tab_active_bg, underline = true, sp = tab_bottom_border_active },
-  TabWarn = { fg = warn_list , bg = black4, underline = true, sp = tab_bottom_border },
+  TabWarn = { fg = warn_list , bg = tab_inactive_bg, underline = true, sp = tab_border },
   TabWarnActive = { fg = warn_list, bg = tab_active_bg, underline = true, sp = tab_bottom_border_active },
 
   --
   -- Editor
   --
+
   CursorLine = { bg = black3 },
   CursorColumn = { bg = black3 },
-  ColorColumn = { bg = black2 }, -- #5a5a5a in VSCode (editorRuler.foreground) it's too bright
+  ColorColumn = { bg = black2 }, -- editorRuler.foreground, #5a5a5a in VSCode that's too bright
   Conceal = { fg = gray2 },
   Cursor = { fg = norm_bg, bg = norm_fg },
   -- lCursor = { },
@@ -162,7 +181,7 @@ local groups = {
   SignColumn = { bg = norm_bg },
   IncSearch = { bg = '#9e6a03' }, -- editor.findMatchBackground
   -- Substitute = { },
-  MatchParen = { bg = gray, bold = true, underline = true },
+  MatchParen = { bg = gray, bold = true, underline = true }, -- editorBracketMatch.background
   ModeMsg = { fg = norm_fg },
   MsgArea = { fg = norm_fg },
   -- MsgSeparator = { },
@@ -171,7 +190,7 @@ local groups = {
   Normal = { fg = norm_fg, bg = norm_bg },
   -- NormalNC = { },
   Pmenu = { fg = norm_fg, bg = norm_bg }, -- editorSuggestWidget.background/foreground
-  PmenuSel = { fg = white, bg = selected_entry_bg },
+  PmenuSel = { fg = white, bg = selected_item_bg }, -- editorSuggestWidget.selectedForeground/selectedBackground
   PmenuSbar = { bg = norm_bg },
   PmenuThumb = "ScrollbarSlider",
   NormalFloat = "Pmenu",
@@ -185,9 +204,9 @@ local groups = {
   SpellRare  = { undercurl = true, sp = info_blue  },
   StatusLine = { bg = black4 },
   StatusLineNC = { fg = gray, bg = black4 },
-  TabLine = { fg = gray4, bg = black4, underline = true, sp = tab_bottom_border }, -- tab.inactiveBackground, tab.inactiveForeground
-  TabLineFill = { fg = 'NONE', bg = black4, underline = true, sp = tab_bottom_border }, -- editorGroupHeader.tabsBackground
-  TabLineSel = { fg = white, bg = tab_active_bg, underline = true, sp = tab_bottom_border_active }, -- tab.activeBackground, tab.activeForeground
+  TabLine = { fg = tab_inactive_fg, bg = tab_inactive_bg, underline = true, sp = tab_border }, -- tab.inactiveBackground, tab.inactiveForeground
+  TabLineFill = { fg = 'NONE', bg = tab_bg, underline = true, sp = tab_border }, -- editorGroupHeader.tabsBackground
+  TabLineSel = { fg = tab_active_fg, bg = tab_active_bg, underline = true, sp = tab_bottom_border_active }, -- tab.activeBackground, tab.activeForeground
   Title = { fg = dark_blue, bold = true },
   Visual = { bg = '#264F78' }, -- editor.selectionBackground
   -- VisualNOS = { },
@@ -200,46 +219,47 @@ local groups = {
   --
   -- Statusline
   --
-  StlModeNormal = { fg = white, bg = statusline_blue },
-  StlModeInsert = { fg = white, bg = statusline_orange },
-  StlModeVisual = { fg = white, bg = statusline_purple },
-  StlModeReplace = { fg = white, bg = statusline_pink },
-  StlModeCommand = { fg = white, bg = statusline_green },
-  StlModeTerminal = { fg = white, bg = statusline_violet },
-  StlModePending = { fg = white, bg = statusline_red },
 
-  StlModeSepNormal = { fg = statusline_blue, bg = black4 },
-  StlModeSepInsert = { fg = statusline_orange, bg = black4 },
-  StlModeSepVisual = { fg = statusline_purple, bg = black4 },
-  StlModeSepReplace = { fg = statusline_pink, bg = black4 },
-  StlModeSepCommand = { fg = statusline_green, bg = black4 },
-  StlModeSepTerminal = { fg = statusline_violet, bg = black4 },
-  StlModeSepPending = { fg = statusline_red, bg = black4 },
+  StlModeNormal = { fg = stl_fg, bg = stl_normal },
+  StlModeInsert = { fg = stl_fg, bg = stl_insert },
+  StlModeVisual = { fg = stl_fg, bg = stl_visual },
+  StlModeReplace = { fg = stl_fg, bg = stl_replace },
+  StlModeCommand = { fg = stl_fg, bg = stl_command },
+  StlModeTerminal = { fg = stl_fg, bg = stl_terminal },
+  StlModePending = { fg = stl_fg, bg = stl_pending },
 
-  StlIcon = { fg = icon_fg, bg = black4 },
+  StlModeSepNormal = { fg = stl_normal, bg = stl_bg },
+  StlModeSepInsert = { fg = stl_insert, bg = stl_bg },
+  StlModeSepVisual = { fg = stl_visual, bg = stl_bg },
+  StlModeSepReplace = { fg = stl_replace, bg = stl_bg },
+  StlModeSepCommand = { fg = stl_command, bg = stl_bg },
+  StlModeSepTerminal = { fg = stl_terminal, bg = stl_bg },
+  StlModeSepPending = { fg = stl_pending, bg = stl_bg },
+
+  StlIcon = { fg = icon_fg, bg = stl_bg },
 
   -- The status of the component. E.g., for treesitter component
   -- * the current buffer has no treesitter parser: StlComponentInactive
   -- * it has treesitter parser, but treesitter highlight is on/off: StlComponentOn/StlComponentOff
-  StlComponentInactive = { fg = statusline_gray, bg = black4 },
-  StlComponentOn = { fg = statusline_green, bg = black4 },
-  StlComponentOff = { fg = statusline_red, bg = black4 },
+  StlComponentInactive = { fg = stl_inactive, bg = stl_bg },
+  StlComponentOn = { fg = stl_on, bg = stl_bg },
+  StlComponentOff = { fg = stl_off, bg = stl_bg },
 
-  StlGitadded = { fg = gutter_git_added, bg = black4 },
-  StlGitdeleted = { fg = gutter_git_deleted, bg = black4 },
-  StlGitmodified = { fg = gutter_git_modified, bg = black4 },
+  StlGitadded = { fg = gutter_git_added, bg = stl_bg },
+  StlGitdeleted = { fg = gutter_git_deleted, bg = stl_bg },
+  StlGitmodified = { fg = gutter_git_modified, bg = stl_bg },
 
-  StlDiagnosticERROR = { fg = error_red, bg = black4 },
-  StlDiagnosticWARN = { fg = warn_yellow, bg = black4 },
-  StlDiagnosticINFO = { fg = info_blue, bg = black4 },
-  StlDiagnosticHINT = { fg = hint_gray, bg = black4 },
+  StlDiagnosticERROR = { fg = error_red, bg = stl_bg },
+  StlDiagnosticWARN = { fg = warn_yellow, bg = stl_bg },
+  StlDiagnosticINFO = { fg = info_blue, bg = stl_bg },
+  StlDiagnosticHINT = { fg = hint_gray, bg = stl_bg },
 
-  StlSearchCnt = { fg = statusline_orange, bg = black4 },
+  StlSearchCnt = { fg = stl_insert, bg = stl_bg },
 
   StlMacroRecording = "StlComponentOff",
   StlMacroRecorded = "StlComponentOn",
 
-  StlFiletype = { fg = white, bg = black4, bold = true },
+  StlFiletype = { fg = stl_fg, bg = stl_bg, bold = true },
 
   StlLocComponent = "StlModeNormal",
   StlLocComponentSep = "StlModeSepNormal",
@@ -247,12 +267,15 @@ local groups = {
   --
   -- Syntax
   --
+  -- There are the common vim syntax groups.
+  --
+
   Comment = { fg = green },
 
   Constant = { fg = dark_blue },
   String = { fg = brown },
   Character = "Constant",
-  Number = { fg = light_green },
+  Number = { fg = '#b5cea8' },
   Boolean = "Constant",
   Float = "Number",
 
@@ -276,7 +299,7 @@ local groups = {
   Type = { fg = dark_blue },
   StorageClass = "Type",
   Structure = "Type",
-  Typedef = "Type",
+  Typedef = "Keyword",
 
   Special = { fg = yellow_orange },
   SpecialChar = "Special",
@@ -293,8 +316,10 @@ local groups = {
   --
   -- diff
   --
-  -- VSCode doesn't have foreground for git added/removed/changed, so here I
-  -- use the corresponding colors for gutter instead.
+  -- VSCode doesn't have foreground for git added/removed/changed, so here I use the corresponding
+  -- colors for gutter instead.
+  --
+
   diffAdded = "GutterGitAdded",
   diffRemoved = "GutterGitDeleted",
   diffChanged = "GutterGitModified",
@@ -302,17 +327,19 @@ local groups = {
   --
   -- LSP
   --
+
   LspReferenceText = "SelectionHighlightBackground",
   LspReferenceRead = "SelectionHighlightBackground",
   LspReferenceWrite = "SelectionHighlightBackground",
   LspCodeLens = "CodeLens",
-  -- LspCodeLensSeparator = { }, -- Used to color the seperator between two or more code lens.
+  -- LspCodeLensSeparator = { }, -- color the seperator between two or more code lens.
   LspSignatureActiveParameter = "MatchedCharacters",
   LspInlayHint = "InlayHint",
 
   --
   -- Diagnostics
   --
+
   DiagnosticError = { fg = error_red },
   DiagnosticWarn = { fg = warn_yellow },
   DiagnosticInfo = { fg = info_blue },
@@ -344,19 +371,21 @@ local groups = {
   --
   -- Treesitter
   --
-  -- Now use the capture names directly as the highlight groups.
-  -- To find all the capture names, see https://github.com/nvim-treesitter/nvim-treesitter/blob/master/CONTRIBUTING.md#highlights)
+  -- To find all the capture names, see
+  -- https://github.com/nvim-treesitter/nvim-treesitter/blob/master/CONTRIBUTING.md#highlights)
+  --
 
   -- Identifiers
-  ["@variable"] = { fg = light_blue }, -- various variable names
+  ["@variable"] = "Identifier", -- various variable names
   ["@variable.builtin"] = { fg = dark_blue }, -- built-in variable names (e.g. `this`)
-  ["@variable.parameter"] = { fg = orange }, -- parameters of a function, use a conspicuous color (VSCode uses the common light_blue)
+  ["@variable.parameter"] = { fg = orange }, -- parameters of a function
   ["@variable.parameter.builtin"] = "@variable.parameter", -- special parameters (e.g. `_`, `it`)
-  ["@variable.member"] = { fg = light_blue }, -- object and struct fields
+  ["@variable.member"] = "@variable", -- object and struct fields
+  ["@variable.member.lua"] = { fg = blue_green },
 
   ["@constant"] = "Constant", -- constant identifiers
-  ["@constant.builtin"] = "Constant", -- built-in constant values
-  ["@constant.macro"] = "Constant", -- constants defined by the preprocessor
+  ["@constant.builtin"] = "@constant", -- built-in constant values
+  ["@constant.macro"] = "@function", -- constants defined by the preprocessor
 
   ["@module"] = { fg = blue_green }, -- modules or namespaces
   ["@module.builtin"] = "@module", -- built-in modules or namespaces
@@ -381,7 +410,7 @@ local groups = {
 
   -- Types
   ["@type"] = { fg = blue_green }, -- type or class definitions and annotations
-  ["@type.builtin"] = { fg = dark_blue }, -- built-in types
+  ["@type.builtin"] = "Type", -- built-in types
   ["@type.definition"] = { fg = blue_green }, -- identifiers in type definitions (e.g. `typedef <type> <identifier>` in C)
 
   ["@attribute"] = { fg = blue_green }, -- attribute annotations (e.g. Python decorators)
@@ -390,9 +419,9 @@ local groups = {
 
   -- Function
   ["@function"] = "Function", -- function definitions
-  ["@function.builtin"] = "Function", -- built-in functions
-  ["@function.call"] = "Function", -- function calls
-  ["@function.macro"] = "Function", -- preprocessor macros
+  ["@function.builtin"] = "@function", -- built-in functions
+  ["@function.call"] = "@function", -- function calls
+  ["@function.macro"] = "@function", -- preprocessor macros
 
   ["@function.method"] = "@function", -- method definitions
   ["@function.method.call"] = "@function.call", -- method calls
@@ -406,7 +435,7 @@ local groups = {
   ["@keyword.function"] = { fg = dark_blue }, -- keywords that define a function (e.g. `func` in Go, `def` in Python)
   ["@keyword.operator"] = "@operator", -- operators that are English words (e.g. `and` / `or`)
   ["@keyword.import"] = "Include", -- keywords for including modules (e.g. `import` / `from` in Python)
-  ["@keyword.type"] = { fg = dark_blue }, -- keywords describing composite types (e.g. `struct`, `enum`)
+  ["@keyword.type"] = "Type", -- keywords describing composite types (e.g. `struct`, `enum`)
   ["@keyword.modifier"] = { fg = dark_blue }, -- keywords modifying other constructs (e.g. `const`, `static`, `public`)
   ["@keyword.repeat"] = "Repeat", -- keywords related to loops (e.g. `for` / `while`)
   ["@keyword.return"] = { fg = dark_pink }, --  keywords like `return` and `yield`
@@ -458,7 +487,7 @@ local groups = {
   ["@markup.raw"] = { fg = brown }, -- literal or verbatim text (e.g., inline code)
   ["@markup.raw.block"] = { fg = norm_fg }, -- literal or verbatim text as a stand-alone block
 
-  ["@markup.list"] = { fg = cornflower_blue }, -- list markers
+  ["@markup.list"] = { fg = '#6796e6' }, -- list markers
   -- ["@markup.list.checked"] = { }, -- checked todo-style list markers
   -- ["@markup.list.unchecked"] = { }, -- unchecked todo-style list markers
 
@@ -471,80 +500,76 @@ local groups = {
   ["@tag.attribute"] = { fg = light_blue }, -- XML tag attributes
   ["@tag.delimiter"] = { fg = gray3 }, -- XML tag delimiters
 
-  -- Language specific
-  -- Lua
-  ["@variable.member.lua"] = { fg = blue_green },
-
   --
   -- LSP semantic tokens
   --
   -- The help page :h lsp-semantic-highlight
   -- A short guide: https://gist.github.com/swarn/fb37d9eefe1bc616c2a7e476c0bc0316
   -- Token types and modifiers are described here: http://code.visualstudio.com/api/language-extensions/semantic-highlight-guide
+  --
+
+  -- Standard token types
   ["@lsp.type.namespace"] = "@module",
-  ["@lsp.type.type"] = "@type",
   ["@lsp.type.class"] = "@type",
-  ["@lsp.type.enum"] = "@keyword.type",
+  ["@lsp.type.enum"] = "@type",
   ["@lsp.type.interface"] = "@type",
   ["@lsp.type.struct"] = "@type",
   ["@lsp.type.typeParameter"] = "@type.definition",
+  ["@lsp.type.type"] = "@type",
   ["@lsp.type.parameter"] = "@variable.parameter",
   ["@lsp.type.variable"] = "@variable",
   ["@lsp.type.property"] = "@property",
   ["@lsp.type.enumMember"] = { fg = blue },
+  ["@lsp.type.decorator"] = "@attribute",
   ["@lsp.type.event"] = "@type",
   ["@lsp.type.function"] = "@function",
   ["@lsp.type.method"] = "@function",
   ["@lsp.type.macro"] = "@constant.macro",
-  ["@lsp.type.keyword"] = "@keyword",
+  ["@lsp.type.label"] = "@label",
   ["@lsp.type.comment"] = "@comment",
   ["@lsp.type.string"] = "@string",
+  ["@lsp.type.keyword"] = "@keyword",
   ["@lsp.type.number"] = "@number",
   ["@lsp.type.regexp"] = "@string.regexp",
   ["@lsp.type.operator"] = "@operator",
-  ["@lsp.type.decorator"] = "@attribute",
-  ["@lsp.type.escapeSequence"] = "@string.escape",
-  ["@lsp.type.formatSpecifier"] = { fg = light_blue },
-  ["@lsp.type.builtinType"] = "@type.builtin",
-  ["@lsp.type.typeAlias"] = "@type.definition",
-  ["@lsp.type.unresolvedReference"] = { undercurl = true, sp = error_red },
-  ["@lsp.type.lifetime"] = "@keyword.modifier",
-  ["@lsp.type.generic"] = "@variable",
-  ["@lsp.type.selfKeyword"] = "@variable.buitin",
-  ["@lsp.type.selfTypeKeyword"] = "@variable.buitin",
-  ["@lsp.type.deriveHelper"] = "@attribute",
-  ["@lsp.type.boolean"] = "@boolean",
   ["@lsp.type.modifier"] = "@keyword.modifier",
-  ["@lsp.typemod.type.defaultLibrary"] = "@type.builtin",
-  ["@lsp.typemod.typeAlias.defaultLibrary"] = "@type.builtin",
-  ["@lsp.typemod.class.defaultLibrary"] = "@type.builtin",
-  ["@lsp.typemod.variable.defaultLibrary"] = "@variable.builtin",
-  ["@lsp.typemod.function.defaultLibrary"] = "@function.builtin",
-  ["@lsp.typemod.method.defaultLibrary"] = "@function.builtin",
-  ["@lsp.typemod.macro.defaultLibrary"] = "@function.builtin",
-  ["@lsp.typemod.struct.defaultLibrary"] = "@type.builtin",
-  ["@lsp.typemod.enum.defaultLibrary"] = "@type.builtin",
-  ["@lsp.typemod.enumMember.defaultLibrary"] = "@constant.builtin",
-  ["@lsp.typemod.variable.readonly"] = { fg = blue },
-  ["@lsp.typemod.variable.callable"] = "@function",
-  ["@lsp.typemod.variable.static"] = "@constant",
-  ["@lsp.typemod.property.readonly"] = { fg = blue },
-  ["@lsp.typemod.keyword.async"] = "@keyword.coroutine",
-  ["@lsp.typemod.keyword.injected"] = "@keyword",
-  -- Set injected highlights. Mainly for Rust doc comments and also works for
-  -- other lsps that inject tokens in comments.
+
+  -- Standard token modifiers
+  -- ["@lsp.mod.declaration"] = "", -- declarations of symbols.
+  -- ["@lsp.mod.definition"] = "", -- definitions of symbols, for example, in header files.
+  -- ["@lsp.mod.readonly"] = "", -- readonly variables and member fields (constants).
+  -- ["@lsp.mod.static"] = "", -- class members (static members).
+  ["@lsp.mod.deprecated"] = { strikethrough = true }, -- symbols that should no longer be used.
+  -- ["@lsp.mod.abstract"] = "", -- types and member functions that are abstract.
+  -- ["@lsp.mod.async"] = "", -- functions that are marked async.
+  -- ["@lsp.mod.modification"] = "", -- variable references where the variable is assigned to.
+  -- ["@lsp.mod.documentation"] = "", -- occurrences of symbols in documentation.
+  -- ["@lsp.mod.defaultLibrary"] = "", -- symbols that are part of the standard library. (support.*)
+
+  -- Others
+  ["@lsp.typemod.type.defaultLibrary"] = { fg = blue_green }, -- (support.type)
+  ["@lsp.typemod.class.defaultLibrary"] = { fg = blue_green }, -- (support.class)
+  ["@lsp.typemod.function.defaultLibrary"] = { fg = yellow }, -- (support.function)
+  ["@lsp.typemod.variable.readonly"] = { fg = blue }, -- (variable.other.constant, or entity.name.constant)
+  ["@lsp.typemod.variable.readdonly.defaultLibrary"] = { fg = blue }, -- (support.constant)
+  ["@lsp.typemod.property.readonly"] = { fg = blue }, -- (variable.other.constant.property)
+
+  ["@lsp.type.escapeSequence"] = "@string.escape",
+  ["@lsp.type.builtinType"] = "@type.builtin",
+  ["@lsp.type.selfParamete"] = "@variable.parameter",
+  ["@lsp.type.boolean"] = "@boolean",
+
+  -- Set injected highlights. Mainly for Rust doc comments and also works for other lsps that inject
+  -- tokens in comments.
   -- Ref: https://github.com/folke/tokyonight.nvim/pull/340
   ["@lsp.typemod.operator.injected"] = "@operator",
   ["@lsp.typemod.string.injected"] = "@string",
   ["@lsp.typemod.variable.injected"] = "@variable",
 
-  -- Language specific
-  -- Lua
-  ["@lsp.type.property.lua"] = "@variable.member.lua",
-
   --
   -- nvim-lspconfig
   --
+
   -- LspInfoTitle = { },
   -- LspInfoList = { },
   -- LspInfoFiletype = { },
@@ -554,8 +579,9 @@ local groups = {
   --
   -- nvim-cmp
   --
+
   CmpItemAbbrDeprecated = { fg = gray3, bg = 'NONE', strikethrough = true },
-  CmpItemAbbrMatch = { fg = blue2, bg = 'NONE' },
+  CmpItemAbbrMatch = { fg = matched_chars, bg = 'NONE' },
   CmpItemAbbrMatchFuzzy = "CmpItemAbbrMatch",
   CmpItemMenu = "Description",
   CmpItemKindText = { fg = norm_fg, bg = 'NONE' },
@@ -595,11 +621,12 @@ local groups = {
   CmpItemKindPackage = "CmpItemKindText",
   -- Predefined for the winhighlight config of cmp float window
   SuggestWidgetBorder = "FloatBorder",
-  SuggestWidgetSelect = { bg = selected_entry_bg },
+  SuggestWidgetSelect = { bg = selected_item_bg },
 
   --
   -- Aerial
   --
+
   AerialTextIcon = "CmpItemKindText",
   AerialMethodIcon = "CmpItemKindMethod",
   AerialFunctionIcon = "CmpItemKindFunction",
@@ -630,7 +657,6 @@ local groups = {
   -- nvim-navic
   --
 
-  -- Consistent with nvim-cmp but has an additional black underline for winbar decoration
   NavicText = "Winbar",
   NavicSeparator = "NavicText",
   NavicIconsMethod = { fg = '#b180d7', bg = norm_bg },
@@ -670,6 +696,7 @@ local groups = {
   --
   -- Gitsigns
   --
+
   GitSignsAdd = "GutterGitAdded",
   GitSignsChange = "GutterGitModified",
   GitSignsDelete = "GutterGitDeleted",
@@ -686,6 +713,7 @@ local groups = {
   --
   -- vim-illuminate
   --
+
   IlluminatedWordText = "SelectionHighlightBackground",
   IlluminatedWordRead = "SelectionHighlightBackground",
   IlluminatedWordWrite = "SelectionHighlightBackground",
@@ -696,12 +724,13 @@ local groups = {
   -- Find all the default highlight groups
   -- https://github.com/nvim-telescope/telescope.nvim/blob/master/plugin/telescope.lua
   --
+
   TelescopeBorder = "FloatBorder",
   TelescopePromptBorder = "TelescopeBorder",
   TelescopeResultsBorder = "TelescopePromptBorder",
   TelescopePreviewBorder = "TelescopePromptBorder",
   TelescopeNormal = "Normal",
-  TelescopeSelection = { fg = white, bg = selected_entry_bg, bold = true },
+  TelescopeSelection = { fg = white, bg = selected_item_bg, bold = true },
   TelescopeSelectionCaret = { fg = deep_pink },
   TelescopeMultiSelection = "TelescopeNormal",
   TelescopeMultiIcon = { fg = hot_pink },
@@ -712,24 +741,21 @@ local groups = {
   --
   -- Harpoon
   --
+
   HarpoonBorder = "TelescopeBorder",
   HarpoonWindow = "TelescopeNormal",
 
   --
-  -- fFHighlight
-  --
-  fFHintWords = { underline = true, sp = 'yellow' },
-  fFHintCurrentWord = { undercurl = true, sp = 'yellow' },
-
-  --
   -- indent-blankline
   --
+
   IblIndent = { fg = indent_guide_fg },
   IblScope = { fg = indent_guide_scope_fg },
 
   --
   -- hlslens
   --
+
   HlSearchNear = "IncSearch",
   HlSearchLens = "Description",
   HlSearchLensNear = "HlSearchLens",
@@ -750,6 +776,7 @@ local groups = {
   --
   -- nvim-bqf
   --
+
   BqfPreviewFloat = "PeekViewNormal",
   BqfPreviewBorder = "PeekViewBorder",
   BqfPreviewTitle = "PeekViewTitle",
@@ -762,24 +789,17 @@ local groups = {
   BqfSign = { fg = blue_green },
 
   --
-  -- git-messenger.vim
-  --
-  gitmessengerHeader = { fg = '#4daafc' },  -- textLink.activeForeground
-  gitmessengerPopupNormal = "NormalFloat",
-  gitmessengerHash = "NormalFloat",
-  gitmessengerHistory = "NormalFloat",
-  gitmessengerEmail = "NormalFloat",
-
-  --
   -- nvim-treesitter-context
   --
+
   -- TreesitterContext = { bg = black4 },
-  TreesitterContextLineNumber = { fg = '#4d535a' }, -- 30% darker based on LineNr
+  TreesitterContextLineNumber = { fg = '#4d535a' }, -- 30% darker than LineNr
   TreesitterContextBottom = { underline = true, sp = floatwin_border },
 
   --
   -- nvim-scrollview
   --
+
   ScrollView = "ScrollbarSlider",
   ScrollViewRestricted = "ScrollView",
   ScrollViewConflictsTop = "DiffAdd",
@@ -796,12 +816,14 @@ local groups = {
   --
   -- vim-floaterm
   --
+
   Floaterm = "Normal",
   FloatermBorder = "FloatBorder",
 
   --
   -- quick-scope
   --
+
   QuickScopePrimary = { fg = bright_pink, underline = true, sp = bright_pink },
   QuickScopeSecondary = { fg = purple, underline = true, sp = purple },
 }

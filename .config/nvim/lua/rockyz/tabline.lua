@@ -132,7 +132,7 @@ function M.render()
     end
 
     -- Right border
-    local border = '%#TabBorderRight#' .. icons.separators.bar2
+    local border = '%#TabBorderRight#|'
     table.insert(items, border)
 
     -- Assemble tabline for this one tab

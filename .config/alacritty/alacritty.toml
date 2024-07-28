@@ -9,11 +9,15 @@ opacity = 1
 option_as_alt = "OnlyLeft"
 
 [font]
-normal = { family = "PragmataProMono Nerd Font", style = "Regular" }
-bold = { family = "PragmataProMono Nerd Font", style = "Bold" }
-bold_italic = { family = "PragmataProMono Nerd Font", style = "Bold Italic" }
-italic = { family = "PragmataProMono Nerd Font", style = "Italic" }
-size = 16
+normal = { family = "SFMono Nerd Font", style = "Regular" }
+bold = { family = "SFMono Nerd Font", style = "Bold" }
+bold_italic = { family = "SFMono Nerd Font", style = "Bold Italic" }
+italic = { family = "SFMono Nerd Font", style = "Italic" }
+size = 14
+
+#
+# Arctic (VSCode's Dark Modern port)
+#
 
 [colors]
 cursor = { text = "#000000", cursor = "#52ad70" } # stolen from wezterm

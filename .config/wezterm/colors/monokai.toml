@@ -1,0 +1,30 @@
+[colors]
+foreground = '#f8f8f2'
+background = '#272822'
+ansi = [
+    '#272822',
+    '#f92472',
+    '#a6e22c',
+    '#e7db74',
+    '#67d8ef',
+    '#ac80ff',
+    '#5fd7d7',
+    '#d8d8d8',
+]
+brights = [
+    '#4a4d48',
+    '#ff5a8f',
+    '#ccff66',
+    '#f3e58f',
+    '#92eaff',
+    '#c4a6ff',
+    '#a6f7f7',
+    '#f8f8f8',
+]
+selection_fg = 'none'
+selection_bg = '#555449'
+
+[metadata]
+aliases = []
+author = 'rockyzhang24'
+name = 'monokai'

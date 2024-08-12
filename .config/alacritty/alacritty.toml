@@ -53,6 +53,44 @@ red = "#f55757"
 white = "#ffffff"
 yellow = "#e1cb9e"
 
+#
+# Monokai
+#
+
+# [colors]
+# cursor = { text = "#272822", cursor = "#f8f8f2" }
+# vi_mode_cursor = { text = "CellBackground", cursor = "CellForeground" }
+# footer_bar = { foreground = "#ffffff", background = "#ac80ff" }
+# selection = { text = "CellForeground", background = "#555449" }
+#
+# [colors.search]
+# focused_match = { foreground = "CellForeground", background = "#ffe849" }
+# matches = { foreground = "CellForeground", background = "#673917" }
+#
+# [colors.primary]
+# background = "#272822"
+# foreground = "#f8f8f2"
+#
+# [colors.normal]
+# black = "#272822"
+# blue = "#67d8ef"
+# cyan = "#5fd7d7"
+# green = "#a6e22c"
+# magenta = "#ac80ff"
+# red = "#f92472"
+# white = "#d8d8d8"
+# yellow = "#e7db74"
+#
+# [colors.bright]
+# black = "#4a4d48"
+# blue = "#92eaff"
+# cyan = "#a6f7f7"
+# green = "#ccff66"
+# magenta = "#c4a6ff"
+# red = "#ff5a8f"
+# white = "#f8f8f8"
+# yellow = "#f3e58f"
+
 [cursor]
 vi_mode_style = "Block"
 

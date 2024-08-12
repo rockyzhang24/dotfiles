@@ -27,7 +27,7 @@ config.window_padding = {
 }
 
 -- Color scheme
-config.color_scheme = 'arctic'
+config.color_scheme = 'monokai'
 
 -- Tab bar
 config.window_frame = {

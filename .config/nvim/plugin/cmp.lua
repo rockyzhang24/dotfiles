@@ -13,6 +13,15 @@ local large_file_disable = function()
   return { buf }
 end
 
+-- Whether the file in the buffer is too large
+local function is_large_file(buf)
+  local byte_size = vim.api.nvim_buf_get_offset(buf, vim.api.nvim_buf_line_count(buf))
+  if byte_size > 1024 * 1024 then -- 1MB
+    return true
+  end
+  return false
+end
+
 local winhighlight = 'FloatBorder:SuggestWidgetBorder,CursorLine:SuggestWidgetSelect,Search:None'
 if vim.g.border_enabled then
   winhighlight = 'Normal:Normal,PmenuThumb:ScrollbarSlider,' .. winhighlight
@@ -111,8 +120,19 @@ cmp.setup({
     { name = 'luasnip' },
     {
       name = 'buffer',
+      keyword_length = 3,
       option = {
-        get_bufnrs = large_file_disable,
+        -- Buffer completions from all visible buffers
+        get_bufnrs = function()
+          return vim.iter(vim.api.nvim_list_wins())
+          :map(function(win)
+            local buf = vim.api.nvim_win_get_buf(win)
+            if not is_large_file(buf) then
+              return buf
+            end
+          end)
+          :totable()
+        end,
       },
     },
     { name = 'path' },
@@ -162,7 +182,10 @@ cmp.setup.cmdline('/', {
     {
       name = 'buffer',
       option = {
-        get_bufnrs = large_file_disable,
+        get_bufnrs = function()
+          local buf = vim.api.nvim_get_current_buf()
+          return is_large_file(buf) and {} or { buf }
+        end,
       },
     },
   },
@@ -177,7 +200,10 @@ cmp.setup.cmdline('?', {
     {
       name = 'buffer',
       option = {
-        get_bufnrs = large_file_disable,
+        get_bufnrs = function()
+          local buf = vim.api.nvim_get_current_buf()
+          return is_large_file(buf) and {} or { buf }
+        end,
       },
     },
   },

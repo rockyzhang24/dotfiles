@@ -1,7 +1,76 @@
-# zsh
-source $HOME/.config/zsh/plugins
-source $HOME/.config/zsh/general
-source $HOME/.config/zsh/completion
+# Completion for other programs
+fpath=($HOME/.config/zsh/completions/ $fpath)
+
+# My own defined autoload functions under ~/.config/zsh/functions/
+autoload_functions_dir="$HOME/.config/zsh/functions"
+fpath+=$autoload_functions_dir
+autoload -Uz ${autoload_functions_dir}/*(.:t)
+
+# Uncomment lines below if not using the completion module in Zimfw
+# autoload -Uz compinit
+# compinit
+
+# Zimfw
+if [[ ${ZIM_HOME}/init.zsh -ot ${ZDOTDIR:-${HOME}}/.zimrc ]]; then
+  source ${ZIM_HOME}/zimfw.zsh init -q
+fi
+source ${ZIM_HOME}/init.zsh
+
+# The prefix for the alias from zim builtin git module
+#zstyle ':zim:git' aliases-prefix 'g'
+
+# Append `../` to your input for each `.` you type after an initial `..`
+zstyle ':zim:input' double-dot-expand yes
+
+# zsh-syntax-highlighting
+ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets)
+
+# fzf-tab
+zstyle ':fzf-tab:*' fzf-flags '--preview-window=hidden,<9999(hidden)'
+zstyle ':fzf-tab:*' fzf-preview 'echo Preview is not available!'
+zstyle ':fzf-tab:*' fzf-pad 4
+
+# Ensure add-zsh-hook is available
+autoload -Uz add-zsh-hook
+
+# Remove duplicated commands in history
+setopt HIST_IGNORE_ALL_DUPS
+
+# Make right prompt aligned to the rightmost
+ZLE_RPROMPT_INDENT=0
+
+# Change open files limit on macOS
+ulimit -n 524288
+ulimit -u 2048
+
+# Use menu selection for completion
+zstyle ':completion:*' menu select
+zmodload zsh/complist
+
+# Include hidden files in autocomplete
+_comp_options+=(globdots)
+
+# Completion for other programs
+fpath=($HOME/.config/zsh/completions/ $fpath)
+
+# For kitty kitten: hyperlinked grep (defined in ~/.config/zsh/functions/hg)
+# Delegate its completion to rg
+compdef _rg hg
+
+# Make ngl (~/.config/zsh/functions/ngl) support autocomplete as `git log`
+compdef _ngl ngl
+_ngl() {
+  (( $+functions[_git-log] )) || _git
+  _git-log
+}
+
+# Make ngd (~/.config/zsh/functions/ngd) support autocomplete as `git difftool`
+compdef _ngd ngd
+_ngd() {
+  (( $+functions[_git-difftool] )) || _git
+  _git-difftool
+}
+
 source $HOME/.config/zsh/aliases
 source $HOME/.config/zsh/keybindings
 # source $HOME/.config/zsh/vi # use vi mode

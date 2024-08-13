@@ -33,7 +33,7 @@ lspconfig.gopls.setup({
         unusedparams = true,
       },
       staticcheck = true,
-      semanticTokens = true,
+      -- semanticTokens = true, -- go's semantic token highlight is not accurate so far
     },
   },
 })

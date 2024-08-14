@@ -72,7 +72,7 @@ function M.qftf(info)
       if lnum_col ~= '' then
         table.insert(entry, lnum_col)
         hl_col_start = hl_col_end + 1
-        hl_col_end = hl_col_start + #lnum_col
+        hl_col_end = hl_col_start + #tostring(lnum_col)
         table.insert(
           highlights,
           {

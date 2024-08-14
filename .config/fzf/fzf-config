@@ -1,5 +1,7 @@
 #!/usr/bin/env zsh
 
+color_theme='monokai'
+
 # Terminal background is transparent or not
 export TRANSPARENT=false
 
@@ -14,7 +16,25 @@ eval "$(fzf --zsh)"
 # Use fd instead of default find
 export FZF_DEFAULT_COMMAND="fd --type f --hidden --follow $FD_EXCLUDE"
 
-# Default options when running fzf
+# Define color themes
+# Default colors are defined in https://github.com/junegunn/fzf/blob/master/src/tui/tui.go
+if $TRANSPARENT; then
+  bg=-1
+fi
+# arctic theme
+if [[ $color_theme == 'arctic' ]]; then
+  [[ $bg != -1 ]] && bg='#1f1f1f'
+  fg='#cccccc'
+  colors="dark,fg:$fg,bg:$bg,hl:#2aaaff,fg+:#ffffff,bg+:#04395e,gutter:$bg,hl+:#2aaaff,query:$fg,disabled:#808080,border:$fg,separator:#454545,label:$fg,header:#3794ff:underline"
+fi
+# monokai theme
+if [[ $color_theme == 'monokai' ]]; then
+  [[ $bg != -1 ]] && bg='#272822'
+  fg='#f8f8f2'
+  colors="dark,fg:$fg,bg:$bg,hl:#f92472,fg+:#ffffff,bg+:#414339,gutter:$bg,hl+:#f92472,query:$fg,disabled:#7a7a77:strikethrough,border:$fg,separator:#454545,label:$fg,header:#fd9621:underline:bold"
+fi
+
+# Config the default options when running fzf
 # Keybindings:
 # - ctrl-d: move cursor half page down
 # - ctrl-u: move cursor halp page up
@@ -27,12 +47,6 @@ export FZF_DEFAULT_COMMAND="fd --type f --hidden --follow $FD_EXCLUDE"
 # - ctrl-o: open the selections via default application
 # - ctrl-y: copy the selections to system clipboard
 # - ctrl-e: edit the selections via $EDITOR
-# Colors: default colors are defined in https://github.com/junegunn/fzf/blob/master/src/tui/tui.go
-bg='#1f1f1f'
-fg='#cccccc'
-if $TRANSPARENT; then
-  bg=-1
-fi
 export FZF_DEFAULT_OPTS=" \
   --reverse \
   --height 85% \
@@ -57,8 +71,7 @@ export FZF_DEFAULT_OPTS=" \
   --bind 'focus:transform-preview-label:echo [ {} ]' \
   --preview '~/.config/fzf/fzf-previewer.sh {}' \
   --preview-window 'right,60%' \
-  --color=dark,fg:$fg,bg:$bg,hl:#2aaaff,fg+:#ffffff,bg+:#04395e,gutter:$bg,hl+:#2aaaff,query:$fg,`
-    `disabled:#808080,border:$fg,separator:#454545,label:$fg,header:#3794ff:underline"
+  --color=$colors"
 
 # Use fd for FZF completion
 # 1). listing files and dirs ($1 is the base path to start search) such as "vim ~/.config/**<TAB>"

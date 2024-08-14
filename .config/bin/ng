@@ -4,11 +4,13 @@
 # DESCRIPTION: Open neovim and run fugitive's `:Git` command to open a summary
 # window akin to `git status`
 
+if [[ $PWD == $HOME/.config || $PWD == $HOME/.config/* && $PWD != $HOME/.config/nvim/pack* ]]; then
+  export GIT_DIR="$HOME/dotfiles"
+  export GIT_WORK_TREE="$HOME"
+fi
+
 if git rev-parse >/dev/null 2>&1; then
   nvim -c "Git" -c "bwipeout #"
 else
-  # If not in a git repo, use my dotfiles git bare repo
-  nvim -c "let \$GIT_DIR = '$HOME/dotfiles'" \
-    -c "let \$GIT_WORK_TREE = '$HOME'" \
-    -c "Git" -c "bwipeout #"
+  echo "Warning: not a git repo!"
 fi

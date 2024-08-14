@@ -11,7 +11,7 @@ __fda=${BASH_SOURCE[0]}
 
 git_cmd="git"
 # Handle my dotfile bare repo
-if [[ $PWD == $HOME || $PWD == $HOME/.config || $PWD == $HOME/.config/* && $PWD != $HOME/.config/nvim/pack* ]]; then
+if [[ $PWD == $HOME/.config || $PWD == $HOME/.config/* && $PWD != $HOME/.config/nvim/pack* ]]; then
   git_cmd="git --git-dir=$HOME/dotfiles/ --work-tree=$HOME"
 fi
 

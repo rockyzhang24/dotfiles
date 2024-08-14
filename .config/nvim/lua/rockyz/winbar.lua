@@ -187,7 +187,7 @@ M.render = function()
   local diag_cnt = vim.diagnostic.count(0)
   local error_cnt = diag_cnt[vim.diagnostic.severity.ERROR] or 0
   local warn_cnt = diag_cnt[vim.diagnostic.severity.WARN] or 0
-  local hl = error_cnt > 0 and 'WinbarError' or (warn_cnt > 0 and 'WinbarWarn' or 'Winbar')
+  local hl = error_cnt > 0 and 'WinbarError' or (warn_cnt > 0 and 'WinbarWarn' or 'WinbarFilename')
 
   -- Name
   local name = name_component()

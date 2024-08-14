@@ -62,6 +62,7 @@ local indent_guide_scope_fg = '#767771' -- editorIndentGuide.activeBackground
 local win_separator = gray4 -- editorGroup.border
 local icon_fg = '#ffcc00' -- fg for icons on tabline, winbar and statusline
 local directory = '#569CD6'
+local winbar_fg = '#ababaa' -- breadcrumb.foreground
 
 -- Tabline
 local tab_bg = norm_bg -- editorGroupHeader.tabsBackground
@@ -110,7 +111,7 @@ local groups = {
   GutterGitAdded = { fg = gutter_git_added }, -- editorGutter.addedBackground
   GutterGitDeleted = { fg = gutter_git_deleted }, -- editorGutter.deletedBackground
   GutterGitModified = { fg = gutter_git_modified }, -- editorGutter.modifiedBackground
-  Breadcrumb = { fg = '#ababaa', bg = norm_bg }, -- breadcrumb.foreground/background
+  Breadcrumb = { fg = winbar_fg, bg = norm_bg }, -- breadcrumb.foreground/background
   ScrollbarSliderHover = { bg = '#525250' }, -- scrollbarSlider.hoverBackground
   PeekViewBorder = { fg = brown }, -- peekView.border
   PeekViewNormal = { bg = norm_bg }, -- peekViewEditor.background
@@ -142,9 +143,10 @@ local groups = {
   -- Winbar
   WinbarHeader = { fg = stl_mode_fg, bg = stl_normal }, -- the very beginning part of winbar
   WinbarTriangleSep = { fg = stl_normal }, -- the triangle separator in winbar
+  WinbarFilename = { fg = winbar_fg, bg = norm_bg, bold = true }, -- filename
   WinbarModified = { fg = norm_fg, bg = norm_bg }, -- the modification indicator
-  WinbarError = { fg = error_list, bg = norm_bg }, -- the filename color if the current buffer has errors
-  WinbarWarn = { fg = warn_list, bg = norm_bg }, -- the filename color if the current buffer has warnings
+  WinbarError = { fg = error_list, bg = norm_bg, bold = true }, -- the filename color if the current buffer has errors
+  WinbarWarn = { fg = warn_list, bg = norm_bg, bold = true }, -- the filename color if the current buffer has warnings
   WinbarSpecialIcon = { fg = icon_fg, bg = norm_bg }, -- icon for special filetype
   WinbarPathPrefix = { fg = icon_fg, bg = norm_bg, bold = true }, -- the prefix of the path for the special folders such as CONFIG
   -- Tabline

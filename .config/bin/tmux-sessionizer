@@ -3,12 +3,20 @@
 # DESCRIPTION: Tmux session management. Create a new session or switch to the
 #              existing session by giving a session name and/or a start
 #              directory, or selecting a start directory via fzf.
-# SYNOPSIS:    tmux-sessionizer [SESSION_NAME/DIR] [DIR/SESSION_NAME]
+# SYNOPSIS:    tmux-sessionizer [DIRECTORY]
+#              tmux-sessionizer [SESSION_NAME]
+#              tmux-sessionizer [DIRECTORY] [SESSION_NAME]
+#              tmux-sessionizer [SESSION_NAME] [DIRECTORY]
 
-# Directory candidates in fzf
-read -r -d '' dirs << EOM
+# List all the parent directories that contain the projects here
+read -r -d '' parent_dirs << EOM
 $HOME/oj/
 $HOME/projects/*/
+EOM
+
+# Other scattered project directories
+read -r -d '' other_dirs << EOM
+$HOME/.config
 EOM
 
 if [[ $# -eq 1 ]]; then
@@ -27,24 +35,31 @@ elif [[ $# -eq 2 ]]; then
     session_name=$1
   fi
 else
-  directory=$(fd . $(echo $dirs | tr '\n' ' ') --exact-depth 1 --type d | fzf --no-multi)
+  project_dirs=$(fd --type d --exact-depth 1 . $parent_dirs)
+  combined_dirs=$(echo -e "$project_dirs\n$other_dirs")
+  directory=$(echo "$combined_dirs" | fzf --no-multi)
   [[ -z $directory ]] && exit 0
 fi
 
-([[ -z $directory ]] || [[ $directory = . ]]) && directory=$(pwd)
-[[ -z $session_name ]] && session_name=$(basename "$directory" | tr . _)
+if [[ -z $directory || $directory = . ]]; then
+  directory=$(pwd)
+fi
 
-if ! tmux has-session -t=$session_name 2> /dev/null; then
+if [[ -z $session_name ]]; then
+  session_name=$(basename "$directory" | tr . _)
+fi
+
+if ! tmux has-session -t="$session_name" 2> /dev/null; then
   if [[ -z $TMUX ]]; then
-    tmux new-session -s $session_name -c $directory
+    tmux new-session -s "$session_name" -c "$directory"
   else
-    tmux new-session -ds $session_name -c $directory
-    tmux switch-client -t $session_name
+    tmux new-session -ds "$session_name" -c "$directory"
+    tmux switch-client -t "$session_name"
   fi
 else
   if [[ -z $TMUX ]]; then
-    tmux attach-session -t $session_name
+    tmux attach-session -t "$session_name"
   else
-    tmux switch-client -t $session_name
+    tmux switch-client -t "$session_name"
   fi
 fi

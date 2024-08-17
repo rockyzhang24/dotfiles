@@ -12,8 +12,8 @@ vim.keymap.set('ca', 'dot', function()
       or 'dot'
 end, { expr = true })
 
-vim.keymap.set('ca', 'tm', function()
-  return is_begining('tm') and 'silent !tmux neww tmux-sessionizer' or 'tm'
+vim.keymap.set('ca', 'ts', function()
+  return is_begining('ts') and 'silent !tmux neww tmux-sessionizer' or 'ts'
 end, { expr = true })
 
 vim.keymap.set('ca', 'man', function()

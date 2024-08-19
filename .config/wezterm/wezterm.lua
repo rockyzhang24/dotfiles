@@ -9,13 +9,13 @@ config.term = 'wezterm'
 config.window_decorations = "RESIZE"
 
 -- Font
-config.font = wezterm.font('JetBrainsMono Nerd Font', { weight = 'Medium' })
+config.font = wezterm.font('SauceCodePro Nerd Font', { weight = 'Medium' })
 config.font_size = 15
 -- Disable ligatures
 config.harfbuzz_features = { 'calt=0', 'clig=0', 'liga=0' }
 
 -- Adjust underline style
-config.underline_thickness = 2
+config.underline_position = -6
 
 -- Remove extra space
 config.window_padding = {

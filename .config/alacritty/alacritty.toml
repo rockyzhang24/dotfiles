@@ -9,87 +9,87 @@ opacity = 1
 option_as_alt = "OnlyLeft"
 
 [font]
-normal = { family = "SFMono Nerd Font", style = "Regular" }
-bold = { family = "SFMono Nerd Font", style = "Bold" }
-bold_italic = { family = "SFMono Nerd Font", style = "Bold Italic" }
-italic = { family = "SFMono Nerd Font", style = "Italic" }
-size = 14
+normal = { family = "JetBrainsMono Nerd Font", style = "Regular" }
+bold = { family = "JetBrainsMono Nerd Font", style = "Bold" }
+bold_italic = { family = "JetBrainsMono Nerd Font", style = "Bold Italic" }
+italic = { family = "JetBrainsMono Nerd Font", style = "Italic" }
+size = 15
 
 #
 # Arctic (VSCode's Dark Modern port)
 #
 
-[colors]
-cursor = { text = "#000000", cursor = "#52ad70" } # stolen from wezterm
-vi_mode_cursor = { text = "CellBackground", cursor = "CellForeground" }
-footer_bar = { foreground = "#ffffff", background = "#68217a" }
-selection = { text = "CellForeground", background = "#264f78" }
-
-[colors.search]
-focused_match = { foreground = "CellForeground", background = "#9e6a03" }
-matches = { foreground = "CellForeground", background = "#623315" }
-
-[colors.primary]
-background = "#1f1f1f"
-foreground = "#cccccc"
-
-[colors.normal]
-black = "#1f1f1f"
-blue = "#569cd6"
-cyan = "#4dc9d0"
-green = "#6a9955"
-magenta = "#c586c0"
-red = "#f44747"
-white = "#dddddd"
-yellow = "#d7ba7d"
-
-[colors.bright]
-black = "#808080"
-blue = "#6fabdc"
-cyan = "#70d3bf"
-green = "#80ad6b"
-magenta = "#d6a9d2"
-red = "#f55757"
-white = "#ffffff"
-yellow = "#e1cb9e"
+# [colors]
+# cursor = { text = "#000000", cursor = "#52ad70" } # stolen from wezterm
+# vi_mode_cursor = { text = "CellBackground", cursor = "CellForeground" }
+# footer_bar = { foreground = "#ffffff", background = "#68217a" }
+# selection = { text = "CellForeground", background = "#264f78" }
+#
+# [colors.search]
+# focused_match = { foreground = "CellForeground", background = "#9e6a03" }
+# matches = { foreground = "CellForeground", background = "#623315" }
+#
+# [colors.primary]
+# background = "#1f1f1f"
+# foreground = "#cccccc"
+#
+# [colors.normal]
+# black = "#1f1f1f"
+# blue = "#569cd6"
+# cyan = "#4dc9d0"
+# green = "#6a9955"
+# magenta = "#c586c0"
+# red = "#f44747"
+# white = "#dddddd"
+# yellow = "#d7ba7d"
+#
+# [colors.bright]
+# black = "#808080"
+# blue = "#6fabdc"
+# cyan = "#70d3bf"
+# green = "#80ad6b"
+# magenta = "#d6a9d2"
+# red = "#f55757"
+# white = "#ffffff"
+# yellow = "#e1cb9e"
 
 #
 # Monokai
 #
 
-# [colors]
-# cursor = { text = "#272822", cursor = "#f8f8f2" }
-# vi_mode_cursor = { text = "CellBackground", cursor = "CellForeground" }
-# footer_bar = { foreground = "#ffffff", background = "#ac80ff" }
-# selection = { text = "CellForeground", background = "#555449" }
-#
-# [colors.search]
-# focused_match = { foreground = "CellForeground", background = "#ffe849" }
-# matches = { foreground = "CellForeground", background = "#673917" }
-#
-# [colors.primary]
-# background = "#272822"
-# foreground = "#f8f8f2"
-#
-# [colors.normal]
-# black = "#272822"
-# blue = "#67d8ef"
-# cyan = "#5fd7d7"
-# green = "#a6e22c"
-# magenta = "#ac80ff"
-# red = "#f92472"
-# white = "#d8d8d8"
-# yellow = "#e7db74"
-#
-# [colors.bright]
-# black = "#4a4d48"
-# blue = "#92eaff"
-# cyan = "#a6f7f7"
-# green = "#ccff66"
-# magenta = "#c4a6ff"
-# red = "#ff5a8f"
-# white = "#f8f8f8"
-# yellow = "#f3e58f"
+[colors]
+cursor = { text = "#272822", cursor = "#f8f8f2" }
+vi_mode_cursor = { text = "CellBackground", cursor = "CellForeground" }
+footer_bar = { foreground = "#ffffff", background = "#ac80ff" }
+selection = { text = "CellForeground", background = "#555449" }
+
+[colors.search]
+focused_match = { foreground = "CellForeground", background = "#ffe849" }
+matches = { foreground = "CellForeground", background = "#673917" }
+
+[colors.primary]
+background = "#272822"
+foreground = "#f8f8f2"
+
+[colors.normal]
+black = "#272822"
+blue = "#67d8ef"
+cyan = "#5fd7d7"
+green = "#a6e22c"
+magenta = "#ac80ff"
+red = "#f92472"
+white = "#d8d8d8"
+yellow = "#e7db74"
+
+[colors.bright]
+black = "#4a4d48"
+blue = "#92eaff"
+cyan = "#a6f7f7"
+green = "#ccff66"
+magenta = "#c4a6ff"
+red = "#ff5a8f"
+white = "#f8f8f8"
+yellow = "#f3e58f"
 
 [cursor]
 vi_mode_style = "Block"

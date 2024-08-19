@@ -18,12 +18,34 @@ bat() {
     --terminal-width="${PV_WIDTH}" "$@"
 }
 
-image_preview_by_kitty() {
-  kitty icat --clear --transfer-mode memory --stdin no --align left --place "${1}" "${2}" < /dev/null > /dev/tty
-}
-
-get_video_dimensions() {
-  ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=s=x:p=0 "${1}"
+image_previewer() {
+  # In Kitty, only lf running in normal terminal, not in tmux or Neovim's builtin terminal, could
+  # use kitty image protocal. In other situations, chafa could be used, however, lf running in
+  # tmux displays the image with abnormal colors.
+  if [[ $KITTY_WINDOW_ID ]]; then
+    # In Kitty
+    if [[ ! $TERM =~ "tmux" && -z $NVIM ]]; then
+      local place="${PV_WIDTH}x${PV_HEIGHT}@${HORIZONTAL_POS}x${VERTICAL_POS}"
+      kitty icat --clear --transfer-mode memory --stdin no --align left --place "$place" "$1" < /dev/null > /dev/tty
+    elif [[ $TERM =~ "tmux" && -z $NVIM ]]; then
+      printf "Preview is not supported here!\n"
+      printf "Instead, preview it in FZF (CTRL-F)."
+    else
+      chafa -f symbols -s "${PV_WIDTH}x${PV_HEIGHT}" --animate off --polite on "$1"
+    fi
+  elif [[ $WEZTERM_PANE || $ALACRITTY_WINDOW_ID ]]; then
+    # In Wezterm or Alacritty
+    if [[ ! $TERM =~ "tmux" && -z $NVIM ]]; then
+      chafa -s "${PV_WIDTH}x${PV_HEIGHT}" --animate off --polite on "$1"
+    elif [[ $TERM =~ "tmux" && -z $NVIM ]]; then
+      printf "Preview is not supported here!\n"
+      printf "Instead, preview it in FZF (CTRL-F)."
+    else
+      chafa -f symbols -s "${PV_WIDTH}x${PV_HEIGHT}" --animate off --polite on "$1"
+    fi
+  else
+    printf "Preview is NOT supported!"
+  fi
 }
 
 handle_extension() {
@@ -77,37 +99,12 @@ handle_mime() {
       pandoc -s -t markdown -- "${FILE_PATH}" | glow -s dark --width "${PV_WIDTH}" && exit 1;;
     # Image
     image/*)
-      printf "Resolution: %s\n\n" "$(identify -format "%w×%h" "${FILE_PATH}")"
-      if [[ $TERM == "xterm-kitty" ]]; then
-        # For kitty
-        local place="${PV_WIDTH}x$(( PV_HEIGHT - 1 ))@${HORIZONTAL_POS}x$(( VERTICAL_POS + 1 ))"
-        image_preview_by_kitty "${place}" "${FILE_PATH}"
-      elif [[ $TERM == "tmux-256color" && -n $KITTY_WINDOW_ID ]]; then
-        # For tmux running in kitty
-        printf "Image preview is NOT supported in lf running in tmux!\n"
-        printf "Instead preview images in fzf (CTRL-F)."
-      else
-        # For others
-        printf "Image preview is NOT supported!"
-      fi
+      image_previewer "${FILE_PATH}"
       exit 1;;
     # Video
     video/*)
-      local dimensions=$(get_video_dimensions "${FILE_PATH}")
-      printf "Dimensions: %s\n\n" "$dimensions"
-      if [[ $TERM == "xterm-kitty" ]]; then
-        # For kitty
-        local thumbnail=$($HOME/.config/lf/vidthumb "${FILE_PATH}")
-        local place="${PV_WIDTH}x$(( PV_HEIGHT - 1 ))@${HORIZONTAL_POS}x$(( VERTICAL_POS + 1 ))"
-        image_preview_by_kitty "${place}" "${thumbnail}"
-      elif [[ $TERM =~ "tmux-256color" && -n $KITTY_WINDOW_ID ]]; then
-        # For tmux running in kitty
-        printf "Previewing video's thumbnail is NOT supported in lf running in tmux!\n"
-        printf "Instead preview the thumbnail in fzf (CTRL-F)."
-      else
-        # For others
-        printf "Previewing video's thumbnail is NOT supported!"
-      fi
+      local thumbnail=$($HOME/.config/lf/vidthumb "${FILE_PATH}")
+      image_previewer "$thumbnail"
       exit 1;;
     # Text
     text/* | */xml)

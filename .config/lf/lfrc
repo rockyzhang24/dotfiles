@@ -16,6 +16,7 @@ set anchorfind
 set findlen 1
 set tabstop 4
 set info size
+set sixel
 set preview
 set previewer ~/.config/lf/previewer
 set cleaner ~/.config/lf/cleaner

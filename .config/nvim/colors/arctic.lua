@@ -57,9 +57,9 @@ local indent_guide_scope_fg = '#707070'
 local label_fg = '#c8c8c8' -- entity.name.label
 local win_separator = '#333333' -- editorGroup.border
 local icon_fg = '#d7ba7d' -- fg for icons on tabline, winbar and statusline
+local winbar_fg = '#a9a9a9' -- breadcrumb.foreground
 
 -- Tabline
-
 local tab_bg = black4 -- editorGroupHeader.tabsBackground
 local tab_active_fg = white -- tab.activeForeground
 local tab_active_bg = '#353535' -- tab.activeBackground, 10% lighter than the norm_bg.
@@ -105,7 +105,7 @@ local groups = {
   GutterGitAdded = { fg = gutter_git_added }, -- editorGutter.addedBackground
   GutterGitDeleted = { fg = gutter_git_deleted }, -- editorGutter.deletedBackground
   GutterGitModified = { fg = gutter_git_modified }, -- editorGutter.modifiedBackground
-  Breadcrumb = { fg = '#a9a9a9', bg = norm_bg }, -- breadcrumb.foreground/background
+  Breadcrumb = { fg = winbar_fg, bg = norm_bg }, -- breadcrumb.foreground/background
   ScrollbarSliderHover = { bg = '#4f4f4f' }, -- scrollbarSlider.hoverBackground
   PeekViewBorder = { fg = '#3794ff' }, -- peekView.border
   PeekViewNormal = { bg = norm_bg }, -- peekViewEditor.background
@@ -137,9 +137,10 @@ local groups = {
   -- Winbar
   WinbarHeader = { fg = white, bg = stl_normal }, -- the very beginning part of winbar
   WinbarTriangleSep = { fg = stl_normal }, -- the triangle separator in winbar
+  WinbarFilename = { fg = winbar_fg, bg = norm_bg, bold = true }, -- filename
   WinbarModified = { fg = norm_fg, bg = norm_bg }, -- the modification indicator
-  WinbarError = { fg = error_list, bg = norm_bg }, -- the filename color if the current buffer has errors
-  WinbarWarn = { fg = warn_list, bg = norm_bg }, -- the filename color if the current buffer has warnings
+  WinbarError = { fg = error_list, bg = norm_bg, bold = true }, -- the filename color if the current buffer has errors
+  WinbarWarn = { fg = warn_list, bg = norm_bg, bold = true }, -- the filename color if the current buffer has warnings
   WinbarSpecialIcon = { fg = icon_fg, bg = norm_bg }, -- icon for special filetype
   WinbarPathPrefix = { fg = icon_fg, bg = norm_bg, bold = true }, -- the prefix of the path for the special folders such as CONFIG
   -- Tabline

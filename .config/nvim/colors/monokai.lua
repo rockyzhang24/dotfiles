@@ -67,11 +67,11 @@ local winbar_fg = '#ababaa' -- breadcrumb.foreground
 -- Tabline
 local tab_bg = norm_bg -- editorGroupHeader.tabsBackground
 local tab_active_fg = white -- tab.activeForeground
-local tab_active_bg = util.lighten(norm_bg, 0.1) -- tab.activeBackground
+local tab_active_bg = util.lighten(norm_bg, 0.15) -- tab.activeBackground
 local tab_inactive_fg = '#ccccc7' -- tab.inactiveForeground
 local tab_inactive_bg = tab_bg -- tab.inactiveBackground
-local tab_border = tab_active_bg -- tab.border TODO
-local tab_bottom_border_active = '#0078d4' -- tab.activeBorderTop from Dark Modern theme
+local tab_indicator_active_fg = '#0078d4' -- indicator for the active tab, a bar on the leftmost of the current tab
+local tab_indicator_inactive_fg = util.lighten(tab_active_bg, 0.1)
 
 -- Statusline
 local stl_fg = white -- statusBar.foreground
@@ -150,13 +150,14 @@ local groups = {
   WinbarSpecialIcon = { fg = icon_fg, bg = norm_bg }, -- icon for special filetype
   WinbarPathPrefix = { fg = icon_fg, bg = norm_bg, bold = true }, -- the prefix of the path for the special folders such as CONFIG
   -- Tabline
-  TabBorderRight = { fg = tab_border, bg = tab_inactive_bg }, -- the right border between inactive tabs
   TabDefaultIcon = { fg = icon_fg, bg = tab_inactive_bg }, -- icon for special filetype on inactive tab
-  TabDefaultIconActive = { fg = icon_fg, bg = tab_active_bg, underline = true, sp = tab_bottom_border_active }, -- icon for special filetype on active tab
+  TabDefaultIconActive = { fg = icon_fg, bg = tab_active_bg }, -- icon for special filetype on active tab
   TabError = { fg = error_list, bg = tab_inactive_bg },
-  TabErrorActive = { fg = error_list, bg = tab_active_bg, underline = true, sp = tab_bottom_border_active },
+  TabErrorActive = { fg = error_list, bg = tab_active_bg },
   TabWarn = { fg = warn_list , bg = tab_inactive_bg },
-  TabWarnActive = { fg = warn_list, bg = tab_active_bg, underline = true, sp = tab_bottom_border_active },
+  TabWarnActive = { fg = warn_list, bg = tab_active_bg },
+  TabIndicatorActive = { fg = tab_indicator_active_fg, bg = tab_active_bg },
+  TabIndicatorInactive = { fg = tab_indicator_inactive_fg, bg = tab_inactive_bg },
 
   --
   -- diff
@@ -266,7 +267,7 @@ local groups = {
   -- StatusLineNC = { },
   TabLine = { fg = tab_inactive_fg, bg = tab_inactive_bg }, -- tab.inactiveBackground, tab.inactiveForeground
   TabLineFill = { fg = 'NONE', bg = tab_bg }, -- editorGroupHeader.tabsBackground
-  TabLineSel = { fg = tab_active_fg, bg = tab_active_bg, underline = true, sp = tab_bottom_border_active, bold = true }, -- tab.activeBackground, tab.activeForeground
+  TabLineSel = { fg = tab_active_fg, bg = tab_active_bg }, -- tab.activeBackground, tab.activeForeground
   Title = { fg = orange, bold = true },
   Visual = { bg = '#555449' }, -- editor.selectionBackground, use the selection color in Sublime Text
   -- VisualNOS = { },

@@ -66,9 +66,7 @@ icons.git = {
 
 icons.separators = {
   bar = '│',
-  bar2 = '￨', -- Halfwidth Forms Light Vertical (U+FFE8)
-  bar_left = '▏', -- U+258F
-  bar_right = '▕', -- U+2595
+  bar_left_bold = '▎',
   chevron_left = '',
   chevron_right = '',
   triangle_left = '',

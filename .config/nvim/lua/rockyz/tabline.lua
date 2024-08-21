@@ -1,8 +1,8 @@
 -- The structure of each tab is like:
--- Tab_number. Icon Title Diagnostic_info Modification_indicator Right_border
---              ^     ^
---              |_____|
---                 |___ get_icon_and_title()
+-- Indicator Tab_number. Icon Title Diagnostic_info Modification_indicator
+--                        ^     ^
+--                        |_____|
+--                           |___ get_icon_and_title()
 
 local M = {}
 
@@ -98,10 +98,13 @@ function M.render()
 
     local items = {}
 
-    -- Tab number
+    -- Indicator, the bar on the leftmost of the tab
     -- %iT label at the beginning of each tab is used for mouse click
-    local num = string.format('%%%sT %s.', i, i)
-    table.insert(items, num)
+    local indicator_hl = is_cur and 'TabIndicatorActive' or 'TabIndicatorInactive'
+    table.insert(items, string.format('%%%sT%%#%s#%s%%#%s#', i, indicator_hl, icons.separators.bar_left_bold, tab_hl))
+
+    -- Tab number
+    table.insert(items, i .. '.')
 
     -- Icon and title
     local title_hl = diag_hl ~= '' and diag_hl or tab_hl
@@ -131,12 +134,8 @@ function M.render()
       end
     end
 
-    -- Right border
-    local border = '%#TabBorderRight#|'
-    table.insert(items, border)
-
     -- Assemble tabline for this one tab
-    local tab = string.format('%%#%s#%s', tab_hl, table.concat(items, ' '))
+    local tab = string.format('%%#%s#%s ', tab_hl, table.concat(items, ' '))
     table.insert(tabs, tab)
   end
 

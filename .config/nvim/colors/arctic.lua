@@ -3,6 +3,8 @@
 -- Author: Rocky Zhang (@rockyzhang24)
 --
 
+local util = require('rockyz.utils.color_utils')
+
 local dark_red = '#d16969'
 local orange = '#f9ae28'
 local brown = '#ce9178'
@@ -62,11 +64,11 @@ local winbar_fg = '#a9a9a9' -- breadcrumb.foreground
 -- Tabline
 local tab_bg = black4 -- editorGroupHeader.tabsBackground
 local tab_active_fg = white -- tab.activeForeground
-local tab_active_bg = '#353535' -- tab.activeBackground, 10% lighter than the norm_bg.
+local tab_active_bg = util.lighten(norm_bg, 0.15) -- tab.activeBackground
 local tab_inactive_fg = '#ccccc7' -- tab.inactiveForeground
 local tab_inactive_bg = tab_bg -- tab.inactiveBackground
-local tab_border = '#2b2b2b' -- editorGroupHeader.tabsBorder, tab.border
-local tab_bottom_border_active = '#0078d4' -- tab.activeBorderTop
+local tab_indicator_active_fg = '#0078d4' -- indicator for the active tab, a bar on the leftmost of the current tab
+local tab_indicator_inactive_fg = util.lighten(tab_active_bg, 0.1)
 
 -- Statusline
 local stl_fg = white -- statusBar.foreground
@@ -144,13 +146,14 @@ local groups = {
   WinbarSpecialIcon = { fg = icon_fg, bg = norm_bg }, -- icon for special filetype
   WinbarPathPrefix = { fg = icon_fg, bg = norm_bg, bold = true }, -- the prefix of the path for the special folders such as CONFIG
   -- Tabline
-  TabBorderRight = { fg = tab_border, bg = tab_inactive_bg, underline = true, sp = tab_border }, -- the right border of each tab
-  TabDefaultIcon = { fg = icon_fg, bg = tab_inactive_bg, underline = true, sp = tab_border }, -- icon for special filetype on inactive tab
-  TabDefaultIconActive = { fg = icon_fg, bg = tab_active_bg, underline = true, sp = tab_bottom_border_active }, -- icon for special filetype on active tab
-  TabError = { fg = error_list, bg = tab_inactive_bg, underline = true, sp = tab_border },
-  TabErrorActive = { fg = error_list, bg = tab_active_bg, underline = true, sp = tab_bottom_border_active },
-  TabWarn = { fg = warn_list , bg = tab_inactive_bg, underline = true, sp = tab_border },
-  TabWarnActive = { fg = warn_list, bg = tab_active_bg, underline = true, sp = tab_bottom_border_active },
+  TabDefaultIcon = { fg = icon_fg, bg = tab_inactive_bg }, -- icon for special filetype on inactive tab
+  TabDefaultIconActive = { fg = icon_fg, bg = tab_active_bg }, -- icon for special filetype on active tab
+  TabError = { fg = error_list, bg = tab_inactive_bg },
+  TabErrorActive = { fg = error_list, bg = tab_active_bg },
+  TabWarn = { fg = warn_list , bg = tab_inactive_bg },
+  TabWarnActive = { fg = warn_list, bg = tab_active_bg },
+  TabIndicatorActive = { fg = tab_indicator_active_fg, bg = tab_active_bg },
+  TabIndicatorInactive = { fg = tab_indicator_inactive_fg, bg = tab_inactive_bg },
 
   --
   -- Editor
@@ -205,9 +208,9 @@ local groups = {
   SpellRare  = { undercurl = true, sp = info_blue  },
   StatusLine = { bg = black4 },
   StatusLineNC = { fg = gray, bg = black4 },
-  TabLine = { fg = tab_inactive_fg, bg = tab_inactive_bg, underline = true, sp = tab_border }, -- tab.inactiveBackground, tab.inactiveForeground
-  TabLineFill = { fg = 'NONE', bg = tab_bg, underline = true, sp = tab_border }, -- editorGroupHeader.tabsBackground
-  TabLineSel = { fg = tab_active_fg, bg = tab_active_bg, underline = true, sp = tab_bottom_border_active }, -- tab.activeBackground, tab.activeForeground
+  TabLine = { fg = tab_inactive_fg, bg = tab_inactive_bg }, -- tab.inactiveBackground, tab.inactiveForeground
+  TabLineFill = { fg = 'NONE', bg = tab_bg }, -- editorGroupHeader.tabsBackground
+  TabLineSel = { fg = tab_active_fg, bg = tab_active_bg }, -- tab.activeBackground, tab.activeForeground
   Title = { fg = dark_blue, bold = true },
   Visual = { bg = '#264F78' }, -- editor.selectionBackground
   -- VisualNOS = { },

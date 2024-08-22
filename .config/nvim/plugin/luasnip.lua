@@ -73,6 +73,11 @@ vim.keymap.set({ 'i', 's' }, '<C-c>', function()
   end
 end)
 
+-- Insert on-the-fly snippet previously stored in register s
+vim.keymap.set('i', '<C-r>s', function()
+  require('luasnip.extras.otf').on_the_fly('s')
+end)
+
 -- Cancel the snippet session when leaving insert mode
 -- Ref: https://github.com/L3MON4D3/LuaSnip/issues/656#issuecomment-1313310146
 vim.api.nvim_create_autocmd('ModeChanged', {

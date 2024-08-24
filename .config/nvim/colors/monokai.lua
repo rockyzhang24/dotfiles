@@ -124,10 +124,6 @@ local groups = {
   ProgressBar = { fg = brown }, -- progressBar.background
   MatchedCharacters = { fg = matched_chars }, -- editorSuggestWidget.highlightForeground
   Hint = "MatchedCharacters", -- for the hint letter in options, e.g., the q in [q]uickfix
-  -- For the unused code, use Identifier's fg (f8f8f2) as the base color,
-  -- editorUnnecessaryCode.opacity is 000000aa (the alpha value is aa), so the color will be
-  -- f8f8f2aa. Converting hexa to hex gets b3b3ad.
-  UnnecessaryCode = { fg = '#b3b3ad' },
   -- Git diff
   DiffLineAdded = { bg = '#374026' }, -- diffEditor.insertedLineBackground
   DiffLineDeleted = { bg = '#432f31' }, -- diffEditor.removedLineBackground
@@ -208,7 +204,7 @@ local groups = {
   DiagnosticSignInfo = "DiagnosticInfo",
   DiagnosticSignHint = "DiagnosticHint",
   DiagnosticSignOk = "DiagnosticOk",
-  DiagnosticUnnecessary = "UnnecessaryCode",
+  DiagnosticUnnecessary = {}, -- don't gray the unused code
   DiagnosticDeprecated = { fg = gray, strikethrough = true },
 
   --

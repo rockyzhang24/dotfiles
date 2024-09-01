@@ -45,8 +45,6 @@ icons.symbol_kinds = {
   Package = ' ',
 }
 
-icons.lightbulb = ' '
-
 icons.diagnostics = {
   ERROR = ' ',
   WARN = ' ',
@@ -94,6 +92,8 @@ icons.misc = {
   folder = '󰉋 ',
   graph = ' ',
   help = ' ',
+  lightbulb = '',
+  lightning_bolt = '󱐋',
   list = ' ',
   location = '',
   indent = ' ',

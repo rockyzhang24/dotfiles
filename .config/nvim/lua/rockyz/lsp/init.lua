@@ -1,4 +1,5 @@
 local diagnostic_icons = require('rockyz.icons').diagnostics
+local lsp_utils = require('rockyz.lsp.utils')
 
 local M = {}
 
@@ -73,20 +74,16 @@ local function on_attach(client, bufnr)
   vim.keymap.set('n', 'grr', vim.lsp.buf.references, opts)
   vim.keymap.set('i', '<C-s>', vim.lsp.buf.signature_help, opts)
   vim.keymap.set('n', 'K', vim.lsp.buf.hover, opts)
-  -- Rename
   vim.keymap.set('n', '<Leader>rn', vim.lsp.buf.rename, opts)
-  -- Code actions under the cursor
-  -- TODO: so far vim.lsp.buf.code_action() returns code actions on the entire cursor line, not
-  -- just right under the cursor. So I extracted only those diagnostics overlapping the cursor and
-  -- use them to get code actions. Once this issue https://github.com/neovim/neovim/issues/21985
-  -- is solved, we just need to directly call vim.lsp.buf.code_action().
-  vim.keymap.set({ 'n', 'x' }, '<Leader>ca', function()
-    vim.lsp.buf.code_action({
-      context = {
-        diagnostics = require('rockyz.lsp.utils').get_diagnostics_under_cursor(),
-      },
-    })
-  end, opts)
+  -- Code actions for the current line.
+  -- In order to get the code actions only for the cursor position, the diagnostics overlap the
+  -- cursor position could be passed as part of the parameter to vim.lsp.buf.code_action(). However,
+  -- currently the code action function doesn't offer a way to extract per client diagnostics, i.e.,
+  -- all the diagnostics at the cursor position will be sent to each server.
+  --
+  -- TODO: modify this keymap to only get the code actions for the current cursor position after the
+  -- API is fixed.
+  vim.keymap.set({ 'n', 'x' }, '<Leader>ca', vim.lsp.buf.code_action, opts)
   -- Diagnostics
   vim.keymap.set('n', 'go', vim.diagnostic.open_float, opts)
   vim.keymap.set('n', '[d', function() -- previous

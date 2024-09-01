@@ -24,7 +24,7 @@ end
 
 local winhighlight = 'FloatBorder:SuggestWidgetBorder,CursorLine:SuggestWidgetSelect,Search:None'
 if vim.g.border_enabled then
-  winhighlight = 'Normal:Normal,PmenuThumb:ScrollbarSlider,' .. winhighlight
+  winhighlight = 'Normal:Normal,' .. winhighlight
 else
   winhighlight = 'Normal:Pmenu,' .. winhighlight
 end
@@ -75,10 +75,10 @@ cmp.setup({
         end
       end,
     },
-    ['<C-b>'] = {
+    ['<C-h>'] = {
       i = cmp.mapping.scroll_docs(-4),
     },
-    ['<C-f>'] = {
+    ['<C-l>'] = {
       i = cmp.mapping.scroll_docs(4),
     },
     ['<C-Enter>'] = {

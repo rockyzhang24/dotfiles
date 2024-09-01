@@ -9,8 +9,8 @@ config.term = 'wezterm'
 config.window_decorations = "RESIZE"
 
 -- Font
-config.font = wezterm.font('SauceCodePro Nerd Font', { weight = 'Medium' })
-config.font_size = 15
+config.font = wezterm.font('MonoLisa Nerd Font', { weight = 'Regular' })
+config.font_size = 14
 -- Disable ligatures
 config.harfbuzz_features = { 'calt=0', 'clig=0', 'liga=0' }
 
@@ -30,7 +30,7 @@ config.color_scheme = 'monokai'
 
 -- Tab bar
 config.window_frame = {
-  font = wezterm.font('JetBrainsMono Nerd Font', { weight = 'Bold' }),
+  font = wezterm.font('MonoLisa Nerd Font', { weight = 'Bold' }),
   font_size = 11,
 }
 -- Tab bar title

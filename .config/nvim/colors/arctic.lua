@@ -191,8 +191,14 @@ local groups = {
   -- NormalNC = { },
   Pmenu = { fg = norm_fg, bg = norm_bg }, -- editorSuggestWidget.background/foreground
   PmenuSel = { fg = white, bg = selected_item_bg }, -- editorSuggestWidget.selectedForeground/selectedBackground
+  -- PmenuKind = {},
+  -- PmenuKindSel = {},
+  -- PmenuExtra = {},
+  -- PmenuExtraSel = {},
   PmenuSbar = { bg = norm_bg },
   PmenuThumb = "ScrollbarSlider",
+  PmenuMatch = { fg = matched_chars, bg = norm_bg },
+  PmenuMatchSel = { fg = matched_chars, bg = selected_item_bg, bold = true },
   NormalFloat = "Pmenu",
   Question = { fg = dark_blue },
   QuickFixLine = "QfSelection",

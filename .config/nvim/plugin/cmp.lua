@@ -90,6 +90,15 @@ cmp.setup({
     ['<C-y>'] = {
       i = cmp.mapping.confirm({ select = true }),
     },
+    ['<C-f>'] = {
+      i = cmp.mapping.complete({
+        config = {
+          sources = {
+            { name = 'path' }
+          },
+        },
+      })
+    },
     ['<Tab>'] = {
       c = function()
         if cmp.visible() then
@@ -124,14 +133,12 @@ cmp.setup({
       option = {
         -- Buffer completions from all visible buffers
         get_bufnrs = function()
-          return vim.iter(vim.api.nvim_list_wins())
-          :map(function(win)
+          return vim.iter(vim.api.nvim_list_wins()):map(function(win)
             local buf = vim.api.nvim_win_get_buf(win)
             if not is_large_file(buf) then
               return buf
             end
-          end)
-          :totable()
+          end):totable()
         end,
       },
     },

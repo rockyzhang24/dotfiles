@@ -95,9 +95,9 @@ vim.api.nvim_create_autocmd('ModeChanged', {
   end,
 })
 
--- Snippets are stored in separate files.
--- Ref: https://github.com/L3MON4D3/LuaSnip/blob/master/DOC.md#lua
-require('luasnip.loaders.from_lua').lazy_load({ paths = '~/.config/nvim/lua/rockyz/snippets' })
+-- Load my custom snippets
+require('luasnip.loaders.from_lua').lazy_load({ paths = vim.fn.stdpath('config') .. '/luasnippets' })
+require('luasnip.loaders.from_vscode').lazy_load({ paths = vim.fn.stdpath('config') .. '/codesnippets' })
 
 -- Create a command to edit the snippet file associated with the current
 -- filetype type

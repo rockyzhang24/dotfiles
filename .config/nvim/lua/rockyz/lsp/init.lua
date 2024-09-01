@@ -1,5 +1,4 @@
 local diagnostic_icons = require('rockyz.icons').diagnostics
-local lsp_utils = require('rockyz.lsp.utils')
 
 local M = {}
 

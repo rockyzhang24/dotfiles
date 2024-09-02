@@ -13,7 +13,11 @@
 [branch]
   sort = -committerdate
 [alias]
+  b = branch
+  co = checkout
   lg = log --all --color --graph --abbrev-commit --date=short --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold dim blue)<%an>%Creset'
+  m = merge
+  p = push
 [interactive]
   diffFilter = delta --color-only
 [delta]

@@ -37,7 +37,9 @@ M.client_capabilities = function()
     vim.lsp.protocol.make_client_capabilities(),
     require('cmp_nvim_lsp').default_capabilities()
   )
-  capabilities.textDocument.completion.completionItem.snippetSupport = true -- for jsonls
+  -- Enable (broadcasting) snippet capability for completion
+  -- For html, cssls, jsonls
+  capabilities.textDocument.completion.completionItem.snippetSupport = true
   return capabilities
 end
 

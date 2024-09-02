@@ -23,6 +23,11 @@ lspconfig.clangd.setup({
   },
 })
 
+-- CSS
+lspconfig.cssls.setup({
+  capabilities = capabilities(),
+})
+
 -- Golang
 lspconfig.gopls.setup({
   capabilities = capabilities(),
@@ -38,10 +43,17 @@ lspconfig.gopls.setup({
   },
 })
 
+-- HTML
+lspconfig.html.setup({
+  capabilities = capabilities(),
+})
+
 -- Json/Jsonc
 lspconfig.jsonls.setup({
   capabilities = capabilities(),
   settings = {
+    -- See setting options
+    -- https://github.com/microsoft/vscode/tree/main/extensions/json-language-features/server#settings
     json = {
       -- Use JSON Schema Store (SchemaStore.nvim)
       schemas = require('schemastore').json.schemas(),

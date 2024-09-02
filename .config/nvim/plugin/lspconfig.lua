@@ -50,6 +50,35 @@ lspconfig.jsonls.setup({
   },
 })
 
+-- JavaScript and TypeScript
+local lang_settings = {
+  suggest = { completeFunctionCalls = true },
+  inlayHints = {
+    functionLikeReturnTypes = { enabled = true },
+    parameterNames = { enabled = 'literals' },
+    variableTypes = { enabled = true },
+  },
+}
+lspconfig.vtsls.setup({
+  capabilities = capabilities(),
+  settings = {
+    -- See the configuration schema
+    -- https://github.com/yioneko/vtsls/blob/main/packages/service/configuration.schema.json
+    vtsls = {
+      javascript = lang_settings,
+      typescript = lang_settings,
+      -- Use workspace version of TypeScript
+      autoUseWorkspaceTsdk = true,
+      experimental = {
+        maxInlayHintLength = 30,
+        completion = {
+          enableServerSideFuzzyMatch = true,
+        },
+      },
+    },
+  },
+})
+
 -- Lua
 lspconfig.lua_ls.setup({
   capabilities = capabilities(),

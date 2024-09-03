@@ -183,6 +183,27 @@ lspconfig.rust_analyzer.setup({
 -- TOML
 lspconfig.taplo.setup({
   capabilities = capabilities(),
+  settings = {
+    -- See all the setting options
+    -- https://github.com/tamasfe/taplo/blob/master/editors/vscode/package.json
+    evenBetterToml = {
+      taplo = {
+        configFile = {
+          enabled = true,
+        },
+      },
+      schema = {
+        enabled = true,
+        catalogs = {
+          'https://www.schemastore.org/api/json/catalog.json',
+        },
+        cache = {
+          memoryExpiration = 60,
+          diskExpiration = 600,
+        },
+      },
+    },
+  },
 })
 
 -- Vimscript

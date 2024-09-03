@@ -93,7 +93,7 @@ local function lightbulb()
     vim.list_extend(diagnostics, vim.diagnostic.get(bufnr, { namespace = ns_push }))
 
     -- Fetch lsp diagnostics (lsp.Diagnostics[]) that only overlaps the cursor position
-    context.diagnostics = vim.tbl_map(function(d)
+    context.diagnostics = vim.iter(diagnostics):map(function(d)
       --
       -- After the client receives diagnostics (lsp.Diagnostics[]) from the server, each lsp
       -- diagnostic gets converted to vim diagnostic (vim.Diagnostics[]) and then catched. In the
@@ -112,7 +112,7 @@ local function lightbulb()
       then
         return d.user_data.lsp
       end
-    end, diagnostics)
+    end):totable()
 
     local params = vim.lsp.util.make_range_params(winid, client.offset_encoding)
     params.context = context

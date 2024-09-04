@@ -1,5 +1,4 @@
 local function scratch_buf_init()
-  local buf = vim.api.nvim_get_current_buf()
   for name, value in pairs({
     filetype = 'scratch',
     buftype = 'nofile',
@@ -7,7 +6,7 @@ local function scratch_buf_init()
     swapfile = false,
     modifiable = true,
   }) do
-    vim.api.nvim_set_option_value(name, value, { buf = buf })
+    vim.api.nvim_set_option_value(name, value, { scope = 'local' })
   end
 end
 
@@ -45,22 +44,13 @@ vim.api.nvim_create_user_command('Scratch', function()
   scratch_buf_init()
 end, { nargs = 0 })
 
--- Messages redirection
--- 1. Redirect messages to a file
-vim.api.nvim_create_user_command('MsgsFile', function()
-  local file = '$HOME/Downloads/messages.txt'
-  vim.cmd('redir >> ' .. file .. ' | silent messages | redir END')
-end, {})
--- 2. Redirect messages to system clipboard
-vim.api.nvim_create_user_command('MsgsClip', function()
-  vim.cmd('redir @*>  | silent messages | redir END')
-end, {})
--- 3. Redirect messages to a split window
-vim.api.nvim_create_user_command('MsgsSplit', function()
+-- Redirect message output to a split window
+vim.api.nvim_create_user_command('Redir', function()
   vim.cmd('vertical new')
   scratch_buf_init()
   vim.cmd('redir => msg_output | silent messages | redir END')
-  vim.cmd("execute 'put =msg_output'")
+  local output = vim.fn.split(vim.g.msg_output, '\n')
+  vim.api.nvim_buf_set_lines(0, 0, 0, false, output)
 end, {})
 
 -- Copy text to clipboard using code block format, i.e.,
@@ -89,8 +79,7 @@ vim.api.nvim_create_user_command(
 )
 
 -- Change indentation of the current buffer
--- Usage:
--- :Reindent cur_indent new_indent
+-- Usage: `:Reindent cur_indent new_indent`
 vim.api.nvim_create_user_command('Reindent', function(opts)
   if #opts.fargs < 2 then
     vim.notify("Two arguments are required!")

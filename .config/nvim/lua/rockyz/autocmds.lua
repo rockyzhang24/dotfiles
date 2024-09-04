@@ -145,9 +145,11 @@ vim.api.nvim_create_autocmd('CmdWinEnter', {
 
 -- Terminal
 vim.api.nvim_create_autocmd({ 'TermOpen', 'BufWinEnter', 'WinEnter' }, {
-  group = vim.api.nvim_create_augroup('rockyz/terminal', {}),
+  group = vim.api.nvim_create_augroup('rockyz/terminal_insert', {}),
   pattern = 'term://*',
-  command = 'startinsert',
+  callback = function()
+    vim.cmd.startinsert()
+  end,
 })
 
 -- Automatically equalize splits when Vim is resized

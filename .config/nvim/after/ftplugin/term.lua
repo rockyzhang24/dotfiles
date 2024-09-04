@@ -1,4 +1,4 @@
-vim.wo.number = false
-vim.wo.relativenumber = false
-vim.wo.signcolumn = 'no'
-vim.wo.list = false
+vim.wo[0][0].number = false
+vim.wo[0][0].relativenumber = false
+vim.wo[0][0].signcolumn = 'no'
+vim.wo[0][0].list = false

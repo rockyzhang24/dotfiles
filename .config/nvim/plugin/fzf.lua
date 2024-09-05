@@ -205,11 +205,15 @@ vim.keymap.set('n', '<Leader>fb', function()
     ['sink*'] = function(lines)
       local key = lines[1]
       if key == 'ctrl-d' then
-        local bufnrs = {}
         for i = 2, #lines do
-          table.insert(bufnrs, string.match(lines[i], '%[(%d+)%]'))
+          local bufnr = string.match(lines[i], '%[(%d+)%]')
+          if vim.bo[tonumber(bufnr)].buftype == 'terminal' then
+            -- Force deletion of terminal buffer
+            vim.cmd('bwipeout! ' .. bufnr)
+          else
+            vim.cmd('bwipeout ' .. bufnr)
+          end
         end
-        vim.cmd('bwipeout ' .. table.concat(bufnrs, ' '))
       elseif key == '' then
         -- ENTER (only works when a single buffer is selected)
         if #lines ~= 2 then

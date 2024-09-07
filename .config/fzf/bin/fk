@@ -10,7 +10,7 @@ opts=" \
   --header-lines=2 \
   --preview='echo {}' \
   --preview-window=down,30%,wrap \
-  --preview-label '[ Full Command ]' \
+  --preview-label '[ Process Information ]' \
   --bind 'start:unbind(focus)'"
 
 if [ "$UID" != "0" ]; then

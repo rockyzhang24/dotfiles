@@ -61,6 +61,7 @@ selections="$(fzf \
     } || { \
       rm $fzf_mode_enabled; echo \"change-prompt(1. RG> )+disable-search+reload($rg_prefix {q} || true)+rebind(change)+transform-query({ echo {q} > $fzf_query; cat $rg_query })\" \
     }" \
+  --bind 'focus:transform-preview-label:echo [ {1}:{2}:{3} ]' \
   --prompt '1. RG> ' \
   --delimiter : \
   --header ':: ENTER (open selections in vim), ALT-F (toggle FZF mode and RG mode)' \

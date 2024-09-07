@@ -148,6 +148,8 @@ vim.cmd([[
     \   "down,45%",
     \   "--header",
     \   ":: CTRL-S (toggle sort), CTRL-Y (yank commmit hashes), CTRL-D (diff)",
+    \   "--bind",
+    \   "focus:transform-preview-label:echo [ Diff with commit {2} ]",
     \ ]}, <bang>0)
 ]])
 vim.keymap.set({ 'n', 'x' }, '<Leader>fC', function()
@@ -164,6 +166,8 @@ vim.cmd([[
     \   "down,45%",
     \   "--header",
     \   ":: CTRL-S (toggle sort), CTRL-Y (yank commmit hashes), CTRL-D (diff)",
+    \   "--bind",
+    \   "focus:transform-preview-label:echo [ Diff with commit {1} ]",
     \ ]}, <bang>0)
 ]])
 vim.keymap.set({ 'n', 'x' }, '<Leader>fc', function()
@@ -242,6 +246,8 @@ vim.keymap.set('n', '<Leader>fb', function()
       ':: CTRL-D (delete buffers)',
       '--expect',
       'ctrl-d,ctrl-x,ctrl-v,ctrl-t',
+      '--bind',
+      'focus:transform-preview-label:echo [ {3..} ]',
     },
   }))
 end)
@@ -285,6 +291,8 @@ vim.keymap.set('n', '<Leader>fm', function()
       '+{2}-/2',
       '--preview',
       bat_prefix .. ' --highlight-line {2} -- ' .. filename,
+      '--bind',
+      'focus:transform-preview-label:echo [ {1}:{2}:{3} ]',
     },
   }))
 end)
@@ -361,6 +369,8 @@ vim.keymap.set('n', '<Leader>ft', function()
       'ctrl-d',
       '--preview',
       'file=$(echo {1} | sed "s/@@@@/ /g"); [[ -f $file ]] && ' .. bat_prefix .. ' --highlight-line {2} -- $file || echo "No preview support!"',
+      '--bind',
+      'focus:transform-preview-label:echo [ $(echo {1} | sed "s/@@@@/ /g; s|^$HOME|~|") ]',
     },
   }))
 end)
@@ -408,6 +418,8 @@ local function fzf_qf(win_local)
       'down,45%,+{3}-/2',
       '--preview',
       bat_prefix .. ' --highlight-line {3} -- {2}',
+      '--bind',
+      'focus:transform-preview-label:echo [ $(echo {2} | sed "s|^$HOME|~|") ]',
     },
   }))
 end
@@ -532,6 +544,8 @@ local function fzf_qf_history(win_local)
       'down,45%',
       '--preview',
       preview,
+      '--bind',
+      'focus:transform-preview-label:echo [ {2..} ]',
     },
   }))
 end
@@ -589,6 +603,8 @@ local function get_fzf_opts_for_RG(rg, query, name)
         rm ' .. fzf_mode_enabled .. '; \
         echo "change-prompt(' .. name .. ' [RG]> )+disable-search+reload(' .. rg .. ' {q} || true)+rebind(change)+transform-query({ echo {q} > ' .. fzf_query .. '; cat ' .. rg_query .. ' })"\
       }',
+    '--bind',
+    'focus:transform-preview-label:echo [ {1}:{2}:{3} ]',
     '--delimiter',
     ':',
     '--header',
@@ -667,6 +683,8 @@ vim.keymap.set({ 'n', 'x' }, '<Leader>g*', function()
         -- code.
         '--header',
         ':: Query: ' .. colors.red_bold .. header .. colors.reset,
+        '--bind',
+        'focus:transform-preview-label:echo [ {1}:{2}:{3} ]',
       },
     }
   )
@@ -694,6 +712,8 @@ vim.keymap.set('n', '<Leader>gb', function()
       'start:reload(' .. rg .. " '' " .. filename .. ')',
       '--bind',
       'change:reload:' .. rg .. ' {q} ' .. filename .. '|| true',
+      '--bind',
+      'focus:transform-preview-label:echo [ {1}:{2}:{3} ]',
       '--preview-window',
       'down,45%,+{2}-/2',
       '--preview',

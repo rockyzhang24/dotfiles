@@ -10,7 +10,7 @@ local M = {}
 
 local navic = require('nvim-navic')
 local icons  = require('rockyz.icons')
-local delimiter = icons.caret.caret_right
+local delimiter = icons.caret.right
 local special_filetypes = require('rockyz.special_filetypes')
 
 -- Cache the highlight groups created for different icons

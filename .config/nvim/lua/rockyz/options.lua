@@ -16,8 +16,8 @@ vim.opt.listchars = {
 }
 vim.opt.fillchars = {
   fold = ' ',
-  foldopen = icons.caret.caret_down,
-  foldclose = icons.caret.caret_right,
+  foldopen = icons.caret.down,
+  foldclose = icons.caret.right,
   foldsep = ' ',
   eob = ' ',
   msgsep = '‾',

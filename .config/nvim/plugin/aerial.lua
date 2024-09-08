@@ -19,7 +19,7 @@ require('aerial').setup({
     ["zX"] = "",
   },
   filter_kind = false, -- don't filter out any kinds
-  icons = vim.tbl_extend('keep', icons.symbol_kinds, { Collapsed = icons.caret.caret_right }),
+  icons = vim.tbl_extend('keep', icons.symbol_kinds, { Collapsed = icons.caret.right }),
   show_guides = true,
   nav = {
     border = vim.g.border_style,

@@ -343,7 +343,7 @@ vim.keymap.set('n', '<Leader>ft', function()
     local entry = prefix .. ' ' .. idx .. ': ' .. table.concat(filenames, ', ')
     -- Indicator for current tab
     if tid == cur_tab then
-      entry = entry .. ' ' .. icon.caret.caret_left
+      entry = entry .. ' ' .. icon.caret.left
     end
     table.insert(entries, entry)
   end
@@ -524,7 +524,7 @@ local function fzf_qf_history(win_local)
     -- Each entry presented in fzf is like: "[3] 1 items    Diagnostics".
     local entry = list.id .. ' [' .. cnt .. '] ' .. list.size .. ' items    ' .. list.title
     if list.nr == cur_nr then
-      entry = entry .. ' ' .. icon.caret.caret_left
+      entry = entry .. ' ' .. icon.caret.left
     end
     table.insert(entries, entry)
     cnt = cnt + 1

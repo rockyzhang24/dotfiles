@@ -66,7 +66,7 @@ function M.qftf(info)
       end
       -- Line number and column number
       local lnum_col = item.lnum
-      if item.lnum ~= '' and item.col ~= '' then
+      if item.col ~= '' then
         lnum_col = item.lnum .. ':' .. item.col
       end
       if lnum_col ~= '' then

@@ -47,7 +47,7 @@
 
 local uv = require('luv')
 local qf_utils = require('rockyz.utils.qf_utils')
-local caret = require('rockyz.icons').caret
+local icon = require('rockyz.icons')
 
 -- Use the globally set statusline
 vim.api.nvim_create_autocmd('User', {
@@ -63,10 +63,17 @@ local bat_prefix = 'bat --color=always --paging=never --style=numbers'
 
 -- ANSI escape codes for colors
 local colors = {
-  red = '\x1b[31m',
-  red_bold = '\x1b[1;31m',
-  green = '\x1b[32m',
-  yellow = '\x1b[33m',
+  directory = '\x1b[38;2;86;156;214m', -- Directory
+  number = '\x1b[38;2;172;128;255m', -- Number
+  type = {
+    E = '\x1b[38;2;241;74;74m', -- DiagnosticError
+    W = '\x1b[38;2;204;167;0m', -- DiagnosticWarn
+    I = '\x1b[38;2;55;148;255m', -- DiagnosticInfo
+    H = '\x1b[38;2;179;178;177m', -- DiagnosticHint
+  },
+  green = '\x1b[38;2;166;226;44m',
+  red = '\x1b[38;2;249;36;114m',
+  red_bold = '\x1b[1;38;2;249;36;114m',
   reset = '\x1b[m'
 }
 
@@ -336,7 +343,7 @@ vim.keymap.set('n', '<Leader>ft', function()
     local entry = prefix .. ' ' .. idx .. ': ' .. table.concat(filenames, ', ')
     -- Indicator for current tab
     if tid == cur_tab then
-      entry = entry .. ' ' .. caret.caret_left
+      entry = entry .. ' ' .. icon.caret.caret_left
     end
     table.insert(entries, entry)
   end
@@ -379,6 +386,38 @@ end)
 -- Find entries in quickfix and location list
 --
 
+-- Construct entry in qf
+-- <filename> <lnum>-<end_lnum>:<col>-<end_col> [<type>] <text>
+local function get_qf_entry(item)
+  local entry = {}
+  if item.fname ~= '' then
+    table.insert(entry, colors.directory .. item.fname .. colors.reset)
+  end
+  local lnum_col = item.lnum
+  if item.col ~= '' then
+    lnum_col = item.lnum .. ':' .. item.col
+  end
+  if lnum_col ~= '' then
+    table.insert(entry, colors.number .. lnum_col .. colors.reset)
+  end
+  local type_color = colors.type[item.type]
+  if item.type ~= '' then
+    local type = '[' .. item.type .. ']'
+    if type_color then
+      type = type_color .. type .. colors.reset
+    end
+    table.insert(entry, type)
+  end
+  if item.text ~= '' then
+    local text = item.text
+    if type_color then
+      text = type_color .. text .. colors.reset
+    end
+    table.insert(entry, text)
+  end
+  return table.concat(entry, ' ')
+end
+
 ---@param win_local boolean true for location list and false for quickfix
 local function fzf_qf(win_local)
   local what = { items = 0 }
@@ -393,7 +432,7 @@ local function fzf_qf(win_local)
     -- The first three parts are used for fzf itself and won't be presented in fzf window.
     -- * bufnr is used for sink of fzf.vim
     -- * bufname and lnum are used for preview
-    table.insert(entries, bufnr .. ' ' .. bufname .. ' ' .. lnum .. ' ' .. qf_utils.format_qf_item(item))
+    table.insert(entries, bufnr .. ' ' .. bufname .. ' ' .. lnum .. ' ' .. get_qf_entry(qf_utils.format_qf_item(item)))
   end
   -- fzf
   local prompt = win_local and 'LocationList' or 'QuickfixList'
@@ -407,6 +446,7 @@ local function fzf_qf(win_local)
       vim.cmd('normal! zvzz')
     end,
     options = {
+      '--ansi',
       '--no-multi',
       '--prompt',
       prompt .. '> ',
@@ -484,7 +524,7 @@ local function fzf_qf_history(win_local)
     -- Each entry presented in fzf is like: "[3] 1 items    Diagnostics".
     local entry = list.id .. ' [' .. cnt .. '] ' .. list.size .. ' items    ' .. list.title
     if list.nr == cur_nr then
-      entry = entry .. ' ' .. caret.caret_left
+      entry = entry .. ' ' .. icon.caret.caret_left
     end
     table.insert(entries, entry)
     cnt = cnt + 1
@@ -509,7 +549,7 @@ local function fzf_qf_history(win_local)
         if item == nil then
           break
         end
-        local str = qf_utils.format_qf_item(item)
+        local str = get_qf_entry(qf_utils.format_qf_item(item))
         table.insert(errors, str)
       end
       write_file(hist_path, table.concat(errors, '\n'))

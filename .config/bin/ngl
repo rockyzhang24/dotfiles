@@ -11,7 +11,7 @@ if [[ $PWD == $HOME/.config || $PWD == $HOME/.config/* && $PWD != $HOME/.config/
 fi
 
 if git rev-parse >/dev/null 2>&1; then
-  nvim -c "Flog -raw-args=${*:+${(q)*}}" -c "bwipeout 1"
+  nvim -c "Flog -raw-args=${*:+${(q)*}}"
 else
   echo "Warning: not a git repo!"
 fi

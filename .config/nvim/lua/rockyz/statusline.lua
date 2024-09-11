@@ -146,6 +146,11 @@ function M.lsp_component(trunc_width)
   return string.format('[%s]', table.concat(client_names, ', '))
 end
 
+-- Cscope DB build status
+function M.cscope_component()
+  return vim.g.cscope_maps_statusline_indicator
+end
+
 ----------------
 -- Right section
 ----------------
@@ -325,6 +330,7 @@ function M.render()
       M.git_branch_component(120),
       M.git_diff_component(120),
       M.lsp_component(120),
+      M.cscope_component(),
     }, ' ' .. powerline_left .. ' '),
     '%=',
     concat_components({

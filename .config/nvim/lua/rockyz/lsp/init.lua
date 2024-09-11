@@ -56,8 +56,7 @@ local function on_attach(client, bufnr)
   --
   -- Mappings
   --
-  -- Nvim creates the following default LSP mappings but as a reference I still redefined the ones
-  -- I'm using, e,g., grr and K.
+  -- Nvim creates the following default LSP mappings:
   --  * K in NORMAL maps vim.lsp.buf.hover()
   --  * grr in NORMAL maps vim.lsp.buf.references()
   --  * grn in NORMAL maps vim.lsp.buf.rename()
@@ -72,7 +71,7 @@ local function on_attach(client, bufnr)
   vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, opts)
   vim.keymap.set('n', 'gy', vim.lsp.buf.type_definition, opts)
   vim.keymap.set('n', 'gI', vim.lsp.buf.implementation, opts)
-  vim.keymap.set('n', 'grr', vim.lsp.buf.references, opts)
+  vim.keymap.set('n', 'gr', vim.lsp.buf.references, { buffer = bufnr, nowait = true })
   vim.keymap.set('i', '<C-s>', vim.lsp.buf.signature_help, opts)
   vim.keymap.set('n', 'K', vim.lsp.buf.hover, opts)
   vim.keymap.set('n', '<Leader>rn', vim.lsp.buf.rename, opts)
@@ -84,7 +83,7 @@ local function on_attach(client, bufnr)
   --
   -- TODO: modify this keymap to only get the code actions for the current cursor position after the
   -- API is fixed.
-  vim.keymap.set({ 'n', 'x' }, '<Leader>ca', vim.lsp.buf.code_action, opts)
+  vim.keymap.set({ 'n', 'x' }, '<Leader>la', vim.lsp.buf.code_action, opts)
   -- Diagnostics
   vim.keymap.set('n', 'go', vim.diagnostic.open_float, opts)
   vim.keymap.set('n', '[d', function() -- previous

@@ -157,3 +157,14 @@ vim.api.nvim_create_autocmd('VimResized', {
   group = vim.api.nvim_create_augroup('rockyz/balance_splits', {}),
   command = 'wincmd =',
 })
+
+-- Disable wezterm shell integration if vim is launched in tmux in wezterm.
+-- Ref: https://github.com/wez/wezterm/issues/5986
+vim.api.nvim_create_autocmd('VimEnter', {
+  group = vim.api.nvim_create_augroup('rockyz/shell_integration_disable', {}),
+  callback = function()
+    if vim.env.WEZTERM_PANE and vim.env.TERM:match('tmux') then
+      vim.env.WEZTERM_SHELL_SKIP_ALL = 1
+    end
+  end
+})

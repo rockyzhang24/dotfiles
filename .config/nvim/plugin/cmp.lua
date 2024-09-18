@@ -126,7 +126,16 @@ cmp.setup({
       --   return types.lsp.CompletionItemKind[entry:get_kind()] ~= 'Snippet'
       -- end,
     },
-    { name = 'luasnip' },
+    {
+      name = 'luasnip',
+      -- Disable snippets inside comments and strings
+      entry_filter = function()
+        local ctx = require('cmp.config.context')
+        local in_string = ctx.in_syntax_group('String') or ctx.in_treesitter_capture('string')
+        local in_comment = ctx.in_syntax_group('Comment') or ctx.in_treesitter_capture('comment')
+        return not in_string and not in_comment
+      end,
+    },
     {
       name = 'buffer',
       keyword_length = 3,

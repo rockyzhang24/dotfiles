@@ -16,6 +16,7 @@ config.harfbuzz_features = { 'calt=0', 'clig=0', 'liga=0' }
 
 -- Adjust underline style
 config.underline_position = -6
+config.underline_thickness = '150%'
 
 -- Remove extra space
 config.window_padding = {

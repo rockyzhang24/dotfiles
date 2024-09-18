@@ -1,8 +1,8 @@
 # Completion for other programs
-fpath=($HOME/.config/zsh/completions/ $fpath)
+fpath=($ZDOTDIR/completions/ $fpath)
 
 # My own defined autoload functions under ~/.config/zsh/functions/
-autoload_functions_dir="$HOME/.config/zsh/functions"
+autoload_functions_dir="$ZDOTDIR/functions"
 fpath+=$autoload_functions_dir
 autoload -Uz ${autoload_functions_dir}/*(.:t)
 
@@ -51,7 +51,7 @@ zmodload zsh/complist
 _comp_options+=(globdots)
 
 # Completion for other programs
-fpath=($HOME/.config/zsh/completions/ $fpath)
+fpath=($ZDOTDIR/completions/ $fpath)
 
 # For kitty kitten: hyperlinked grep (defined in ~/.config/zsh/functions/hg)
 # Delegate its completion to rg
@@ -71,16 +71,22 @@ _ngd() {
   _git-difftool
 }
 
-source $HOME/.config/zsh/aliases
-source $HOME/.config/zsh/keybindings
-# source $HOME/.config/zsh/vi # use vi mode
-source $HOME/.config/zsh/env
+# Auto-cd if the command is a directory and can't be executed as a normal command
+setopt auto_cd
+
+# When deleting with <C-w>, delete file names at a time.
+WORDCHARS=${WORDCHARS/\/}
+
+source "$ZDOTDIR/aliases"
+source "$ZDOTDIR/keybindings"
+# source "$ZDOTDIR/vi" # use vi mode
+source "$ZDOTDIR/env"
 
 # fzf
-source $HOME/.config/fzf/fzf-config
+source "$HOME/.config/fzf/fzf-config"
 
 # Rust
-source $HOME/.cargo/env
+source "$HOME/.cargo/env"
 
 # iTerm2 Shell Integration
 export ITERM2_SQUELCH_MARK=1

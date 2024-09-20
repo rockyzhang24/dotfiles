@@ -1,12 +1,16 @@
 -- Dotfiles setup
 local function update_git_env()
   local cwd = vim.fn.getcwd()
-  local inside_config = vim.startswith(cwd, vim.env.XDG_CONFIG_HOME)
-  local inside_pack = vim.startswith(cwd, vim.env.XDG_CONFIG_HOME .. '/nvim/pack')
-  if inside_config and not inside_pack then
-    vim.env.GIT_DIR = vim.env.HOME .. '/dotfiles'
-    vim.env.GIT_WORK_TREE = vim.env.HOME
+  local ok1, inside_config = pcall(vim.startswith, cwd, vim.env.XDG_CONFIG_HOME)
+  if not ok1 or not inside_config then
+    return
   end
+  local ok2, inside_pack = pcall(vim.startswith, cwd, vim.env.XDG_CONFIG_HOME .. '/nvim/pack')
+  if not ok2 or inside_pack then
+    return
+  end
+  vim.env.GIT_DIR = vim.env.HOME .. '/dotfiles'
+  vim.env.GIT_WORK_TREE = vim.env.HOME
 end
 vim.api.nvim_create_autocmd('VimEnter', {
   group = vim.api.nvim_create_augroup('rockyz/dotfiles', {}),

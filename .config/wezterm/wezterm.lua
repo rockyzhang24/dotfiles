@@ -2,6 +2,9 @@ local wezterm = require('wezterm')
 local act = wezterm.action
 local config = wezterm.config_builder()
 
+-- Smoother
+config.max_fps = 100
+
 -- Support for undercurl, etc.
 config.term = 'wezterm'
 

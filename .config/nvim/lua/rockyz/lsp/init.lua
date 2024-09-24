@@ -8,8 +8,8 @@ vim.diagnostic.config({
     source = true,
     border = vim.g.border_style,
     severity_sort = true,
-    prefix = function(diag)
-      local level = vim.diagnostic.severity[diag.severity]
+    prefix = function(diagnostic)
+      local level = vim.diagnostic.severity[diagnostic.severity]
       local prefix = string.format(' %s ', diagnostic_icons[level])
       return prefix, 'Diagnostic' .. level:gsub('^%l', string.upper)
     end,

@@ -102,6 +102,7 @@ icons.misc = {
   neovim = ' ',
   note = ' ',
   outline = ' ',
+  page_previous = '󰮳 ',
   quickfix = ' ',
   rocket = ' ',
   search = ' ',

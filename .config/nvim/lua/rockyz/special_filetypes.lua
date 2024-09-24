@@ -45,6 +45,10 @@ local special_filetypes = {
     icon = icons.misc.help,
     title = 'Vim Help',
   },
+  kitty_scrollback = {
+    icon = icons.misc.page_previous,
+    title = 'Kitty Scrollback',
+  },
   loclist = {
     icon = icons.misc.quickfix,
     title = 'Location List',

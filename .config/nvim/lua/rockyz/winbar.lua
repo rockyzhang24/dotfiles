@@ -136,6 +136,9 @@ local function name_component()
   if ft == 'gitsigns.blame' then
     return 'Gitsigns Blame'
   end
+  if ft == 'kitty_scrollback' then
+    return 'Kitty Scrollback'
+  end
   if ft == 'qf' then
     local is_loclist = vim.fn.win_gettype(winid) == 'loclist'
     local type = is_loclist and 'Location List' or 'Quickfix List'

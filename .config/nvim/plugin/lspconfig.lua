@@ -11,6 +11,8 @@ lspconfig.bashls.setup({
 })
 
 -- C/C++
+-- Clangd requires compile_commands.json to work and the easiest way to generate it is to use CMake.
+-- How to use clangd C/C++ LSP in any project: https://gist.github.com/Strus/042a92a00070a943053006bf46912ae9
 lspconfig.clangd.setup({
   capabilities = capabilities(),
   cmd = {

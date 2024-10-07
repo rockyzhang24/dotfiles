@@ -215,7 +215,7 @@ local groups = {
   SymbolKindMethod = "@function.method",
   SymbolKindFunction = "@function",
   SymbolKindConstructor = "@constructor",
-  SymbolKindField = "@varialbe.member",
+  SymbolKindField = "@variable.member",
   SymbolKindVariable = "@variable",
   SymbolKindClass = "@type",
   SymbolKindInterface = "@lsp.type.interface",
@@ -239,7 +239,7 @@ local groups = {
   -- Other kinds from VSCode's symbolIcon.*
   SymbolKindArray = "@punctuation.bracket",
   SymbolKindBoolean = "@boolean",
-  SymbolKindKey = "@varialbe.member",
+  SymbolKindKey = "@variable.member",
   SymbolKindNamespace = "@module",
   SymbolKindString = "@string",
   SymbolKindNull = "@constant.builtin",

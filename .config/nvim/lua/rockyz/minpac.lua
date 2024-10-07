@@ -52,7 +52,10 @@ local function pack_init()
     'stevearc/aerial.nvim',
 
     -- Autocomplete
-    'hrsh7th/nvim-cmp',
+    {
+      'iguanacucumber/magazine.nvim',
+      { name = 'nvim-cmp', },
+    },
     'hrsh7th/cmp-nvim-lsp',
     'hrsh7th/cmp-buffer',
     'hrsh7th/cmp-path',

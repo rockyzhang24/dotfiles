@@ -31,7 +31,7 @@ fi
 if [[ $color_theme == 'monokai' ]]; then
   [[ $bg != -1 ]] && bg='#272822'
   fg='#f8f8f2'
-  colors="dark,fg:$fg,bg:$bg,hl:#f92472,fg+:#ffffff,bg+:#414339,gutter:$bg,hl+:#f92472,query:$fg,disabled:#7a7a77,border:$fg,separator:#454545,label:$fg,header:#fd9621:underline:bold"
+  colors="dark,fg:$fg,bg:$bg,hl:#ffe849,fg+:#ffffff,bg+:#414339,gutter:$bg,hl+:#ffe849,query:$fg,disabled:#7a7a77,border:$fg,separator:#454545,label:$fg,header:#fd9621:underline:bold"
 fi
 
 # Config the default options when running fzf

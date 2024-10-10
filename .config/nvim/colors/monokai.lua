@@ -786,7 +786,7 @@ local groups = {
   TelescopeSelectionCaret = { fg = colors256_161_pink },
   TelescopeMultiSelection = "TelescopeNormal",
   TelescopeMultiIcon = { fg = colors256_168_pink2 },
-  TelescopeMatching = "CmpItemAbbrMatch",
+  TelescopeMatching = { fg = yellow2 },
   TelescopePromptPrefix = { fg = colors256_110_blue, bold = true },
   TelescopePromptCounter = { fg = colors256_144_brown },
 

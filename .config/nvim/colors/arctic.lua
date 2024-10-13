@@ -5,6 +5,7 @@
 
 local util = require('rockyz.utils.color_utils')
 
+local red = '#f44747'
 local dark_red = '#d16969'
 local orange = '#f9ae28'
 local brown = '#ce9178'
@@ -872,6 +873,14 @@ local groups = {
 
   QuickScopePrimary = { fg = bright_pink, underline = true, sp = bright_pink },
   QuickScopeSecondary = { fg = purple, underline = true, sp = purple },
+
+  --
+  -- Ripgrep
+  --
+
+  RipgrepQuery = { fg = red },
+  RipgrepFilename = { fg = dark_pink },
+  RipgrepLineNum = { fg = green },
 }
 
 for k, v in pairs(groups) do

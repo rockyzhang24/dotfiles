@@ -879,6 +879,14 @@ local groups = {
 
   QuickScopePrimary = { fg = '#ff0000', underline = true, sp = '#ff0000' },
   QuickScopeSecondary = { fg = '#ff00ff', underline = true, sp = '#ff00ff' },
+
+  --
+  -- Ripgrep
+  --
+
+  RipgrepQuery = { fg = pink },
+  RipgrepFilename = { fg = purple },
+  RipgrepLineNum = { fg = green },
 }
 
 for k, v in pairs(groups) do

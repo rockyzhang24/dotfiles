@@ -43,6 +43,8 @@ icons.symbol_kinds = {
   Number = ' ',
   Object = ' ',
   Package = ' ',
+  -- Specials
+  Unknown = ' ',
 }
 
 icons.diagnostics = {

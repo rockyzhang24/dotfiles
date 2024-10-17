@@ -59,6 +59,7 @@ local function on_attach(client, bufnr)
   -- Nvim creates the following default LSP mappings:
   --  * K in NORMAL maps vim.lsp.buf.hover()
   --  * grr in NORMAL maps vim.lsp.buf.references()
+  --  * gri in NORMAL maps vim.lsp.buf.implementation()
   --  * grn in NORMAL maps vim.lsp.buf.rename()
   --  * gra in NORMAL and VISUAL maps vim.lsp.buf.code_action()
   --  * <C-s> in INSERT maps vim.lsp.buf.signature_help()

@@ -156,12 +156,6 @@ vim.api.nvim_create_autocmd({ 'TermOpen', 'BufWinEnter', 'WinEnter' }, {
   end,
 })
 
--- Automatically equalize splits when Vim is resized
-vim.api.nvim_create_autocmd('VimResized', {
-  group = vim.api.nvim_create_augroup('rockyz/balance_splits', {}),
-  command = 'wincmd =',
-})
-
 -- Disable wezterm shell integration if vim is launched in tmux in wezterm.
 -- Ref: https://github.com/wez/wezterm/issues/5986
 vim.api.nvim_create_autocmd('VimEnter', {

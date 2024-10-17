@@ -810,90 +810,92 @@ end
 -- Convert symbols to fzf entries and quickfix items
 -- Reference: the source code of vim.lsp.util.symbols_to_items
 -- (https://github.com/neovim/neovim/blob/master/runtime/lua/vim/lsp/util.lua)
-local function symbols_to_entries_and_items(symbols, bufnr, offset_encoding)
+local function symbols_to_entries_and_items(symbols, bufnr, offset_encoding, child_prefix)
+  bufnr = bufnr or 0
   local index = 0
-  local function _symbols_to_entries_and_items(_symbols, _entries, _items, _bufnr, child_prefix)
-    for _, symbol in ipairs(_symbols) do
-      local kind = vim.lsp.protocol.SymbolKind[symbol.kind] or 'Unknown'
-      local icon = icons.symbol_kinds[kind]
-      local colored_icon_kind = color_str(icon .. kind, 'SymbolKind' .. kind)
-      index = index + 1
-      if symbol.location then
-        --
-        -- LSP's WorkspaceSymbol[]
-        --
-        -- Get quickfix item. vim.lsp.util.locations_to_items will handle the conversion from
-        -- utf-32 or utf-16 index to utf-8 index internally.
-        local item = vim.lsp.util.locations_to_items({ symbol.location }, offset_encoding)[1]
-        item.text = '[' .. icon .. kind .. '] ' .. symbol.name
-        table.insert(_items, item)
-        local filename = item.filename
-        local lnum = item.lnum
-        local col = item.col
-        -- Get devicon
-        local devicon = ''
-        local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
-        if has_devicons then
-          local file_icon, file_icon_hl = devicons.get_icon(filename, vim.fn.fnamemodify(filename, ':e'), { default = true })
-          devicon = color_str(file_icon, file_icon_hl)
-        end
-        local fzf_text = '[' .. colored_icon_kind .. '] ' .. symbol.name
-          .. string.rep(' ', 6)
-          .. (devicon == '' and devicon or devicon .. ' ')
-          .. color_str(vim.fn.fnamemodify(filename, ':~:.'), 'RipgrepFilename')
-          .. ':' .. color_str(tostring(lnum), 'RipgrepLineNum')
-          .. ':' .. col
-        -- Fzf entries
-        -- Each fzf entry consists of 5 parts: index filename lnum col fzf_text. Only the fzf_text
-        -- will be displayed in fzf.
-        table.insert(_entries, table.concat({
-          index,
-          filename,
-          lnum,
-          col,
-          fzf_text,
-        }, ' '))
-      elseif symbol.selectionRange then
-        --
-        -- LSP's DocumentSymbol[]
-        --
-        local filename = vim.api.nvim_buf_get_name(_bufnr)
-        local start_pos = symbol.selectionRange.start
-        local end_pos = symbol.selectionRange['end']
-        local lnum = start_pos.line + 1
-        local line = vim.api.nvim_buf_get_lines(0, start_pos.line, start_pos.line + 1, false)[1]
-        local col = _str_byteindex_enc(line, start_pos.character, offset_encoding) + 1
-        local end_lnum = end_pos.line + 1
-        local end_line = vim.api.nvim_buf_get_lines(0, end_pos.line, end_pos.line + 1, false)[1]
-        local end_col = _str_byteindex_enc(end_line, end_pos.character, offset_encoding) + 1
-        local text = '[' .. icon .. kind .. '] ' .. symbol.name
-        -- Use two whitespaces for each level of indentation to show the hierarchical structure
-        local fzf_text = child_prefix .. '[' .. colored_icon_kind .. '] ' .. symbol.name
-        -- Fzf entries
-        table.insert(_entries, table.concat({
-          index,
-          filename,
-          lnum,
-          col,
-          fzf_text,
-        }, ' '))
-        -- Quickfix items
-        table.insert(_items, {
-          filename = filename,
-          lnum = lnum,
-          end_lnum = end_lnum,
-          col = col,
-          end_col = end_col,
-          text = text
-        })
-        if symbol.children then
-          _symbols_to_entries_and_items(symbol.children, _entries, _items, _bufnr, child_prefix .. string.rep(' ', 2))
-        end
+  local entries = {}
+  local items = {}
+  for _, symbol in ipairs(symbols) do
+    index = index + 1
+    local kind = vim.lsp.protocol.SymbolKind[symbol.kind] or 'Unknown'
+    local icon = icons.symbol_kinds[kind]
+    local colored_icon_kind = color_str(icon .. kind, 'SymbolKind' .. kind)
+    if symbol.location then
+      --
+      -- LSP's WorkspaceSymbol[]
+      --
+      -- Get quickfix item. vim.lsp.util.locations_to_items will handle the conversion from
+      -- utf-32 or utf-16 index to utf-8 index internally.
+      local item = vim.lsp.util.locations_to_items({ symbol.location }, offset_encoding)[1]
+      item.text = '[' .. icon .. kind .. '] ' .. symbol.name
+      table.insert(items, item)
+      local filename = item.filename
+      local lnum = item.lnum
+      local col = item.col
+      -- Get devicon
+      local devicon = ''
+      local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
+      if has_devicons then
+        local file_icon, file_icon_hl = devicons.get_icon(filename, vim.fn.fnamemodify(filename, ':e'), { default = true })
+        devicon = color_str(file_icon, file_icon_hl)
+      end
+      local fzf_text = '[' .. colored_icon_kind .. '] ' .. symbol.name
+      .. string.rep(' ', 6)
+      .. (devicon == '' and devicon or devicon .. ' ')
+      .. color_str(vim.fn.fnamemodify(filename, ':~:.'), 'RipgrepFilename')
+      .. ':' .. color_str(tostring(lnum), 'RipgrepLineNum')
+      .. ':' .. col
+      -- Fzf entries
+      -- Each fzf entry consists of 5 parts: index filename lnum col fzf_text. Only the fzf_text
+      -- will be displayed in fzf.
+      table.insert(entries, table.concat({
+        index,
+        filename,
+        lnum,
+        col,
+        fzf_text,
+      }, ' '))
+    elseif symbol.selectionRange then
+      --
+      -- LSP's DocumentSymbol[]
+      --
+      local filename = vim.api.nvim_buf_get_name(bufnr)
+      local start_pos = symbol.selectionRange.start
+      local end_pos = symbol.selectionRange['end']
+      local lnum = start_pos.line + 1
+      local line = vim.api.nvim_buf_get_lines(0, start_pos.line, start_pos.line + 1, false)[1]
+      local col = _str_byteindex_enc(line, start_pos.character, offset_encoding) + 1
+      local end_lnum = end_pos.line + 1
+      local end_line = vim.api.nvim_buf_get_lines(0, end_pos.line, end_pos.line + 1, false)[1]
+      local end_col = _str_byteindex_enc(end_line, end_pos.character, offset_encoding) + 1
+      local text = '[' .. icon .. kind .. '] ' .. symbol.name
+      -- Use two whitespaces for each level of indentation to show the hierarchical structure
+      local fzf_text = child_prefix .. '[' .. colored_icon_kind .. '] ' .. symbol.name
+      -- Fzf entries
+      table.insert(entries, table.concat({
+        index,
+        filename,
+        lnum,
+        col,
+        fzf_text,
+      }, ' '))
+      -- Quickfix items
+      table.insert(items, {
+        filename = filename,
+        lnum = lnum,
+        end_lnum = end_lnum,
+        col = col,
+        end_col = end_col,
+        text = text
+      })
+      if symbol.children then
+        local _entries, _items = symbols_to_entries_and_items(symbol.children, bufnr, offset_encoding, child_prefix .. string.rep(' ', 2))
+        vim.list_extend(entries, _entries)
+        vim.list_extend(items, _items)
       end
     end
-    return _entries, _items
   end
-  return _symbols_to_entries_and_items(symbols, {}, {}, bufnr or 0, '')
+  return entries, items
 end
 
 ---Send request document symbols or workspace symbols and then execute fzf
@@ -907,7 +909,7 @@ local function symbol_request_and_run_fzf(method, params, title, query)
     for client_id, result in pairs(results) do
       if result.result then
         local client = assert(vim.lsp.get_client_by_id(client_id))
-        entries, items = symbols_to_entries_and_items(result.result, 0, client.offset_encoding)
+        entries, items = symbols_to_entries_and_items(result.result, 0, client.offset_encoding, '')
       end
     end
     if vim.tbl_isempty(entries) then

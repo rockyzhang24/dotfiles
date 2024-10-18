@@ -791,17 +791,20 @@ end)
 -- Copied from the source code of vim.lsp.util._str_byteindex_enc
 -- (https://github.com/neovim/neovim/blob/master/runtime/lua/vim/lsp/util.lua)
 local function _str_byteindex_enc(line, index, encoding)
-  local len = #line
-  if index > len then
-    return len
-  end
+  local len8 = #line
   encoding = encoding or 'utf-16'
   if encoding == 'utf-8' then
-    return index and index or len
-  elseif encoding == 'utf-16' then
-    return vim.str_byteindex(line, index, true)
+    if index and index <= len8 then
+      return index
+    else
+      return len8
+    end
+  end
+  local len32, len16 = vim.str_utfindex(line)
+  if encoding == 'utf-16' then
+    return index <= len16 and vim.str_byteindex(line, index, true) or len8
   elseif encoding == 'utf=32' then
-    return vim.str_byteindex(line, index)
+    return index <= len32 and vim.str_byteindex(line, index) or len8
   else
     error('Invalid encoding: ' .. vim.inspect(encoding))
   end

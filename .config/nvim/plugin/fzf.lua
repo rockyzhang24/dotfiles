@@ -807,16 +807,24 @@ local function _str_byteindex_enc(line, index, encoding)
   end
 end
 
+--
+-- LSP document symbols and workspace symbols
+--
+
+-- The order of symbols in fzf entries and quickfix items is consistent. This symbol_idx is used to
+-- record the position of each symbol and its stored in each fzf entry. After selecting certain
+-- entries in fzf, we can retrieve the corresponding quickfix items using their indices.
+local symbol_idx = 0
+
 -- Convert symbols to fzf entries and quickfix items
 -- Reference: the source code of vim.lsp.util.symbols_to_items
 -- (https://github.com/neovim/neovim/blob/master/runtime/lua/vim/lsp/util.lua)
 local function symbols_to_entries_and_items(symbols, bufnr, offset_encoding, child_prefix)
   bufnr = bufnr or 0
-  local index = 0
   local entries = {}
   local items = {}
   for _, symbol in ipairs(symbols) do
-    index = index + 1
+    symbol_idx = symbol_idx + 1
     local kind = vim.lsp.protocol.SymbolKind[symbol.kind] or 'Unknown'
     local icon = icons.symbol_kinds[kind]
     local colored_icon_kind = color_str(icon .. kind, 'SymbolKind' .. kind)
@@ -849,7 +857,7 @@ local function symbols_to_entries_and_items(symbols, bufnr, offset_encoding, chi
       -- Each fzf entry consists of 5 parts: index filename lnum col fzf_text. Only the fzf_text
       -- will be displayed in fzf.
       table.insert(entries, table.concat({
-        index,
+        symbol_idx,
         filename,
         lnum,
         col,
@@ -873,7 +881,7 @@ local function symbols_to_entries_and_items(symbols, bufnr, offset_encoding, chi
       local fzf_text = child_prefix .. '[' .. colored_icon_kind .. '] ' .. symbol.name
       -- Fzf entries
       table.insert(entries, table.concat({
-        index,
+        symbol_idx,
         filename,
         lnum,
         col,
@@ -903,13 +911,16 @@ end
 ---@param query string The query for requesting workspace symbols. It will be empty for document
 ---symbol request
 local function symbol_request_and_run_fzf(method, params, title, query)
+  symbol_idx = 0
   vim.lsp.buf_request_all(0, method, params, function(results)
     local entries = {}
     local items = {}
     for client_id, result in pairs(results) do
       if result.result then
         local client = assert(vim.lsp.get_client_by_id(client_id))
-        entries, items = symbols_to_entries_and_items(result.result, 0, client.offset_encoding, '')
+        local _entries, _items = symbols_to_entries_and_items(result.result, 0, client.offset_encoding, '')
+        vim.list_extend(entries, _entries)
+        vim.list_extend(items, _items)
       end
     end
     if vim.tbl_isempty(entries) then
@@ -948,6 +959,11 @@ local function symbol_request_and_run_fzf(method, params, title, query)
               vim.cmd(action)
             end
             local idx = tonumber(lines[i]:match('^%S+'))
+            -- For workspace symbol, open the file
+            local filename = items[idx].filename
+            if query ~= '' and vim.api.nvim_buf_get_name(0) ~= filename then
+              vim.cmd('edit! ' .. filename)
+            end
             -- Save position in jumplist
             vim.cmd("normal! m'")
             vim.api.nvim_win_set_cursor(0, { items[idx].lnum, items[idx].col - 1 })

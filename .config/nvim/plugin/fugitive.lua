@@ -2,16 +2,16 @@
 
 vim.api.nvim_create_augroup('fugitive_user_autocmd', { clear = true })
 vim.api.nvim_create_autocmd({ 'User' }, {
-  group = 'fugitive_user_autocmd',
-  pattern = 'FugitiveIndex,FugitiveCommit',
-  callback = function()
-    vim.keymap.set(
-      'n',
-      'dt',
-      ':Gtabedit <Plug><cfile><Bar>Gdiffsplit! @<CR>',
-      { buffer = 0, remap = true, silent = true }
-    )
-  end,
+    group = 'fugitive_user_autocmd',
+    pattern = 'FugitiveIndex,FugitiveCommit',
+    callback = function()
+        vim.keymap.set(
+            'n',
+            'dt',
+            ':Gtabedit <Plug><cfile><Bar>Gdiffsplit! @<CR>',
+            { buffer = 0, remap = true, silent = true }
+        )
+    end,
 })
 
 vim.keymap.set('n', ',s', '<Cmd>tab Git<CR>')

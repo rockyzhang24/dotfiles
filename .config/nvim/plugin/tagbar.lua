@@ -7,8 +7,8 @@ vim.g.tagbar_compact = 2 -- don't show the help at the top
 vim.g.tagbar_show_data_type = 1
 vim.g.tagbar_scrolloff = 3
 vim.g.tagbar_iconchars = {
-  icons.caret.right,
-  icons.caret.down,
+    icons.caret.right,
+    icons.caret.down,
 }
 
 vim.keymap.set('n', 'yot', '<Cmd>TagbarToggle<CR>')

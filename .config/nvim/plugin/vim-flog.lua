@@ -1,12 +1,12 @@
 vim.g.flog_default_opts = {
-  max_count = 1000,
+    max_count = 1000,
 }
 vim.g.flog_enable_dynamic_commit_hl = true
 vim.g.flog_enable_dynamic_branch_hl = true
 
 -- Use special font symbols to render git commit graph. It's supported by kitty since 0.36.0
 if vim.env.KITTY_WINDOW_ID then
-  vim.g.flog_enable_extended_chars = true
+    vim.g.flog_enable_extended_chars = true
 end
 
 vim.keymap.set('n', ',L', '<Cmd>Flog<CR>')

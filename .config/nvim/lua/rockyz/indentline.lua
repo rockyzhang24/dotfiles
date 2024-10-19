@@ -7,40 +7,40 @@
 --    to the indent line character.
 
 local function indentchar_update(is_local)
-  local tab
-  local leadmultispace
-  if vim.api.nvim_get_option_value('expandtab', {}) then
-    -- For space indentation
-    local spaces = vim.api.nvim_get_option_value('shiftwidth', {})
-    -- If shiftwidth is 0, vim will use tabstop value
-    if spaces == 0 then
-      spaces = vim.api.nvim_get_option_value('tabstop', {})
+    local tab
+    local leadmultispace
+    if vim.api.nvim_get_option_value('expandtab', {}) then
+        -- For space indentation
+        local spaces = vim.api.nvim_get_option_value('shiftwidth', {})
+        -- If shiftwidth is 0, vim will use tabstop value
+        if spaces == 0 then
+            spaces = vim.api.nvim_get_option_value('tabstop', {})
+        end
+        tab = '› '
+        leadmultispace = vim.g.indentline_char .. string.rep(' ', spaces - 1)
+    else
+        -- For tab indentation
+        tab = vim.g.indentline_char .. ' '
+        leadmultispace = '␣'
     end
-    tab = '› '
-    leadmultispace = vim.g.indentline_char .. string.rep(' ', spaces - 1)
-  else
-    -- For tab indentation
-    tab = vim.g.indentline_char .. ' '
-    leadmultispace = '␣'
-  end
 
-  -- Update
-  local opt = is_local and vim.opt_local or vim.opt
-  opt.listchars:append({ tab = tab })
-  opt.listchars:append({ leadmultispace = leadmultispace })
+    -- Update
+    local opt = is_local and vim.opt_local or vim.opt
+    opt.listchars:append({ tab = tab })
+    opt.listchars:append({ leadmultispace = leadmultispace })
 end
 
 vim.api.nvim_create_augroup('rockyz/indentline', { clear = true })
 vim.api.nvim_create_autocmd({ 'VimEnter' }, {
-  group = 'rockyz/indentline',
-  callback = function()
-    indentchar_update(false)
-  end,
+    group = 'rockyz/indentline',
+    callback = function()
+        indentchar_update(false)
+    end,
 })
 vim.api.nvim_create_autocmd({ 'OptionSet' }, {
-  group = 'rockyz/indentline',
-  pattern = { 'shiftwidth', 'expandtab', 'tabstop' },
-  callback = function()
-    indentchar_update(vim.v.option_type == 'local')
-  end,
+    group = 'rockyz/indentline',
+    pattern = { 'shiftwidth', 'expandtab', 'tabstop' },
+    callback = function()
+        indentchar_update(vim.v.option_type == 'local')
+    end,
 })

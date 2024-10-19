@@ -1,5 +1,5 @@
 local opts = {
-  buffer = true
+    buffer = true,
 }
 
 -- git reset --mixed/hard

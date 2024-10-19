@@ -23,22 +23,22 @@
 local icons = require('rockyz.icons')
 
 require('cscope_maps').setup({
-  cscope = {
-    exec = 'gtags-cscope',
-    qf_window_size = 10,
-    statusline_indicator = 'cscope db building' .. icons.misc.ellipsis,
-    project_rooter = {
-      enable = true,
+    cscope = {
+        exec = 'gtags-cscope',
+        qf_window_size = 10,
+        statusline_indicator = 'cscope db building' .. icons.misc.ellipsis,
+        project_rooter = {
+            enable = true,
+        },
     },
-  },
 })
 
 -- Rebuild DB
 local group = vim.api.nvim_create_augroup("rockyz/cscope_db_build", { clear = true })
 vim.api.nvim_create_autocmd("BufWritePost", {
-  group = group,
-  pattern = { "*.c", "*.h" },
-  callback = function ()
-    vim.cmd("Cscope db build")
-  end,
+    group = group,
+    pattern = { "*.c", "*.h" },
+    callback = function ()
+        vim.cmd("Cscope db build")
+    end,
 })

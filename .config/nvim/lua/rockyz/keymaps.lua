@@ -27,48 +27,48 @@ vim.keymap.set('n', 'zl', '10zl')
 vim.keymap.set('n', '<M-a>', 'VggoG')
 -- Smart jk
 local function smart_jk(jk)
-  if vim.v.count ~= 0 then
-    if vim.v.count > 5 then
-      return "m'" .. vim.v.count .. jk
+    if vim.v.count ~= 0 then
+        if vim.v.count > 5 then
+            return "m'" .. vim.v.count .. jk
+        end
+        return jk
     end
-    return jk
-  end
-  return 'g' .. jk
+    return 'g' .. jk
 end
 vim.keymap.set('n', 'j', function()
-  return smart_jk('j')
+    return smart_jk('j')
 end, { expr = true })
 vim.keymap.set('n', 'k', function()
-  return smart_jk('k')
+    return smart_jk('k')
 end, { expr = true })
 -- Smart dd: use blackhole register if we delete empty line by dd
 vim.keymap.set('n', 'dd', function()
-  if vim.api.nvim_get_current_line():match('^%s*$') then
-    return '"_dd'
-  else
-    return 'dd'
-  end
+    if vim.api.nvim_get_current_line():match('^%s*$') then
+        return '"_dd'
+    else
+        return 'dd'
+    end
 end, { expr = true })
 -- Smart i: make i indent properly on empty line
 vim.keymap.set('n', 'i', function()
-  if #vim.fn.getline('.') == 0 then
-    return [["_cc]]
-  else
-    return 'i'
-  end
+    if #vim.fn.getline('.') == 0 then
+        return [["_cc]]
+    else
+        return 'i'
+    end
 end, { expr = true })
 -- Remove the trailing whitespaces in the selected lines or the whole buffer
 vim.keymap.set(
-  'n',
-  '<Leader>$',
-  ":<C-u>call utils#Preserve('%s/\\s\\+$//e')<CR>;",
-  { silent = true }
+    'n',
+    '<Leader>$',
+    ":<C-u>call utils#Preserve('%s/\\s\\+$//e')<CR>;",
+    { silent = true }
 )
 vim.keymap.set(
-  'x',
-  '<Leader>$',
-  ":<C-u>call utils#Preserve('s/\\s\\+$//e', visualmode())<CR>;",
-  { silent = true }
+    'x',
+    '<Leader>$',
+    ":<C-u>call utils#Preserve('s/\\s\\+$//e', visualmode())<CR>;",
+    { silent = true }
 )
 -- Insert blank lines above or below the current line and preserve the cursor position
 vim.keymap.set('n', '[<Space>', 'm`' .. vim.v.count .. 'O<Esc>``')
@@ -84,33 +84,33 @@ vim.keymap.set('n', 'dq', require('rockyz.utils.win_utils').close_diff)
 vim.keymap.set('n', 'dQ', [[<Cmd>tabdo lua require("rockyz.utils.win_utils").close_diff()<CR>]])
 -- Toggle the quickfix window
 vim.keymap.set('n', 'yoq', function()
-  if vim.fn.getqflist({ winid = 0 }).winid ~= 0 then
-    vim.cmd.cclose()
-  elseif #vim.fn.getqflist() > 0 then
-    vim.cmd.copen()
-    vim.cmd.wincmd('p')
-  end
+    if vim.fn.getqflist({ winid = 0 }).winid ~= 0 then
+        vim.cmd.cclose()
+    elseif #vim.fn.getqflist() > 0 then
+        vim.cmd.copen()
+        vim.cmd.wincmd('p')
+    end
 end)
 -- Toggle the location list window
 vim.keymap.set('n', 'yol', function()
-  if vim.fn.getloclist(0, { winid = 0 }).winid ~= 0 then
-    vim.cmd.lclose()
-  elseif #vim.fn.getloclist(0) > 0 then
-    vim.cmd.lopen()
-    vim.cmd.wincmd('p')
-  end
+    if vim.fn.getloclist(0, { winid = 0 }).winid ~= 0 then
+        vim.cmd.lclose()
+    elseif #vim.fn.getloclist(0) > 0 then
+        vim.cmd.lopen()
+        vim.cmd.wincmd('p')
+    end
 end)
 -- Toggle spell
 vim.keymap.set('n', 'yos', function()
-  vim.wo.spell = not vim.wo.spell
+    vim.wo.spell = not vim.wo.spell
 end)
 -- Toggle diffthis for each window in the current tab page
 vim.keymap.set('n', 'yodd', function()
-  if vim.wo.diff then
-    vim.cmd('windo diffoff')
-  else
-    vim.cmd('windo diffthis')
-  end
+    if vim.wo.diff then
+        vim.cmd('windo diffoff')
+    else
+        vim.cmd('windo diffthis')
+    end
 end)
 
 --
@@ -121,11 +121,11 @@ end)
 vim.keymap.set('x', '/', '<Esc>/\\%V')
 -- Clean search highlighting and update diff if needed
 vim.keymap.set('n', '<Esc>', function()
-  if vim.v.hlsearch then
-    return ":<C-u>nohlsearch<C-R>=has('diff')?'<Bar>diffupdate':''<CR><CR>"
-  else
-    return '<Esc>'
-  end
+    if vim.v.hlsearch then
+        return ":<C-u>nohlsearch<C-R>=has('diff')?'<Bar>diffupdate':''<CR><CR>"
+    else
+        return '<Esc>'
+    end
 end, { expr = true, silent = true })
 
 --
@@ -155,14 +155,14 @@ vim.keymap.set('n', '<Leader>Y', '"+y$')
 vim.keymap.set('x', 'p', '"_c<ESC>p')
 -- Paste below or above the current cursor
 vim.keymap.set('n', '<Leader>p', function()
-  require('rockyz.utils.misc_utils').putline(vim.v.count1 .. ']p')
+    require('rockyz.utils.misc_utils').putline(vim.v.count1 .. ']p')
 end)
 vim.keymap.set('n', '<Leader>P', function()
-  require('rockyz.utils.misc_utils').putline(vim.v.count1 .. '[p')
+    require('rockyz.utils.misc_utils').putline(vim.v.count1 .. '[p')
 end)
 -- Select the last changed (or pasted) text
 vim.keymap.set('n', 'gp', function()
-  return '`[' .. vim.fn.strpart(vim.fn.getregtype(vim.v.register), 0, 1) .. '`]'
+    return '`[' .. vim.fn.strpart(vim.fn.getregtype(vim.v.register), 0, 1) .. '`]'
 end, { expr = true })
 
 --
@@ -187,7 +187,7 @@ vim.o.cedit = '<C-o>'
 -- Use %% to get the absolute filepath of the current buffer in command-line
 -- mode
 vim.keymap.set('c', '%%', function()
-  vim.api.nvim_feedkeys(vim.fn.expand('%:p:h') .. '/', 'c', false)
+    vim.api.nvim_feedkeys(vim.fn.expand('%:p:h') .. '/', 'c', false)
 end)
 
 --
@@ -197,99 +197,99 @@ end)
 
 -- Argument list
 vim.keymap.set('n', '[a', function()
-  vim.cmd.previous({ count = vim.v.count1 })
+    vim.cmd.previous({ count = vim.v.count1 })
 end)
 vim.keymap.set('n', ']a', function()
-  vim.cmd.next({ count = vim.v.count1 })
+    vim.cmd.next({ count = vim.v.count1 })
 end)
 vim.keymap.set('n', '[A', function()
-  if vim.v.count ~= 0 then
-    vim.cmd.argument({ count = vim.v.count })
-  else
-    vim.cmd.first()
-  end
+    if vim.v.count ~= 0 then
+        vim.cmd.argument({ count = vim.v.count })
+    else
+        vim.cmd.first()
+    end
 end)
 vim.keymap.set('n', ']A', function()
-  if vim.v.count ~= 0 then
-    vim.cmd.argument({ count = vim.v.count })
-  else
-    vim.cmd.last()
-  end
+    if vim.v.count ~= 0 then
+        vim.cmd.argument({ count = vim.v.count })
+    else
+        vim.cmd.last()
+    end
 end)
 -- Buffers
 vim.keymap.set('n', '[b', function()
-  vim.cmd.bprevious({ count = vim.v.count1 })
+    vim.cmd.bprevious({ count = vim.v.count1 })
 end)
 vim.keymap.set('n', ']b', function()
-  vim.cmd.bnext({ count = vim.v.count1 })
+    vim.cmd.bnext({ count = vim.v.count1 })
 end)
 vim.keymap.set('n', '[B', function()
-  if vim.v.count ~= 0 then
-    vim.cmd.buffer({ count = vim.v.count })
-  else
-    vim.cmd.bfirst()
-  end
+    if vim.v.count ~= 0 then
+        vim.cmd.buffer({ count = vim.v.count })
+    else
+        vim.cmd.bfirst()
+    end
 end)
 vim.keymap.set('n', ']B', function()
-  if vim.v.count ~= 0 then
-    vim.cmd.buffer({ count = vim.v.count })
-  else
-    vim.cmd.blast()
-  end
+    if vim.v.count ~= 0 then
+        vim.cmd.buffer({ count = vim.v.count })
+    else
+        vim.cmd.blast()
+    end
 end)
 -- Quickfix
 vim.keymap.set('n', '[q', function()
-  vim.cmd.cprevious({ count = vim.v.count1 })
+    vim.cmd.cprevious({ count = vim.v.count1 })
 end)
 vim.keymap.set('n', ']q', function()
-  vim.cmd.cnext({ count = vim.v.count1 })
+    vim.cmd.cnext({ count = vim.v.count1 })
 end)
 vim.keymap.set('n', '[Q', function()
-  if vim.v.count ~= 0 then
-    vim.cmd.cc({ count = vim.v.count })
-  else
-    vim.cmd.cfirst()
-  end
+    if vim.v.count ~= 0 then
+        vim.cmd.cc({ count = vim.v.count })
+    else
+        vim.cmd.cfirst()
+    end
 end)
 vim.keymap.set('n', ']Q', function()
-  if vim.v.count ~= 0 then
-    vim.cmd.cc({ count = vim.v.count })
-  else
-    vim.cmd.clast()
-  end
+    if vim.v.count ~= 0 then
+        vim.cmd.cc({ count = vim.v.count })
+    else
+        vim.cmd.clast()
+    end
 end)
 vim.keymap.set('n', '[<C-Q>', function()
-  vim.cmd.cpfile({ count = vim.v.count1 })
+    vim.cmd.cpfile({ count = vim.v.count1 })
 end)
 vim.keymap.set('n', ']<C-Q>', function()
-  vim.cmd.cnfile({ count = vim.v.count1 })
+    vim.cmd.cnfile({ count = vim.v.count1 })
 end)
 -- Location List
 vim.keymap.set('n', '[l', function()
-  vim.cmd.lprevious({ count = vim.v.count1 })
+    vim.cmd.lprevious({ count = vim.v.count1 })
 end)
 vim.keymap.set('n', ']l', function()
-  vim.cmd.lnext({ count = vim.v.count1 })
+    vim.cmd.lnext({ count = vim.v.count1 })
 end)
 vim.keymap.set('n', '[L', function()
-  if vim.v.count ~= 0 then
-    vim.cmd.ll({ count = vim.v.count })
-  else
-    vim.cmd.lfirst()
-  end
+    if vim.v.count ~= 0 then
+        vim.cmd.ll({ count = vim.v.count })
+    else
+        vim.cmd.lfirst()
+    end
 end)
 vim.keymap.set('n', ']L', function()
-  if vim.v.count ~= 0 then
-    vim.cmd.ll({ count = vim.v.count })
-  else
-    vim.cmd.llast()
-  end
+    if vim.v.count ~= 0 then
+        vim.cmd.ll({ count = vim.v.count })
+    else
+        vim.cmd.llast()
+    end
 end)
 vim.keymap.set('n', '[<C-l>', function()
-  vim.cmd.lpfile({ count = vim.v.count })
+    vim.cmd.lpfile({ count = vim.v.count })
 end)
 vim.keymap.set('n', ']<C-l>', function()
-  vim.cmd.lnfile({ count = vim.v.count })
+    vim.cmd.lnfile({ count = vim.v.count })
 end)
 -- Make section-jump work if '{' or '}' are not in the first column (see :h [[)
 vim.keymap.set('n', '[[', ":<C-u>eval search('{', 'b')<CR>w99[{", { silent = true })
@@ -322,7 +322,7 @@ vim.keymap.set('n', '<C-k>', '<C-w>k')
 vim.keymap.set('n', '<C-l>', '<C-w>l')
 -- Move cursor to the window 1 to 9
 for i = 1, 9, 1 do
-  vim.keymap.set('n', '<Leader>' .. i, ':' .. i .. 'wincmd w<CR>')
+    vim.keymap.set('n', '<Leader>' .. i, ':' .. i .. 'wincmd w<CR>')
 end
 -- Go to the previous window
 vim.keymap.set('n', '<Leader>wp', '<C-w>p')
@@ -346,22 +346,22 @@ vim.keymap.set('n', '<Leader>wq', ':CloseWin<Space>')
 vim.keymap.set('n', '<Leader>wl', require('rockyz.utils.win_utils').switch_layout)
 -- Close all other windows (not including floating ones)
 vim.keymap.set('n', '<Leader>wo', function()
-  return vim.fn.len(vim.fn.filter(vim.api.nvim_tabpage_list_wins(0), function(_, v)
-    return vim.api.nvim_win_get_config(v).relative == ''
-  end)) > 1 and '<C-w>o' or ''
+    return vim.fn.len(vim.fn.filter(vim.api.nvim_tabpage_list_wins(0), function(_, v)
+        return vim.api.nvim_win_get_config(v).relative == ''
+    end)) > 1 and '<C-w>o' or ''
 end, { expr = true })
 ---Scroll the other window
 ---@param dir string direction, u for up and d for down
 local function scroll_other_win(dir)
-  vim.cmd('noautocmd silent! wincmd p')
-  vim.cmd('exec "normal! \\<C-' .. dir .. '>"')
-  vim.cmd('noautocmd silent! wincmd p')
+    vim.cmd('noautocmd silent! wincmd p')
+    vim.cmd('exec "normal! \\<C-' .. dir .. '>"')
+    vim.cmd('noautocmd silent! wincmd p')
 end
 vim.keymap.set({ 'n', 'i' }, '<M-u>', function()
-  scroll_other_win('u')
+    scroll_other_win('u')
 end)
 vim.keymap.set({ 'n', 'i' }, '<M-d>', function()
-  scroll_other_win('d')
+    scroll_other_win('d')
 end)
 -- Maximize and restore the current window
 vim.keymap.set('n', 'yom', require('rockyz.utils.win_utils').win_maximize_toggle)
@@ -374,7 +374,7 @@ vim.keymap.set('t', '<Leader><Esc>', '<C-\\><C-n>')
 -- Simulate <C-r> in insert mode for inserting the content of a register.
 -- Reference: http://vimcasts.org/episodes/neovim-terminal-paste/
 vim.keymap.set('t', '<M-r>', function()
-  return '<C-\\><C-n>"' .. vim.fn.nr2char(vim.fn.getchar()) .. 'pi'
+    return '<C-\\><C-n>"' .. vim.fn.nr2char(vim.fn.getchar()) .. 'pi'
 end, { expr = true })
 
 return M

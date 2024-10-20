@@ -47,51 +47,12 @@ local function path_component()
     if fullpath == '' then
         return ''
     end
-    local prefix = ''
-    local path
-    if string.find(fullpath, '^fugitive://') then
-        -- The window of fugitive diff is a regular buffer but with 'diff' set. Its bufname is like
-        -- "fugitive:///Users/xxx/demo/.git//92eb3dd/src/core.go".
-        prefix, path = string.match(fullpath, '^(fugitive://%S+//%w+)/(.*)')
-        path = vim.fn.fnamemodify(path, ':h')
-    elseif string.find(fullpath, '^gitsigns://') then
-        -- For the window running gitsigns.diffthis, its bufname is like
-        -- "gitsigns:///Users/xxx/demo/.git/HEAD~2:src/core.go", or
-        -- "gitsigns:///Users/xxx/demo/.git/:0:src/core.go".
-        prefix, path = string.match(fullpath, '^(gitsigns://[^:]*:?%w+):(.*)')
-        path = vim.fn.fnamemodify(path, ':h')
-    else
-        path = vim.fn.expand('%:~:h')
-        -- For some special folders, use a prefix instead of the full path (making sure to pick the
-        -- longest prefix). E.g., ~/.config/nvim/init.lua will be NVIM/init.lua
-        local special_dirs = {
-            ROOT = '/',
-            HOME = '~',
-            CONFIG = '~/.config',
-            NVIM = '~/.config/nvim',
-            OJ = '~/oj',
-            PROJECTS = '~/projects',
-            GITREPOS = '~/gitrepos',
-        }
-        local prefix_path = ''
-        for dir_name, dir_path in pairs(special_dirs) do
-            if vim.startswith(path, dir_path) and #dir_path > #prefix_path then
-                prefix, prefix_path = dir_name, dir_path
-            end
-        end
-        path = path:gsub('^' .. prefix_path, ''):gsub('^/', '')
+    local icon = icons.misc.folder
+    if string.find(fullpath, '^fugitive://') or string.find(fullpath, '^gitsigns://') then
+        icon = icons.misc.source_control
     end
-    -- Assemble the icon, prefix, and the path
-    if path == '' then
-        return '%#WinbarPathPrefix#' .. icons.misc.folder .. prefix .. '%*'
-    else
-        path = path:gsub('/', ' ' .. delimiter .. ' ')
-        if prefix == '' then
-            return '%#WinbarPathPrefix#' .. icons.misc.folder .. '%*' .. path
-        else
-            return '%#WinbarPathPrefix#' .. icons.misc.folder .. prefix .. '%* ' .. delimiter .. ' ' .. path
-        end
-    end
+    local path = vim.fn.fnamemodify(fullpath, ':~:h')
+    return string.format('%%#WinbarPath#%s%s%%*', icon, path)
 end
 
 local function icon_component()

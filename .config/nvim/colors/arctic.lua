@@ -136,12 +136,12 @@ local groups = {
     -- Winbar
     WinbarHeader = { fg = white, bg = stl_normal }, -- the very beginning part of winbar
     WinbarTriangleSep = { fg = stl_normal }, -- the triangle separator in winbar
+    WinbarPath = { fg = icon_fg, bg = norm_bg, bold = true },
+    WinbarSpecialIcon = { fg = icon_fg, bg = norm_bg }, -- icon for special filetype
     WinbarFilename = { fg = winbar_fg, bg = norm_bg, bold = true }, -- filename
     WinbarModified = { fg = norm_fg, bg = norm_bg }, -- the modification indicator
     WinbarError = { fg = error_list, bg = norm_bg, bold = true }, -- the filename color if the current buffer has errors
     WinbarWarn = { fg = warn_list, bg = norm_bg, bold = true }, -- the filename color if the current buffer has warnings
-    WinbarSpecialIcon = { fg = icon_fg, bg = norm_bg }, -- icon for special filetype
-    WinbarPathPrefix = { fg = icon_fg, bg = norm_bg, bold = true }, -- the prefix of the path for the special folders such as CONFIG
     -- Tabline
     TabDefaultIcon = { fg = icon_fg, bg = tab_inactive_bg }, -- icon for special filetype on inactive tab
     TabDefaultIconActive = { fg = icon_fg, bg = tab_active_bg }, -- icon for special filetype on active tab

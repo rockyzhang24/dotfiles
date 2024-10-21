@@ -18,7 +18,7 @@ vim.opt.fillchars = {
     fold = ' ',
     foldopen = icons.caret.down,
     foldclose = icons.caret.right,
-    foldsep = ' ',
+    foldsep = icons.separators.bar,
     eob = ' ',
     msgsep = '‾',
 }

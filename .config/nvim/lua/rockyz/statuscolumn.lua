@@ -100,7 +100,7 @@ end
 
 function _G.statuscolumn()
     local string = ''
-    string = '%l%s%='
+    string = '%l%s'
     local args = get_args()
     local fold = foldfunc(args)
     string = string .. fold .. ' '

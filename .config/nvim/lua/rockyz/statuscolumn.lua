@@ -54,9 +54,6 @@ local function get_args()
     args.lnum = vim.v.lnum
     args.relnum = vim.v.relnum
     args.virtnum = vim.v.virtnum
-    local cursorlineopt = vim.api.nvim_get_option_value('cursorlineopt', { win = win })
-    args.cursorline = vim.api.nvim_get_option_value('cursorline', { win = win })
-        and (cursorlineopt:find('number') or cursorlineopt:find('both'))
     args.fold.width = ffi.C.compute_foldcolumn(args.wp, 0)
     return args
 end
@@ -69,10 +66,10 @@ local function foldfunc(args)
         return ''
     end
     local foldinfo = ffi.C.fold_info(args.wp, args.lnum)
-    local string = args.cursorline and args.relnum == 0 and '%#CursorLineFold#' or '%#FoldColumn#'
+    -- local string = args.cursorline and args.relnum == 0 and '%#CursorLineFold#' or '%#FoldColumn#'
     local level = foldinfo.level
     if level == 0 then
-        return string .. (' '):rep(width) .. '%*'
+        return (' '):rep(width)
     end
     local closed = foldinfo.lines > 0
     local first_level = level - width - (closed and 1 or 0) + 1
@@ -81,21 +78,26 @@ local function foldfunc(args)
     end
     -- For each column, add a foldopen, foldclose, foldsep or padding char
     local range = level < width and level or width
+    local string = ''
+    -- Highlight the foldopen icon and foldclose icon on the current line
+    local open = (args.relnum == 0 and '%#CursorLineFold#' or '%#FoldColumn#') .. args.fold.open .. '%*'
+    local close = (args.relnum == 0 and '%#CursorLineFold#' or '%#FoldColumn#') .. args.fold.close .. '%*'
+    local sep = '%#FoldColumn#' .. args.fold.sep .. '%*'
     for col = 1, range do
         if args.virtnum ~= 0 then
-            string = string .. args.fold.sep
+            string = string .. sep
         elseif closed and (col == level or col == width) then
-            string = string .. args.fold.close
+            string = string .. close
         elseif foldinfo.start == args.lnum and first_level + col > foldinfo.llevel then
-            string = string .. args.fold.open
+            string = string .. open
         else
-            string = string .. args.fold.sep
+            string = string .. sep
         end
     end
     if range < width then
         string = string .. (' '):rep(width - range)
     end
-    return string .. '%*'
+    return string
 end
 
 function _G.statuscolumn()

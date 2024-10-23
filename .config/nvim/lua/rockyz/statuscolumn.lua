@@ -59,7 +59,7 @@ local function get_args()
 end
 
 -- Return the string that will be displayed in foldcolumn
--- luukvbaal/statuscol.nvim's builtin.foldfunc
+-- Reference luukvbaal/statuscol.nvim's builtin.foldfunc
 local function foldfunc(args)
     local width = args.fold.width
     if width == 0 then
@@ -100,13 +100,19 @@ local function foldfunc(args)
     return string
 end
 
+-- Return line number
+local function lnumfunc(args)
+    if args.virtnum ~= 0 then
+        return '%='
+    end
+    return '%l'
+end
+
 function _G.statuscolumn()
-    local string = ''
-    string = '%l%s'
     local args = get_args()
     local fold = foldfunc(args)
-    string = string .. fold .. ' '
-    return string
+    local lnum = lnumfunc(args)
+    return lnum .. '%s' .. fold .. ' '
 end
 
 -- statuscolumn is local to window, so here both "%{% ... %}" and "%! ... " work (as for their

@@ -3,6 +3,7 @@
 -- Sublime Text, and the theme was Monokai.
 --
 -- Inspired by Monokai theme from Sublime Text and VSCode
+-- Also I cherry-picked some colors from Tsoding's gruber-darker-theme
 --
 -- Created: July 2024
 -- Author: Rocky Zhang (@rockyzhang24)
@@ -17,7 +18,7 @@ local util = require('rockyz.utils.color_utils')
 -- Colors from Monokai
 local pink = '#f92472'
 local yellow = '#e7db74'
-local yellow2 = '#ffe849'
+local yellow2 = '#ffdd33'
 local orange = '#fd9621'
 local green = '#a6e22c'
 local blue = '#67d8ef'
@@ -33,6 +34,7 @@ local gray4 = '#34352f'
 local gray5 = '#b3b3b1'
 
 local white = '#ffffff'
+local black = '#000000'
 
 local norm_fg = '#f8f8f2' -- editor.foreground
 local norm_bg = '#272822' -- editor.background
@@ -127,10 +129,10 @@ local groups = {
     -- Git diff
     DiffLineAdded = { bg = '#374026' }, -- diffEditor.insertedLineBackground
     DiffLineDeleted = { bg = '#432f31' }, -- diffEditor.removedLineBackground
-    DiffLineChanged = { bg = '#254a72' }, -- Thanks ChatGPT
+    DiffLineChanged = { bg = '#2b3a46' }, -- Thanks ChatGPT
     DiffTextAdded = { bg = '#495e21' }, -- diffEditor.insertedTextBackground (DiffLineAdded as its background)
     DiffTextDeleted = { bg = '#642f3e' }, -- diffEditor.removedTextBackground (DiffLineDeleted as its background)
-    DiffTextChanged = { bg = '#3b6da6' },
+    DiffTextChanged = { bg = '#3f5a6b' },
     -- Quickfix list
     QfSelection = { bg = '#3f413e', bold = true }, -- terminal.inactiveSelectionBackground
     -- Inline hints
@@ -256,7 +258,7 @@ local groups = {
     ColorColumn = { bg = '#5a5a5a' }, -- editorRuler.foreground
     Conceal = { fg = gray2 },
     Cursor = { fg = norm_bg, bg = '#f8f8f0' },
-    CurSearch = { fg = '#000000', bg = yellow2 }, -- editor.findMatchBackground
+    CurSearch = { fg = norm_bg, bg = '#f5f5f5' }, -- editor.findMatchBackground
     -- lCursor = { },
     -- CursorIM = { },
     Directory = { fg = directory },
@@ -265,20 +267,20 @@ local groups = {
     DiffChange = 'DiffLineChanged',
     DiffText = 'DiffTextChanged',
     EndOfBuffer = { fg = norm_bg },
-    -- TermCursor = { },
+    TermCursor = { fg = norm_bg, bg = yellow2 },
     -- TermCursorNC = { },
     ErrorMsg = { fg = error_red },
     WinSeparator = { fg = norm_fg }, -- VSCode uses color win_separator
     VirtSplit = 'WinSeparator', -- deprecated and use WinSeparator instead
     LineNr = { fg = gray2 }, -- editorLineNumber.foreground
-    CursorLineNr = { fg = '#c2c2bf' }, -- editorLineNumber.activeForeground
+    CursorLineNr = { fg = yellow2 }, -- editorLineNumber.activeForeground
     Folded = { bg = folded_line_bg },
     CursorLineFold = 'CursorLineNr',
     FoldColumn = 'LineNr',
     SignColumn = { bg = norm_bg },
     IncSearch = 'CurSearch',
     -- Substitute = { },
-    MatchParen = { bg = util.darken(yellow2, 0.5), bold = true, underline = true }, -- editorBracketMatch.background, 50% darken than CurSearch
+    MatchParen = { fg = norm_fg, bg = '#5a9ed1' }, -- editorBracketMatch.background
     ModeMsg = { fg = norm_fg },
     MsgArea = { fg = norm_fg },
     -- MsgSeparator = { },
@@ -877,8 +879,8 @@ local groups = {
     -- quick-scope
     --
 
-    QuickScopePrimary = { fg = '#ff0000', underline = true, sp = '#ff0000' },
-    QuickScopeSecondary = { fg = '#ff00ff', underline = true, sp = '#ff00ff' },
+    QuickScopePrimary = { fg = '#00ffff', bold = true, underline = true, sp = '#00ffff' },
+    QuickScopeSecondary = { fg = '#ff00ff', bold = true, underline = true, sp = '#ff00ff' },
 
     --
     -- Ripgrep

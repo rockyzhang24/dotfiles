@@ -64,7 +64,7 @@ footer_bar = { foreground = "#ffffff", background = "#ac80ff" }
 selection = { text = "CellForeground", background = "#555449" }
 
 [colors.search]
-focused_match = { foreground = "CellForeground", background = "#ffe849" }
+focused_match = { foreground = '#272822', background = "#f5f5f5" }
 matches = { foreground = "CellForeground", background = "#673917" }
 
 [colors.primary]

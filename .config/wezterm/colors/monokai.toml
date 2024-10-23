@@ -1,6 +1,8 @@
 [colors]
 foreground = '#f8f8f2'
 background = '#272822'
+cursor_bg = '#ffdd33'
+cursor_fg = '#272822'
 ansi = [
     '#272822',
     '#f92472',

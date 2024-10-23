@@ -1,6 +1,7 @@
 # Find the document for Alacritty's configuration here https://alacritty.org/config-alacritty.html
 # For all the default keybingds, run man 5 alacritty-bindings
 
+[general]
 live_config_reload = true
 
 [window]
@@ -58,7 +59,7 @@ size = 15
 #
 
 [colors]
-cursor = { text = "#272822", cursor = "#f8f8f2" }
+cursor = { text = "#272822", cursor = "#ffdd33" }
 vi_mode_cursor = { text = "CellBackground", cursor = "CellForeground" }
 footer_bar = { foreground = "#ffffff", background = "#ac80ff" }
 selection = { text = "CellForeground", background = "#555449" }

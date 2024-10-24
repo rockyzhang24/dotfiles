@@ -166,3 +166,15 @@ vim.api.nvim_create_autocmd('VimEnter', {
         end
     end,
 })
+
+-- In large file, only use vim syntax (LSP semantic highlight and treesitter highlight will be
+-- disabled).
+vim.api.nvim_create_autocmd('FileType', {
+    group = vim.api.nvim_create_augroup('rockyz/big_file', { clear = true }),
+    pattern = 'bigfile',
+    callback = function(args)
+        vim.schedule(function()
+            vim.bo[args.buf].syntax = vim.filetype.match({ buf = args.buf }) or ''
+        end)
+    end,
+})

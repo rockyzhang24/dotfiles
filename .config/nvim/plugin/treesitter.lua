@@ -32,12 +32,6 @@ require('nvim-treesitter.configs').setup({
     ignore_install = {},
     highlight = {
         enable = true,
-        -- Disable highlight for large files
-        disable = function(_, buf)
-            local max_filesize = 1000 * 1024 -- 1000 KB
-            local ok, stats = pcall(vim.loop.fs_stat, vim.api.nvim_buf_get_name(buf))
-            return ok and stats and stats.size > max_filesize
-        end,
     },
     incremental_selection = {
         enable = true,
@@ -52,7 +46,7 @@ require('nvim-treesitter.configs').setup({
 
 -- Use treesitter based folding if the current buffer has a parser
 vim.api.nvim_create_autocmd('FileType', {
-    group = vim.api.nvim_create_augroup('treesitter-fold', { clear = true }),
+    group = vim.api.nvim_create_augroup('rockyz/treesitter_folding', { clear = true }),
     callback = function()
         if require('nvim-treesitter.parsers').get_parser() then
             vim.wo.foldmethod = 'expr'

@@ -3,25 +3,6 @@ local cmp = require('cmp')
 local symbol_kinds = require('rockyz.icons').symbol_kinds
 local ellipsis = require('rockyz.icons').misc.ellipsis
 
--- Disable buffer source for large file
-local large_file_disable = function()
-    local buf = vim.api.nvim_get_current_buf()
-    local byte_size = vim.api.nvim_buf_get_offset(buf, vim.api.nvim_buf_line_count(buf))
-    if byte_size > 1024 * 1024 then -- 1MB
-        return {}
-    end
-    return { buf }
-end
-
--- Whether the file in the buffer is too large
-local function is_large_file(buf)
-    local byte_size = vim.api.nvim_buf_get_offset(buf, vim.api.nvim_buf_line_count(buf))
-    if byte_size > 1024 * 1024 then -- 1MB
-        return true
-    end
-    return false
-end
-
 local winhighlight = 'FloatBorder:SuggestWidgetBorder,CursorLine:SuggestWidgetSelect,Search:None'
 if vim.g.border_enabled then
     winhighlight = 'Normal:Normal,' .. winhighlight
@@ -144,7 +125,7 @@ cmp.setup({
                 get_bufnrs = function()
                     return vim.iter(vim.api.nvim_list_wins()):map(function(win)
                         local buf = vim.api.nvim_win_get_buf(win)
-                        if not is_large_file(buf) then
+                        if vim.bo[buf].filetype ~= 'bigfile' then
                             return buf
                         end
                     end):totable()
@@ -200,7 +181,7 @@ cmp.setup.cmdline('/', {
             option = {
                 get_bufnrs = function()
                     local buf = vim.api.nvim_get_current_buf()
-                    return is_large_file(buf) and {} or { buf }
+                    return vim.bo[buf] == 'bigfile' and {} or { buf }
                 end,
             },
         },
@@ -218,7 +199,7 @@ cmp.setup.cmdline('?', {
             option = {
                 get_bufnrs = function()
                     local buf = vim.api.nvim_get_current_buf()
-                    return is_large_file(buf) and {} or { buf }
+                    return vim.bo[buf] == 'bigfile' and {} or { buf }
                 end,
             },
         },

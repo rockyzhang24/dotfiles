@@ -75,7 +75,7 @@ cmp.setup({
             i = cmp.mapping.complete({
                 config = {
                     sources = {
-                        { name = 'path' }
+                        { name = 'async_path' }
                     },
                 },
             })
@@ -132,7 +132,7 @@ cmp.setup({
                 end,
             },
         },
-        { name = 'path' },
+        { name = 'async_path' },
     }),
     formatting = {
         format = function(entry, vim_item)
@@ -212,7 +212,7 @@ cmp.setup.cmdline('?', {
 -- For cmdline
 cmp.setup.cmdline(':', {
     sources = cmp.config.sources({
-        { name = 'path' },
+        { name = 'async_path' },
     }, {
         { name = 'cmdline' },
     }),

@@ -784,34 +784,6 @@ vim.keymap.set('n', '<Leader>gb', function()
 end)
 
 --
--- LSP
---
-
--- Wrapper around vim.str_byteindex that takes offset_encoding. It converts UTF-32 or UTF-16 index
--- to byte (UTF-8) index.
--- Copied from the source code of vim.lsp.util._str_byteindex_enc
--- (https://github.com/neovim/neovim/blob/master/runtime/lua/vim/lsp/util.lua)
-local function _str_byteindex_enc(line, index, encoding)
-    local len8 = #line
-    encoding = encoding or 'utf-16'
-    if encoding == 'utf-8' then
-        if index and index <= len8 then
-            return index
-        else
-            return len8
-        end
-    end
-    local len32, len16 = vim.str_utfindex(line)
-    if encoding == 'utf-16' then
-        return index <= len16 and vim.str_byteindex(line, index, true) or len8
-    elseif encoding == 'utf=32' then
-        return index <= len32 and vim.str_byteindex(line, index) or len8
-    else
-        error('Invalid encoding: ' .. vim.inspect(encoding))
-    end
-end
-
---
 -- LSP document symbols and workspace symbols
 --
 
@@ -876,10 +848,10 @@ local function symbols_to_entries_and_items(symbols, bufnr, offset_encoding, chi
             local end_pos = symbol.selectionRange['end']
             local lnum = start_pos.line + 1
             local line = vim.api.nvim_buf_get_lines(0, start_pos.line, start_pos.line + 1, false)[1]
-            local col = _str_byteindex_enc(line, start_pos.character, offset_encoding) + 1
+            local col = vim.str_byteindex(line, offset_encoding, start_pos.character, false) + 1
             local end_lnum = end_pos.line + 1
             local end_line = vim.api.nvim_buf_get_lines(0, end_pos.line, end_pos.line + 1, false)[1]
-            local end_col = _str_byteindex_enc(end_line, end_pos.character, offset_encoding) + 1
+            local end_col = vim.str_byteindex_enc(end_line, offset_encoding, end_pos.character, false) + 1
             local text = '[' .. icon .. kind .. '] ' .. symbol.name
             -- Use two whitespaces for each level of indentation to show the hierarchical structure
             local fzf_text = child_prefix .. '[' .. colored_icon_kind .. '] ' .. symbol.name

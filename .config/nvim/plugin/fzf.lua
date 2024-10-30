@@ -177,7 +177,7 @@ vim.cmd([[
         \ ]}, <bang>0)
 ]])
 vim.keymap.set({ 'n', 'x' }, '<leader>fc', function()
-    vim.cmd('gitbufcommits')
+    vim.cmd('GitBufCommits')
 end)
 
 -- Search history
@@ -851,7 +851,7 @@ local function symbols_to_entries_and_items(symbols, bufnr, offset_encoding, chi
             local col = vim.str_byteindex(line, offset_encoding, start_pos.character, false) + 1
             local end_lnum = end_pos.line + 1
             local end_line = vim.api.nvim_buf_get_lines(0, end_pos.line, end_pos.line + 1, false)[1]
-            local end_col = vim.str_byteindex_enc(end_line, offset_encoding, end_pos.character, false) + 1
+            local end_col = vim.str_byteindex(end_line, offset_encoding, end_pos.character, false) + 1
             local text = '[' .. icon .. kind .. '] ' .. symbol.name
             -- Use two whitespaces for each level of indentation to show the hierarchical structure
             local fzf_text = child_prefix .. '[' .. colored_icon_kind .. '] ' .. symbol.name

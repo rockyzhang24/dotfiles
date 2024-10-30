@@ -57,12 +57,13 @@ local function on_attach(client, bufnr)
     -- Mappings
     --
     -- Nvim creates the following default LSP mappings:
-    --  * K in NORMAL maps vim.lsp.buf.hover()
-    --  * grr in NORMAL maps vim.lsp.buf.references()
-    --  * gri in NORMAL maps vim.lsp.buf.implementation()
-    --  * grn in NORMAL maps vim.lsp.buf.rename()
-    --  * gra in NORMAL and VISUAL maps vim.lsp.buf.code_action()
-    --  * <C-s> in INSERT maps vim.lsp.buf.signature_help()
+    --  * K in NORMAL maps to vim.lsp.buf.hover()
+    --  * grr in NORMAL maps to vim.lsp.buf.references()
+    --  * gri in NORMAL maps to vim.lsp.buf.implementation()
+    --  * gO in NORMAL maps to vim.lsp.buf.document_symbol()
+    --  * grn in NORMAL maps to vim.lsp.buf.rename()
+    --  * gra in NORMAL and VISUAL maps to vim.lsp.buf.code_action()
+    --  * <C-s> in INSERT maps to vim.lsp.buf.signature_help()
     -- Also, the following default diagnostic mappings are creataed:
     --  * ]d and [d: jump to the next or previous diagnostic
     --  * ]D and [D: jump to the last or first diagnostic

@@ -62,9 +62,20 @@ I assign the key mappings rationally aiming to make them efficient and easy to r
 
 ### Fuzzy finders
 
-### LSP progress
+I implemented a series of fuzzy finders based on fzf.vim instead of using ready-made fuzzy finder plugins because I find them bloated and slower in extreme environments. Additionally, I prefer full control and not having to worry about essential plugins becoming unmaintained.
+
+![fuzzy-finders](https://github.com/user-attachments/assets/0459ae54-b0bd-4187-8760-d19f5fc1731c)
+
+### LSP progress message
+
+![lsp-progress](https://github.com/user-attachments/assets/63f5fa48-cefe-4d32-9d8d-806418c066a2)
 
 ### Lightbulb
 
-### Quickfix
+I use a lightning icon instead of a bulb.
 
+![lightbulb](https://github.com/user-attachments/assets/882c0ddc-0f29-4844-b4dd-a243d8a4009d)
+
+### Quickfix list
+
+<img width="1774" alt="quickfix" src="https://github.com/user-attachments/assets/5084ffd3-ab23-46c0-abe8-a7960b5ae455">

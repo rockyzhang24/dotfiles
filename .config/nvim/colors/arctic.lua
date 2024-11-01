@@ -198,7 +198,7 @@ local groups = {
     -- PmenuExtraSel = {},
     PmenuSbar = { bg = norm_bg },
     PmenuThumb = 'ScrollbarSlider',
-    PmenuMatch = { fg = matched_chars, bg = norm_bg },
+    PmenuMatch = { fg = matched_chars, bg = norm_bg, bold = true },
     PmenuMatchSel = { fg = matched_chars, bg = selected_item_bg, bold = true },
     NormalFloat = 'Pmenu',
     Question = { fg = dark_blue },
@@ -628,7 +628,7 @@ local groups = {
     --
 
     CmpItemAbbrDeprecated = { fg = gray3, bg = 'NONE', strikethrough = true },
-    CmpItemAbbrMatch = { fg = matched_chars, bg = 'NONE' },
+    CmpItemAbbrMatch = { fg = matched_chars, bg = 'NONE', bold = true },
     CmpItemAbbrMatchFuzzy = 'CmpItemAbbrMatch',
     CmpItemMenu = 'Description',
     CmpItemKindText = 'SymbolKindText',

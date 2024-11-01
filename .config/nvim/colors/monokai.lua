@@ -296,7 +296,7 @@ local groups = {
     -- PmenuExtraSel = {},
     PmenuSbar = { bg = norm_bg },
     PmenuThumb = 'ScrollbarSlider',
-    PmenuMatch = { fg = matched_chars, bg = norm_bg },
+    PmenuMatch = { fg = matched_chars, bg = norm_bg, bold = true },
     PmenuMatchSel = { fg = matched_chars, bg = selected_item_bg, bold = true },
     NormalFloat = 'Pmenu',
     Question = { fg = warn_yellow },
@@ -634,7 +634,7 @@ local groups = {
     --
 
     CmpItemAbbrDeprecated = { fg = gray, bg = 'NONE', strikethrough = true },
-    CmpItemAbbrMatch = { fg = matched_chars, bg = 'NONE' }, -- editorSuggestWidget.focusHighlightForeground
+    CmpItemAbbrMatch = { fg = matched_chars, bg = 'NONE', bold = true }, -- editorSuggestWidget.focusHighlightForeground
     CmpItemAbbrMatchFuzzy = 'CmpItemAbbrMatch',
     CmpItemMenu = 'Description',
     -- Kinds
@@ -788,7 +788,7 @@ local groups = {
     TelescopeSelectionCaret = { fg = colors256_161_pink },
     TelescopeMultiSelection = 'TelescopeNormal',
     TelescopeMultiIcon = { fg = colors256_168_pink2 },
-    TelescopeMatching = { fg = yellow2 },
+    TelescopeMatching = { fg = yellow2, bold = true },
     TelescopePromptPrefix = { fg = colors256_110_blue, bold = true },
     TelescopePromptCounter = { fg = colors256_144_brown },
 

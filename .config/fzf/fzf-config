@@ -25,13 +25,13 @@ fi
 if [[ $color_theme == 'arctic' ]]; then
   [[ $bg != -1 ]] && bg='#1f1f1f'
   fg='#cccccc'
-  colors="dark,fg:$fg,bg:$bg,hl:#2aaaff,fg+:#ffffff,bg+:#04395e,gutter:$bg,hl+:#2aaaff,query:$fg,disabled:#808080,border:$fg,separator:#454545,label:$fg,header:#3794ff:underline"
+  colors="dark,fg:$fg,bg:$bg,hl:#2aaaff:bold,fg+:#ffffff,bg+:#04395e,gutter:$bg,hl+:#2aaaff:bold,query:$fg,disabled:#808080,border:$fg,separator:#454545,label:$fg,header:#3794ff:underline"
 fi
 # monokai theme
 if [[ $color_theme == 'monokai' ]]; then
   [[ $bg != -1 ]] && bg='#272822'
   fg='#f8f8f2'
-  colors="dark,fg:$fg,bg:$bg,hl:#ffdd33,fg+:#ffffff,bg+:#414339,gutter:$bg,hl+:#ffdd33,query:$fg,disabled:#7a7a77,border:$fg,separator:#454545,label:$fg,header:#fd9621:underline:bold"
+  colors="dark,fg:$fg,bg:$bg,hl:#ffdd33:bold,fg+:#ffffff,bg+:#414339,gutter:$bg,hl+:#ffdd33:bold,query:$fg,disabled:#7a7a77,border:$fg,separator:#454545,label:$fg,header:#fd9621:underline:bold"
 fi
 
 # Config the default options when running fzf

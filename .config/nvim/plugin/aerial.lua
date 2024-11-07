@@ -5,12 +5,17 @@ require('aerial').setup({
     layout = {
         max_width = 50,
         min_width = 50,
+        default_direction = 'right',
     },
     -- Press "?" in Aerial win to see the help showing all the available keymaps
     keymaps = {
         ["g?"] = "",
-        ["<C-x>"] = "actions.jump_split",
         ["<C-s>"] = "",
+        ["<C-x>"] = "actions.jump_split",
+        ["<C-j>"] = "",
+        ["<C-k>"] = "",
+        ["J"] = "actions.down_and_scroll",
+        ["K"] = "actions.up_and_scroll",
         ["o"] = "",
         ["O"] = "",
         ["l"] = "",

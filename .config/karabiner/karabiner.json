@@ -36,6 +36,27 @@
                         ]
                     },
                     {
+                        "manipulators": [
+                            {
+                                "description": "Map CTRL-[ to ESC",
+                                "from": {
+                                    "key_code": "open_bracket",
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "left_control"
+                                        ]
+                                    }
+                                },
+                                "to": [
+                                    {
+                                        "key_code": "escape"
+                                    }
+                                ],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
                         "Ref": "https://github.com/pqrs-org/Karabiner-Elements/issues/346#issuecomment-1920990353",
                         "description": "Double left Shift to caps_lock",
                         "manipulators": [

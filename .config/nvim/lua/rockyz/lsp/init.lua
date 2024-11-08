@@ -43,16 +43,28 @@ M.client_capabilities = function()
     return capabilities
 end
 
+local hover = vim.lsp.buf.hover
+---@diagnostic disable-next-line: duplicate-set-field
+vim.lsp.buf.hover = function()
+    return hover {
+        border = vim.g.border_style,
+        max_height = math.floor(vim.o.lines * 0.5),
+        max_width = math.floor(vim.o.columns * 0.4),
+    }
+end
+
+local signature_help = vim.lsp.buf.signature_help
+---@diagnostic disable-next-line: duplicate-set-field
+vim.lsp.buf.signature_help = function()
+    return signature_help {
+        border = vim.g.border_style,
+        focusable = false,
+        max_height = math.floor(vim.o.lines * 0.5),
+        max_width = math.floor(vim.o.columns * 0.4),
+    }
+end
+
 local function on_attach(client, bufnr)
-    -- Config border of float windows
-    if vim.g.border_enabled then
-        vim.lsp.handlers['textDocument/signatureHelp'] = vim.lsp.with(vim.lsp.handlers.signature_help, {
-            border = vim.g.border_style,
-        })
-        vim.lsp.handlers['textDocument/hover'] = vim.lsp.with(vim.lsp.handlers.hover, {
-            border = vim.g.border_style,
-        })
-    end
     --
     -- Mappings
     --

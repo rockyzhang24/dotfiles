@@ -17,3 +17,7 @@ conform.setup({
         },
     },
 })
+
+-- NOTE:
+-- For the difference between formatters_by_ft and the table returned by format_on_save, see
+-- https://github.com/stevearc/conform.nvim/issues/565#issuecomment-2453047201

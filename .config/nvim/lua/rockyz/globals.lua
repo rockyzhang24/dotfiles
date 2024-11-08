@@ -9,5 +9,5 @@ vim.g.indentline_char = '|'
 -- LSP, treesitter and other ft plugins will be disabled.
 vim.g.bigfile_size = 1024 * 1024
 
--- Format-on-save
-vim.g.autoformat_disabled = true
+-- Autoformat (format-on-save)
+vim.g.autoformat = false

@@ -18,7 +18,7 @@ conform.setup({
     },
     -- Autoformat (format-on-save) can be toggled via the custom :ToggleFormat command
     format_on_save = function()
-        if vim.g.autoformat_disabled then
+        if not vim.g.autoformat then
             return
         end
         return {}

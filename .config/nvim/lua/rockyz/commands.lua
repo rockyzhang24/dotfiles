@@ -99,6 +99,7 @@ vim.api.nvim_create_user_command('Reindent', function(opts)
 end, { nargs = '+' })
 
 -- Toggle a variable to switch autoformat (format-on-save)
-vim.api.nvim_create_user_command('ToggleFormat', function()
-    vim.g.autoformat_disabled = not vim.g.autoformat_disabled
+vim.api.nvim_create_user_command('ToggleAutoFormat', function()
+    vim.g.autoformat = not vim.g.autoformat
+    vim.notify(string.format('Autoformat (format-on-save) is %s', vim.g.autoformat and 'enabled' or 'disabled'), vim.log.levels.INFO)
 end, { nargs = 0 })

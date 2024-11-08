@@ -175,7 +175,7 @@ end
 
 -- Autoformat (format-on-save)
 function M.autoformat_component()
-    if vim.g.autoformat_disabled then
+    if not vim.g.autoformat then
         return ''
     end
     return string.format('%%#StlComponentOn#%s%%*', icons.misc.format)

@@ -218,12 +218,8 @@ vim.keymap.set('n', '<Leader>fb', function()
                 -- CTRL-D to delete selected buffers
                 for i = 2, #lines do
                     local bufnr = string.match(lines[i], '%[(%d+)%]')
-                    if vim.bo[tonumber(bufnr)].buftype == 'terminal' then
-                        -- Force deletion of terminal buffer
-                        vim.cmd('bwipeout! ' .. bufnr)
-                    else
-                        vim.cmd('bwipeout ' .. bufnr)
-                    end
+                    local cmd = vim.bo[tonumber(bufnr)].buftype == 'terminal' and 'bwipeout! ' or 'bwipeout '
+                    vim.cmd(cmd .. bufnr)
                 end
             else
                 -- ENTER with only a single selection: switch to the buffer
@@ -232,27 +228,12 @@ vim.keymap.set('n', '<Leader>fb', function()
                     return
                 end
                 local action = vim.g.fzf_action[key]
+                action = action and action .. ' | buffer ' or 'buffer '
                 for i = 2, #lines do
-                    if action then
-                        vim.cmd(action)
-                    end
                     local bufnr = string.match(lines[i], '%[(%d+)%]')
-                    vim.cmd('buffer ' .. bufnr)
+                    vim.cmd(action .. bufnr)
                 end
             end
-            -- elseif key == '' and #lines == 2 then
-            --   -- ENTER (only works when a single buffer is selected)
-            --   local bufnr = string.match(lines[2], '%[(%d+)%]')
-            --   vim.cmd('buffer ' .. bufnr)
-            -- else
-            --   -- CTRL-X/V/T (supports multiple selections)
-            --   local action = vim.g.fzf_action[key]
-            --   for i = 2, #lines do
-            --     vim.cmd(action)
-            --     local bufnr = string.match(lines[i], '%[(%d+)%]')
-            --     vim.cmd('buffer ' .. bufnr)
-            --   end
-            -- end
         end,
         placeholder = '{1}',
         options = {
@@ -365,12 +346,14 @@ vim.keymap.set('n', '<Leader>ft', function()
         ['sink*'] = function(lines)
             local key = lines[1]
             if key == 'ctrl-d' and #vim.api.nvim_list_tabpages() > 1 then
+                -- CTRL-D: delete tabs
                 for i = 2, #lines do
                     for winid in lines[i]:match('%S+%s%S+%s%S+%s(%S+)'):gmatch('[^,]+') do
                         vim.api.nvim_win_close(tonumber(winid), false)
                     end
                 end
             else
+                -- ENTER with single selection: select tab
                 if #lines == 2 then
                     local tid = string.match(lines[2], '%S+%s%S+%s(%S+)')
                     vim.api.nvim_set_current_tabpage(tonumber(tid))
@@ -439,44 +422,80 @@ end
 
 ---@param win_local boolean true for location list and false for quickfix
 local function fzf_qf(win_local)
-    local what = { items = 0 }
+    local what = { items = 0, title = 0 }
     local list = win_local and vim.fn.getloclist(0, what) or vim.fn.getqflist(what)
     local entries = {}
+    local index = 1
     for _, item in ipairs(list.items) do
         local bufnr = item.bufnr
         local bufname = vim.api.nvim_buf_get_name(bufnr)
         local lnum = item.lnum
         -- The formatted entries will be fed to fzf.
-        -- Each entry is like "bufnr bufname lnum path/to/the/file:134:20 [E] error".
+        -- Each entry is like "index bufname lnum path/to/the/file:134:20 [E] error"
         -- The first three parts are used for fzf itself and won't be presented in fzf window.
-        -- * bufnr is used for sink of fzf.vim
-        -- * bufname and lnum are used for preview
-        table.insert(entries, bufnr .. ' ' .. bufname .. ' ' .. lnum .. ' ' .. get_qf_entry(qf_utils.format_qf_item(item)))
+        -- * index: display the error by :[nr]cc!
+        -- * bufname and lnum: fzf preview
+        table.insert(entries, index .. ' ' .. bufname .. ' ' .. lnum .. ' ' .. get_qf_entry(qf_utils.format_qf_item(item)))
+        index = index + 1
     end
     -- fzf
     local prompt = win_local and 'Location List' or 'Quickfix List'
     vim.fn['fzf#run'](vim.fn['fzf#wrap']({
         source = entries,
-        ['sink'] = function(line)
-            local bufnr = string.match(line, "%d+")
-            local lnum = string.match(line, "%S+%s+%S+%s+(%S+)")
-            vim.cmd('buffer ' .. bufnr)
-            vim.cmd('execute ' .. lnum)
-            vim.cmd('normal! zvzz')
+        ['sink*'] = function(lines)
+            local key = lines[1]
+            if key == 'ctrl-q' or key == 'ctrl-r' then
+                -- CTRL-Q: send selections to a new quickfix
+                -- CTRL-R: refine the current quickfix with selections
+                local new_qf_items = {}
+                for i = 2, #lines do
+                    local idx = tonumber(string.match(lines[i], '^%d+'))
+                    table.insert(new_qf_items, list.items[idx])
+                end
+                local new_what = { title = list.title, items = new_qf_items }
+                if key == 'ctrl-q' then
+                    vim.fn.setqflist({}, ' ', new_what)
+                else
+                    vim.fn.setqflist({}, 'u', new_what)
+                end
+            elseif key == '' and #lines == 2 then
+                -- ENTER with a single selection: display the error
+                local nr = string.match(lines[2], '^%d+')
+                vim.cmd(nr .. 'cc!')
+            else
+                -- ENTER/CTRL-X/CTRL-V/CTRL-T with multiple selections
+                local action = vim.g.fzf_action[key]
+                for i = 2, #lines do
+                    if action then
+                        vim.cmd(action)
+                    end
+                    local idx = tonumber(string.match(lines[i], '^%d+'))
+                    local item = list.items[idx]
+                    local bufnr = item.bufnr
+                    if vim.api.nvim_buf_is_loaded(bufnr) then
+                        vim.cmd('buffer! ' .. bufnr)
+                    else
+                        vim.cmd('edit! ' .. vim.fn.bufname(bufnr))
+                    end
+                    vim.api.nvim_win_set_cursor(0, { item.lnum, item.col - 1 })
+                    vim.cmd('normal! zvzz')
+                end
+            end
         end,
         options = {
             '--ansi',
-            '--no-multi',
             '--prompt',
             prompt .. '> ',
             '--header',
-            ':: ENTER (jump to the file)',
+            ':: ENTER (display the error)\n:: CTRL-R (refine the current quickfix), CTRL-Q (send to a new quickfix)',
             '--with-nth',
             '4..',
-            '--preview-window',
-            'down,45%,+{3}-/2',
+            '--expect',
+            'ctrl-x,ctrl-v,ctrl-t,ctrl-q,ctrl-r',
             '--preview',
             bat_prefix .. ' --highlight-line {3} -- {2}',
+            '--preview-window',
+            'down,45%,+{3}-/2',
             '--bind',
             'focus:transform-preview-label:echo [ $(echo {2} | sed "s|^$HOME|~|") ]',
         },
@@ -935,15 +954,16 @@ local function symbol_request_and_run_fzf(method, params, title, query)
                             vim.cmd(action)
                         end
                         local idx = tonumber(lines[i]:match('^%S+'))
+                        local item = items[idx]
                         -- For workspace symbol, open the file
-                        local filename = items[idx].filename
+                        local filename = item.filename
                         if query ~= '' and vim.api.nvim_buf_get_name(0) ~= filename then
                             vim.cmd('edit! ' .. filename)
                         end
                         -- Save position in jumplist
                         vim.cmd("normal! m'")
-                        vim.api.nvim_win_set_cursor(0, { items[idx].lnum, items[idx].col - 1 })
-                        vim.cmd('normal! zv')
+                        vim.api.nvim_win_set_cursor(0, { item.lnum, item.col - 1 })
+                        vim.cmd('normal! zvzz')
                     end
                 end
             end,

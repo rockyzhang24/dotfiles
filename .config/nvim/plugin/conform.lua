@@ -16,6 +16,13 @@ conform.setup({
             prepend_args = { '-i', '2' },
         },
     },
+    -- Autoformat (format-on-save) can be toggled via the custom :ToggleFormat command
+    format_on_save = function()
+        if vim.g.autoformat_disabled then
+            return
+        end
+        return {}
+    end,
 })
 
 -- NOTE:

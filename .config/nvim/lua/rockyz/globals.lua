@@ -8,3 +8,6 @@ vim.g.indentline_char = '|'
 -- Only vim syntax will be enabled (with correct filetype)
 -- LSP, treesitter and other ft plugins will be disabled.
 vim.g.bigfile_size = 1024 * 1024
+
+-- Format-on-save
+vim.g.autoformat_disabled = true

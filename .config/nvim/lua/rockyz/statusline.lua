@@ -173,6 +173,14 @@ function M.search_component()
     return string.format('%%#StlSearchCnt#%s[%s/%s]%%*', icons.misc.search, current, total)
 end
 
+-- Autoformat (format-on-save)
+function M.autoformat_component()
+    if vim.g.autoformat_disabled then
+        return ''
+    end
+    return string.format('%%#StlComponentOn#%s%%*', icons.misc.format)
+end
+
 -- Diagnostics
 local diagnostic_levels = {
     { name = 'ERROR', icon = icons.diagnostics.ERROR },
@@ -335,6 +343,7 @@ function M.render()
         '%=',
         concat_components({
             M.search_component(),
+            M.autoformat_component(),
             M.diagnostic_component(),
             M.spell_component(120),
             M.treesitter_component(),

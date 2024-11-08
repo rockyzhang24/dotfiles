@@ -92,6 +92,7 @@ icons.misc = {
     file = ' ',
     file_code = ' ',
     folder = '󰉋 ',
+    format = ' ',
     graph = ' ',
     help = ' ',
     lightbulb = '',

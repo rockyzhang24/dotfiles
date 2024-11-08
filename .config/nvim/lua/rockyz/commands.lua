@@ -97,3 +97,8 @@ vim.api.nvim_create_user_command('Reindent', function(opts)
     end
     vim.o.shiftwidth = new_indent
 end, { nargs = '+' })
+
+-- Toggle a variable to switch autoformat (format-on-save)
+vim.api.nvim_create_user_command('ToggleFormat', function()
+    vim.g.autoformat_disabled = not vim.g.autoformat_disabled
+end, { nargs = 0 })

@@ -172,9 +172,14 @@ vim.api.nvim_create_autocmd('VimEnter', {
 vim.api.nvim_create_autocmd('FileType', {
     group = vim.api.nvim_create_augroup('rockyz/big_file', { clear = true }),
     pattern = 'bigfile',
-    callback = function(args)
+    callback = function(ev)
+        local path = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(ev.buf), ":p:~:.")
+        vim.notify(
+            ('Big file detected: %s.\nSome Neovim features have been disabled.'):format(path),
+            vim.log.levels.WARN,
+            { title = 'Bif File' })
         vim.schedule(function()
-            vim.bo[args.buf].syntax = vim.filetype.match({ buf = args.buf }) or ''
+            vim.bo[ev.buf].syntax = vim.filetype.match({ buf = ev.buf }) or ''
         end)
     end,
 })

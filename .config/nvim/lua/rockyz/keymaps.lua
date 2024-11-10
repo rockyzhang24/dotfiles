@@ -140,9 +140,9 @@ vim.keymap.set('n', '<Leader>sw', ':%s/\\<<C-r><C-w>\\>//gI<Left><Left><Left>')
 --
 
 -- Delete the current buffer and switch back to the previous one
-vim.keymap.set('n', '<Leader>bd', ':<C-u>bprevious <Bar> bdelete #<CR>', { silent = true })
+vim.keymap.set('n', '<Leader>bd', require('rockyz.utils.buf_utils').bufdelete)
 -- Delete all the other unmodified buffers
-vim.keymap.set('n', '<Leader>bo', ':call utils#BufsDel()<CR>', { silent = true })
+vim.keymap.set('n', '<Leader>bo', require('rockyz.utils.buf_utils').bufdelete_other)
 
 --
 -- Copy and paste

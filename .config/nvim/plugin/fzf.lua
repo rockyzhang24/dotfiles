@@ -217,9 +217,8 @@ vim.keymap.set('n', '<Leader>fb', function()
             if key == 'ctrl-d' then
                 -- CTRL-D to delete selected buffers
                 for i = 2, #lines do
-                    local bufnr = string.match(lines[i], '%[(%d+)%]')
-                    local cmd = vim.bo[tonumber(bufnr)].buftype == 'terminal' and 'bwipeout! ' or 'bwipeout '
-                    vim.cmd(cmd .. bufnr)
+                    local bufnr = tonumber(string.match(lines[i], '%[(%d+)%]'))
+                    require('rockyz.utils.buf_utils').bufdelete({ bufnr = bufnr, wipe = true })
                 end
             else
                 -- ENTER with only a single selection: switch to the buffer

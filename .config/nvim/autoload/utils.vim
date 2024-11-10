@@ -37,12 +37,3 @@ function! utils#GrepOperator(type) abort
     copen
     let @@ = saved_unnamed_register
 endfunction
-
-" Delete all the other unmodified buffers
-function! utils#BufsDel() abort
-    for buf in getbufinfo({'buflisted':1})
-        if (buf.hidden && !buf.changed)
-            execute buf.bufnr . 'bdelete'
-        endif
-    endfor
-endfunction

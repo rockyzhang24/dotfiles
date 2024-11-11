@@ -16,9 +16,10 @@ conform.setup({
             prepend_args = { '-i', '2' },
         },
     },
-    -- Autoformat (format-on-save) can be toggled via the custom :ToggleFormat command
-    format_on_save = function()
-        if not vim.g.autoformat then
+    -- Autoformat (format-on-save) can be toggled via the custom :ToggleFormat[!] command.
+    -- Toggle buffer-local autoformat without [!]; Global autoformat with [!].
+    format_on_save = function(bufnr)
+        if not vim.g.autoformat and not vim.b[bufnr].autoformat then
             return
         end
         return {}

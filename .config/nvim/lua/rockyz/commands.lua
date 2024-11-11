@@ -98,8 +98,16 @@ vim.api.nvim_create_user_command('Reindent', function(opts)
     vim.o.shiftwidth = new_indent
 end, { nargs = '+' })
 
--- Toggle a variable to switch autoformat (format-on-save)
-vim.api.nvim_create_user_command('ToggleAutoFormat', function()
-    vim.g.autoformat = not vim.g.autoformat
-    vim.notify(string.format('Autoformat (format-on-save) is %s', vim.g.autoformat and 'enabled' or 'disabled'), vim.log.levels.INFO)
-end, { nargs = 0 })
+-- Toggle variable to switch autoformat (format-on-save)
+-- If [!] is not given, toggle buffer-local autoformat; Use [!] to toggle autoformat globally.
+vim.api.nvim_create_user_command('ToggleAutoFormat', function(opts)
+    local msg = ''
+    if opts.bang then
+        vim.g.autoformat = not vim.g.autoformat
+        msg = 'Global autoformat (format-on-save) is ' .. (vim.g.autoformat and 'enabled' or 'disabled')
+    else
+        vim.b.autoformat = not vim.b.autoformat
+        msg = 'Buffer-local autoformat (format-on-save) is ' .. (vim.b.autoformat and 'enabled' or 'disabled')
+    end
+    vim.notify(msg, vim.log.levels.INFO)
+end, { nargs = 0, bang = true })

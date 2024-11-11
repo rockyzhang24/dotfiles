@@ -112,6 +112,9 @@ vim.keymap.set('n', 'yodd', function()
         vim.cmd('windo diffthis')
     end
 end)
+-- Toggle autoformat (format-on-save)
+vim.keymap.set('n', 'yof', ':ToggleAutoFormat<CR>') -- buffer-local
+vim.keymap.set('n', 'yoF', ':ToggleAutoFormat!<CR>') -- global
 
 --
 -- Search

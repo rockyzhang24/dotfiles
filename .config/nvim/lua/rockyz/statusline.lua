@@ -175,10 +175,12 @@ end
 
 -- Autoformat (format-on-save)
 function M.autoformat_component()
-    if not vim.g.autoformat then
+    if not vim.g.autoformat and not vim.b.autoformat then
         return ''
     end
-    return string.format('%%#StlComponentOn#%s%%*', icons.misc.format)
+    -- Type of the autoformat: G for global and B for buffer-local
+    local type = vim.g.autoformat and '[G]' or (vim.b.autoformat and '[B]' or '')
+    return string.format('%%#StlComponentOn#%s%%*%s', icons.misc.format, type)
 end
 
 -- Diagnostics

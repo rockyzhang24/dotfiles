@@ -18,7 +18,7 @@ vim.opt.fillchars = {
     fold = ' ',
     foldopen = icons.caret.down,
     foldclose = icons.caret.right,
-    foldsep = icons.separators.bar,
+    foldsep = ' ',
     eob = ' ',
     msgsep = '‾',
 }
@@ -48,7 +48,7 @@ vim.o.spelllang = 'en_us'
 vim.o.pumheight = 15
 vim.o.pumwidth = 20
 vim.o.breakindent = true
-vim.o.showbreak = '↪ '
+vim.o.showbreak = '↳ '
 -- Presistent undo (use set undodir=... to change the undodir, default is ~/.local/share/nvim/undo)
 vim.o.undofile = true
 vim.o.nrformats = 'octal,bin,hex,unsigned,alpha'

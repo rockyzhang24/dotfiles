@@ -4,6 +4,7 @@ illuminate.configure({
     delay = 300,
     filetypes_denylist = {
         'aerial',
+        'floggraph',
         'fugitive',
         'git',
         'gitsigns.blame',

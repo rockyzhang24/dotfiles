@@ -25,26 +25,27 @@
 -- The support finders are as below
 -----------------------------------
 
--- Files
--- Old files
--- Git files
--- Git commits
--- Git commits for current buffer
--- Search history
--- Command history
--- Buffers
--- Buffer delete
--- Files for my dotfiles
--- Files under HOME
--- Tabs
--- Quickfix/Location list items
--- Quickfix/Location list history
--- Ultimate grep (:RGU)
--- Live grep in my nvim config
--- Grep for the current word/selection
--- Live grep in current buffer
--- LSP document symbols
--- LSP workspace symbols
+-- <Leader>ff : Files
+-- <Leader>fo : Old files
+-- <C-p>      : Git files
+-- <Leader>fc : Git commits for current buffer
+-- <Leader>fC : Git commits
+-- <Leader>f/ : Search history
+-- <Leader>f: : Command history
+-- <Leader>fb : Buffers
+-- <Leader>f. : Files for my dotfiles
+-- <Leader>f~ : Files under $HOME
+-- <Leader>ft : Tabs
+-- <Leader>fq : Quickfix list items
+-- <Leader>fl : Location list items
+-- <Leader>fQ : Quickfix list history
+-- <Leader>fL : Location list history
+-- <Leader>gg : Ultimate grep (:RGU)
+-- <Leader>gv : Live grep in my nvim config
+-- <Leader>g* : Grep for the current word/selection
+-- <Leader>gb : Live grep in current buffer
+-- <Leader>fs : LSP document symbols
+-- <Leader>fS : LSP workspace symbols
 
 local uv = require('luv')
 local qf_utils = require('rockyz.utils.qf_utils')

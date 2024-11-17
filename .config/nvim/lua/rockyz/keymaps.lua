@@ -167,6 +167,10 @@ end)
 vim.keymap.set('n', 'gp', function()
     return '`[' .. vim.fn.strpart(vim.fn.getregtype(vim.v.register), 0, 1) .. '`]'
 end, { expr = true })
+-- Copy unnamed(") register to system(*) register
+vim.keymap.set('n', 'yc', function()
+    vim.fn.setreg('+', vim.fn.getreg('"'))
+end)
 
 --
 -- Command line

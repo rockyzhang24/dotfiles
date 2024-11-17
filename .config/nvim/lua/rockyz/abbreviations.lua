@@ -1,21 +1,14 @@
-local function is_begining(from)
-    return vim.fn.getcmdtype() == ':' and vim.fn.getcmdline() == from
+---Create abbreviation
+---@param everywhere boolean? The abbreviation applies everywhere or only at the very beginning.
+---Defaults to false.
+local function abbreviate(from, to, everywhere)
+    vim.keymap.set('ca', from, function()
+        return everywhere and to or (vim.fn.getcmdtype() == ':' and vim.fn.getcmdline() == from and to or from)
+    end, { expr = true })
 end
 
-vim.keymap.set('ca', 'T', function()
-    return is_begining('T') and 'tabedit' or 'T'
-end, { expr = true })
-
-vim.keymap.set('ca', 'dot', function()
-    return is_begining('dot')
-        and '!git --git-dir=/Users/rockyzhang/dotfiles/ --work-tree=/Users/rockyzhang'
-        or 'dot'
-end, { expr = true })
-
-vim.keymap.set('ca', 'ts', function()
-    return is_begining('ts') and 'silent !tmux neww tmux-sessionizer' or 'ts'
-end, { expr = true })
-
-vim.keymap.set('ca', 'man', function()
-    return is_begining('man') and 'Man' or 'man'
-end, { expr = true })
+abbreviate('T', 'tabedit')
+abbreviate('dot', '!git --git-dir=/Users/rockyzhang/dotfiles/ --work-tree=/Users/rockyzhang')
+abbreviate('ts', 'silent !tmux neww tmux-sessionizer')
+abbreviate('man', 'Man')
+abbreviate('H', 'h')

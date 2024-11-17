@@ -75,7 +75,7 @@ local function on_attach(client, bufnr)
     --  * gO in NORMAL maps to vim.lsp.buf.document_symbol()
     --  * grn in NORMAL maps to vim.lsp.buf.rename()
     --  * gra in NORMAL and VISUAL maps to vim.lsp.buf.code_action()
-    --  * <C-s> in INSERT maps to vim.lsp.buf.signature_help()
+    --  * <C-s> in INSERT and SELECT maps to vim.lsp.buf.signature_help()
     -- Also, the following default diagnostic mappings are creataed:
     --  * ]d and [d: jump to the next or previous diagnostic
     --  * ]D and [D: jump to the last or first diagnostic
@@ -86,7 +86,7 @@ local function on_attach(client, bufnr)
     vim.keymap.set('n', 'gy', vim.lsp.buf.type_definition, opts)
     vim.keymap.set('n', 'gI', vim.lsp.buf.implementation, opts)
     vim.keymap.set('n', 'gr', vim.lsp.buf.references, { buffer = bufnr, nowait = true })
-    vim.keymap.set('i', '<C-s>', vim.lsp.buf.signature_help, opts)
+    vim.keymap.set({ 'i', 's' }, '<C-s>', vim.lsp.buf.signature_help, opts)
     vim.keymap.set('n', 'K', vim.lsp.buf.hover, opts)
     vim.keymap.set('n', '<Leader>rn', vim.lsp.buf.rename, opts)
     -- Code actions for the current line.

@@ -889,6 +889,7 @@ local groups = {
     RipgrepQuery = { fg = pink },
     RipgrepFilename = { fg = purple },
     RipgrepLineNum = { fg = green },
+    RipgrepColNum = { fg = blue },
 }
 
 for k, v in pairs(groups) do

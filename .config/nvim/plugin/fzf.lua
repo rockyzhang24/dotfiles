@@ -44,8 +44,13 @@
 -- <Leader>gv : Live grep in my nvim config
 -- <Leader>g* : Grep for the current word/selection
 -- <Leader>gb : Live grep in current buffer
--- <Leader>fs : LSP document symbols
--- <Leader>fS : LSP workspace symbols
+-- <Leader>ls : LSP document symbols
+-- <Leader>lS : LSP workspace symbols
+-- <Leader>ld : LSP definitions
+-- <Leader>lr : LSP references
+-- <Leader>li : LSP implementations
+-- <Leader>lD : LSP declarations
+-- <Leader>lt : LSP type definitions
 
 local uv = require('luv')
 local qf_utils = require('rockyz.utils.qf_utils')
@@ -75,6 +80,17 @@ local function color_str(str, hl, from_type, to_type)
     local ansi = color_utils.hl2ansi(hl, from_type, to_type)
     local ansi_reset = '\x1b[m'
     return  ansi .. str .. ansi_reset
+end
+
+-- Get ANSI colored devicon for a filename
+local function get_colored_devicon(filename)
+    local devicon = ''
+    local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
+    if has_devicons then
+        local file_icon, file_icon_hl = devicons.get_icon(filename, vim.fn.fnamemodify(filename, ':e'), { default = true })
+        devicon = color_str(file_icon, file_icon_hl)
+    end
+    return devicon
 end
 
 vim.g.fzf_layout = {
@@ -803,23 +819,28 @@ vim.keymap.set('n', '<Leader>gb', function()
 end)
 
 --
--- LSP document symbols and workspace symbols
+-- LSP
+--
+-- Each fzf entry consists of 5 parts: index filename lnum col fzf_text.
+--
+-- Only fzf_text will be displayed in fzf. Other parts are used in running fzf such as fzf preview,
+-- setting border label, sending selections to quickfix and etc.
+--
+-- The `index` represents the position of the current entry among all entries. The order of all fzf
+-- entries is consistent with the order of all quickfix items. When selecting certain entries in fzf
+-- and wanting to send them to quickfix, their corresponding quickfix items can be retrieved using
+-- their indices.
 --
 
--- The order of symbols in fzf entries and quickfix items is consistent. This symbol_idx is used to
--- record the position of each symbol and its stored in each fzf entry. After selecting certain
--- entries in fzf, we can retrieve the corresponding quickfix items using their indices.
-local symbol_idx = 0
+--
+-- LSP document symbols and workspace symbols
+--
 
 -- Convert symbols to fzf entries and quickfix items
 -- Reference: the source code of vim.lsp.util.symbols_to_items
 -- (https://github.com/neovim/neovim/blob/master/runtime/lua/vim/lsp/util.lua)
-local function symbols_to_entries_and_items(symbols, bufnr, offset_encoding, child_prefix)
-    bufnr = bufnr or 0
-    local entries = {}
-    local items = {}
+local function symbols_to_entries_and_items(symbols, bufnr, offset_encoding, child_prefix, all_entries, all_items)
     for _, symbol in ipairs(symbols) do
-        symbol_idx = symbol_idx + 1
         local kind = vim.lsp.protocol.SymbolKind[symbol.kind] or 'Unknown'
         local icon = icons.symbol_kinds[kind]
         local colored_icon_kind = color_str(icon .. kind, 'SymbolKind' .. kind)
@@ -831,28 +852,20 @@ local function symbols_to_entries_and_items(symbols, bufnr, offset_encoding, chi
             -- utf-32 or utf-16 index to utf-8 index internally.
             local item = vim.lsp.util.locations_to_items({ symbol.location }, offset_encoding)[1]
             item.text = '[' .. icon .. kind .. '] ' .. symbol.name
-            table.insert(items, item)
+            table.insert(all_items, item)
+            -- Construct fzf entries
             local filename = item.filename
             local lnum = item.lnum
             local col = item.col
-            -- Get devicon
-            local devicon = ''
-            local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
-            if has_devicons then
-                local file_icon, file_icon_hl = devicons.get_icon(filename, vim.fn.fnamemodify(filename, ':e'), { default = true })
-                devicon = color_str(file_icon, file_icon_hl)
-            end
+            local devicon = get_colored_devicon(filename)
             local fzf_text = '[' .. colored_icon_kind .. '] ' .. symbol.name
-            .. string.rep(' ', 6)
-            .. (devicon == '' and devicon or devicon .. ' ')
-            .. color_str(vim.fn.fnamemodify(filename, ':~:.'), 'RipgrepFilename')
-            .. ':' .. color_str(tostring(lnum), 'RipgrepLineNum')
-            .. ':' .. col
-            -- Fzf entries
-            -- Each fzf entry consists of 5 parts: index filename lnum col fzf_text. Only the
-            -- fzf_text will be displayed in fzf.
-            table.insert(entries, table.concat({
-                symbol_idx,
+                .. string.rep(' ', 6)
+                .. (devicon == '' and devicon or devicon .. ' ')
+                .. color_str(vim.fn.fnamemodify(filename, ':~:.'), 'RipgrepFilename')
+                .. ':' .. color_str(tostring(lnum), 'RipgrepLineNum')
+                .. ':' .. color_str(tostring(col), 'RipgrepColNum')
+            table.insert(all_entries, table.concat({
+                #all_entries + 1,
                 filename,
                 lnum,
                 col,
@@ -875,15 +888,15 @@ local function symbols_to_entries_and_items(symbols, bufnr, offset_encoding, chi
             -- Use two whitespaces for each level of indentation to show the hierarchical structure
             local fzf_text = child_prefix .. '[' .. colored_icon_kind .. '] ' .. symbol.name
             -- Fzf entries
-            table.insert(entries, table.concat({
-                symbol_idx,
+            table.insert(all_entries, table.concat({
+                #all_entries + 1,
                 filename,
                 lnum,
                 col,
                 fzf_text,
             }, ' '))
             -- Quickfix items
-            table.insert(items, {
+            table.insert(all_items, {
                 filename = filename,
                 lnum = lnum,
                 end_lnum = end_lnum,
@@ -892,78 +905,64 @@ local function symbols_to_entries_and_items(symbols, bufnr, offset_encoding, chi
                 text = text
             })
             if symbol.children then
-                local _entries, _items = symbols_to_entries_and_items(symbol.children, bufnr, offset_encoding, child_prefix .. string.rep(' ', 2))
-                vim.list_extend(entries, _entries)
-                vim.list_extend(items, _items)
+                symbols_to_entries_and_items(symbol.children, bufnr, offset_encoding, child_prefix .. string.rep(' ', 2), all_entries, all_items)
             end
         end
     end
-    return entries, items
 end
 
 ---Send request document symbols or workspace symbols and then execute fzf
 ---@param title string The title for quickfix list and fzf prompt
 ---@param query string The query for requesting workspace symbols. It will be empty for document
 ---symbol request
-local function symbol_request_and_run_fzf(method, params, title, query)
-    symbol_idx = 0
-    vim.lsp.buf_request_all(0, method, params, function(results)
-        local entries = {}
-        local items = {}
-        for client_id, result in pairs(results) do
-            if result.result then
-                local client = assert(vim.lsp.get_client_by_id(client_id))
-                local _entries, _items = symbols_to_entries_and_items(result.result, 0, client.offset_encoding, '')
-                vim.list_extend(entries, _entries)
-                vim.list_extend(items, _items)
-            end
-        end
-        if vim.tbl_isempty(entries) then
-            vim.notify('No results!')
-            return
-        end
+local function request_symbols_and_fzf_exec(method, params, title, query)
+    local bufnr = vim.api.nvim_get_current_buf()
+    local clients = vim.lsp.get_clients({ method = method, bufnr = bufnr })
+    if not next(clients) then
+        return
+    end
+    local remaining = #clients
+    local all_entries = {}
+    local all_items = {}
+
+    local function fzf_exec(offset_encoding)
         local fzf_header = ':: CTRL-Q (send to quickfix)'
         local fzf_preview_window = '+{3}-/2'
         if query ~= '' then
             fzf_header = ':: Query: ' .. color_str(query, 'RipgrepQuery') .. '\n' .. fzf_header
             fzf_preview_window = 'down,45%,' .. fzf_preview_window
         end
-        -- Run fzf
         vim.fn['fzf#run'](vim.fn['fzf#wrap']({
-            source = entries,
+            source = all_entries,
             ['sink*'] = function(lines)
                 local key = lines[1]
-                if key == 'ctrl-q' or key == '' and #lines > 2 then
-                    -- CTRL-Q or ENTER with multiple selections: send them to quickfix
+                if key == 'ctrl-q' then
+                    -- CTRL-Q: send them to quickfix
                     local qf_items = {}
                     for i = 2, #lines do
                         local idx = tonumber(lines[i]:match('^%S+'))
-                        table.insert(qf_items, items[idx])
+                        table.insert(qf_items, all_items[idx])
                     end
                     vim.fn.setqflist({}, ' ', { title = title, items = qf_items })
                     vim.cmd('botright copen')
                 else
-                    -- ENTER with only a single selection: go to the location
-                    -- CTRL-X/V/T supports multiple selections
-                    if key == '' and #lines ~= 2 then
-                        return
-                    end
+                    -- ENTER/CTRL-X/CTRL-V/CTRL-T with multiple selections
                     local action = vim.g.fzf_action[key]
                     for i = 2, #lines do
                         if action then
                             vim.cmd(action)
                         end
                         local idx = tonumber(lines[i]:match('^%S+'))
-                        local item = items[idx]
-                        -- For workspace symbol, open the file
-                        local filename = item.filename
-                        if query ~= '' and vim.api.nvim_buf_get_name(0) ~= filename then
-                            vim.cmd('edit! ' .. filename)
+                        local item = all_items[idx]
+                        if query ~= '' then
+                            -- For workspace symbol
+                            vim.lsp.util.show_document(item.user_data, offset_encoding)
+                        else
+                            -- For document symbol
+                            vim.cmd("normal! m'") -- save position to jumplist
+                            vim.api.nvim_win_set_cursor(0, { item.lnum, item.col - 1 })
+                            vim.cmd('normal! zvzz')
                         end
-                        -- Save position in jumplist
-                        vim.cmd("normal! m'")
-                        vim.api.nvim_win_set_cursor(0, { item.lnum, item.col - 1 })
-                        vim.cmd('normal! zvzz')
                     end
                 end
             end,
@@ -987,20 +986,153 @@ local function symbol_request_and_run_fzf(method, params, title, query)
                 'focus:transform-preview-label:echo [ $(echo {2}:{3}:{4} | sed "s|^$HOME|~|") ]',
             },
         }))
-    end)
+    end
+
+    for _, client in ipairs(clients) do
+        client.request(method, params, function(_, result)
+            symbols_to_entries_and_items(result, bufnr, client.offset_encoding, '', all_entries, all_items)
+            remaining = remaining - 1
+            if remaining == 0 then
+                fzf_exec(client.offset_encoding)
+            end
+        end)
+    end
 end
 
--- Document symbols
+-- LSP document symbols
 -- CTRL-Q: send selections to quickfix
-vim.keymap.set('n', '<Leader>fs', function()
+vim.keymap.set('n', '<Leader>ls', function()
     local params = { textDocument = vim.lsp.util.make_text_document_params() }
-    symbol_request_and_run_fzf('textDocument/documentSymbol', params, 'LSP Document Symbols', '')
+    request_symbols_and_fzf_exec('textDocument/documentSymbol', params, 'LSP Document Symbols', '')
 end)
 
--- Workspace symbols
+-- LSP workspace symbols
 -- CTRL-Q: send selections to quickfix
-vim.keymap.set('n', '<Leader>fS', function()
+vim.keymap.set('n', '<Leader>lS', function()
     local query = vim.fn.input('Query: ')
     local params = { query = query }
-    symbol_request_and_run_fzf('workspace/symbol', params, 'LSP Workspace Symbols', query)
+    request_symbols_and_fzf_exec('workspace/symbol', params, 'LSP Workspace Symbols', query)
+end)
+
+--
+-- LSP definitions, references, implementations, declarations, type definitions
+--
+
+-- Convert lsp.Location[] to fzf entries and quickfix items
+local function locations_to_entries_and_items(locations, offset_encoding, all_entries, all_items)
+    local items = vim.lsp.util.locations_to_items(locations, offset_encoding)
+    vim.list_extend(all_items, items)
+    -- Construct fzf entries
+    for _, item in ipairs(items) do
+        local filename = item.filename
+        local lnum = item.lnum
+        local col = item.col
+        local icon = get_colored_devicon(filename)
+        local fzf_text = icon == '' and icon or icon .. ' '
+            .. color_str(vim.fn.fnamemodify(filename, ':~:.'), 'RipgrepFilename')
+            .. ':' .. color_str(tostring(lnum), 'RipgrepLineNum')
+            .. ':' .. color_str(tostring(col), 'RipgrepColNum')
+            .. ': ' .. item.text
+        table.insert(all_entries, table.concat({
+            #all_entries + 1,
+            filename,
+            lnum,
+            col,
+            fzf_text
+        }, ' '))
+    end
+end
+
+local function request_locations_and_fzf_exec(method, title)
+    local bufnr = vim.api.nvim_get_current_buf()
+    local clients = vim.lsp.get_clients({ method = method, bufnr = bufnr })
+    if not next(clients) then
+        return
+    end
+    local win = vim.api.nvim_get_current_win()
+    local remaining = #clients
+    local all_items = {}
+    local all_entries = {}
+
+    local function fzf_exec(offset_encoding)
+        vim.fn['fzf#run'](vim.fn['fzf#wrap']({
+            source = all_entries,
+            ['sink*'] = function(lines)
+                local key = lines[1]
+                if key == 'ctrl-q' then
+                    -- CTRL-Q: send them to quickfix
+                    local qf_items = {}
+                    for i = 2, #lines do
+                        local idx = tonumber(lines[i]:match('^%S+'))
+                        table.insert(qf_items, all_items[idx])
+                    end
+                    vim.fn.setqflist({}, ' ', { title = title, items = qf_items })
+                    vim.cmd('botright copen')
+                else
+                    -- ENTER/CTRL-X/CTRL-V/CTRL-T with multiple selections
+                    local action = vim.g.fzf_action[key]
+                    for i = 2, #lines do
+                        if action then
+                            vim.cmd(action)
+                        end
+                        local idx = tonumber(lines[i]:match('^%S+'))
+                        local item = all_items[idx]
+                        vim.lsp.util.show_document(item.user_data, offset_encoding)
+                    end
+                end
+            end,
+            options = {
+                '--ansi',
+                '--with-nth',
+                '5..',
+                '--prompt',
+                title .. '> ',
+                '--header',
+                ':: CTRL-Q (send to quickfix)',
+                '--expect',
+                'ctrl-x,ctrl-v,ctrl-t,ctrl-q',
+                '--preview',
+                bat_prefix .. ' --highlight-line {3} -- {2}',
+                '--preview-window',
+                '+{3}-/2',
+                '--bind',
+                'focus:transform-preview-label:echo [ $(echo {2}:{3}:{4} | sed "s|^$HOME|~|") ]',
+            },
+        }))
+    end
+
+    for _, client in ipairs(clients) do
+        local params = vim.lsp.util.make_position_params(win, client.offset_encoding)
+        if method == 'textDocument/references' then
+            params.context = { includeDeclaration = true }
+        end
+        client.request(method, params, function(_, result)
+            locations_to_entries_and_items(result or {}, client.offset_encoding, all_entries, all_items)
+            remaining = remaining - 1
+            if remaining == 0 then
+                fzf_exec(client.offset_encoding)
+            end
+        end)
+    end
+end
+
+-- LSP definitions
+vim.keymap.set('n', '<Leader>ld', function()
+    request_locations_and_fzf_exec('textDocument/definition', 'LSP Definitions')
+end)
+-- LSP references
+vim.keymap.set('n', '<Leader>lr', function()
+    request_locations_and_fzf_exec('textDocument/references', 'LSP References')
+end)
+-- LSP implementations
+vim.keymap.set('n', '<Leader>li', function()
+    request_locations_and_fzf_exec('textDocument/implementation', 'LSP Implementations')
+end)
+-- LSP declarations
+vim.keymap.set('n', '<Leader>lD', function()
+    request_locations_and_fzf_exec('textDocument/declaration', 'LSP Declarations')
+end)
+-- LSP type definitions
+vim.keymap.set('n', '<Leader>lt', function()
+    request_locations_and_fzf_exec('textDocument/typeDefinition', 'LSP Type Definitions')
 end)

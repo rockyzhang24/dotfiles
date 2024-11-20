@@ -839,11 +839,13 @@ end)
 -- Convert symbols to fzf entries and quickfix items
 -- Reference: the source code of vim.lsp.util.symbols_to_items
 -- (https://github.com/neovim/neovim/blob/master/runtime/lua/vim/lsp/util.lua)
-local function symbols_to_entries_and_items(symbols, bufnr, offset_encoding, child_prefix, all_entries, all_items)
+local function symbols_to_entries_and_items(symbols, ctx, bufnr, offset_encoding, child_prefix, all_entries, all_items)
     for _, symbol in ipairs(symbols) do
         local kind = vim.lsp.protocol.SymbolKind[symbol.kind] or 'Unknown'
         local icon = icons.symbol_kinds[kind]
         local colored_icon_kind = color_str(icon .. kind, 'SymbolKind' .. kind)
+        local client_name = '[' .. vim.lsp.get_client_by_id(ctx.client_id).name .. ']'
+        local colored_client_name = color_str(client_name, 'Comment')
         if symbol.location then
             --
             -- LSP's WorkspaceSymbol[]
@@ -851,7 +853,7 @@ local function symbols_to_entries_and_items(symbols, bufnr, offset_encoding, chi
             -- Get quickfix item. vim.lsp.util.locations_to_items will handle the conversion from
             -- utf-32 or utf-16 index to utf-8 index internally.
             local item = vim.lsp.util.locations_to_items({ symbol.location }, offset_encoding)[1]
-            item.text = '[' .. icon .. kind .. '] ' .. symbol.name
+            item.text = '[' .. icon .. kind .. '] ' .. symbol.name .. ' ' .. client_name
             table.insert(all_items, item)
             -- Construct fzf entries
             local filename = item.filename
@@ -859,6 +861,7 @@ local function symbols_to_entries_and_items(symbols, bufnr, offset_encoding, chi
             local col = item.col
             local devicon = get_colored_devicon(filename)
             local fzf_text = '[' .. colored_icon_kind .. '] ' .. symbol.name
+                .. ' ' .. colored_client_name
                 .. string.rep(' ', 6)
                 .. (devicon == '' and devicon or devicon .. ' ')
                 .. color_str(vim.fn.fnamemodify(filename, ':~:.'), 'RipgrepFilename')
@@ -884,9 +887,9 @@ local function symbols_to_entries_and_items(symbols, bufnr, offset_encoding, chi
             local end_lnum = end_pos.line + 1
             local end_line = vim.api.nvim_buf_get_lines(0, end_pos.line, end_pos.line + 1, false)[1]
             local end_col = vim.str_byteindex(end_line, offset_encoding, end_pos.character, false) + 1
-            local text = '[' .. icon .. kind .. '] ' .. symbol.name
+            local text = '[' .. icon .. kind .. '] ' .. symbol.name .. ' ' .. client_name
             -- Use two whitespaces for each level of indentation to show the hierarchical structure
-            local fzf_text = child_prefix .. '[' .. colored_icon_kind .. '] ' .. symbol.name
+            local fzf_text = child_prefix .. '[' .. colored_icon_kind .. '] ' .. symbol.name .. ' ' .. colored_client_name
             -- Fzf entries
             table.insert(all_entries, table.concat({
                 #all_entries + 1,
@@ -905,7 +908,7 @@ local function symbols_to_entries_and_items(symbols, bufnr, offset_encoding, chi
                 text = text
             })
             if symbol.children then
-                symbols_to_entries_and_items(symbol.children, bufnr, offset_encoding, child_prefix .. string.rep(' ', 2), all_entries, all_items)
+                symbols_to_entries_and_items(symbol.children, ctx, bufnr, offset_encoding, child_prefix .. string.rep(' ', 2), all_entries, all_items)
             end
         end
     end
@@ -919,6 +922,7 @@ local function request_symbols_and_fzf_exec(method, params, title, query)
     local bufnr = vim.api.nvim_get_current_buf()
     local clients = vim.lsp.get_clients({ method = method, bufnr = bufnr })
     if not next(clients) then
+        vim.notify(string.format('No active clients supporting %s method', method), vim.log.levels.WARN)
         return
     end
     local remaining = #clients
@@ -989,8 +993,8 @@ local function request_symbols_and_fzf_exec(method, params, title, query)
     end
 
     for _, client in ipairs(clients) do
-        client.request(method, params, function(_, result)
-            symbols_to_entries_and_items(result, bufnr, client.offset_encoding, '', all_entries, all_items)
+        client.request(method, params, function(_, result, ctx)
+            symbols_to_entries_and_items(result, ctx, bufnr, client.offset_encoding, '', all_entries, all_items)
             remaining = remaining - 1
             if remaining == 0 then
                 fzf_exec(client.offset_encoding)
@@ -1047,6 +1051,7 @@ local function request_locations_and_fzf_exec(method, title)
     local bufnr = vim.api.nvim_get_current_buf()
     local clients = vim.lsp.get_clients({ method = method, bufnr = bufnr })
     if not next(clients) then
+        vim.notify(string.format('No active clients supporting %s method', method), vim.log.levels.WARN)
         return
     end
     local win = vim.api.nvim_get_current_win()

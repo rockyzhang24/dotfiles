@@ -101,22 +101,22 @@ local function on_attach(client, bufnr)
     -- Diagnostics
     vim.keymap.set('n', 'go', vim.diagnostic.open_float, opts)
     vim.keymap.set('n', '[d', function() -- previous
-        vim.diagnostic.jump({ count = -vim.v.count1 })
+        vim.diagnostic.jump({ count = -vim.v.count1, float = false })
     end, opts)
     vim.keymap.set('n', ']d', function() -- next
-        vim.diagnostic.jump({ count = vim.v.count1 })
+        vim.diagnostic.jump({ count = vim.v.count1, float = false })
     end, opts)
     vim.keymap.set('n', '[D', function() -- first
-        vim.diagnostic.jump({ count = -math.huge, wrap = false, })
+        vim.diagnostic.jump({ count = -math.huge, wrap = false, float = false })
     end)
     vim.keymap.set('n', ']D', function() -- last
-        vim.diagnostic.jump({ count = math.huge, wrap = false, })
+        vim.diagnostic.jump({ count = math.huge, wrap = false, float = false })
     end)
     vim.keymap.set('n', '[e', function() -- previous error
-        vim.diagnostic.jump({ count = -vim.v.count1, severity = vim.diagnostic.severity.ERROR })
+        vim.diagnostic.jump({ count = -vim.v.count1, severity = vim.diagnostic.severity.ERROR, float = false })
     end, opts)
     vim.keymap.set('n', ']e', function() -- next error
-        vim.diagnostic.jump({ count = vim.v.count1, severity = vim.diagnostic.severity.ERROR })
+        vim.diagnostic.jump({ count = vim.v.count1, severity = vim.diagnostic.severity.ERROR, float = false })
     end, opts)
     -- Feed all diagnostics to quickfix list, or buffer diagnostics to location list
     vim.keymap.set('n', '<Leader>dq', vim.diagnostic.setqflist, opts)

@@ -41,6 +41,7 @@ fi
 # - alt-d: move preview half page down
 # - alt-u: move preview half page up
 # - ctrl-a: toggle all
+# - ctrl-s: toggle single
 # - ctrl-/: toggle preview window
 # - ctrl-w: toggle wrap
 # - alt-w: toggle preview wrap
@@ -64,6 +65,7 @@ export FZF_DEFAULT_OPTS=" \
     `ctrl-/:toggle-preview,`
     `ctrl-w:toggle-wrap,`
     `alt-w:toggle-preview-wrap,`
+    `ctrl-s:toggle,`
     `ctrl-o:execute(open {+}),`
     `ctrl-y:execute-silent(echo -n {+} | pbcopy),`
     `ctrl-e:execute(\$EDITOR {+} < /dev/tty > /dev/tty 2>&1),`

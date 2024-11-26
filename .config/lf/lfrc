@@ -198,7 +198,8 @@ map <space>
 map zh
 
 map z. set hidden!
-map <tab> :toggle;down
+map <tab> :toggle; down
+map <c-s> :toggle
 map yy copy
 map yn copy-filename
 map yP copy-absolute-path
@@ -206,7 +207,7 @@ map <enter> shell
 map d delete
 map T trash
 # list the size of each item in the current directory
-map U !printf "\n";du -csh *
+map U !printf "\n"; du -csh *
 map <c-f> fzf-select
 map <c-j> fzf-cd
 # give a name and then make a directory

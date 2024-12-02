@@ -16,7 +16,7 @@ vim.diagnostic.config({
     },
     virtual_text = {
         prefix = '',
-        spacing = 2,
+        spacing = 4,
         format = function(diagnostic)
             local icon = diagnostic_icons[vim.diagnostic.severity[diagnostic.severity]]
             return string.format('%s %s ', icon, diagnostic.message)
@@ -37,9 +37,6 @@ M.client_capabilities = function()
         vim.lsp.protocol.make_client_capabilities(),
         require('cmp_nvim_lsp').default_capabilities()
     )
-    -- Enable (broadcasting) snippet capability for completion
-    -- For html, cssls, jsonls
-    capabilities.textDocument.completion.completionItem.snippetSupport = true
     return capabilities
 end
 
@@ -101,22 +98,22 @@ local function on_attach(client, bufnr)
     -- Diagnostics
     vim.keymap.set('n', 'go', vim.diagnostic.open_float, opts)
     vim.keymap.set('n', '[d', function() -- previous
-        vim.diagnostic.jump({ count = -vim.v.count1, float = false })
+        vim.diagnostic.jump({ count = -vim.v.count1, float = true })
     end, opts)
     vim.keymap.set('n', ']d', function() -- next
-        vim.diagnostic.jump({ count = vim.v.count1, float = false })
+        vim.diagnostic.jump({ count = vim.v.count1, float = true })
     end, opts)
     vim.keymap.set('n', '[D', function() -- first
-        vim.diagnostic.jump({ count = -math.huge, wrap = false, float = false })
+        vim.diagnostic.jump({ count = -math.huge, wrap = false, float = true })
     end)
     vim.keymap.set('n', ']D', function() -- last
-        vim.diagnostic.jump({ count = math.huge, wrap = false, float = false })
+        vim.diagnostic.jump({ count = math.huge, wrap = false, float = true })
     end)
     vim.keymap.set('n', '[e', function() -- previous error
-        vim.diagnostic.jump({ count = -vim.v.count1, severity = vim.diagnostic.severity.ERROR, float = false })
+        vim.diagnostic.jump({ count = -vim.v.count1, severity = vim.diagnostic.severity.ERROR, float = true })
     end, opts)
     vim.keymap.set('n', ']e', function() -- next error
-        vim.diagnostic.jump({ count = vim.v.count1, severity = vim.diagnostic.severity.ERROR, float = false })
+        vim.diagnostic.jump({ count = vim.v.count1, severity = vim.diagnostic.severity.ERROR, float = true })
     end, opts)
     -- Feed all diagnostics to quickfix list, or buffer diagnostics to location list
     vim.keymap.set('n', '<Leader>dq', vim.diagnostic.setqflist, opts)

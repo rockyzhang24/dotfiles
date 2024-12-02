@@ -96,11 +96,30 @@ lspconfig.vtsls.setup({
 -- Lua
 lspconfig.lua_ls.setup({
     capabilities = capabilities(),
+    on_init = function(client)
+        local path = client.workspace_folders
+            and client.workspace_folders[1]
+            and client.workspace_folders[1].name
+        if path and (vim.uv.fs_stat(path .. '/.luarc.json') or vim.uv.fs_stat(path .. '/.luarc.jsonc')) then
+            return
+        end
+        client.config.settings = vim.tbl_deep_extend('force', client.config.settings, {
+            Lua = {
+                runtime = {
+                    version = 'LuaJIT',
+                },
+                workspace = {
+                    checkThirdParty = false,
+                    library = {
+                        vim.env.VIMRUNTIME,
+                        '${3rd}/luv/library',
+                    },
+                },
+            },
+        })
+    end,
     settings = {
         Lua = {
-            runtime = {
-                version = 'LuaJIT',
-            },
             -- Inlay hints
             hint = {
                 enable = true,
@@ -115,8 +134,6 @@ lspconfig.lua_ls.setup({
                 postfix = '.',
                 displayContext = 50,
             },
-            -- workspace = {
-            -- },
             telemetry = {
                 enable = false,
             },
@@ -125,17 +142,17 @@ lspconfig.lua_ls.setup({
             -- format = {
             --   enable = true,
             --   defaultConfig = {
-            --     indent_size = "2",
+            --     indent_size = "4",
             --     max_line_length = "100",
-            --     continuation_indent = "4",
+            --     continuation_indent = "8",
             --   },
             -- },
-            diagnostics = {
-                -- Code style checking offered by the Lua LS code formatter
-                -- neededFileStatus = {
-                --   ["codestyle-check"] = "Any",
-                -- },
-            },
+            -- diagnostics = {
+            --     -- Code style checking offered by the Lua LS code formatter
+            --     neededFileStatus = {
+            --       ["codestyle-check"] = "Any",
+            --     },
+            -- },
         },
     },
 })

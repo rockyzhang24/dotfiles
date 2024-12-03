@@ -55,7 +55,7 @@ export CLICOLOR=1
 export LSCOLORS='ExfxcxdxbxGxDxabagacad'
 
 # Bat
-export BAT_THEME="Monokai Extended"
+export BAT_THEME="Monokai Extended Origin"
 
 #
 # User-defined

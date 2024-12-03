@@ -25,8 +25,6 @@ vim.opt.fillchars = {
 vim.o.foldcolumn = '1'
 vim.o.foldlevel = 99
 vim.o.foldlevelstart = 99
--- Transparent foldtext (https://github.com/neovim/neovim/pull/20750)
-vim.o.foldtext = ''
 vim.o.completeopt = 'menu,menuone,noselect,popup'
 vim.o.timeoutlen = 500
 vim.o.updatetime = 250
@@ -77,3 +75,33 @@ vim.g.loaded_node_provider = 0
 vim.g.netrw_banner = 0
 vim.g.netrw_winsize = 25
 vim.g.netrw_localcopydircmd = 'cp -r'
+
+-- Fold
+-- Use LSP folding if available; otherwise, fall back to treesitter folding.
+vim.o.foldmethod = 'indent' -- default
+vim.o.foldtext = '' -- transparent foldtext (https://github.com/neovim/neovim/pull/20750)
+local group = vim.api.nvim_create_augroup('rockyz/folding', { clear = true })
+vim.api.nvim_create_autocmd('LspAttach', {
+    group = group,
+    callback = function(args)
+        local client = vim.lsp.get_client_by_id(args.data.client_id)
+        if client and client:supports_method('textDocument/foldingRange') then
+            vim.wo.foldmethod = 'expr'
+            vim.wo.foldexpr = 'v:lua.vim.lsp.foldexpr()'
+            vim.w.lsp_folding_enabled = true
+        end
+    end,
+})
+vim.api.nvim_create_autocmd('FileType', {
+    group = group,
+    callback = function(args)
+        if
+            vim.bo[args.buf].filetype ~= 'bigfile'
+            and not vim.w.lsp_folding_enabled
+            and require('nvim-treesitter.parsers').get_parser(args.buf)
+        then
+            vim.wo.foldmethod = 'expr'
+            vim.wo.foldexpr = 'v:lua.vim.treesitter.foldexpr()'
+        end
+    end,
+})

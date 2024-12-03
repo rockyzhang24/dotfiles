@@ -44,16 +44,3 @@ require('nvim-treesitter.configs').setup({
         },
     },
 })
-
--- Use treesitter based folding if the current buffer has a parser
-vim.api.nvim_create_autocmd('FileType', {
-    group = vim.api.nvim_create_augroup('rockyz/treesitter_folding', { clear = true }),
-    callback = function(ev)
-        if vim.bo[ev.buf].filetype ~= 'bigfile' and require('nvim-treesitter.parsers').get_parser(ev.buf) then
-            vim.wo.foldmethod = 'expr'
-            vim.wo.foldexpr = 'v:lua.vim.treesitter.foldexpr()'
-        else
-            vim.wo.foldmethod = 'indent'
-        end
-    end,
-})

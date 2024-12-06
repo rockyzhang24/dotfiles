@@ -666,22 +666,15 @@ end)
 -- * FZF mode (fzf will be the fuzzy finder for the results of RG)
 --
 
--- Temp files for query restore and mode toggle
-local rg_query = '/tmp/fzfvim-grep-rg-mode-query'
-local fzf_query = '/tmp/fzfvim-grep-fzf-mode-query'
-local fzf_mode_enabled = '/tmp/fzfvim-grep-fzf-mode-enabled'
-
--- Remove temp files
-local function rm_temp_files()
-    os.execute(string.format('rm -f %s %s %s', rg_query, fzf_query, fzf_mode_enabled))
-end
-
 ---Generate the fzf options for rg and fzf integration
 ---@param rg string The final rg command
 ---@param query string The initial query for rg
 ---@param name string The name of that keymap
 ---@return table
 local function get_fzf_opts_for_RG(rg, query, name)
+    local rg_query = vim.fn.tempname() -- tempfile to store the query in rg
+    local fzf_query = vim.fn.tempname() -- tempfile to store the query in fzf
+    local fzf_mode_enabled = vim.fn.tempname() -- tempfile to record whether it is currently in fzf mode
     return {
         '--ansi',
         '--disabled',
@@ -717,7 +710,6 @@ end
 
 -- Define a new command :RGU (U for Ultimate) that supports rg options and two modes
 vim.api.nvim_create_user_command('RGU', function(opts)
-    rm_temp_files()
     local extra_flags = {}
     local query = ''
     for _, arg in ipairs(opts.fargs) do
@@ -740,7 +732,6 @@ vim.keymap.set('n', '<Leader>gg', ':RGU ')
 
 -- Live grep in nvim config
 vim.keymap.set('n', '<Leader>gv', function()
-    rm_temp_files()
     local rg = rg_prefix .. ' --glob=!minpac -- '
     local query = ''
     vim.fn['fzf#vim#grep2'](

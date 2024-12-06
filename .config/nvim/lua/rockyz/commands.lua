@@ -1,3 +1,14 @@
+-- CloseWin 1 2 3
+-- DiffSplit file1 file2
+-- ProfileStart, ProfileStop
+-- Scratch
+-- Redir
+-- CopyCodeBlock
+-- ReorderList
+-- Reindent 4 8
+-- ToggleAutoFormat[!]
+-- CopyPath [nameonly|relative|absolute]
+
 local function scratch_buf_init()
     for name, value in pairs({
         filetype = 'scratch',
@@ -111,3 +122,34 @@ vim.api.nvim_create_user_command('ToggleAutoFormat', function(opts)
     end
     vim.notify(msg, vim.log.levels.INFO)
 end, { nargs = 0, bang = true })
+
+-- Copy file path to clipboard. Support absolute, relative (default) or nameonly.
+-- Ref: https://github.com/jdhao/nvim-config/blob/main/plugin/command.lua
+vim.api.nvim_create_user_command('CopyPath', function(context)
+    local full_path = vim.fn.glob('%:p')
+    local file_path = nil
+    if context['args'] == 'nameonly' then
+        file_path = vim.fn.fnamemodify(full_path, ':t')
+    end
+    if context['args'] == 'relative' or not context['args'] then
+        local project_marker = { '.git' }
+        local project_root = vim.fs.root(0, project_marker)
+        if project_root == nil then
+            vim.print('Can not find project root!')
+            return
+        end
+        project_root = project_root .. '/'
+        file_path = string.gsub(full_path, project_root, '')
+    end
+    if context['args'] == 'absolute' then
+        file_path = full_path
+    end
+    vim.fn.setreg('+', file_path)
+    vim.notify('Filepath copied to clipboard: ' .. file_path, vim.log.levels.INFO)
+end, {
+    bang = false,
+    nargs = 1,
+    complete = function()
+        return { 'nameonly', 'relative', 'absolute' }
+    end,
+})

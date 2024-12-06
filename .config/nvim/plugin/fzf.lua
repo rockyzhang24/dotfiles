@@ -36,14 +36,17 @@
 -- <Leader>f. : Files for my dotfiles
 -- <Leader>f~ : Files under $HOME
 -- <Leader>ft : Tabs
+
 -- <Leader>fq : Quickfix list items
 -- <Leader>fl : Location list items
 -- <Leader>fQ : Quickfix list history
 -- <Leader>fL : Location list history
+
 -- <Leader>gg : Ultimate grep (:RGU)
 -- <Leader>gv : Live grep in my nvim config
 -- <Leader>g* : Grep for the current word/selection
 -- <Leader>gb : Live grep in current buffer
+
 -- <Leader>ls : LSP document symbols
 -- <Leader>lS : LSP workspace symbols
 -- <Leader>ld : LSP definitions
@@ -51,6 +54,9 @@
 -- <Leader>li : LSP implementations
 -- <Leader>lD : LSP declarations
 -- <Leader>lt : LSP type definitions
+
+-- <Leader>fd : document diagnostics
+-- <Leader>fD : workspace diagnostics
 
 local uv = require('luv')
 local qf_utils = require('rockyz.utils.qf_utils')
@@ -156,6 +162,8 @@ vim.keymap.set('n', '<C-p>', function()
         '',
         vim.fn['fzf#vim#with_preview']({
             options = {
+                '--prompt',
+                'Git Files> ',
             },
         })
     )
@@ -460,8 +468,9 @@ local function fzf_qf(win_local)
         source = entries,
         ['sink*'] = function(lines)
             local key = lines[1]
-            if key == 'ctrl-q' or key == 'ctrl-r' then
-                -- CTRL-Q: send selections to a new quickfix
+            if key == 'ctrl-q' or key == 'ctrl-l' or key == 'ctrl-r' then
+                -- CTRL-Q: send to a new quickfix
+                -- CTRL-L: send to a new location list
                 -- CTRL-R: refine the current quickfix with selections
                 local new_qf_items = {}
                 for i = 2, #lines do
@@ -471,8 +480,14 @@ local function fzf_qf(win_local)
                 local new_what = { title = list.title, items = new_qf_items }
                 if key == 'ctrl-q' then
                     vim.fn.setqflist({}, ' ', new_what)
+                elseif key == 'ctrl-l' then
+                    vim.fn.setloclist(0, {}, ' ', new_what)
                 else
-                    vim.fn.setqflist({}, 'u', new_what)
+                    if win_local then
+                        vim.fn.setloclist(0, {}, 'u', new_what)
+                    else
+                        vim.fn.setqflist({}, 'u', new_what)
+                    end
                 end
             elseif key == '' and #lines == 2 then
                 -- ENTER with a single selection: display the error
@@ -503,11 +518,11 @@ local function fzf_qf(win_local)
             '--prompt',
             prompt .. '> ',
             '--header',
-            ':: ENTER (display the error)\n:: CTRL-R (refine the current quickfix), CTRL-Q (send to a new quickfix)',
+            ':: ENTER (display the error), CTRL-R (refine the current ' .. (win_local and 'loclist' or 'quickfix') .. ')\n:: CTRL-Q (send to quickfix), CTRL-L (send to loclist)',
             '--with-nth',
             '4..',
             '--expect',
-            'ctrl-x,ctrl-v,ctrl-t,ctrl-q,ctrl-r',
+            'ctrl-x,ctrl-v,ctrl-t,ctrl-q,ctrl-l,ctrl-r',
             '--preview',
             bat_prefix .. ' --highlight-line {3} -- {2}',
             '--preview-window',
@@ -539,16 +554,6 @@ uv.fs_mkdir(qflist_hist_dir, 511, function()
 end)
 uv.fs_mkdir(loclist_hist_dir, 511, function()
 end)
-
--- Remove temp dirs when quiting nvim
-vim.api.nvim_create_autocmd('VimLeave', {
-    callback = function()
-        uv.fs_rmdir(qflist_hist_dir, function()
-        end)
-        uv.fs_rmdir(loclist_hist_dir, function()
-        end)
-    end,
-})
 
 -- Write contents into a file
 local function write_file(filepath, contents)
@@ -821,7 +826,7 @@ end)
 --
 -- LSP
 --
--- Each fzf entry consists of 5 parts: index filename lnum col fzf_text.
+-- Each fzf entry consists of 5 parts: index, filename, lnum, col, fzf_text.
 --
 -- Only fzf_text will be displayed in fzf. Other parts are used in running fzf such as fzf preview,
 -- setting border label, sending selections to quickfix and etc.
@@ -930,7 +935,7 @@ local function request_symbols_and_fzf_exec(method, params, title, query)
     local all_items = {}
 
     local function fzf_exec(offset_encoding)
-        local fzf_header = ':: CTRL-Q (send to quickfix)'
+        local fzf_header = ':: CTRL-Q (send to quickfix), CTRL-L (send to loclist)'
         local fzf_preview_window = '+{3}-/2'
         if query ~= '' then
             fzf_header = ':: Query: ' .. color_str(query, 'RipgrepQuery') .. '\n' .. fzf_header
@@ -940,15 +945,21 @@ local function request_symbols_and_fzf_exec(method, params, title, query)
             source = all_entries,
             ['sink*'] = function(lines)
                 local key = lines[1]
-                if key == 'ctrl-q' then
-                    -- CTRL-Q: send them to quickfix
+                if key == 'ctrl-q' or key == 'ctrl-l' then
+                    -- CTRL-Q: send to quickfix; CTRL-L: send to location list
+                    local loclist = key == 'ctrl-l'
                     local qf_items = {}
                     for i = 2, #lines do
                         local idx = tonumber(lines[i]:match('^%S+'))
                         table.insert(qf_items, all_items[idx])
                     end
-                    vim.fn.setqflist({}, ' ', { title = title, items = qf_items })
-                    vim.cmd('botright copen')
+                    if loclist then
+                        vim.fn.setloclist(0, {}, ' ', { title = title, items = qf_items })
+                        vim.cmd('botright lopen')
+                    else
+                        vim.fn.setqflist({}, ' ', { title = title, items = qf_items })
+                        vim.cmd('botright copen')
+                    end
                 else
                     -- ENTER/CTRL-X/CTRL-V/CTRL-T with multiple selections
                     local action = vim.g.fzf_action[key]
@@ -981,7 +992,7 @@ local function request_symbols_and_fzf_exec(method, params, title, query)
                 '--header',
                 fzf_header,
                 '--expect',
-                'ctrl-x,ctrl-v,ctrl-t,ctrl-q',
+                'ctrl-x,ctrl-v,ctrl-t,ctrl-q,ctrl-l',
                 '--preview',
                 bat_prefix .. ' --highlight-line {3} -- {2}',
                 '--preview-window',
@@ -1004,14 +1015,12 @@ local function request_symbols_and_fzf_exec(method, params, title, query)
 end
 
 -- LSP document symbols
--- CTRL-Q: send selections to quickfix
 vim.keymap.set('n', '<Leader>ls', function()
     local params = { textDocument = vim.lsp.util.make_text_document_params() }
     request_symbols_and_fzf_exec('textDocument/documentSymbol', params, 'LSP Document Symbols', '')
 end)
 
 -- LSP workspace symbols
--- CTRL-Q: send selections to quickfix
 vim.keymap.set('n', '<Leader>lS', function()
     local query = vim.fn.input('Query: ')
     local params = { query = query }
@@ -1042,7 +1051,7 @@ local function locations_to_entries_and_items(locations, offset_encoding, all_en
             filename,
             lnum,
             col,
-            fzf_text
+            fzf_text,
         }, ' '))
     end
 end
@@ -1064,15 +1073,21 @@ local function request_locations_and_fzf_exec(method, title)
             source = all_entries,
             ['sink*'] = function(lines)
                 local key = lines[1]
-                if key == 'ctrl-q' then
-                    -- CTRL-Q: send them to quickfix
+                if key == 'ctrl-q' or key == 'ctrl-l' then
+                    -- CTRL-Q: send to quickfix; CTRL-L: send to location list
+                    local loclist = key == 'ctrl-l'
                     local qf_items = {}
                     for i = 2, #lines do
                         local idx = tonumber(lines[i]:match('^%S+'))
                         table.insert(qf_items, all_items[idx])
                     end
-                    vim.fn.setqflist({}, ' ', { title = title, items = qf_items })
-                    vim.cmd('botright copen')
+                    if loclist then
+                        vim.fn.setloclist(0, {}, ' ', { title = title, items = qf_items })
+                        vim.cmd('botright lopen')
+                    else
+                        vim.fn.setqflist({}, ' ', { title = title, items = qf_items })
+                        vim.cmd('botright copen')
+                    end
                 else
                     -- ENTER/CTRL-X/CTRL-V/CTRL-T with multiple selections
                     local action = vim.g.fzf_action[key]
@@ -1093,13 +1108,13 @@ local function request_locations_and_fzf_exec(method, title)
                 '--prompt',
                 title .. '> ',
                 '--header',
-                ':: CTRL-Q (send to quickfix)',
+                ':: CTRL-Q (send to quickfix), CTRL-L (send to loclist)',
                 '--expect',
-                'ctrl-x,ctrl-v,ctrl-t,ctrl-q',
+                'ctrl-x,ctrl-v,ctrl-t,ctrl-q,ctrl-l',
                 '--preview',
                 bat_prefix .. ' --highlight-line {3} -- {2}',
                 '--preview-window',
-                '+{3}-/2',
+                'down,45%,+{3}-/2',
                 '--bind',
                 'focus:transform-preview-label:echo [ $(echo {2}:{3}:{4} | sed "s|^$HOME|~|") ]',
             },
@@ -1140,4 +1155,149 @@ end)
 -- LSP type definitions
 vim.keymap.set('n', '<Leader>lt', function()
     request_locations_and_fzf_exec('textDocument/typeDefinition', 'LSP Type Definitions')
+end)
+
+--
+-- Diagnostics
+--
+
+local function get_diagnostics(opts)
+    opts = opts or {}
+    local curbuf = vim.api.nvim_get_current_buf()
+    local diags = vim.diagnostic.get(not opts.all and curbuf or nil)
+    if vim.tbl_isempty(diags) then
+        vim.notify('No diagnostics!', vim.log.levels.WARN)
+        return
+    end
+
+    local diag_icons = {
+        { text = 'E', hl = 'DiagnosticError', }, -- Error
+        { text = 'W', hl = 'DiagnosticWarn', }, -- Warn
+        { text = 'I', hl = 'DiagnosticInfo', }, -- Info
+        { text = 'H', hl = 'DiagnosticHint', }, -- Hint
+    }
+
+    local title = string.format('Diagnostics (%s)', opts.all and 'workspace' or 'document')
+
+    -- Fzf entries
+    local entries = {}
+
+    for _, diag in ipairs(diags) do
+        local bufnr = diag.bufnr
+        local filename = vim.api.nvim_buf_get_name(bufnr)
+        local devicon = get_colored_devicon(filename)
+        local diag_icon = color_str(diag_icons[diag.severity].text, diag_icons[diag.severity].hl)
+        -- Fzf entry
+        -- Each entry consists of 5 parts:
+        -- index, filename, lnum, col, fzf_text
+        -- Only fzf_text will be displayed in fzf. The first part, index, is used to retrieve the
+        -- corresponding original diagnostic item from the selected entry in fzf.
+        local fzf_text = string.format(
+            -- Use `\0` and fzf's `--read0` to support multi-line items
+            -- Ref: https://junegunn.github.io/fzf/tips/processing-multi-line-items/
+            '%s %s %s:%s:%s:\n%s%s\0',
+            diag_icon,
+            devicon,
+            vim.fn.fnamemodify(filename, ':~:.'),
+            color_str(tostring(diag.lnum), 'RipgrepLineNum'),
+            color_str(tostring(diag.col), 'RipgrepColNum'),
+            string.rep(' ', 2) .. (diag.source and '[' .. diag.source .. '] ' or ''),
+            string.gsub(diag.message, '\n', '\n' .. string.rep(' ', 2))
+        )
+        table.insert(entries, table.concat({
+            #entries + 1,
+            filename,
+            diag.lnum,
+            diag.col,
+            fzf_text
+        }, ' '))
+    end
+
+    local diags_tempfile = vim.fn.tempname()
+
+    local function fzf_exec()
+        vim.fn['fzf#run'](vim.fn['fzf#wrap']({
+            source = 'cat ' .. diags_tempfile,
+            -- Even though diagnostics are multi-line items, `lines` contains linewise contents
+            -- rather than the whole item. However, we can get the index of each item easily because
+            -- it is the number in the beginning of the item.
+            ['sink*'] = function(lines)
+                local key = lines[1]
+                if key == 'ctrl-q' or key == 'ctrl-l' then
+                    -- CTRL-Q: send to quickfix; CTRL-L: send to location list
+                    local loclist = key == 'ctrl-l'
+                    local selected_diags = {}
+                    for i = 2, #lines do
+                        local idx = tonumber(lines[i]:match('^%d+'))
+                        if idx then
+                            table.insert(selected_diags, diags[idx])
+                        end
+                    end
+                    local items = vim.diagnostic.toqflist(selected_diags)
+                    if loclist then
+                        vim.fn.setloclist(0, {}, ' ', { title = title, items = items })
+                        vim.cmd('botright lopen')
+                    else
+                        vim.fn.setqflist({}, ' ', { title = title, items = items })
+                        vim.cmd('botright copen')
+                    end
+                else
+                    -- ENTER/CTRL-X/CTRL-V/CTRL-T
+                    local action = vim.g.fzf_action[key]
+                    for i = 2, #lines do
+                        if action then
+                            vim.cmd(action)
+                        end
+                        local idx = tonumber(lines[i]:match('^%d+'))
+                        if idx then
+                            local diag = diags[idx]
+                            local bufnr = diag.bufnr
+                            if vim.api.nvim_buf_is_loaded(bufnr) then
+                                vim.cmd('buffer! ' .. bufnr)
+                            else
+                                vim.cmd('edit! ' .. vim.fn.bufname(bufnr))
+                            end
+                            vim.api.nvim_win_set_cursor(0, { diag.lnum, diag.col - 1 })
+                            vim.cmd('normal! zvzz')
+                        end
+                    end
+                end
+            end,
+            options = {
+                '--read0',
+                '--ansi',
+                '--with-nth',
+                '5..',
+                '--prompt',
+                title .. '> ',
+                '--header',
+                ':: CTRL-Q (send to quickfix), CTRL-L (send to loclist)',
+                '--expect',
+                'ctrl-x,ctrl-v,ctrl-t,ctrl-q,ctrl-l',
+                '--preview',
+                bat_prefix .. ' --highlight-line {3} -- {2}',
+                '--preview-window',
+                '+{3}-/2',
+                '--bind',
+                'focus:transform-preview-label:echo [ $(echo {2}:{3}:{4} | sed "s|^$HOME|~|") ]',
+            },
+        }))
+    end
+
+    uv.fs_open(diags_tempfile, 'w', 438, function(_, fd)
+        uv.fs_write(fd, entries, 0, function()
+            -- Use schedule_wrap to avoid E5560 "vimscript function must be called in a fast event",
+            -- see :h E5560.
+            uv.fs_close(fd, vim.schedule_wrap(fzf_exec))
+        end)
+    end)
+end
+
+-- Diagnostics (document)
+vim.keymap.set('n', '<Leader>fd', function()
+    get_diagnostics()
+end)
+-- Diagnostics (workspace)
+vim.keymap.set('n', '<Leader>fD', function()
+    get_diagnostics({ all = true })
 end)

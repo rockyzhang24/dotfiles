@@ -35,7 +35,9 @@
 -- <Leader>fb : Buffers
 -- <Leader>f. : Files for my dotfiles
 -- <Leader>f~ : Files under $HOME
+-- <Leader>fm : Marks
 -- <Leader>ft : Tabs
+-- <Leader>fa : Argument list
 
 -- <Leader>fq : Quickfix list items
 -- <Leader>fl : Location list items
@@ -400,6 +402,71 @@ vim.keymap.set('n', '<Leader>ft', function()
             'focus:transform-preview-label:echo [ $(echo {1} | sed "s/@@@@/ /g; s|^$HOME|~|") ]',
         },
     }))
+end)
+
+--
+-- Argument list
+--
+
+local function args()
+    local argc = vim.fn.argc()
+    if argc == 0 then
+        vim.notify('Argument list is empty', vim.log.levels.WARN)
+        return
+    end
+    local entries = {}
+    for i = 0, argc - 1 do
+        local f = vim.fn.argv(i)
+        local fs = uv.fs_stat(f)
+        if fs and fs.type == 'file' then
+            local devicon = get_colored_devicon(f)
+            -- Fzf entry consists of 3 parts: index, devicon, filename
+            -- Index is used for file switch and it won't be displayed in fzf
+            local entry = string.format('%s %s %s', #entries + 1, devicon, f)
+            table.insert(entries, entry)
+        end
+    end
+    vim.fn['fzf#run'](vim.fn['fzf#wrap']({
+        source = entries,
+        ['sink*'] = function(lines)
+            local key = lines[1]
+            if key == 'ctrl-d' then
+                -- CTRL-D: delete from arglist
+                for i = 2, #lines do
+                    vim.cmd.argdelete(string.match(lines[i], '%S+%s%S+%s(%S+)'))
+                end
+            elseif key ~= '' then
+                -- CTRL-X/CTRL-V/CTRL-T
+                local action = vim.g.fzf_action[key]
+                for i = 2, #lines do
+                    if action then
+                        vim.cmd(action)
+                    end
+                    local index = tonumber(lines[i]:match('^%d+'))
+                    vim.cmd('argument! ' .. index)
+                end
+            end
+        end,
+        options = {
+            '--ansi',
+            '--with-nth',
+            '2..',
+            '--prompt',
+            'Args> ',
+            '--header',
+            ':: CTRL-D (delete from arglist)',
+            '--expect',
+            'ctrl-x,ctrl-v,ctrl-t,ctrl-d',
+            '--preview',
+            bat_prefix .. ' -- {3}',
+            '--bind',
+            'focus:transform-preview-label:echo [ {3} ]',
+        },
+    }))
+end
+
+vim.keymap.set('n', '<Leader>fa', function()
+    args()
 end)
 
 --
@@ -1152,7 +1219,7 @@ end)
 -- Diagnostics
 --
 
-local function get_diagnostics(opts)
+local function diagnostics(opts)
     opts = opts or {}
     local curbuf = vim.api.nvim_get_current_buf()
     local diags = vim.diagnostic.get(not opts.all and curbuf or nil)
@@ -1286,9 +1353,9 @@ end
 
 -- Diagnostics (document)
 vim.keymap.set('n', '<Leader>fd', function()
-    get_diagnostics()
+    diagnostics()
 end)
 -- Diagnostics (workspace)
 vim.keymap.set('n', '<Leader>fD', function()
-    get_diagnostics({ all = true })
+    diagnostics({ all = true })
 end)

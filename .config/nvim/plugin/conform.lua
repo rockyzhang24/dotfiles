@@ -9,6 +9,8 @@ conform.setup({
         cpp = { 'clang_format' },
         lua = { 'stylua' },
         sh = { 'shfmt' },
+        -- For filetypes without a formatter
+        ['_'] = { 'trim_whitespace', 'trim_newlines' },
     },
     formatters = {
         shfmt = {

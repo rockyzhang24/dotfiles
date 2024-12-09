@@ -33,6 +33,7 @@
 -- <Leader>f/ : Search history
 -- <Leader>f: : Command history
 -- <Leader>fb : Buffers
+-- <C-\>      : Buffers
 -- <Leader>f. : Files for my dotfiles
 -- <Leader>f~ : Files under $HOME
 -- <Leader>fm : Marks
@@ -44,7 +45,8 @@
 -- <Leader>fQ : Quickfix list history
 -- <Leader>fL : Location list history
 
--- <Leader>gg : Ultimate grep (:RGU)
+-- <Leader>gg : :RGU
+-- <C-g>      : :RGU
 -- <Leader>gv : Live grep in my nvim config
 -- <Leader>g* : Grep for the current word/selection
 -- <Leader>gb : Live grep in current buffer
@@ -237,7 +239,8 @@ end)
 
 -- Buffers
 -- CTRL-D: delete selected buffers
-vim.keymap.set('n', '<Leader>fb', function()
+
+local function buffers()
     vim.fn['fzf#vim#buffers']('', vim.fn['fzf#vim#with_preview']({
         ['sink*'] = function(lines)
             local key = lines[1]
@@ -276,6 +279,14 @@ vim.keymap.set('n', '<Leader>fb', function()
             'focus:transform-preview-label:echo [ {3..} ]',
         },
     }))
+end
+
+vim.keymap.set('n', '<Leader>fb', function()
+    buffers()
+end)
+
+vim.keymap.set('n', '<C-\\>', function()
+    buffers()
 end)
 
 -- Find files for my dotfiles
@@ -795,7 +806,9 @@ vim.api.nvim_create_user_command('RGU', function(opts)
         }
     )
 end, { bang = true, nargs = '*' })
+
 vim.keymap.set('n', '<Leader>gg', ':RGU ')
+vim.keymap.set('n', '<C-g>', ':RGU ')
 
 -- Live grep in nvim config
 vim.keymap.set('n', '<Leader>gv', function()

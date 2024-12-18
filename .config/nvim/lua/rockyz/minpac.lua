@@ -51,18 +51,18 @@ local plugins = {
     'stevearc/aerial.nvim',
 
     -- Autocomplete
-    'hrsh7th/nvim-cmp',
-    'hrsh7th/cmp-nvim-lsp',
-    'hrsh7th/cmp-buffer',
-    'hrsh7th/cmp-cmdline',
-    'https://codeberg.org/FelipeLema/cmp-async-path',
+    {
+        'saghen/blink.cmp',
+        { ['do'] = function()
+            vim.system({ 'cargo', 'build', '--release' })
+        end},
+    },
 
     -- Snippets
     {
         'L3MON4D3/LuaSnip',
         { ['do'] = 'make install_jsregexp' },
     },
-    'saadparwaiz1/cmp_luasnip',
 
     -- Treesitter
     {

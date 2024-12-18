@@ -107,6 +107,7 @@ local groups = {
     -- And for aesthetics, set the scrollbar to the same color as the border.
     FloatBorder = { fg = norm_fg }, -- VSCode uses color floatwin_border
     ScrollbarSlider = { bg = norm_fg }, -- VSCode uses color scrollbar
+    ScrollbarGutter = { bg = norm_bg },
     SelectionHighlightBackground = { bg = '#3f4242' }, -- editor.selectionHighlightBackground
     LightBulb = { fg = '#ffcc00' }, -- editorLightBulb.foreground
     CodeLens = { fg = '#999999' }, -- editorCodeLens.foreground
@@ -294,7 +295,7 @@ local groups = {
     -- PmenuKindSel = {},
     -- PmenuExtra = {},
     -- PmenuExtraSel = {},
-    PmenuSbar = { bg = norm_bg },
+    PmenuSbar = 'ScrollbarGutter',
     PmenuThumb = 'ScrollbarSlider',
     PmenuMatch = { fg = matched_chars, bg = norm_bg, bold = true },
     PmenuMatchSel = { fg = matched_chars, bg = selected_item_bg, bold = true },
@@ -678,8 +679,74 @@ local groups = {
     SuggestWidgetSelect = { bg = selected_item_bg },
 
     --
+    -- blink.cmp
+    --
+
+    -- Completion menu window
+    BlinkCmpMenu = 'Normal',
+    BlinkCmpMenuBorder = 'FloatBorder',
+    BlinkCmpMenuSelection = { bg = selected_item_bg, bold = true },
+    BlinkCmpScrollBarThumb = 'ScrollbarSlider',
+    BlinkCmpScrollBarGutter = 'ScrollbarGutter',
+    -- Document window
+    BlinkCmpDoc = 'BlinkCmpMenu',
+    BlinkCmpDocBorder = 'BlinkCmpMenuBorder',
+    BlinkCmpDocSeparator = 'BlinkCmpDocBorder',
+    BlinkCmpDocCursorLine = 'BlinkCmpMenuSelection',
+    -- Signature help window
+    BlinkCmpSignatureHelp = 'BlinkCmpMenu',
+    BlinkCmpSignatureHelpBorder = 'BlinkCmpMenuBorder',
+    BlinkCmpSignatureHelpActiveParameter = 'LspSignatureActiveParameter',
+    -- Label
+    BlinkCmpLabel = { fg = norm_fg },
+    BlinkCmpLabelDeprecated = { fg = gray, bg = 'NONE', strikethrough = true },
+    BlinkCmpLabelMatch = { fg = matched_chars, bg = 'NONE', bold = true },
+    BlinkCmpLabelDetail = { fg = gray, bg = 'NONE' },
+    BlinkCmpLabelDescription = 'BlinkCmpLabelDetail',
+    -- Source
+    BlinkCmpSource = 'BlinkCmpLabelDetail',
+    BlinkCmpGhostText = 'BlinkCmpLabelDetail',
+    -- Kinds
+    BlinkCmpKindText = 'SymbolKindText',
+    BlinkCmpKindMethod = 'SymbolKindMethod',
+    BlinkCmpKindFunction = 'SymbolKindFunction',
+    BlinkCmpKindConstructor = 'SymbolKindConstructor',
+    BlinkCmpKindField = 'SymbolKindField',
+    BlinkCmpKindVariable = 'SymbolKindVariable',
+    BlinkCmpKindClass = 'SymbolKindClass',
+    BlinkCmpKindInterface = 'SymbolKindInterface',
+    BlinkCmpKindModule = 'SymbolKindModule',
+    BlinkCmpKindProperty = 'SymbolKindProperty',
+    BlinkCmpKindUnit = 'SymbolKindUnit',
+    BlinkCmpKindValue = 'SymbolKindValue',
+    BlinkCmpKindEnum = 'SymbolKindEnum',
+    BlinkCmpKindKeyword = 'SymbolKindKeyword',
+    BlinkCmpKindSnippet = 'SymbolKindSnippet',
+    BlinkCmpKindColor = 'SymbolKindColor',
+    BlinkCmpKindFile = 'SymbolKindFile',
+    BlinkCmpKindReference = 'SymbolKindReference',
+    BlinkCmpKindFolder = 'SymbolKindFolder',
+    BlinkCmpKindEnumMember = 'SymbolKindEnumMember',
+    BlinkCmpKindConstant = 'SymbolKindConstant',
+    BlinkCmpKindStruct = 'SymbolKindStruct',
+    BlinkCmpKindEvent = 'SymbolKindEvent',
+    BlinkCmpKindOperator = 'SymbolKindOperator',
+    BlinkCmpKindTypeParameter = 'SymbolKindTypeParameter',
+    -- Other kinds from VSCode's symbolIcon.*
+    BlinkCmpKindArray = 'SymbolKindArray',
+    BlinkCmpKindBoolean = 'SymbolKindBoolean',
+    BlinkCmpKindKey = 'SymbolKindKey',
+    BlinkCmpKindNamespace = 'SymbolKindNamespace',
+    BlinkCmpKindString = 'SymbolKindString',
+    BlinkCmpKindNull = 'SymbolKindNull',
+    BlinkCmpKindNumber = 'SymbolKindNumber',
+    BlinkCmpKindObject = 'SymbolKindObject',
+    BlinkCmpKindPackage = 'SymbolKindPackage',
+
+    --
     -- Aerial
     --
+
     AerialTextIcon = 'SymbolKindText',
     AerialMethodIcon = 'SymbolKindMethod',
     AerialFunctionIcon = 'SymbolKindFunction',

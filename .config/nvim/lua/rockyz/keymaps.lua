@@ -154,6 +154,9 @@ vim.keymap.set('n', '<Leader>bo', require('rockyz.utils.buf_utils').bufdelete_ot
 vim.keymap.set({ 'n', 'x' }, '<Leader>y', '"+y')
 vim.keymap.set('n', '<Leader>Y', '"+y$')
 vim.keymap.set('n', '<Leader>Y', '"+y$')
+-- Paste and format
+vim.keymap.set('n', 'p', 'p=`]')
+vim.keymap.set('n', 'P', 'P=`]')
 -- Paste over the selected text
 vim.keymap.set('x', 'p', '"_c<ESC>p')
 -- Paste below or above the current cursor

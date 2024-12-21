@@ -259,7 +259,7 @@ local groups = {
     ColorColumn = { bg = '#5a5a5a' }, -- editorRuler.foreground
     Conceal = { fg = gray2 },
     Cursor = { fg = norm_bg, bg = '#f8f8f0' },
-    CurSearch = { fg = norm_bg, bg = '#f5f5f5' }, -- editor.findMatchBackground
+    CurSearch = { fg = norm_bg, bg = '#ff966c' }, -- editor.findMatchBackground. Take the color from tokyonight moon.
     -- lCursor = { },
     -- CursorIM = { },
     Directory = { fg = directory },
@@ -302,7 +302,7 @@ local groups = {
     NormalFloat = 'Pmenu',
     Question = { fg = warn_yellow },
     QuickFixLine = 'QfSelection',
-    Search = { bg = '#673917' }, -- editor.findMatchHighlightBackground, 10% lighter
+    Search = { fg = norm_fg, bg = '#3e68d7' }, -- editor.findMatchHighlightBackground. Take the color from tokyonight moon.
     SpecialKey = 'NonText',
     SpellBad = { undercurl = true, sp = error_red },
     SpellCap = { undercurl = true, sp = warn_yellow },

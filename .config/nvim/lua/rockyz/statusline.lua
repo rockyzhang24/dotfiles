@@ -81,9 +81,9 @@ function M.mode_component()
         hl = 'Pending'
     end
     return table.concat({
-        string.format('%%#StlMode%s# %s', hl, mode),
+        string.format('%%#StlMode%s#[%s]', hl, mode),
         string.format('%%#StlModeSep%s#%s%%*', hl, icons.separators.triangle_right),
-    }, ' ')
+    }, '')
 end
 
 function M.git_branch_component(trunc_width)

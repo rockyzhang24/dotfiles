@@ -25,6 +25,8 @@
 -- The support finders are as below
 -----------------------------------
 
+-- <Leader>fr : Resume
+
 -- <Leader>ff : Files
 -- <Leader>fo : Old files
 -- <C-p>      : Git files
@@ -45,8 +47,8 @@
 -- <Leader>fQ : Quickfix list history
 -- <Leader>fL : Location list history
 
--- <Leader>gg : :RGU
--- <C-g>      : :RGU
+-- <Leader>gg : live grep
+-- <C-g>      : live grep
 -- <Leader>gv : Live grep in my nvim config
 -- <Leader>g* : Grep for the current word/selection
 -- <Leader>gb : Live grep in current buffer
@@ -62,6 +64,11 @@
 -- <Leader>fd : document diagnostics
 -- <Leader>fD : workspace diagnostics
 
+-- Commands
+-- [RANGE]GitCommits [GIT LOG OPTIONS]
+-- [RANGE]GitBufCommits [GIT LOG OPTIONS]
+-- RGU [RG OPTIONS] [QUERY] [PATH]
+
 local uv = require('luv')
 local qf_utils = require('rockyz.utils.qf_utils')
 local color_utils = require('rockyz.utils.color_utils')
@@ -76,7 +83,7 @@ vim.api.nvim_create_autocmd('User', {
     end,
 })
 
-local rg_prefix = 'rg --column --line-number --no-heading --color=always --smart-case'
+local rg_prefix = 'rg --column --line-number --no-heading --color=always --smart-case --with-filename'
 local bat_prefix = 'bat --color=always --paging=never --style=numbers'
 
 ---Color a string by ANSI color code that is converted from a highlight group
@@ -125,6 +132,47 @@ vim.g.fzf_vim = {
     },
 }
 
+local cached_fzf_query -- cached the last fzf query
+local cached_rg_query -- cached the last rg query (for live greps)
+local cached_finder -- cached the last executed fzf finder
+if not cached_fzf_query then
+    cached_fzf_query = vim.fn.tempname()
+end
+if not cached_rg_query then
+    cached_rg_query = vim.fn.tempname()
+end
+
+-- Record whether Rg is in fzf mode or not
+local fzf_mode_enabled = ''
+
+---Get fzf options
+---@param from_resume boolean? Whether the finder is called by fzf resume
+---@param extra_opts table? Extra options
+local function get_fzf_opts(from_resume, extra_opts)
+    extra_opts = extra_opts or {}
+    local common_opts = {
+        '--ansi',
+        '--multi',
+        '--bind',
+        -- Cache the query for fzf resume
+        'result:execute-silent(echo {q} > ' .. cached_fzf_query .. ')',
+    }
+    -- When the finder is called by fzf resume, use the start event to fetch the cached query
+    if from_resume then
+        common_opts = vim.list_extend(common_opts, {
+            '--bind',
+            'start:transform-query:cat ' .. cached_fzf_query,
+        })
+    end
+    return vim.list_extend(common_opts, extra_opts)
+end
+
+-- Run the fzf finder and cache it for fzf resume
+local function run(finder)
+    cached_finder = finder
+    finder()
+end
+
 -- Path completion in INSERT mode
 vim.keymap.set('i', '<C-x><C-f>', function()
     vim.fn['fzf#vim#complete#path'](
@@ -139,108 +187,180 @@ vim.keymap.set('i', '<C-x><C-f>', function()
     )
 end)
 
+-- Resume
+vim.keymap.set('n', '<Leader>fr', function()
+    if not cached_finder then
+        vim.notify('No resume finder available!', vim.log.levels.WARN)
+        return
+    end
+    if type(cached_finder) == 'function' then
+        cached_finder(true)
+    elseif type(cached_finder) == 'table' then
+        -- The last executed command-line command
+        -- A special argument `@@from_resume@@` is used to tell the command that it is executed via
+        -- fzf resume
+        local command = string.format(
+            ':%s%s %s @@from_resume@@<CR>',
+            cached_finder.range and cached_finder.range or '',
+            cached_finder.cmd,
+            cached_finder.args
+        )
+        local keys = vim.api.nvim_replace_termcodes(command, true, false, true)
+        vim.api.nvim_feedkeys(keys, 'n', false)
+    end
+end)
+
 -- Files
-vim.keymap.set('n', '<Leader>ff', function()
+local function files(from_resume)
     vim.fn['fzf#vim#files'](
         '',
         vim.fn['fzf#vim#with_preview']({
-            options = {
-            },
+            options = get_fzf_opts(from_resume)
         })
     )
+end
+
+vim.keymap.set('n', '<Leader>ff', function()
+    run(files)
 end)
 
 -- Old files
-vim.keymap.set('n', '<Leader>fo', function()
+local function old_files(from_resume)
     vim.fn['fzf#vim#history'](vim.fn['fzf#vim#with_preview']({
-        options = {
+        options = get_fzf_opts(from_resume, {
             '--prompt',
             'Old Files> ',
-        },
+        }),
     }))
+end
+
+vim.keymap.set('n', '<Leader>fo', function()
+    run(old_files)
 end)
 
 -- Git files
-vim.keymap.set('n', '<C-p>', function()
+local function git_files(from_resume)
     vim.fn['fzf#vim#gitfiles'](
         '',
         vim.fn['fzf#vim#with_preview']({
-            options = {
+            options = get_fzf_opts(from_resume, {
                 '--prompt',
                 'Git Files> ',
-            },
+            }),
         })
     )
+end
+vim.keymap.set('n', '<C-p>', function()
+    run(git_files)
 end)
 
--- Git commits
-vim.cmd([[
-    command! -bar -bang -nargs=* -range=% GitCommits <line1>,<line2>call fzf#vim#commits(<q-args>, {
-        \ "options": [
-        \   "--prompt",
-        \   "Commits> ",
-        \   "--preview-window",
-        \   "down,45%",
-        \   "--header",
-        \   ":: CTRL-S (toggle sort), CTRL-Y (yank commmit hashes), CTRL-D (diff)",
-        \   "--bind",
-        \   "focus:transform-preview-label:echo [ Diff with commit {2} ]",
-        \ ]}, <bang>0)
-]])
-vim.keymap.set({ 'n', 'x' }, '<Leader>fC', function()
-    vim.cmd('GitCommits')
-end)
+--
+-- Git commits (for the whole project) and Git buffer commits (for current buffer)
+--
 
--- Git commits for current buffer or visual-select lines
-vim.cmd([[
-    command! -bar -bang -nargs=* -range=% GitBufCommits <line1>,<line2>call fzf#vim#buffer_commits(<q-args>, {
-        \ "options": [
-        \   "--prompt",
-        \   "Buffer Commits> ",
-        \   "--preview-window",
-        \   "down,45%",
-        \   "--header",
-        \   ":: CTRL-S (toggle sort), CTRL-Y (yank commmit hashes), CTRL-D (diff)",
-        \   "--bind",
-        \   "focus:transform-preview-label:echo [ Diff with commit {1} ]",
-        \ ]}, <bang>0)
-]])
+-- Create two commands, GitCommits and GitBufCommits
+-- Any command accepts git log options and supports a range
+-- E.g., :GitCommits 'foo' --name-only
+-- A special argument `@@from_resume@@` is used internally for fzf resume
+
+local function create_commands(name, func)
+    vim.api.nvim_create_user_command(name, function(opts)
+        local from_resume = opts.args:match('@@from_resume@@') and true or false
+        local args = opts.args:gsub('@@from_resume@@', '')
+        cached_finder = {
+            range = opts.line1 .. ',' .. opts.line2,
+            cmd =  opts.name,
+            args = args,
+        }
+        vim.cmd(
+            string.format(
+                [[%s,%scall %s(%s, {
+                    \ "options": [
+                    \     "--prompt",
+                    \     %s,
+                    \     "--preview-window",
+                    \     "down,45%%",
+                    \     "--header",
+                    \     ":: CTRL-S (toggle sort), CTRL-Y (yank commmit hashes), CTRL-D (diff)",
+                    \     "--bind",
+                    \     "focus:transform-preview-label:echo [ Diff with commit %s ]",
+                    \     "--bind",
+                    \     "result:execute-silent(echo {q} > ]] .. cached_fzf_query .. [[)",
+                    \     "--bind",
+                    \     "start:transform-query:%s"
+                    \ ]
+                \ }, 0)]],
+                opts.line1,
+                opts.line2,
+                func,
+                string.format("'%s'", args),
+                string.format("'%s> '", name),
+                string.format("'%s'", name == 'GitCommits' and '{2}' or '{1}'),
+                from_resume and ('cat ' .. cached_fzf_query) or ''
+            )
+        )
+    end, {
+        nargs = '*',
+        range = '%',
+    })
+end
+
+create_commands('GitBufCommits', 'fzf#vim#buffer_commits')
+create_commands('GitCommits', 'fzf#vim#commits')
+
+local function run_git_commit_cmd(cmd)
+    local str = string.format(":%s<CR>", cmd)
+    local keys = vim.api.nvim_replace_termcodes(str, true, false, true)
+    vim.api.nvim_feedkeys(keys, 'n', false)
+end
+
 vim.keymap.set({ 'n', 'x' }, '<leader>fc', function()
-    vim.cmd('GitBufCommits')
+    run_git_commit_cmd('GitBufCommits')
+end)
+
+vim.keymap.set({ 'n', 'x' }, '<Leader>fC', function()
+    run_git_commit_cmd('GitCommits')
 end)
 
 -- Search history
-vim.keymap.set('n', '<Leader>f/', function()
-    vim.fn['fzf#vim#search_history'](vim.fn['fzf#vim#with_preview']({
-        options = {
+local function search_history(from_resume)
+    vim.fn['fzf#vim#search_history']({
+        options = get_fzf_opts(from_resume, {
             '--prompt',
             'Search History> ',
             '--bind',
-            'start:unbind(ctrl-/)',
+            'ctrl-/:ignore',
             '--preview-window',
             'hidden',
-        },
-    }))
+        }),
+    })
+end
+
+vim.keymap.set('n', '<Leader>f/', function()
+    run(search_history)
 end)
 
 -- Command history
-vim.keymap.set('n', '<Leader>f:', function()
-    vim.fn['fzf#vim#command_history'](vim.fn['fzf#vim#with_preview']({
-        options = {
+local function command_history(from_resume)
+    vim.fn['fzf#vim#command_history']({
+        options = get_fzf_opts(from_resume, {
             '--prompt',
             'Command History> ',
             '--bind',
-            'start:unbind(ctrl-/)',
+            'ctrl-/:ignore',
             '--preview-window',
             'hidden',
-        },
-    }))
+        }),
+    })
+end
+
+vim.keymap.set('n', '<Leader>f:', function()
+    run(command_history)
 end)
 
 -- Buffers
 -- CTRL-D: delete selected buffers
-
-local function buffers()
+local function buffers(from_resume)
     vim.fn['fzf#vim#buffers']('', vim.fn['fzf#vim#with_preview']({
         ['sink*'] = function(lines)
             local key = lines[1]
@@ -265,7 +385,7 @@ local function buffers()
             end
         end,
         placeholder = '{1}',
-        options = {
+        options = get_fzf_opts(from_resume, {
             '--multi',
             '--header-lines',
             '0',
@@ -277,51 +397,59 @@ local function buffers()
             'ctrl-d,ctrl-x,ctrl-v,ctrl-t',
             '--bind',
             'focus:transform-preview-label:echo [ {3..} ]',
-        },
+        }),
     }))
 end
 
 vim.keymap.set('n', '<Leader>fb', function()
-    buffers()
+    run(buffers)
 end)
 
 vim.keymap.set('n', '<C-\\>', function()
-    buffers()
+    run(buffers)
 end)
 
 -- Find files for my dotfiles
-vim.keymap.set('n', '<Leader>f.', function()
+local function dotfiles(from_resume)
     vim.fn['fzf#vim#files'](
         '',
         vim.fn['fzf#vim#with_preview']({
             source = 'ls-dotfiles',
-            options = {
+            options = get_fzf_opts(from_resume, {
                 '--prompt',
                 'Dotfiles> ',
-            },
+            }),
         })
     )
+end
+
+vim.keymap.set('n', '<Leader>f.', function()
+    run(dotfiles)
 end)
 
 -- Find files under home directory
-vim.keymap.set('n', '<Leader>f~', function()
+local function home_files(from_resume)
     vim.fn['fzf#vim#files'](
         '~',
         vim.fn['fzf#vim#with_preview']({
-            options = {
+            options = get_fzf_opts(from_resume, {
                 '--prompt',
                 'Home Files> ',
-            },
+            }),
         })
     )
+end
+
+vim.keymap.set('n', '<Leader>f~', function()
+    run(home_files)
 end)
 
 -- Marks
-vim.keymap.set('n', '<Leader>fm', function()
+local function marks(from_resume)
     local filename = '$([[ -f {4} ]] && echo {4} || echo ' .. vim.api.nvim_buf_get_name(0) .. ')'
     vim.fn['fzf#vim#marks'](vim.fn['fzf#vim#with_preview']({
         placeholder = '',
-        options = {
+        options = get_fzf_opts(from_resume, {
             '--prompt',
             'Marks> ',
             '--preview-window',
@@ -330,12 +458,16 @@ vim.keymap.set('n', '<Leader>fm', function()
             bat_prefix .. ' --highlight-line {2} -- ' .. filename,
             '--bind',
             'focus:transform-preview-label:echo [ {1}:{2}:{3} ]',
-        },
+        }),
     }))
+end
+
+vim.keymap.set('n', '<Leader>fm', function()
+    run(marks)
 end)
 
 -- Tabs
-vim.keymap.set('n', '<Leader>ft', function()
+local function tabs(from_resume)
     local entries = {}
     local cur_tab = vim.api.nvim_get_current_tabpage()
     for idx, tid in ipairs(vim.api.nvim_list_tabpages()) do
@@ -397,8 +529,7 @@ vim.keymap.set('n', '<Leader>ft', function()
                 end
             end
         end,
-        options = {
-            '--ansi',
+        options = get_fzf_opts(from_resume, {
             '--with-nth',
             '5..',
             '--prompt',
@@ -411,15 +542,19 @@ vim.keymap.set('n', '<Leader>ft', function()
             'file=$(echo {1} | sed "s/@@@@/ /g"); [[ -f $file ]] && ' .. bat_prefix .. ' --highlight-line {2} -- $file || echo "No preview support!"',
             '--bind',
             'focus:transform-preview-label:echo [ $(echo {1} | sed "s/@@@@/ /g; s|^$HOME|~|") ]',
-        },
+        }),
     }))
+end
+
+vim.keymap.set('n', '<Leader>ft', function()
+    run(tabs)
 end)
 
 --
 -- Argument list
 --
 
-local function args()
+local function args(from_resume)
     local argc = vim.fn.argc()
     if argc == 0 then
         vim.notify('Argument list is empty', vim.log.levels.WARN)
@@ -458,8 +593,7 @@ local function args()
                 end
             end
         end,
-        options = {
-            '--ansi',
+        options = get_fzf_opts(from_resume, {
             '--with-nth',
             '2..',
             '--prompt',
@@ -472,12 +606,12 @@ local function args()
             bat_prefix .. ' -- {3}',
             '--bind',
             'focus:transform-preview-label:echo [ {3} ]',
-        },
+        }),
     }))
 end
 
 vim.keymap.set('n', '<Leader>fa', function()
-    args()
+    run(args)
 end)
 
 --
@@ -523,7 +657,7 @@ local function get_qf_entry(item)
 end
 
 ---@param win_local boolean true for location list and false for quickfix
-local function fzf_qf(win_local)
+local function qf_items_fzf(win_local, from_resume)
     local what = { items = 0, title = 0 }
     local list = win_local and vim.fn.getloclist(0, what) or vim.fn.getqflist(what)
     local entries = {}
@@ -591,8 +725,7 @@ local function fzf_qf(win_local)
                 end
             end
         end,
-        options = {
-            '--ansi',
+        options = get_fzf_opts(from_resume, {
             '--prompt',
             prompt .. '> ',
             '--header',
@@ -607,18 +740,26 @@ local function fzf_qf(win_local)
             'down,45%,+{3}-/2',
             '--bind',
             'focus:transform-preview-label:echo [ $(echo {2} | sed "s|^$HOME|~|") ]',
-        },
+        }),
     }))
+end
+
+local function quickfix_items(from_resume)
+    qf_items_fzf(false, from_resume)
+end
+
+local function loclist_items(from_resume)
+    qf_items_fzf(true, from_resume)
 end
 
 -- Quickfix list
 vim.keymap.set('n', '<Leader>fq', function()
-    fzf_qf(false)
+    run(quickfix_items)
 end)
 
 -- Location list
 vim.keymap.set('n', '<Leader>fl', function()
-    fzf_qf(true)
+    run(loclist_items)
 end)
 
 --
@@ -644,7 +785,7 @@ end
 -- Show list history in fzf and support preview for each entry.
 -- Dump the errors in each list into a separate temp file, and cat this file to preview the list.
 ---@param win_local boolean Whether it's a window-local location list or quickfix list
-local function fzf_qf_history(win_local)
+local function qf_history_fzf(win_local, from_resume)
     local hist_dir = win_local and loclist_hist_dir or qflist_hist_dir
     local cur_nr = win_local and vim.fn.getloclist(0, { nr = 0 }).nr or vim.fn.getqflist({ nr = 0 }).nr
     local entries = {}
@@ -709,7 +850,7 @@ local function fzf_qf_history(win_local)
             vim.cmd(open_cmd)
         end,
         placeholder = '',
-        options = {
+        options = get_fzf_opts(from_resume, {
             '--with-nth',
             '2..',
             '--no-multi',
@@ -723,55 +864,93 @@ local function fzf_qf_history(win_local)
             preview,
             '--bind',
             'focus:transform-preview-label:echo [ {2..} ]',
-        },
+        }),
     }))
+end
+
+local function quickfix_history(from_resume)
+    qf_history_fzf(false, from_resume)
+end
+
+local function loclist_history(from_resume)
+    qf_history_fzf(true, from_resume)
 end
 
 -- List all the quickfix lists and switch to the selected one
 vim.keymap.set('n', '<Leader>fQ', function()
-    fzf_qf_history(false)
+    run(quickfix_history)
 end)
 
 -- List all the location lists for the current window and switch to the selected one
 vim.keymap.set('n', '<Leader>fL', function()
-    fzf_qf_history(true)
+    run(loclist_history)
 end)
 
 --
--- Config grep to be the same as my shell script frg (~/.config/fzf/fzfutils/frg). It could run rg
--- with its normal options and has two modes:
--- * RG mode (fzf will be just an interactive interface for RG) and
--- * FZF mode (fzf will be the fuzzy finder for the results of RG)
+-- Grep
+--
+-- Live grep
+-- It has two modes (ALT-F for switching between each other)
+-- * RG mode (fzf will be just an interactive interface for RG)
+-- * FZF mode (fzf will be the fuzzy finder for the current results of RG)
 --
 
 ---Generate the fzf options for rg and fzf integration
 ---@param rg string The final rg command
----@param query string The initial query for rg
----@param name string The name of that keymap
----@return table
-local function get_fzf_opts_for_RG(rg, query, name)
-    local rg_query = vim.fn.tempname() -- tempfile to store the query in rg
-    local fzf_query = vim.fn.tempname() -- tempfile to store the query in fzf
-    local fzf_mode_enabled = vim.fn.tempname() -- tempfile to record whether it is currently in fzf mode
-    return {
+---@param rg_query string The initial query for rg
+---@param path string File or directory for rg to search
+---@param prompt string Fzf prompt string
+---@param extra_opts table? Extra fzf options
+---@param from_resume boolean? Whether or not the finder is called from fzf resume
+---@return table Fzf options for live grep
+local function get_fzf_opts_for_live_grep(rg, rg_query, path, prompt, extra_opts, from_resume)
+    extra_opts = extra_opts or {}
+    if not from_resume then
+        cached_rg_query = vim.fn.tempname()
+        cached_fzf_query = vim.fn.tempname()
+        fzf_mode_enabled = vim.fn.tempname() -- tempfile to record whether it is currently in fzf mode
+    end
+    local is_fzf_mode = uv.fs_stat(fzf_mode_enabled)
+    local mode = is_fzf_mode and 'FZF' or 'RG'
+    local search_enabled = is_fzf_mode and true or false
+    -- Initial rg query
+    if from_resume and uv.fs_stat(cached_rg_query) then
+        rg_query = '$(cat ' .. cached_rg_query .. ')'
+    else
+        rg_query = vim.fn.shellescape(rg_query)
+    end
+    -- Initial fzf query
+    local set_query = ''
+    if from_resume then
+        set_query = string.format(
+            '+transform-query(cat %s)',
+            is_fzf_mode and cached_fzf_query or cached_rg_query
+        )
+    end
+    -- Unbind the change event if it is called by fzf resume and rg's initial mode is fzf mode
+    local unbind_change = ''
+    if from_resume and is_fzf_mode then
+        unbind_change = '+unbind(change)'
+    end
+    local opts =  {
         '--ansi',
-        '--disabled',
-        '--query',
-        query,
         '--prompt',
-        name .. ' [RG]> ',
+        string.format('%s [%s]> ', prompt, mode),
         '--bind',
-        'start:reload(' .. rg .. ' ' .. vim.fn.shellescape(query) .. ')',
+        'start:reload(' .. rg .. ' ' .. rg_query .. ' ' .. path .. ')' .. set_query .. unbind_change,
         '--bind',
-        'change:reload:' .. rg .. ' {q} || true',
+        'change:reload:' .. rg .. ' {q} ' .. path .. ' || true',
+        '--bind',
+        -- Cache the query into the specific tempfile based on the current mode
+        'result:execute-silent([[ ! -e ' .. fzf_mode_enabled .. ' ]] && echo {q} > ' .. cached_rg_query .. ' || echo {q} > ' .. cached_fzf_query .. ')',
         '--bind',
         'alt-f:transform:\
         [[ ! -e ' .. fzf_mode_enabled .. ' ]] && { \
             touch ' .. fzf_mode_enabled .. '; \
-            echo "unbind(change)+change-prompt(' .. name .. ' [FZF]> )+enable-search+transform-query({ echo {q} > ' .. rg_query .. '; cat ' .. fzf_query .. ' })"; \
+            echo "unbind(change)+change-prompt(' .. prompt .. ' [FZF]> )+enable-search+transform-query(cat ' .. cached_fzf_query .. ')"; \
         } || { \
             rm ' .. fzf_mode_enabled .. '; \
-            echo "change-prompt(' .. name .. ' [RG]> )+disable-search+reload(' .. rg .. ' {q} || true)+rebind(change)+transform-query({ echo {q} > ' .. fzf_query .. '; cat ' .. rg_query .. ' })"\
+            echo "change-prompt(' .. prompt .. ' [RG]> )+disable-search+reload(' .. rg .. ' {q} || true)+rebind(change)+transform-query(cat ' .. cached_rg_query .. ')"\
         }',
         '--bind',
         'focus:transform-preview-label:echo [ {1}:{2}:{3} ]',
@@ -784,34 +963,55 @@ local function get_fzf_opts_for_RG(rg, query, name)
         '--preview',
         bat_prefix .. ' --highlight-line {2} -- {1}',
     }
+    if not search_enabled then
+        table.insert(opts, '--disabled')
+    end
+    return vim.list_extend(opts, extra_opts)
 end
 
--- Define a new command :RGU (U for Ultimate) that supports rg options and two modes
+-- Define a new command :RGU (U for Ultimate) that accepts rg options
+-- Synopsis: :RGU [RG OPTIONS] [QUERY] [PATH]. The QUERY PATH can be placed anywhere
+-- A special argument `@@from_resume@@` is used internally for fzf resume
 vim.api.nvim_create_user_command('RGU', function(opts)
     local extra_flags = {}
     local query = ''
+    local path = ''
+    local from_resume
     for _, arg in ipairs(opts.fargs) do
         if arg:match('^-') ~= nil then
             table.insert(extra_flags, arg)
-        else
+        elseif arg:match('@@from_resume@@') then
+            from_resume = true
+        elseif uv.fs_stat(arg) then
+            path = arg
+        elseif query == '' then
             query = arg
+        else
+            vim.notify('Error: more than one query string are given!', vim.log.levels.ERROR)
+            return
         end
     end
-    local rg = rg_prefix .. ' ' .. table.concat(extra_flags, ' ') .. ' -- '
-    vim.fn['fzf#vim#grep2'](
-        rg,
-        query,
-        {
-            options = get_fzf_opts_for_RG(rg, query, 'RGU'),
-        }
-    )
-end, { bang = true, nargs = '*' })
+    cached_finder = {
+        cmd = opts.name,
+        args = opts.args:gsub('@@from_resume@@', ''),
+    }
+    local rg_args = table.concat(extra_flags, ' ')
+    local rg = rg_prefix .. ' ' .. rg_args .. ' --'
+    vim.fn['fzf#vim#grep2'](rg, query, {
+        options = get_fzf_opts_for_live_grep(rg, query, path, 'RGU', {}, from_resume),
+    })
+end, { nargs = '*' })
 
-vim.keymap.set('n', '<Leader>gg', ':RGU ')
-vim.keymap.set('n', '<C-g>', ':RGU ')
+vim.keymap.set('n', '<Leader>gg', function()
+    vim.cmd('RGU')
+end)
+
+vim.keymap.set('n', '<C-g>', function()
+    vim.cmd('RGU')
+end)
 
 -- Live grep in nvim config
-vim.keymap.set('n', '<Leader>gv', function()
+local function live_grep_nvim_config(from_resume)
     local rg = rg_prefix .. ' --glob=!minpac -- '
     local query = ''
     vim.fn['fzf#vim#grep2'](
@@ -819,79 +1019,88 @@ vim.keymap.set('n', '<Leader>gv', function()
         query,
         {
             dir = '~/.config/nvim',
-            options = get_fzf_opts_for_RG(rg, query, 'Nvim Config'),
+            options = get_fzf_opts_for_live_grep(rg, query, '', 'Nvim Config', {}, from_resume),
         }
     )
+end
+
+vim.keymap.set('n', '<Leader>gv', function()
+    run(live_grep_nvim_config)
 end)
 
+--
+-- Live grep in current buffer
+--
+
+local function grep_buffer(from_resume)
+    local rg = rg_prefix .. ' --'
+    local filename = vim.api.nvim_buf_get_name(0)
+    if #filename == 0 or not vim.uv.fs_stat(filename) then
+        vim.notify('Live grep in current buffer requires a valid buffer!', vim.log.levels.WARN)
+        return
+    end
+    vim.fn['fzf#vim#grep2'](rg, '', {
+        options = get_fzf_opts_for_live_grep(rg, '', filename, 'Buffer', {
+            '--with-nth',
+            '2..',
+            '--header',
+            ':: Current buffer: ' .. vim.fn.expand('%:~:.'),
+        }, from_resume)
+    })
+end
+
+vim.keymap.set('n', '<Leader>gb', function()
+    run(grep_buffer)
+end)
+
+--
 -- Grep for the current word (normal mode) or the current selection (visual mode)
-vim.keymap.set({ 'n', 'x' }, '<Leader>g*', function()
-    local query
+--
+
+-- Cache the rg query for fzf resume
+local cached_grep_word_rg_query = ''
+
+---@param from_resume boolean? Whether or not this function is called from fzf resume
+local function grep_word(from_resume)
+    local rg_query
     local header
-    if vim.fn.mode() == 'v' then
+    if from_resume then
+        rg_query = cached_grep_word_rg_query
+    elseif vim.fn.mode() == 'v' then
         local saved_reg = vim.fn.getreg('v')
         vim.cmd([[noautocmd sil norm "vy]])
-        query = vim.fn.getreg('v')
+        rg_query = vim.fn.getreg('v')
         vim.fn.setreg('v', saved_reg)
     else
-        query = vim.fn.expand('<cword>')
+        rg_query = vim.fn.expand('<cword>')
     end
-    header = query
-    query = vim.fn.escape(query, '.*+?()[]{}\\|^$')
-    local rg = rg_prefix .. ' -- ' .. vim.fn['fzf#shellescape'](query)
+    cached_grep_word_rg_query = rg_query
+    header = rg_query
+    rg_query = vim.fn.escape(rg_query, '.*+?()[]{}\\|^$')
+    local rg = rg_prefix .. ' -- ' .. vim.fn['fzf#shellescape'](rg_query)
     vim.fn['fzf#vim#grep'](
         rg,
         {
-            options = {
+            options = get_fzf_opts(from_resume, {
                 '--prompt',
                 'Word [Rg]> ',
                 '--preview-window',
                 'down,45%,+{2}-/2',
                 '--preview',
                 bat_prefix .. ' --highlight-line {2} -- {1}',
-                -- Show the current query in header. Set its style to bold, red foreground via ANSI
+                -- Show the current rg query in header. Set its style to bold, red foreground via ANSI
                 -- color code.
                 '--header',
                 ':: Query: ' .. color_str(header, 'RipgrepQuery'),
                 '--bind',
                 'focus:transform-preview-label:echo [ {1}:{2}:{3} ]',
-            },
+            }),
         }
     )
-end)
+end
 
--- Live grep in current buffer
-vim.keymap.set('n', '<Leader>gb', function()
-    local rg = rg_prefix .. ' --with-filename --'
-    local initial_query = ''
-    local filename = vim.api.nvim_buf_get_name(0)
-    if #filename == 0 or not vim.uv.fs_stat(filename) then
-        print("Live grep in current buffer requires a valid buffer!")
-        return
-    end
-    vim.fn['fzf#vim#grep2'](rg, initial_query, {
-        options = {
-            '--ansi',
-            '--query',
-            initial_query,
-            '--with-nth',
-            '2..',
-            '--prompt',
-            'Buffer [Rg]> ',
-            '--bind',
-            'start:reload(' .. rg .. " '' " .. filename .. ')',
-            '--bind',
-            'change:reload:' .. rg .. ' {q} ' .. filename .. '|| true',
-            '--bind',
-            'focus:transform-preview-label:echo [ {1}:{2}:{3} ]',
-            '--preview-window',
-            'down,45%,+{2}-/2',
-            '--preview',
-            bat_prefix .. ' --highlight-line {2} -- {1}',
-            '--header',
-            ':: Current buffer: ' .. vim.fn.expand('%:~:.'),
-        },
-    })
+vim.keymap.set({ 'n', 'x' }, '<Leader>g*', function()
+    run(grep_word)
 end)
 
 --
@@ -992,9 +1201,10 @@ end
 
 ---Send request document symbols or workspace symbols and then execute fzf
 ---@param title string The title for quickfix list and fzf prompt
----@param query string The query for requesting workspace symbols. It will be empty for document
+---@param symbol_query string The query for requesting workspace symbols. It will be empty for document
 ---symbol request
-local function request_symbols_and_fzf_exec(method, params, title, query)
+---@param from_resume boolean?
+local function lsp_symbols(method, params, title, symbol_query, from_resume)
     local bufnr = vim.api.nvim_get_current_buf()
     local clients = vim.lsp.get_clients({ method = method, bufnr = bufnr })
     if not next(clients) then
@@ -1008,8 +1218,8 @@ local function request_symbols_and_fzf_exec(method, params, title, query)
     local function fzf_exec(offset_encoding)
         local fzf_header = ':: CTRL-Q (send to quickfix), CTRL-L (send to loclist)'
         local fzf_preview_window = '+{3}-/2'
-        if query ~= '' then
-            fzf_header = ':: Query: ' .. color_str(query, 'RipgrepQuery') .. '\n' .. fzf_header
+        if symbol_query ~= '' then
+            fzf_header = ':: Query: ' .. color_str(symbol_query, 'RipgrepQuery') .. '\n' .. fzf_header
             fzf_preview_window = 'down,45%,' .. fzf_preview_window
         end
         vim.fn['fzf#run'](vim.fn['fzf#wrap']({
@@ -1040,7 +1250,7 @@ local function request_symbols_and_fzf_exec(method, params, title, query)
                         end
                         local idx = tonumber(lines[i]:match('^%S+'))
                         local item = all_items[idx]
-                        if query ~= '' then
+                        if symbol_query ~= '' then
                             -- For workspace symbol
                             vim.lsp.util.show_document(item.user_data, offset_encoding)
                         else
@@ -1052,8 +1262,7 @@ local function request_symbols_and_fzf_exec(method, params, title, query)
                     end
                 end
             end,
-            options = {
-                '--ansi',
+            options = get_fzf_opts(from_resume, {
                 '--delimiter',
                 ' ',
                 '--with-nth',
@@ -1070,12 +1279,12 @@ local function request_symbols_and_fzf_exec(method, params, title, query)
                 fzf_preview_window,
                 '--bind',
                 'focus:transform-preview-label:echo [ $(echo {2}:{3}:{4} | sed "s|^$HOME|~|") ]',
-            },
+            }),
         }))
     end
 
     for _, client in ipairs(clients) do
-        client.request(method, params, function(_, result, ctx)
+        client:request(method, params, function(_, result, ctx)
             symbols_to_entries_and_items(result, ctx, bufnr, client.offset_encoding, '', all_entries, all_items)
             remaining = remaining - 1
             if remaining == 0 then
@@ -1087,15 +1296,26 @@ end
 
 -- LSP document symbols
 vim.keymap.set('n', '<Leader>ls', function()
-    local params = { textDocument = vim.lsp.util.make_text_document_params() }
-    request_symbols_and_fzf_exec('textDocument/documentSymbol', params, 'LSP Document Symbols', '')
+    run(function(from_resume)
+        local params = { textDocument = vim.lsp.util.make_text_document_params() }
+        lsp_symbols('textDocument/documentSymbol', params, 'LSP Document Symbols', '', from_resume)
+    end)
 end)
+
+-- Resume of workspace_symbols finder needs the predefined symbol query
+local cached_symbol_query = ''
+local function workspace_symbols_resume(from_resume)
+    local params = { query = cached_symbol_query }
+    lsp_symbols('workspace/symbol', params, 'LSP Workspace Symbols', cached_symbol_query, from_resume)
+end
 
 -- LSP workspace symbols
 vim.keymap.set('n', '<Leader>lS', function()
-    local query = vim.fn.input('Query: ')
-    local params = { query = query }
-    request_symbols_and_fzf_exec('workspace/symbol', params, 'LSP Workspace Symbols', query)
+    local symbol_query = vim.fn.input('Query: ')
+    cached_symbol_query = symbol_query
+    cached_finder = workspace_symbols_resume
+    local params = { query = symbol_query }
+    lsp_symbols('workspace/symbol', params, 'LSP Workspace Symbols', symbol_query)
 end)
 
 --
@@ -1127,7 +1347,7 @@ local function locations_to_entries_and_items(locations, offset_encoding, all_en
     end
 end
 
-local function request_locations_and_fzf_exec(method, title)
+local function lsp_locations(method, title, from_resume)
     local bufnr = vim.api.nvim_get_current_buf()
     local clients = vim.lsp.get_clients({ method = method, bufnr = bufnr })
     if not next(clients) then
@@ -1172,8 +1392,7 @@ local function request_locations_and_fzf_exec(method, title)
                     end
                 end
             end,
-            options = {
-                '--ansi',
+            options = get_fzf_opts(from_resume, {
                 '--with-nth',
                 '5..',
                 '--prompt',
@@ -1188,16 +1407,17 @@ local function request_locations_and_fzf_exec(method, title)
                 'down,45%,+{3}-/2',
                 '--bind',
                 'focus:transform-preview-label:echo [ $(echo {2}:{3}:{4} | sed "s|^$HOME|~|") ]',
-            },
+            }),
         }))
     end
 
     for _, client in ipairs(clients) do
         local params = vim.lsp.util.make_position_params(win, client.offset_encoding)
         if method == 'textDocument/references' then
+            ---@diagnostic disable-next-line: inject-field
             params.context = { includeDeclaration = true }
         end
-        client.request(method, params, function(_, result)
+        client:request(method, params, function(_, result)
             locations_to_entries_and_items(result or {}, client.offset_encoding, all_entries, all_items)
             remaining = remaining - 1
             if remaining == 0 then
@@ -1209,30 +1429,40 @@ end
 
 -- LSP definitions
 vim.keymap.set('n', '<Leader>ld', function()
-    request_locations_and_fzf_exec('textDocument/definition', 'LSP Definitions')
+    run(function(from_resume)
+        lsp_locations('textDocument/definition', 'LSP Definitions', from_resume)
+    end)
 end)
 -- LSP references
 vim.keymap.set('n', '<Leader>lr', function()
-    request_locations_and_fzf_exec('textDocument/references', 'LSP References')
+    run(function(from_resume)
+        lsp_locations('textDocument/references', 'LSP References', from_resume)
+    end)
 end)
 -- LSP implementations
 vim.keymap.set('n', '<Leader>li', function()
-    request_locations_and_fzf_exec('textDocument/implementation', 'LSP Implementations')
+    run(function(from_resume)
+        lsp_locations('textDocument/implementation', 'LSP Implementations', from_resume)
+    end)
 end)
 -- LSP declarations
 vim.keymap.set('n', '<Leader>lD', function()
-    request_locations_and_fzf_exec('textDocument/declaration', 'LSP Declarations')
+    run(function(from_resume)
+        lsp_locations('textDocument/declaration', 'LSP Declarations', from_resume)
+    end)
 end)
 -- LSP type definitions
 vim.keymap.set('n', '<Leader>lt', function()
-    request_locations_and_fzf_exec('textDocument/typeDefinition', 'LSP Type Definitions')
+    run(function(from_resume)
+        lsp_locations('textDocument/typeDefinition', 'LSP Type Definitions', from_resume)
+    end)
 end)
 
 --
 -- Diagnostics
 --
 
-local function diagnostics(opts)
+local function diagnostics(from_resume, opts)
     opts = opts or {}
     local curbuf = vim.api.nvim_get_current_buf()
     local diags = vim.diagnostic.get(not opts.all and curbuf or nil)
@@ -1334,9 +1564,8 @@ local function diagnostics(opts)
                     end
                 end
             end,
-            options = {
+            options = get_fzf_opts(from_resume, {
                 '--read0',
-                '--ansi',
                 '--with-nth',
                 '5..',
                 '--prompt',
@@ -1351,7 +1580,7 @@ local function diagnostics(opts)
                 '+{3}-/2',
                 '--bind',
                 'focus:transform-preview-label:echo [ $(echo {2}:{3}:{4} | sed "s|^$HOME|~|") ]',
-            },
+            }),
         }))
     end
 
@@ -1366,9 +1595,13 @@ end
 
 -- Diagnostics (document)
 vim.keymap.set('n', '<Leader>fd', function()
-    diagnostics()
+    run(function(from_resume)
+        diagnostics(from_resume)
+    end)
 end)
 -- Diagnostics (workspace)
 vim.keymap.set('n', '<Leader>fD', function()
-    diagnostics({ all = true })
+    run(function(from_resume)
+        diagnostics(from_resume, { all = true })
+    end)
 end)

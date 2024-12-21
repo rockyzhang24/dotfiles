@@ -66,13 +66,13 @@ function M.switch_layout()
     -- pos is {row, col}
     local pos1 = vim.api.nvim_win_get_position(norm_wins[1])
     local pos2 = vim.api.nvim_win_get_position(norm_wins[2])
-    local key = ''
+    local keys = ''
     if pos1[1] == pos2[1] then
-        key = vim.api.nvim_replace_termcodes('<C-w>t<C-w>K', true, false, true)
+        keys = vim.api.nvim_replace_termcodes('<C-w>t<C-w>K', true, false, true)
     else
-        key = vim.api.nvim_replace_termcodes('<C-w>t<C-w>H', true, false, true)
+        keys = vim.api.nvim_replace_termcodes('<C-w>t<C-w>H', true, false, true)
     end
-    vim.api.nvim_feedkeys(key, 'm', false)
+    vim.api.nvim_feedkeys(keys, 'm', false)
     -- nvim_feedkeys is a blocking call and nvim_set_current_win doesn't work when textlock is active,
     -- so vim.schedule is necessary.
     vim.schedule(function()

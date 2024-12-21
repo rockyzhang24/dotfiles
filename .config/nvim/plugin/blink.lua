@@ -53,7 +53,18 @@ require('blink.cmp').setup({
         },
     },
     sources = {
-        default = { 'lsp', 'path', 'snippets', 'luasnip', 'buffer' }
+        default = { 'lsp', 'snippets', 'luasnip', 'buffer', 'path' },
+        providers = {
+            lsp = {
+                -- By default it fallbacks to 'buffer'. It means buffer items will only be listed
+                -- when lsp returns 0 items. I want buffer items to always be listed, so I remove
+                -- 'buffer' from the fallbacks.
+                fallbacks = {},
+            },
+            buffer = {
+                min_keyword_length = 4,
+            },
+        },
     },
     snippets = {
       expand = function(snippet) require('luasnip').lsp_expand(snippet) end,

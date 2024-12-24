@@ -94,10 +94,3 @@ vim.keymap.set('n', '<Leader>fg', function()
         prompt_prefix = 'Highlights> ',
     })
 end)
-
--- Help tags
-vim.keymap.set('n', '<Leader>fh', function()
-    builtin.help_tags({
-        prompt_prefix = 'HelpTags> ',
-    })
-end)

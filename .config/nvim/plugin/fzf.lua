@@ -30,17 +30,21 @@
 -- <Leader>ff : Files
 -- <Leader>fo : Old files
 -- <C-p>      : Git files
--- <Leader>fc : Git commits for current buffer
--- <Leader>fC : Git commits
--- <Leader>f/ : Search history
--- <Leader>f: : Command history
--- <Leader>fb : Buffers
--- <C-\>      : Buffers
 -- <Leader>f. : Files for my dotfiles
 -- <Leader>f~ : Files under $HOME
+-- <Leader>fb : Buffers
+-- <C-\>      : Buffers
+
+-- <Leader>fc : Git commits for current buffer
+-- <Leader>fC : Git commits
+
+-- <Leader>f/ : Search history
+-- <Leader>f: : Command history
+
 -- <Leader>fm : Marks
 -- <Leader>ft : Tabs
 -- <Leader>fa : Argument list
+-- <Leader>fh : Helptags
 
 -- <Leader>fq : Quickfix list items
 -- <Leader>fl : Location list items
@@ -69,9 +73,10 @@
 -- [RANGE]GitBufCommits [GIT LOG OPTIONS]
 -- RGU [RG OPTIONS] [QUERY] [PATH]
 
-local uv = require('luv')
+local uv = vim.uv
 local qf_utils = require('rockyz.utils.qf_utils')
 local color_utils = require('rockyz.utils.color_utils')
+local io_utils = require('rockyz.utils.io_utils')
 local icons = require('rockyz.icons')
 
 -- Use the globally set statusline
@@ -615,6 +620,126 @@ vim.keymap.set('n', '<Leader>fa', function()
 end)
 
 --
+-- Helptags
+--
+
+-- Inspired by fzf-lua
+local function helptags(from_resume)
+    local langs = vim.split(vim.o.helplang, ',')
+
+    local langs_map = {}
+    for _, lang in ipairs(langs) do
+        langs_map[lang] = true
+    end
+
+    ---@type table<string, string[]> A map from language to tag files
+    local tag_files = {}
+    local function add_tag_file(lang, file)
+        if langs_map[lang] then
+            if tag_files[lang] then
+                table.insert(tag_files[lang], file)
+            else
+                tag_files[lang] = { file }
+            end
+        end
+    end
+
+    ---@type table<string, string> A map from the tag file name to its full path
+    local help_files = {}
+    local rtp = vim.o.runtimepath
+    local all_files = vim.fn.globpath(rtp, 'doc/*', true, true)
+    for _, fullpath in ipairs(all_files) do
+        local file = vim.fn.fnamemodify(fullpath, ':t')
+        if file == 'tags' then
+            add_tag_file('en', fullpath)
+        elseif file:match('^tags%-..$') then
+            local lang = file:sub(-2)
+            add_tag_file(lang, fullpath)
+        else
+            help_files[file] = fullpath
+        end
+    end
+
+    local fzf_entries = {}
+    local tags_map = {}
+    local delimiter = string.char(9)
+    for _, lang in ipairs(langs) do
+        for _, file in ipairs(tag_files[lang] or {}) do
+            local lines = vim.split(io_utils.read_file(file), '\n')
+            for _, line in ipairs(lines) do
+                if not line:match('^!_TAG_') then
+                    local fields = vim.split(line, delimiter)
+                    if #fields == 3 and not tags_map[fields[1]] then
+                        -- fzf entry
+                        -- It consists of three parts: tag, filename, file_fullpath
+                        -- Only the first two parts are displayed in fzf. The third part
+                        -- file_fullpath is used to open the help file.
+                        local tag = fields[1]
+                        local filename = fields[2] -- help file name
+                        local excmd = fields[3] -- Ex command
+                        local file_fullpath = help_files[filename] -- help file fullpath
+                        local entry = string.format(
+                            '%s %s %s %s',
+                            color_str(tag, 'Label'),
+                            color_str('[' .. filename .. ']', 'Comment'),
+                            file_fullpath,
+                            excmd
+                        )
+                        table.insert(fzf_entries, entry)
+                    end
+                    tags_map[fields[1]] = true
+                end
+            end
+        end
+    end
+
+    -- Run fzf
+    vim.fn['fzf#run'](vim.fn['fzf#wrap']({
+        source = fzf_entries,
+        ['sink*'] = function(lines)
+            if #lines > 2 then
+                vim.notify('No support multiple selections', vim.log.levels.WARN)
+            end
+            local key = lines[1]
+            local tag = string.match(lines[2], '^%S+')
+            if key == '' or key == 'ctrl-x' then
+                -- ENTER
+                vim.cmd('help ' .. tag)
+            elseif key == 'ctrl-v' then
+                vim.cmd('vert help ' .. tag)
+            elseif key == 'ctrl-t' then
+                vim.cmd('tab help ' .. tag)
+            end
+        end,
+        options = get_fzf_opts(from_resume, {
+            '--with-nth',
+            '..2',
+            '--nth',
+            '1',
+            '--no-multi',
+            '--prompt',
+            'Helptags> ',
+            '--expect',
+            'ctrl-x,ctrl-v,ctrl-t',
+            '--header',
+            ':: CTRL-V (open in vertical split), CTRL-T (open in new tab)',
+            '--preview',
+            -- This script is taken from fzf.vim/bin/tagpreview.sh
+            'TARGET_LINE="$(nvim -R -i NONE -u NONE -e -m -s {3} -c "set nomagic" -c "silent "{4} -c \'let l=line(".") | new | put =l | print | qa!\')"; \
+            START_LINE="$(( TARGET_LINE - 5 ))"; \
+            (( START_LINE <= 0 )) && START_LINE=1; \
+            END_LINE="$(( START_LINE + FZF_PREVIEW_LINES - 1 ))"; ' .. bat_prefix .. ' --style plain --language VimHelp --highlight-line "${TARGET_LINE}" --line-range="${START_LINE}:${END_LINE}" -- {3}',
+            '--bind',
+            'focus:transform-preview-label:echo [ {1} {2} ]',
+        }),
+    }))
+end
+
+vim.keymap.set('n', '<Leader>fh', function()
+    run(helptags)
+end)
+
+--
 -- Find entries in quickfix and location list
 --
 
@@ -774,14 +899,6 @@ end)
 uv.fs_mkdir(loclist_hist_dir, 511, function()
 end)
 
--- Write contents into a file
-local function write_file(filepath, contents)
-    local file, _ = uv.fs_open(filepath, 'w', 438)
-    uv.fs_write(file, contents, -1, function()
-        uv.fs_close(file)
-    end)
-end
-
 -- Show list history in fzf and support preview for each entry.
 -- Dump the errors in each list into a separate temp file, and cat this file to preview the list.
 ---@param win_local boolean Whether it's a window-local location list or quickfix list
@@ -830,7 +947,7 @@ local function qf_history_fzf(win_local, from_resume)
                 local str = get_qf_entry(qf_utils.format_qf_item(item))
                 table.insert(errors, str)
             end
-            write_file(hist_path, table.concat(errors, '\n'))
+            io_utils.write_file(hist_path, table.concat(errors, '\n'))
         end
     end
 

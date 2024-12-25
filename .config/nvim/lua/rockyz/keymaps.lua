@@ -116,6 +116,13 @@ end)
 vim.keymap.set('n', 'yof', ':ToggleAutoFormat<CR>') -- buffer-local
 vim.keymap.set('n', 'yoF', ':ToggleAutoFormat!<CR>') -- global
 
+vim.keymap.set('n', '<C-c>', 'ciw')
+
+-- From TJ
+vim.keymap.set('n', '<Leader><Leader>x', '<Cmd>source %<CR>') -- execute the current file
+vim.keymap.set('n', '<Leader>x', ':.lua<CR>') -- execute the current line
+vim.keymap.set('v', '<Leader>x', ':lua<CR>') -- execute the selected lines
+
 --
 -- Search
 --

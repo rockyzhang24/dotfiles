@@ -14,7 +14,9 @@ Always a WIP 🏗
 
 # ✨ Features
 
-I'm a minimalist, adhering to the KISS principle and embracing the philosophy of "do one thing and do it better". I only install and use plugins that are absolutely essential. I dislike those all-in-one plugins. I prefer plugins that enhance the native functionality of Vim and strongly avoid those that modify Vim's original features. For functionalities that can be achieved with just a few lines of code, I prefer to implement them myself:
+I'm a minimalist, adhering to the KISS principle and embracing the philosophy of "do one thing and do it better". I only install the plugins that are absolutely essential, avoiding all-in-one solutions. I favor plugins that enhance Vim’s native functionality while steering clear of those that alter its original behavior. For features that are straightforward to implement, I prefer to create them myself, maximizing reliability and control.
+
+Functionalities I implemented:
 
 * Comprehensive and aesthetic statusline: [Statusline](./lua/rockyz/statusline.lua)
 * Concise LSP progress message in bottom right: [LSP progress](./lua/rockyz/lsp/progress.lua)
@@ -31,7 +33,7 @@ Plugins essential to my setup:
 * Minimal plugin manager [minpac](https://github.com/k-takata/minpac)
 * Nvim builtin LSP client configured by [nvim-lspconfig](https://github.com/neovim/nvim-lspconfig)
 * Treesitter support [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter)
-* Powerful auto-completion backed by [nvim-cmp](https://github.com/hrsh7th/nvim-cmp)
+* Powerful auto-completion backed by [blink.cmp](https://github.com/Saghen/blink.cmp)
 * Fully Git integration with [vim-fugitive](https://github.com/tpope/vim-fugitive), [gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim), [vim-flog](https://github.com/rbong/vim-flog), etc
 * Consolidated code formatting via [conform.nvim](https://github.com/stevearc/conform.nvim)
 * Snippet engine [LuaSnip](https://github.com/L3MON4D3/LuaSnip)

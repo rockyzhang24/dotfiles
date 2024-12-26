@@ -9,7 +9,7 @@ local plugins = {
     'tpope/vim-surround',
     'tpope/vim-sleuth',
     'tpope/vim-repeat',
-    'uga-rosa/ccc.nvim',
+    'brenoprata10/nvim-highlight-colors',
     'godlygeek/tabular',
     'mbbill/undotree',
     'mhinz/vim-grepper',

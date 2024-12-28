@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# Color theme for fzf, bat, etc
+# Options: arctic, monokai
+export COLOR_THEME="arctic"
+
 export XDG_CONFIG_HOME=$HOME/.config
 export XDG_DATA_HOME=$HOME/.local/share
 
@@ -55,7 +59,8 @@ export CLICOLOR=1
 export LSCOLORS='ExfxcxdxbxGxDxabagacad'
 
 # Bat
-export BAT_THEME='Monokai Extended Origin'
+[[ $COLOR_THEME == 'monokai' ]] && export BAT_THEME='Monokai Extended Origin'
+[[ $COLOR_THEME == 'arctic' ]] && export BAT_THEME='arctic'
 
 #
 # User-defined

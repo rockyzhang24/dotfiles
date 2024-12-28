@@ -503,7 +503,7 @@ local groups = {
     ['@punctuation.delimiter'] = { fg = norm_fg }, -- delimiters (e.g. `;` / `.` / `,`)
     ['@punctuation.bracket'] = { fg = norm_fg }, -- brackets (e.g. `()` / `{}` / `[]`)
     ['@punctuation.special'] = { fg = pink }, -- special symbols (e.g. `{}` in string interpolation)
-    ['@punctuation.special.markdown'] = { fg = brown3 }, -- special symbols (e.g. `{}` in string interpolation)
+    ['@punctuation.special.markdown'] = { fg = brown3 }, -- quote mark `>` in markdown
 
     -- Comments
     ['@comment'] = 'Comment', -- line and block comments
@@ -600,7 +600,8 @@ local groups = {
     -- ["@lsp.mod.documentation"] = "", -- occurrences of symbols in documentation.
     ['@lsp.mod.defaultLibrary'] = { fg = blue }, -- symbols that are part of the standard library. (support.*)
 
-    -- Others
+    -- Predefined in vscode
+    -- (https://code.visualstudio.com/api/language-extensions/semantic-highlight-guide#predefined-textmate-scope-mappings)
     ['@lsp.typemod.type.defaultLibrary'] = { fg = blue, italic = true }, -- (support.type)
     ['@lsp.typemod.class.defaultLibrary'] = { fg = blue, italic = true }, -- (support.class)
     ['@lsp.typemod.function.defaultLibrary'] = { fg = blue }, -- (support.function)
@@ -608,6 +609,7 @@ local groups = {
     ['@lsp.typemod.variable.readonly.defaultLibrary'] = { fg = blue }, -- (support.constant)
     ['@lsp.typemod.property.readonly'] = '@property', -- (variable.other.constant.property)
 
+    -- Others
     ['@lsp.type.escapeSequence'] = '@string.escape',
     ['@lsp.type.builtinType'] = '@type.builtin',
     ['@lsp.type.selfParamete'] = '@variable.parameter',

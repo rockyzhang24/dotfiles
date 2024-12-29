@@ -1,0 +1,55 @@
+font-family = ""
+font-family = "JetBrains Mono"
+font-size = 14
+
+# Disable ligatures
+font-feature = -calt
+font-feature = -liga
+font-feature = -dlig
+
+theme = arctic
+
+macos-option-as-alt = left
+
+#
+# Keybindings
+#
+# ctrl+shift+key for those keybindings that needs to be pressed repeatedly
+# ctrl+; as the leader key for other keybindings
+#
+
+keybind = cmd+ctrl+,=reload_config
+keybind = ctrl+;>s=write_screen_file:paste
+keybind = ctrl+;>i=inspector:toggle
+keybind = global:opt+grave_accent=toggle_quick_terminal
+
+# Scroll
+keybind = ctrl+shift+d=scroll_page_fractional:0.5
+keybind = ctrl+shift+u=scroll_page_fractional:-0.5
+keybind = ctrl+shift+nine=scroll_to_top
+keybind = ctrl+shift+zero=scroll_to_bottom
+keybind = ctrl+shift+z=jump_to_prompt:-1
+keybind = ctrl+shift+x=jump_to_prompt:1
+
+# Tab
+keybind = ctrl+shift+[=previous_tab
+keybind = ctrl+shift+]=next_tab
+keybind = ctrl+shift+,=move_tab:-1
+keybind = ctrl+shift+.=move_tab:1
+
+# Split
+keybind = ctrl+;>\=new_split:right
+keybind = ctrl+;>-=new_split:down
+keybind = ctrl+shift+enter=new_split:auto
+keybind = ctrl+shift+h=goto_split:left
+keybind = ctrl+shift+j=goto_split:bottom
+keybind = ctrl+shift+k=goto_split:top
+keybind = ctrl+shift+l=goto_split:right
+keybind = ctrl+;>m=toggle_split_zoom
+keybind = ctrl+shift+up=resize_split:up,10
+keybind = ctrl+shift+down=resize_split:down,10
+keybind = ctrl+shift+left=resize_split:left,10
+keybind = ctrl+shift+right=resize_split:right,10
+
+# Make <C-/> work in Neovim
+keybind = ctrl+/=text:\x1f

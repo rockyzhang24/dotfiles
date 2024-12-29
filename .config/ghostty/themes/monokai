@@ -1,0 +1,23 @@
+palette = 0=#272822
+palette = 1=#f92472
+palette = 2=#a6e22c
+palette = 3=#e7db74
+palette = 4=#67d8ef
+palette = 5=#ac80ff
+palette = 6=#5fd7d7
+palette = 7=#d8d8d8
+palette = 8=#4a4d48
+palette = 9=#ff5a8f
+palette = 10=#ccff66
+palette = 11=#f3e58f
+palette = 12=#92eaff
+palette = 13=#c4a6ff
+palette = 14=#a6f7f7
+palette = 15=#f8f8f8
+background = 272822
+foreground = f8f8f2
+# Use the cursor color in Tsoding's Emacs
+cursor-color = ffdd33
+cursor-text = 272822
+selection-background = 555449
+selection-foreground = 272822

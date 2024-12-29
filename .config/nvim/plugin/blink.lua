@@ -78,7 +78,9 @@ require('blink.cmp').setup({
     },
     completion = {
         list = {
-            selection = 'auto_insert',
+            selection = function(ctx)
+                return ctx.mode == 'cmdline' and 'auto_insert' or 'preselect'
+            end,
         },
         menu = {
             border = vim.g.border_style,

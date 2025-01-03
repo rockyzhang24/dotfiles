@@ -88,6 +88,9 @@ local function name_component()
     if ft == 'aerial' then
         return 'Outline [Aerial]'
     end
+    if ft == 'Outline' then
+        return 'Outline'
+    end
     if ft == 'floggraph' or ft == 'fugitive' or ft == 'oil' or ft == 'term' then
         return vim.fn.expand('%')
     end

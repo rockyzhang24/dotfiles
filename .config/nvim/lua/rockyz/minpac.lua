@@ -48,7 +48,7 @@ local plugins = {
     'SmiteshP/nvim-navic',
     'smjonas/inc-rename.nvim',
     'b0o/SchemaStore.nvim',
-    'stevearc/aerial.nvim',
+    'hedyhli/outline.nvim',
 
     -- Autocomplete
     {

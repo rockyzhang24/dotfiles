@@ -79,6 +79,12 @@ icons.caret = {
     right = '',
 }
 
+icons.access = {
+    public = '○',
+    protected = '◉',
+    private = '●',
+}
+
 icons.misc = {
     book = ' ',
     check = ' ',

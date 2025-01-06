@@ -952,6 +952,12 @@ local groups = {
     QuickScopeSecondary = { fg = '#ff00ff', bold = true, underline = true, sp = '#ff00ff' },
 
     --
+    -- Tagbar
+    --
+    TagbarFoldIcon = 'Normal',
+    TagbarType = 'Comment',
+
+    --
     -- Ripgrep
     --
 

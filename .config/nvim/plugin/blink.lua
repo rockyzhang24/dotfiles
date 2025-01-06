@@ -4,6 +4,7 @@ require('blink.cmp').setup({
     keymap = {
         ['<C-Enter>'] = { 'show', 'show_documentation', 'hide_documentation' },
         ['<C-e>'] = { 'cancel', 'fallback' },
+        ['<C-\\>'] = { 'hide', 'fallback' },
         ['<C-y>'] = { 'select_and_accept' },
 
         ['<C-p>'] = {
@@ -55,12 +56,6 @@ require('blink.cmp').setup({
     sources = {
         default = { 'lsp', 'snippets', 'luasnip', 'buffer', 'path' },
         providers = {
-            lsp = {
-                -- By default it fallbacks to 'buffer'. It means buffer items will only be listed
-                -- when lsp returns 0 items. I want buffer items to always be listed, so I remove
-                -- 'buffer' from the fallbacks.
-                fallbacks = {},
-            },
             buffer = {
                 min_keyword_length = 4,
             },
@@ -78,9 +73,10 @@ require('blink.cmp').setup({
     },
     completion = {
         list = {
-            selection = function(ctx)
-                return ctx.mode == 'cmdline' and 'auto_insert' or 'preselect'
-            end,
+            -- selection = function(ctx)
+            --     return ctx.mode == 'cmdline' and 'auto_insert' or 'preselect'
+            -- end,
+            selection = 'auto_insert',
         },
         menu = {
             border = vim.g.border_style,

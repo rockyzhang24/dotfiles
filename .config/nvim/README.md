@@ -6,7 +6,7 @@ Simple but featured. Focused on ergonomics, mnemonics and consistency.
 
 Cherry pick the lines you need and totally understand.
 
-Always a WIP 🏗
+Always a WIP 🏗️
 
 <img width="1774" alt="nvim-demo" src="https://github.com/user-attachments/assets/9bfbfa4f-a108-4479-b0ff-2113e74bbddf">
 
@@ -33,7 +33,7 @@ Plugins essential to my setup:
 * Minimal plugin manager [minpac](https://github.com/k-takata/minpac)
 * Nvim builtin LSP client configured by [nvim-lspconfig](https://github.com/neovim/nvim-lspconfig)
 * Treesitter support [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter)
-* Powerful auto-completion backed by [blink.cmp](https://github.com/Saghen/blink.cmp)
+* Ultra-fast auto-completion backed by [blink.cmp](https://github.com/Saghen/blink.cmp)
 * Fully Git integration with [vim-fugitive](https://github.com/tpope/vim-fugitive), [gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim), [vim-flog](https://github.com/rbong/vim-flog), etc
 * Consolidated code formatting via [conform.nvim](https://github.com/stevearc/conform.nvim)
 * Snippet engine [LuaSnip](https://github.com/L3MON4D3/LuaSnip)

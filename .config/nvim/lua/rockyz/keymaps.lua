@@ -123,6 +123,13 @@ vim.keymap.set('n', '<Leader><Leader>x', '<Cmd>source %<CR>') -- execute the cur
 vim.keymap.set('n', '<Leader>x', ':.lua<CR>') -- execute the current line
 vim.keymap.set('v', '<Leader>x', ':lua<CR>') -- execute the selected lines
 
+-- Insert on-the-fly snippet (expand snippet stored in register s)
+-- Uncomment this after discarding LuaSnip
+-- vim.keymap.set('i', '<C-r>s', function()
+--     local snippet = vim.fn.getreg 's'
+--     vim.snippet.expand(snippet)
+-- end)
+
 --
 -- Search
 --

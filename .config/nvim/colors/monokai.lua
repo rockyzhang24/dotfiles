@@ -954,8 +954,10 @@ local groups = {
     --
     -- Tagbar
     --
-    TagbarFoldIcon = 'Normal',
+
     TagbarType = 'Comment',
+    TagbarSignature = 'Normal',
+    TagbarFoldIcon = 'Normal',
 
     --
     -- Ripgrep

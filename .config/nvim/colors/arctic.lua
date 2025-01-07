@@ -51,6 +51,8 @@ local ok_green = '#89d185' -- color for success, so i use notebookstatussuccessi
 local error_list = '#f88070' -- list.errorForeground, for list items (like files in file explorer) containing errors
 local warn_list = '#cca700' -- list.warningForeground, for list items containing warnings
 
+local hint_virtualtext_bg = '#262626'
+
 local selected_item_bg = '#04395e' -- editorSuggestWidget.selectedBackground
 local matched_chars = '#2aaaff' -- editorSuggestWidget.focusHighlightForeground, color for the matched characters in the autocomplete menu
 local folded_line_bg = '#212d3a' -- editor.foldBackground
@@ -189,7 +191,7 @@ local groups = {
     DiagnosticVirtualTextError = { fg = error_red, bg = '#332323' },
     DiagnosticVirtualTextWarn = { fg = warn_yellow, bg = '#2f2c1b' },
     DiagnosticVirtualTextInfo = { fg = info_blue, bg = '#212a35' },
-    DiagnosticVirtualTextHint = { fg = hint_gray, bg = black },
+    DiagnosticVirtualTextHint = { fg = util.lighten(hint_virtualtext_bg, 0.3), bg = hint_virtualtext_bg },
     DiagnosticVirtualTextOk = { fg = ok_green, bg = '#233323' },
     DiagnosticUnderlineError = { undercurl = true, sp = error_red },
     DiagnosticUnderlineWarn = { undercurl = true, sp = warn_yellow },

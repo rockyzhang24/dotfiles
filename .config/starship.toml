@@ -99,15 +99,19 @@ vimcmd_replace_one_symbol = '[](bold fg:color_purple)'
 vimcmd_replace_symbol = '[](bold fg:color_purple)'
 vimcmd_visual_symbol = '[](bold fg:color_yellow)'
 
+[cmd_duration]
+style = 'bg:color_blue'
+format = '[ took $duration ](fg:color_fg0 bg:color_blue)'
+
 [c]
 symbol = ' '
 style = 'bg:color_blue'
-format = '[$symbol( $version) ](fg:color_fg0 bg:color_blue)'
+format = '[ $symbol( $version) ](fg:color_fg0 bg:color_blue)'
 
 [cmake]
 symbol = '△ '
 style = 'bg:color_blue'
-format = '[$symbol( $version) ](fg:color_fg0 bg:color_blue)'
+format = '[ $symbol( $version) ](fg:color_fg0 bg:color_blue)'
 
 [conda]
 style = 'bg:color_bg3'
@@ -116,59 +120,59 @@ format = '[ $symbol( $environment) ](fg:#83a598 bg:color_bg3)'
 [docker_context]
 symbol = ' '
 style = 'bg:color_bg3'
-format = '[$symbol( $context) ](fg:#83a598 bg:color_bg3)'
+format = '[ $symbol( $context) ](fg:#83a598 bg:color_bg3)'
 
 [golang]
 symbol = ' '
 style = 'bg:color_blue'
-format = '[$symbol( $version) ](fg:color_fg0 bg:color_blue)'
+format = '[ $symbol( $version) ](fg:color_fg0 bg:color_blue)'
 
 [java]
 symbol = ' '
 style = 'bg:color_blue'
-format = '[$symbol( $version) ](fg:color_fg0 bg:color_blue)'
+format = '[ $symbol( $version) ](fg:color_fg0 bg:color_blue)'
 
 [kotlin]
 symbol = ' '
 style = 'bg:color_blue'
-format = '[$symbol( $version) ](fg:color_fg0 bg:color_blue)'
+format = '[ $symbol( $version) ](fg:color_fg0 bg:color_blue)'
 
 [lua]
 symbol = ' '
 style = 'bg:color_blue'
-format = '[$symbol( $version) ](fg:color_fg0 bg:color_blue)'
+format = '[ $symbol( $version) ](fg:color_fg0 bg:color_blue)'
 
 [nodejs]
 symbol = ' '
 style = 'bg:color_blue'
-format = '[$symbol( $version) ](fg:color_fg0 bg:color_blue)'
+format = '[ $symbol( $version) ](fg:color_fg0 bg:color_blue)'
 
 [ocaml]
 symbol = ' '
 style = 'bg:color_blue'
-format = '[$symbol( $version) ](fg:color_fg0 bg:color_blue)'
+format = '[ $symbol( $version) ](fg:color_fg0 bg:color_blue)'
 
 [perl]
 symbol = ' '
 style = 'bg:color_blue'
-format = '[$symbol( $version) ](fg:color_fg0 bg:color_blue)'
+format = '[ $symbol( $version) ](fg:color_fg0 bg:color_blue)'
 
 [php]
 symbol = ' '
 style = 'bg:color_blue'
-format = '[$symbol( $version) ](fg:color_fg0 bg:color_blue)'
+format = '[ $symbol( $version) ](fg:color_fg0 bg:color_blue)'
 
 [python]
 symbol = ' '
 style = 'bg:color_blue'
-format = '[$symbol( $version) ](fg:color_fg0 bg:color_blue)'
+format = '[ $symbol( $version) ](fg:color_fg0 bg:color_blue)'
 
 [rust]
 symbol = ' '
 style = 'bg:color_blue'
-format = '[$symbol( $version) ](fg:color_fg0 bg:color_blue)'
+format = '[ $symbol( $version) ](fg:color_fg0 bg:color_blue)'
 
 [zig]
 symbol = ' '
 style = 'bg:color_blue'
-format = '[$symbol( $version) ](fg:color_fg0 bg:color_blue)'
+format = '[ $symbol( $version) ](fg:color_fg0 bg:color_blue)'

@@ -155,6 +155,8 @@ local groups = {
     TabWarnActive = { fg = warn_list, bg = tab_active_bg },
     TabIndicatorActive = { fg = tab_indicator_active_fg, bg = tab_active_bg },
     TabIndicatorInactive = { fg = tab_indicator_inactive_fg, bg = tab_inactive_bg },
+    -- Indent scope
+    IndentScopeSymbol = 'Delimiter',
 
     --
     -- diff

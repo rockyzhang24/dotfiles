@@ -20,13 +20,14 @@ Functionalities I implemented:
 
 * Comprehensive and aesthetic statusline: [Statusline](./lua/rockyz/statusline.lua)
 * Concise LSP progress message in bottom right: [LSP progress](./lua/rockyz/lsp/progress.lua)
-* VSCode style lightbulb: [Lightbulb](./lua/rockyz/lsp/lightbulb.lua)
-* Minimalist indentation guide based on `listchars`: [Indent guide](./lua/rockyz/indentline.lua)
+* Lightbulb with VSCode-style: [Lightbulb](./lua/rockyz/lsp/lightbulb.lua)
+* Minimalist indent guide built on `listchars`: [Indent guide](./lua/rockyz/indentline.lua)
+* Neat indent scope display with support for motions and text objects: [Indent scope](./lua/rockyz/indentscope.lua)
 * Appealing winbar showing file path, diagnostics and breadcrumbss: [Winbar](./lua/rockyz/winbar.lua)
 * Elegant tabline: [Tabline](./lua/rockyz/tabline.lua)
 * Simple yet efficient statuscolumn: [Statuscolumn](./lua/rockyz/statuscolumn.lua)
 * Clean and visually pleasing quickfix window: [Quickfix window](./lua/rockyz/quickfix.lua)
-* A comprehensive set of lightning-fast fuzzy finders built on fzf.vim: [Fuzzy finders](./plugin/fzf.lua)
+* Comprehensive set of lightning-fast fuzzy finders built on fzf.vim: [Fuzzy finders](./plugin/fzf.lua)
 
 Plugins essential to my setup:
 

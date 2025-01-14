@@ -6,6 +6,8 @@
 -- 2. If using tab as indentation: set leadmultispace to a special character for denotation and tab
 --    to the indent line character.
 
+local symbol = require('rockyz.icons').lines.indentline
+
 local function indentchar_update(is_local)
     local tab
     local leadmultispace
@@ -17,10 +19,10 @@ local function indentchar_update(is_local)
             spaces = vim.api.nvim_get_option_value('tabstop', {})
         end
         tab = '› '
-        leadmultispace = vim.g.indentline_char .. string.rep(' ', spaces - 1)
+        leadmultispace = symbol .. string.rep(' ', spaces - 1)
     else
         -- For tab indentation
-        tab = vim.g.indentline_char .. ' '
+        tab = symbol .. ' '
         leadmultispace = '␣'
     end
 

@@ -47,6 +47,11 @@ icons.symbol_kinds = {
     Unknown = ' ',
 }
 
+icons.lines = {
+    indentline = '|',
+    indentscope = '╎',
+}
+
 icons.diagnostics = {
     ERROR = ' ',
     WARN = ' ',

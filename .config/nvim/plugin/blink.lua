@@ -54,22 +54,21 @@ require('blink.cmp').setup({
         },
     },
     sources = {
-        default = { 'lsp', 'snippets', 'luasnip', 'buffer', 'path' },
+        default = { 'lsp', 'snippets', 'buffer', 'path' },
         providers = {
+            lsp = {
+                -- By default it fallbacks to 'buffer'. It means buffer items will only be listed
+                -- when lsp returns 0 items. Remove 'buffer' from the fallbacks to make buffer items
+                -- be always listed.
+                fallbacks = {},
+            },
             buffer = {
                 min_keyword_length = 4,
             },
         },
     },
     snippets = {
-      expand = function(snippet) require('luasnip').lsp_expand(snippet) end,
-      active = function(filter)
-        if filter and filter.direction then
-          return require('luasnip').jumpable(filter.direction)
-        end
-        return require('luasnip').in_snippet()
-      end,
-      jump = function(direction) require('luasnip').jump(direction) end,
+        preset = 'luasnip',
     },
     completion = {
         list = {
@@ -77,7 +76,9 @@ require('blink.cmp').setup({
                 preselect = function(ctx)
                     return ctx.mode ~= 'cmdline'
                 end,
-                auto_insert = true,
+                auto_insert = function(ctx)
+                    return ctx.mode == 'cmdline'
+                end,
             },
         },
         menu = {

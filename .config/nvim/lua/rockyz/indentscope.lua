@@ -7,7 +7,7 @@
 --
 -- {
 --     body = {
---         top: line number of top line in scope --------|__ scope boundaries
+--         top: line number of top line in scope --------|-- scope boundaries
 --         bottom: line number of bottom line in scope --|
 --         indent: minimum indent within the scope
 --     },
@@ -110,6 +110,7 @@ local function get_line_indent(line)
         indent = math.max(indent, next_indent)
     end
 
+    -- Return -1 if line is invalid, i.e., line is less than 1 and larger than vim.fn.line('$')
     return indent
 end
 
@@ -117,7 +118,7 @@ end
 ---adjacent lines.
 ---@param line number
 ---@return number
-local function line_corrector(line)
+local function adjust_border(line)
     local prev_indent, cur_indent, next_indent =
         get_line_indent(line - 1), get_line_indent(line), get_line_indent(line + 1)
     if prev_indent <= cur_indent and next_indent <= cur_indent then
@@ -132,11 +133,11 @@ end
 ---Find the boundary of the scope that the input line belongs to.
 ---@param line number Input line number
 ---@param indent number Indent of the input line
----@param direction string Search direction from the input line, either 'up' or 'down'
+---@param side string Which boundary to find, 'top' or 'bottom'
 ---@return number # Line number of the boundary in the specified direction
-local function search_scope_boundary(line, indent, direction)
+local function search_scope_boundary(line, indent, side)
     local final_line, increment = 1, -1
-    if direction == 'down' then
+    if side == 'bottom' then
         final_line, increment = vim.fn.line('$'), 1
     end
     for l = line, final_line, increment do
@@ -148,14 +149,33 @@ local function search_scope_boundary(line, indent, direction)
     return final_line
 end
 
+---Get the complete scope from its body
+---@param body table Scope body
+---@return table
+local function scope_from_body(body)
+    return {
+        body = body,
+        border = {
+            -- border's top can be 0 if body's top line is line 1 and border's bottom can
+            -- be vim.fn.line('$') + 1 if body's bottom line is the last line. If both
+            -- case are met, border's idnent will be -1.
+            top = body.top - 1,
+            bottom = body.bottom + 1,
+            indent = math.max(get_line_indent(body.top - 1), get_line_indent(body.bottom + 1))
+        },
+        buf_id = vim.api.nvim_get_current_buf(),
+    }
+end
+
 ---@param line number? Input line number
 ---@param col number?
 ---@return table
-local function get_scope(line, col)
+local function get_scope(line, col, opts)
+    opts = vim.tbl_extend('force', config, opts or {})
     if not (line and col) then
         local curpos = vim.fn.getcurpos()
         line = line or curpos[2]
-        line = config.show_body_at_border and line_corrector(line) or line
+        line = opts.show_body_at_border and adjust_border(line) or line
         col = col or (config.indent_at_cursor_col and curpos[5] or math.huge)
     end
     local line_indent = get_line_indent(line)
@@ -164,24 +184,16 @@ local function get_scope(line, col)
     if indent <= 0 then
         body.top, body.bottom, body.indent = 1, vim.fn.line('$'), line_indent
     else
-        body.top = search_scope_boundary(line, indent, 'up')
-        body.bottom = search_scope_boundary(line, indent, 'down')
+        body.top = search_scope_boundary(line, indent, 'top')
+        body.bottom = search_scope_boundary(line, indent, 'bottom')
         body.indent = indent
     end
-    return {
-        body = body,
-        border = {
-            top = body.top - 1,
-            bottom = body.bottom + 1,
-            indent = math.max(get_line_indent(body.top - 1), get_line_indent(body.bottom + 1))
-        },
-        buf_id = vim.api.nvim_get_current_buf(),
-        reference = {
-            line = line,
-            column = col,
-            indent = indent,
-        },
-    }
+    return scope_from_body(body)
+end
+
+---Get the indent of the scope symbol
+local function get_draw_indent(scope)
+    return scope.border.indent
 end
 
 ---Check if two scopes are identical
@@ -190,7 +202,7 @@ end
 ---@return boolean
 local function scopes_are_equal(scope_1, scope_2)
     return scope_1.buf_id == scope_2.buf_id
-        and scope_1.border.indent == scope_2.border.indent
+        and get_draw_indent(scope_1) == get_draw_indent(scope_2)
         and scope_1.body.top == scope_2.body.top
         and scope_1.body.bottom == scope_2.body.bottom
 end
@@ -200,7 +212,7 @@ end
 ---@param scope_2 table
 ---@return boolean
 local function scopes_have_intersect(scope_1, scope_2)
-    if scope_1.buf_id ~= scope_2.buf_id or scope_1.border.indent ~= scope_2.border.indent then
+    if scope_1.buf_id ~= scope_2.buf_id or get_draw_indent(scope_1) ~= get_draw_indent(scope_2) then
         return false
     end
     local body_1, body_2 = scope_1.body, scope_2.body
@@ -226,7 +238,7 @@ end
 local function draw_scope(scope, opts)
     scope = scope or {}
     opts = opts or {}
-    local indent = scope.border.indent
+    local indent = get_draw_indent(scope)
     if indent < 0 then
         return
     end
@@ -301,3 +313,131 @@ vim.api.nvim_create_autocmd({ 'TextChanged', 'TextChangedI', 'TextChangedP', 'Wi
         auto_draw()
     end,
 })
+
+--
+-- Motions and text objects
+--
+-- [i, ]i
+-- * Jump to the top or bottom border of the scope where the cursor is currently located. If the
+-- cursor happens to be on the border, jump to the border of the parent scope.
+-- * Both support count, e.g., 2[i
+--
+-- ii, ai
+-- * ii (inner indent) selects the scope body
+-- * ai (around indent) selects the whole scope (body + border)
+-- * ai supports count, e.g., v2ai
+-- * Support dot-repeat in operator-pending mode
+--
+
+---Expand the current scope from either side of its border and return the new scope
+---@param scope table
+---@param side string From which border to expand, 'top' or 'bottom'
+---@return table # The newly expanded scope
+local function scope_expand(scope, side)
+    local new_body = {}
+    local indent = vim.fn.indent(scope.border[side])
+    new_body.top = search_scope_boundary(scope.border.top, indent, 'top')
+    new_body.bottom = search_scope_boundary(scope.border.bottom, indent, 'bottom')
+    new_body.indent = indent
+    return scope_from_body(new_body)
+end
+
+---Jump to certain side of a scope. Cursor will be placed on the first non-blank character of the
+---target line
+---@param side string 'top' or 'bottom'
+---@param include_border boolean Whether to jump to the border or just to the boundary of the scope body
+---@param scope table
+local function jump_to_side(side, include_border, scope)
+    scope = scope or get_scope()
+    local target_line = include_border and scope.border[side] or scope.body[side]
+    target_line = math.min(math.max(target_line, 1), vim.fn.line('$'))
+    vim.api.nvim_win_set_cursor(0, { target_line, 0 })
+    -- Move to the first non-blank character to allow next jump if count > 1
+    vim.cmd('normal! ^')
+end
+
+---@param side string 'top' or 'bottom'
+---@param update_jumplist boolean? Whether to add movement to jumplist
+local function jump(side, update_jumplist)
+    local scope = get_scope()
+    if scope.border.indent < 0 then
+        return
+    end
+    -- If the current line happens to be a border of a scope, jump to the certain side of its
+    -- surrounding scope
+    local cur_line = vim.fn.line('.')
+    if
+        cur_line == scope.border.top and side == 'top'
+        or cur_line == scope.border.bottom and side == 'bottom'
+    then
+        scope = scope_expand(scope, side)
+    end
+    -- Save count because add to jumplist will reset count1 to 1
+    local count = vim.v.count1
+    if update_jumplist then
+        vim.cmd('normal! m`')
+    end
+    -- Jump
+    for _ = 1, count do
+        jump_to_side(side, true, scope)
+        -- Use `show_body_at_border = false` for continuous jump when count > 1
+        scope = get_scope(nil, nil, { show_body_at_border = false })
+        if get_draw_indent(scope) < 0 then
+            return
+        end
+    end
+end
+
+local function exit_visual_mode()
+    local ctrl_v = vim.api.nvim_replace_termcodes('<C-v>', true, true, true)
+    local cur_mode = vim.fn.mode()
+    if cur_mode == 'v' or cur_mode == 'V' or cur_mode == ctrl_v then vim.cmd('normal! ' .. cur_mode) end
+end
+
+---@param include_border boolean Whether to include the border of the scope in textobject
+local function textobject(include_border)
+    local scope = get_scope()
+    if get_draw_indent(scope) < 0 then
+        return
+    end
+
+    -- Allow count only if the textobject includes border, i.e., `ai`
+    local count = include_border and vim.v.count1 or 1
+
+    for _ = 1, count do
+        exit_visual_mode()
+        jump_to_side('top', include_border, scope)
+        vim.cmd('normal! V')
+        jump_to_side('bottom', include_border, scope)
+
+        -- Use `show_body_at_border = false` for continuous jump when count > 1
+        scope = get_scope(nil, nil, { show_body_at_border = false })
+        if get_draw_indent(scope) < 0 then
+            return
+        end
+    end
+end
+
+vim.keymap.set('n', '[i', function()
+    jump('top', true)
+end)
+
+vim.keymap.set('n', ']i', function()
+    jump('bottom', true)
+end)
+
+vim.keymap.set({ 'x', 'o' }, '[i', function()
+    jump('top')
+end)
+
+vim.keymap.set({ 'x', 'o' }, ']i', function()
+    jump('bottom')
+end)
+
+vim.keymap.set({ 'x', 'o' }, 'ii', function()
+    textobject(false)
+end)
+
+vim.keymap.set({ 'x', 'o' }, 'ai', function()
+    textobject(true)
+end)

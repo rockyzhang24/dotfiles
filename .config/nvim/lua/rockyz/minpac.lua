@@ -23,7 +23,6 @@ local plugins = {
     'stevearc/conform.nvim',
     'Wansmer/treesj',
     'willothy/flatten.nvim',
-    'michaeljsmith/vim-indent-object',
     'junegunn/vim-after-object',
     -- ii for inner indentation, ai for indentation and one line above, aI for indentation and
     -- lines above and below

@@ -81,6 +81,11 @@ require('blink.cmp').setup({
                 end,
             },
         },
+        accept = {
+            auto_brackets = {
+                enabled = false,
+            },
+        },
         menu = {
             border = vim.g.border_style,
             draw = {

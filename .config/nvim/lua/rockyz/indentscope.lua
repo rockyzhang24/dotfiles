@@ -176,7 +176,7 @@ local function get_scope(line, col, opts)
         local curpos = vim.fn.getcurpos()
         line = line or curpos[2]
         line = opts.show_body_at_border and adjust_border(line) or line
-        col = col or (config.indent_at_cursor_col and curpos[5] or math.huge)
+        col = col or (opts.indent_at_cursor_col and curpos[5] or math.huge)
     end
     local line_indent = get_line_indent(line)
     local indent = math.min(col, line_indent)
@@ -344,10 +344,10 @@ end
 
 ---Jump to certain side of a scope. Cursor will be placed on the first non-blank character of the
 ---target line
+---@param scope table
 ---@param side string 'top' or 'bottom'
 ---@param include_border boolean Whether to jump to the border or just to the boundary of the scope body
----@param scope table
-local function jump_to_side(side, include_border, scope)
+local function jump_to_side(scope, side, include_border)
     scope = scope or get_scope()
     local target_line = include_border and scope.border[side] or scope.body[side]
     target_line = math.min(math.max(target_line, 1), vim.fn.line('$'))
@@ -379,7 +379,7 @@ local function jump(side, update_jumplist)
     end
     -- Jump
     for _ = 1, count do
-        jump_to_side(side, true, scope)
+        jump_to_side(scope, side, true)
         -- Use `show_body_at_border = false` for continuous jump when count > 1
         scope = get_scope(nil, nil, { show_body_at_border = false })
         if get_draw_indent(scope) < 0 then
@@ -391,7 +391,14 @@ end
 local function exit_visual_mode()
     local ctrl_v = vim.api.nvim_replace_termcodes('<C-v>', true, true, true)
     local cur_mode = vim.fn.mode()
-    if cur_mode == 'v' or cur_mode == 'V' or cur_mode == ctrl_v then vim.cmd('normal! ' .. cur_mode) end
+    if cur_mode == 'v' or cur_mode == 'V' or cur_mode == ctrl_v then vim.cmd('noautocmd normal! ' .. cur_mode) end
+end
+
+local function visual_select_scope(scope, include_border)
+    exit_visual_mode()
+    jump_to_side(scope, 'top', include_border)
+    vim.cmd('normal! V')
+    jump_to_side(scope, 'bottom', include_border)
 end
 
 ---@param include_border boolean Whether to include the border of the scope in textobject
@@ -405,10 +412,7 @@ local function textobject(include_border)
     local count = include_border and vim.v.count1 or 1
 
     for _ = 1, count do
-        exit_visual_mode()
-        jump_to_side('top', include_border, scope)
-        vim.cmd('normal! V')
-        jump_to_side('bottom', include_border, scope)
+        visual_select_scope(scope, include_border)
 
         -- Use `show_body_at_border = false` for continuous jump when count > 1
         scope = get_scope(nil, nil, { show_body_at_border = false })
@@ -440,4 +444,72 @@ end)
 
 vim.keymap.set({ 'x', 'o' }, 'ai', function()
     textobject(true)
+end)
+
+--
+-- Incremental selection
+--
+-- <C-i> to expand
+-- <M-i> to shrink
+--
+
+---Push when expand and pop when shrink
+local stack = {}
+
+---Get the line with minimal indent within the given line range
+---@param s_line number Start line
+---@param e_line number End line
+---@return number
+local function line_with_min_indent(s_line, e_line)
+    local line
+    local min_indent = math.huge
+    for l = s_line, e_line do
+        local indent = vim.fn.indent(l)
+        if indent < min_indent then
+            min_indent = indent
+            line = l
+        end
+    end
+    return line
+end
+
+local function incremental_selection()
+    local s_line = vim.fn.line('v')
+    local e_line = vim.fn.line('.')
+    local min_line = line_with_min_indent(s_line, e_line)
+    local scope = get_scope(min_line, nil, {
+        show_body_at_border = false,
+        indent_at_cursor_col = false
+    })
+    local select_border = false
+    if s_line == scope.body.top and e_line == scope.body.bottom then
+        select_border = true
+    end
+    visual_select_scope(scope, select_border)
+    stack[#stack + 1] = { scope, select_border }
+end
+
+-- Expand
+vim.keymap.set({ 'n', 'x' }, '<C-i>', function()
+    -- Reset the stack when incremental selection finishes
+    local group = vim.api.nvim_create_augroup('rockyz.indentscope.reset_stack', { clear = true })
+    vim.api.nvim_create_autocmd('ModeChanged', {
+        group = group,
+        pattern = '[vV\x22]*:[ni]',
+        callback = function()
+            stack = {}
+            vim.api.nvim_del_augroup_by_name('rockyz.indentscope.reset_stack')
+        end,
+    })
+    incremental_selection()
+end)
+
+-- Shrink
+vim.keymap.set('x', '<M-i>', function()
+    stack[#stack] = nil
+    local top = stack[#stack]
+    if not top then
+        return
+    end
+    visual_select_scope(unpack(top))
 end)

@@ -80,7 +80,7 @@ vim.g.netrw_localcopydircmd = 'cp -r'
 -- Use LSP folding if available; otherwise, fall back to treesitter folding.
 vim.o.foldmethod = 'indent' -- default
 vim.o.foldtext = '' -- transparent foldtext (https://github.com/neovim/neovim/pull/20750)
-local group = vim.api.nvim_create_augroup('rockyz/folding', { clear = true })
+local group = vim.api.nvim_create_augroup('rockyz.fold', { clear = true })
 vim.api.nvim_create_autocmd('LspAttach', {
     group = group,
     callback = function(args)

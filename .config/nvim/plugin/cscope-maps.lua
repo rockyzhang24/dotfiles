@@ -34,7 +34,7 @@ require('cscope_maps').setup({
 })
 
 -- Rebuild DB
-local group = vim.api.nvim_create_augroup("rockyz/cscope_db_build", { clear = true })
+local group = vim.api.nvim_create_augroup("rockyz.cscope.db_build", { clear = true })
 vim.api.nvim_create_autocmd("BufWritePost", {
     group = group,
     pattern = { "*.c", "*.h" },

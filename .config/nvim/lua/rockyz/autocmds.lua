@@ -13,7 +13,7 @@ local function update_git_env()
     vim.env.GIT_WORK_TREE = vim.env.HOME
 end
 vim.api.nvim_create_autocmd('VimEnter', {
-    group = vim.api.nvim_create_augroup('rockyz/dotfiles', {}),
+    group = vim.api.nvim_create_augroup('rockyz.dotfiles', {}),
     callback = function()
         update_git_env()
     end,
@@ -21,7 +21,7 @@ vim.api.nvim_create_autocmd('VimEnter', {
 
 -- Overwrite default settings in runtime/ftplugin
 vim.api.nvim_create_autocmd('FileType', {
-    group = vim.api.nvim_create_augroup('rockyz/overwrite_default_sets', {}),
+    group = vim.api.nvim_create_augroup('rockyz.overwrite_defaults', {}),
     pattern = '*',
     callback = function()
         vim.opt.formatoptions:remove('t')
@@ -32,7 +32,7 @@ vim.api.nvim_create_autocmd('FileType', {
 
 -- Jump to the position where you last quit (:h last-position-jump)
 vim.api.nvim_create_autocmd('BufRead', {
-    group = vim.api.nvim_create_augroup('rockyz/last_position_restore', {}),
+    group = vim.api.nvim_create_augroup('rockyz.restore_last_pos', {}),
     callback = function()
         vim.api.nvim_create_autocmd('FileType', {
             buffer = 0,
@@ -55,7 +55,7 @@ vim.api.nvim_create_autocmd('BufRead', {
 -- Auto-create dir when saving a file, in case some intermediate directory does not exist
 vim.api.nvim_create_autocmd({ 'BufWritePre' }, {
     pattern = '*',
-    group = vim.api.nvim_create_augroup('rockyz/auto_create_dir', {}),
+    group = vim.api.nvim_create_augroup('rockyz.auto_create_dir', {}),
     callback = function(ctx)
         -- Prevent oil.nivm from creating an extra oil:/ dir when we create a
         -- file/dir
@@ -72,7 +72,7 @@ vim.api.nvim_create_autocmd({ 'BufWritePre' }, {
 
 -- Highlight the selections on yank
 vim.api.nvim_create_autocmd({ 'TextYankPost' }, {
-    group = vim.api.nvim_create_augroup('rockyz/highlight_yank', {}),
+    group = vim.api.nvim_create_augroup('rockyz.highlight_yank', {}),
     callback = function()
         vim.hl.on_yank({ timeout = 300 })
     end,
@@ -84,7 +84,7 @@ vim.api.nvim_create_autocmd({
     'BufEnter',
     'CursorHold',
 }, {
-    group = vim.api.nvim_create_augroup('rockyz/buffer_reload', {}),
+    group = vim.api.nvim_create_augroup('rockyz.buffer_reload', {}),
     callback = function()
         if vim.fn.getcmdwintype() == '' then
             vim.cmd('checktime')
@@ -105,7 +105,7 @@ local function tbl_contains(t, value)
     end
     return false
 end
-local rnu_augroup = vim.api.nvim_create_augroup('rockyz/toggle_relative_number', {})
+local rnu_augroup = vim.api.nvim_create_augroup('rockyz.toggle_relative_number', {})
 -- Toggle relative number on
 vim.api.nvim_create_autocmd({ 'BufEnter', 'FocusGained', 'InsertLeave', 'CmdlineLeave', 'WinEnter' }, {
     group = rnu_augroup,
@@ -137,7 +137,7 @@ vim.api.nvim_create_autocmd({ 'BufLeave', 'FocusLost', 'InsertEnter', 'CmdlineEn
 
 -- Command-line window
 vim.api.nvim_create_autocmd('CmdWinEnter', {
-    group = vim.api.nvim_create_augroup('rockyz/cmdwin', {}),
+    group = vim.api.nvim_create_augroup('rockyz.cmdwin', {}),
     callback = function(args)
         -- Delete <CR> mapping (defined in treesitter for incremental selection and not work in
         -- command-line window)
@@ -149,7 +149,7 @@ vim.api.nvim_create_autocmd('CmdWinEnter', {
 
 -- Terminal
 vim.api.nvim_create_autocmd({ 'TermOpen', 'BufWinEnter', 'WinEnter' }, {
-    group = vim.api.nvim_create_augroup('rockyz/terminal_insert', {}),
+    group = vim.api.nvim_create_augroup('rockyz.terminal.start_insert', {}),
     pattern = 'term://*',
     callback = function()
         vim.cmd.startinsert()
@@ -159,7 +159,7 @@ vim.api.nvim_create_autocmd({ 'TermOpen', 'BufWinEnter', 'WinEnter' }, {
 -- Disable wezterm shell integration if vim is launched in tmux in wezterm.
 -- Ref: https://github.com/wez/wezterm/issues/5986
 vim.api.nvim_create_autocmd('VimEnter', {
-    group = vim.api.nvim_create_augroup('rockyz/shell_integration_disable', {}),
+    group = vim.api.nvim_create_augroup('rockyz.wezterm.shell_integration_disable', {}),
     callback = function()
         if vim.env.WEZTERM_PANE and vim.env.TERM:match('tmux') then
             vim.env.WEZTERM_SHELL_SKIP_ALL = 1
@@ -170,7 +170,7 @@ vim.api.nvim_create_autocmd('VimEnter', {
 -- In large file, only use vim syntax (LSP semantic highlight and treesitter highlight will be
 -- disabled).
 vim.api.nvim_create_autocmd('FileType', {
-    group = vim.api.nvim_create_augroup('rockyz/big_file', { clear = true }),
+    group = vim.api.nvim_create_augroup('rockyz.big_file', { clear = true }),
     pattern = 'bigfile',
     callback = function(ev)
         local path = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(ev.buf), ":p:~:.")

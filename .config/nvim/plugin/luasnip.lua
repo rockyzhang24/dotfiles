@@ -81,7 +81,7 @@ end)
 -- Cancel the snippet session when leaving insert mode
 -- Ref: https://github.com/L3MON4D3/LuaSnip/issues/656#issuecomment-1407098013
 vim.api.nvim_create_autocmd('CursorMovedI', {
-    group = vim.api.nvim_create_augroup('rockyz/unlink_snippet', { clear = true }),
+    group = vim.api.nvim_create_augroup('rockyz.luasnip.unlink_snippet', { clear = true }),
     pattern = '*',
     callback = function(ev)
         if not ls.session or not ls.session.current_nodes[ev.buf] or ls.session.jump_active then

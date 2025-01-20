@@ -80,7 +80,7 @@ local config = {
 
 local symbol = require('rockyz.icons').lines.indentscope
 
-local ns_id = vim.api.nvim_create_namespace('rockyz_indentscope')
+local ns_id = vim.api.nvim_create_namespace('rockyz.indentscope.symbols')
 
 local current = {
     -- Rendering has two steps: undraw the old scope line and draw the new scope. As the cursor
@@ -300,15 +300,15 @@ local function auto_draw(opts)
     end, draw_opts.delay)
 end
 
-vim.api.nvim_create_augroup('rockyz/indentscope', { clear = true })
+vim.api.nvim_create_augroup('rockyz.indentscope.draw', { clear = true })
 vim.api.nvim_create_autocmd({ 'CursorMoved', 'CursorMovedI', 'ModeChanged' }, {
-    group = 'rockyz/indentscope',
+    group = 'rockyz.indentscope.draw',
     callback = function()
         auto_draw({ lazy = true })
     end,
 })
 vim.api.nvim_create_autocmd({ 'TextChanged', 'TextChangedI', 'TextChangedP', 'WinScrolled' }, {
-    group = 'rockyz/indentscope',
+    group = 'rockyz.indentscope.draw',
     callback = function()
         auto_draw()
     end,

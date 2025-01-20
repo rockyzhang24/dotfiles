@@ -383,7 +383,7 @@ local function handler(args)
 end
 
 -- Display the progress message when it comes
-local group = vim.api.nvim_create_augroup('lsp_progress', { clear = true })
+local group = vim.api.nvim_create_augroup('rockyz.lsp_progress', { clear = true })
 vim.api.nvim_create_autocmd({ 'LspProgress' }, {
     group = group,
     pattern = '*',

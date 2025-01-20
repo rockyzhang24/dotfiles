@@ -35,7 +35,7 @@ return function(INPUT_LINE_NUMBER, CURSOR_LINE, CURSOR_COLUMN)
         end
     end
 
-    local group = vim.api.nvim_create_augroup('rockyz/kitty_scrollback', {})
+    local group = vim.api.nvim_create_augroup('rockyz.kitty.scrollback', {})
     vim.api.nvim_create_autocmd('ModeChanged', {
         group = group,
         buffer = buf,

@@ -6,7 +6,7 @@ vim.g.targets_seekRanges = 'cc cr cb cB lc ac Ac lr lb ar ab lB Ar aB Ab AB rr l
 vim.g.targets_jumpRanges = 'rr rb rB bb bB BB ll al Al aa Aa AA'
 
 vim.api.nvim_create_autocmd({ 'User' }, {
-    group = vim.api.nvim_create_augroup('targets_mappings_control', { clear = true }),
+    group = vim.api.nvim_create_augroup('rockyz.targets.mappings_control', { clear = true }),
     pattern = 'targets#mappings#user',
     callback = function()
         -- Remove the mapping for argument text objects.

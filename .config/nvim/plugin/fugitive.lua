@@ -1,8 +1,8 @@
 -- Configs specific to fugitive buffer can be found at ~/.config/nvim/ftplugin/fugitive.vim
 
-vim.api.nvim_create_augroup('fugitive_user_autocmd', { clear = true })
+local group = vim.api.nvim_create_augroup('rockyz.fugitive.tab_diff_cfile', { clear = true })
 vim.api.nvim_create_autocmd({ 'User' }, {
-    group = 'fugitive_user_autocmd',
+    group = group,
     pattern = 'FugitiveIndex,FugitiveCommit',
     callback = function()
         vim.keymap.set(

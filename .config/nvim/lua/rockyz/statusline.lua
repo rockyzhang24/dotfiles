@@ -358,7 +358,7 @@ function M.render()
 end
 
 -- Refresh
-local group = vim.api.nvim_create_augroup('rockyz/status_redraw', {})
+local group = vim.api.nvim_create_augroup('rockyz.statusline.redraw', {})
 -- After gitsigns update
 vim.api.nvim_create_autocmd('User', {
     group = group,

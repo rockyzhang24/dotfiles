@@ -49,7 +49,7 @@ local function lightbulb_update(winid, bufnr, bulb_line)
     end
     -- Create a window-local namespace for the extmark
     if vim.w[winid].bulb_ns_id == nil then
-        local ns_id = vim.api.nvim_create_namespace('bulb_ns_id_' .. winid)
+        local ns_id = vim.api.nvim_create_namespace('rockyz.bulb.' .. winid)
         vim.api.nvim__ns_set(ns_id, { wins = { winid } })
         vim.w[winid].bulb_ns_id = ns_id
     end
@@ -133,8 +133,8 @@ local function lightbulb()
     end
 end
 
-vim.api.nvim_create_augroup('lightbulb', { clear = true })
+vim.api.nvim_create_augroup('rockyz.lightbulb', { clear = true })
 vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
-    group = 'lightbulb',
+    group = 'rockyz.lightbulb',
     callback = lightbulb,
 })

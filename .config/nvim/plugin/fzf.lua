@@ -81,7 +81,7 @@ local icons = require('rockyz.icons')
 
 -- Use the globally set statusline
 vim.api.nvim_create_autocmd('User', {
-    group = vim.api.nvim_create_augroup('fzf-statusline', { clear = true }),
+    group = vim.api.nvim_create_augroup('rockyz.fzf.statusline', { clear = true }),
     pattern = 'FzfStatusLine',
     callback = function()
         vim.wo.statusline = ''

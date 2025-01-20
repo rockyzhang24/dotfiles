@@ -5,7 +5,7 @@ local M = {}
 
 local qf_utils = require('rockyz.utils.qf_utils')
 
-local ns = vim.api.nvim_create_namespace('quickfix-highlight')
+local ns = vim.api.nvim_create_namespace('rockyz.quickfix.highlight')
 
 local function list_items(info)
     local what = { id = info.id, items = 0, qfbufnr = 0 }

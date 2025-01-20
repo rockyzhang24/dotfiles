@@ -190,7 +190,7 @@ end
 -- vim.o.winbar = "%{%v:lua.require('rockyz.winbar').render()%}"
 
 vim.api.nvim_create_autocmd('BufWinEnter', {
-    group = vim.api.nvim_create_augroup('rockyz/winbar', { clear = true }),
+    group = vim.api.nvim_create_augroup('rockyz.winbar', { clear = true }),
     callback = function()
         if not vim.api.nvim_win_get_config(0).zindex then
             vim.wo.winbar = "%{%v:lua.require('rockyz.winbar').render()%}"

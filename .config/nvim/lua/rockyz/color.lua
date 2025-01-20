@@ -3,9 +3,9 @@ vim.o.background = 'dark'
 
 -- Remove the background color for transparent background
 if vim.g.transparent then
-    vim.api.nvim_create_augroup('CleanBackground', { clear = true })
+    vim.api.nvim_create_augroup('rockyz.color.bg_clean', { clear = true })
     vim.api.nvim_create_autocmd({ 'ColorScheme' }, {
-        group = 'CleanBackground',
+        group = 'rockyz.color.bg_clean',
         pattern = '*',
         callback = function()
             local normal_hl = vim.api.nvim_get_hl(0, { name = 'Normal' })
@@ -26,9 +26,9 @@ end
 -- the float window through this option, e.g., vim.o.winhighlight =
 -- 'Normal:Normal'
 if vim.g.border_enabled then
-    vim.api.nvim_create_augroup('HighlightAdjust', { clear = true })
+    vim.api.nvim_create_augroup('rockyz.color.highlight_adjust', { clear = true })
     vim.api.nvim_create_autocmd({ 'ColorScheme' }, {
-        group = 'HighlightAdjust',
+        group = 'rockyz.color.highlight_adjust',
         pattern = '*',
         callback = function()
             vim.api.nvim_set_hl(0, 'NormalFloat', { link = 'Normal' })
@@ -42,7 +42,7 @@ end
 -- https://www.reddit.com/r/neovim/comments/1ehidxy/you_can_remove_padding_around_neovim_instance/
 -- https://github.com/neovim/neovim/issues/16572#issuecomment-1954420136
 local modified = false
-local sync_term_bg_group = vim.api.nvim_create_augroup('rockyz/sync_term_bg', { clear = true })
+local sync_term_bg_group = vim.api.nvim_create_augroup('rockyz.color.sync_term_bg', { clear = true })
 vim.api.nvim_create_autocmd({ 'UIEnter', 'ColorScheme' }, {
     group = sync_term_bg_group,
     callback = function()

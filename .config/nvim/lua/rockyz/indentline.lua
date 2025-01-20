@@ -32,15 +32,15 @@ local function indentchar_update(is_local)
     opt.listchars:append({ leadmultispace = leadmultispace })
 end
 
-vim.api.nvim_create_augroup('rockyz/indentline', { clear = true })
+vim.api.nvim_create_augroup('rockyz.indentline', { clear = true })
 vim.api.nvim_create_autocmd({ 'VimEnter' }, {
-    group = 'rockyz/indentline',
+    group = 'rockyz.indentline',
     callback = function()
         indentchar_update(false)
     end,
 })
 vim.api.nvim_create_autocmd({ 'OptionSet' }, {
-    group = 'rockyz/indentline',
+    group = 'rockyz.indentline',
     pattern = { 'shiftwidth', 'expandtab', 'tabstop' },
     callback = function()
         indentchar_update(vim.v.option_type == 'local')

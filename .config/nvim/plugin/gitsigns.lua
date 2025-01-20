@@ -1,11 +1,6 @@
 local gitsigns = require('gitsigns')
 
 gitsigns.setup({
-    -- Experimental features
-    -- See https://github.com/lewis6991/gitsigns.nvim/blob/main/lua/gitsigns/config.lua. The
-    -- experimental features start with an underscore.
-    _inline2 = true,
-
     signs = {
         add = { show_count = false },
         change = { show_count = false },
@@ -59,6 +54,7 @@ gitsigns.setup({
         end)
 
         -- Stage hunk or buffer
+        -- To unstage, run it on a staged lines
         buf_map('n', '<Leader>hs', gitsigns.stage_hunk)
         buf_map('v', '<Leader>hs', function()
             gitsigns.stage_hunk({ vim.fn.line('.'), vim.fn.line('v') })
@@ -72,23 +68,26 @@ gitsigns.setup({
         end)
         buf_map('n', '<Leader>hR', gitsigns.reset_buffer)
 
-        -- Undo the last gitsigns.stage_hunk call
-        buf_map('n', '<Leader>hu', gitsigns.undo_stage_hunk)
-
         -- Discard changes
         buf_map({ 'n', 'v' }, '<Leader>hr', ':Gitsigns reset_hunk<CR>')
         buf_map('n', '<Leader>hR', gitsigns.reset_buffer)
 
         -- Hunk preview
         buf_map('n', '<Leader>hp', gitsigns.preview_hunk)
+        buf_map('n', '<Leader>hi', gitsigns.preview_hunk_inline)
 
         -- Blame
         buf_map('n', '<Leader>hb', function()
             gitsigns.blame_line({ full = true })
         end)
 
+        -- Diff
+        buf_map('n', '<Leader>hd', gitsigns.diffthis)
+        buf_map('n', '<Leader>hD', function()
+            gitsigns.diffthis('~')
+        end)
+
         -- Toggle
-        buf_map('n', 'yodl', gitsigns.toggle_deleted) -- toggle showing deleted/changed lines via virtual lines
         buf_map('n', 'yodw', gitsigns.toggle_word_diff) -- toggle the word_diff in the buffer
         buf_map('n', 'yob', gitsigns.toggle_current_line_blame) -- toggle displaying the blame for the current line
 

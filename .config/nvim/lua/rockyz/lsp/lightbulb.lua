@@ -115,7 +115,7 @@ local function lightbulb()
         local params = vim.lsp.util.make_range_params(winid, client.offset_encoding)
         params.context = context
 
-        client.request(method, params, function(_, result, _)
+        client:request(method, params, function(_, result, _)
             if has_action then
                 return
             end

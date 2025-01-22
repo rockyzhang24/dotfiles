@@ -3,6 +3,7 @@ vim.g.transparent = false
 vim.g.border_enabled = true
 vim.g.border_style = vim.g.border_enabled and 'rounded' or 'none'
 vim.g.indentscope_enabled = true
+vim.g.inlay_hint_enabled = false
 
 -- Set filetype to 'bigfile' for files larger than 1.5 MB
 -- Only vim syntax will be enabled (with correct filetype)

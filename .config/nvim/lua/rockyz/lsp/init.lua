@@ -1,4 +1,5 @@
 local diagnostic_icons = require('rockyz.icons').diagnostics
+local methods = vim.lsp.protocol.Methods
 
 local M = {}
 
@@ -122,12 +123,24 @@ local function on_attach(client, bufnr)
     -- vim.keymap.set({ 'n', 'x' }, '<leader>F', function()
     --     vim.lsp.buf.format({ async = true })
     -- end, opts)
-    -- Toggle inlay hints
-    if client and client.server_capabilities.inlayHintProvider then
-        vim.keymap.set('n', 'yoh', function()
-            vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled())
-        end, opts)
+
+    -- Inlay hints
+    if vim.g.inlay_hint_enabled then
+        vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
     end
+    -- Toggle (buffer-local)
+    vim.keymap.set('n', 'yoh', function()
+        local is_enabled = vim.lsp.inlay_hint.is_enabled({ bufnr = 0 })
+        vim.b.inlay_hint_enabled = not is_enabled
+        vim.lsp.inlay_hint.enable(vim.b.inlay_hint_enabled, { bufnr = 0 })
+        vim.notify(string.format('Inlay hints (buffer-local) is %s', vim.b.inlay_hint_enabled and 'enabled' or 'disabled'), vim.log.levels.INFO)
+    end, opts)
+    -- Toggle (global)
+    vim.keymap.set('n', 'yoH', function()
+        vim.g.inlay_hint_enabled = not vim.g.inlay_hint_enabled
+        vim.lsp.inlay_hint.enable(vim.g.inlay_hint_enabled)
+        vim.notify(string.format('Inlay hints (global) is %s', vim.g.inlay_hint_enabled and 'enabled' or 'disabled'), vim.log.levels.INFO)
+    end, opts)
 
     -- Lsp progress
     require('rockyz.lsp.progress')

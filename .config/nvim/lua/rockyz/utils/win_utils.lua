@@ -111,6 +111,11 @@ local function win_restore()
 end
 
 function M.win_maximize_toggle()
+    -- The maximized window may be closed before it gets restored
+    if vim.t.maximized_win and not vim.api.nvim_win_is_valid(vim.t.maximized_win) then
+        vim.t.maximizer_sizes = nil
+        vim.t.maximized_win = nil
+    end
     if vim.t.maximizer_sizes ~= nil then
         win_restore()
     else

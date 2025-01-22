@@ -13,14 +13,13 @@ ls.setup({
     store_selection_keys = '<TAB>',
     ext_opts = {
         [types.choiceNode] = {
-            -- active = {
-            --     virt_text = { { '|', 'Operator' } },
+            active = {
+                virt_text = { { '(snippet) choice node', 'LspInlayHint' } },
+            },
+            -- unvisited = {
+            --     virt_text = { { '|', 'Conceal' } },
             --     virt_text_pos = 'inline',
             -- },
-            unvisited = {
-                virt_text = { { '|', 'Conceal' } },
-                virt_text_pos = 'inline',
-            },
         },
         [types.insertNode] = {
             -- active = {
@@ -78,7 +77,7 @@ vim.keymap.set('i', '<C-r>s', function()
     require('luasnip.extras.otf').on_the_fly('s')
 end)
 
--- Cancel the snippet session when leaving insert mode
+-- Cancel the snippet session when the cursor is out of the scope of the snippet
 -- Ref: https://github.com/L3MON4D3/LuaSnip/issues/656#issuecomment-1407098013
 vim.api.nvim_create_autocmd('CursorMovedI', {
     group = vim.api.nvim_create_augroup('rockyz.luasnip.unlink_snippet', { clear = true }),

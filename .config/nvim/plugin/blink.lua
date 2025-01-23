@@ -73,12 +73,8 @@ require('blink.cmp').setup({
     completion = {
         list = {
             selection = {
-                preselect = function(ctx)
-                    return ctx.mode ~= 'cmdline'
-                end,
-                auto_insert = function(ctx)
-                    return ctx.mode == 'cmdline'
-                end,
+                preselect = false,
+                auto_insert = true,
             },
         },
         accept = {
@@ -89,6 +85,7 @@ require('blink.cmp').setup({
         menu = {
             border = vim.g.border_style,
             draw = {
+                gap = 0,
                 columns = {
                     { 'kind_icon' },
                     { 'label', 'label_description', gap = 1 },

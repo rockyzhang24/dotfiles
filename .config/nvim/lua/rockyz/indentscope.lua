@@ -449,8 +449,8 @@ end)
 --
 -- Incremental selection
 --
--- <C-i> to expand
--- <M-i> to shrink
+-- <C-n> to expand
+-- <C-m> to shrink
 --
 
 ---Push when expand and pop when shrink
@@ -476,13 +476,15 @@ end
 local function incremental_selection()
     local s_line = vim.fn.line('v')
     local e_line = vim.fn.line('.')
+    local mode = vim.fn.mode()
     local min_line = line_with_min_indent(s_line, e_line)
     local scope = get_scope(min_line, nil, {
         show_body_at_border = false,
         indent_at_cursor_col = false
     })
     local select_border = false
-    if s_line == scope.body.top and e_line == scope.body.bottom then
+    -- Select the whole scope if the current selection is the scope's body
+    if mode == 'V' and s_line == scope.body.top and e_line == scope.body.bottom then
         select_border = true
     end
     visual_select_scope(scope, select_border)
@@ -490,7 +492,7 @@ local function incremental_selection()
 end
 
 -- Expand
-vim.keymap.set({ 'n', 'x' }, '<C-i>', function()
+vim.keymap.set({ 'n', 'x' }, '<C-n>', function()
     -- Reset the stack when incremental selection finishes
     local group = vim.api.nvim_create_augroup('rockyz.indentscope.reset_stack', { clear = true })
     vim.api.nvim_create_autocmd('ModeChanged', {
@@ -505,7 +507,7 @@ vim.keymap.set({ 'n', 'x' }, '<C-i>', function()
 end)
 
 -- Shrink
-vim.keymap.set('x', '<M-i>', function()
+vim.keymap.set('x', '<C-m>', function()
     stack[#stack] = nil
     local top = stack[#stack]
     if not top then

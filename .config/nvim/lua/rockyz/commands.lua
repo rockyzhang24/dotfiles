@@ -115,6 +115,9 @@ vim.api.nvim_create_user_command('ToggleAutoFormat', function(opts)
     local msg = ''
     if opts.bang then
         vim.g.autoformat = not vim.g.autoformat
+        for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+            vim.b[buf].autoformat = false
+        end
         msg = 'Global autoformat (format-on-save) is ' .. (vim.g.autoformat and 'enabled' or 'disabled')
     else
         vim.b.autoformat = not vim.b.autoformat

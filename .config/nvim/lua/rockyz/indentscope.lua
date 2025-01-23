@@ -454,6 +454,7 @@ end)
 --
 
 ---Push when expand and pop when shrink
+---Top refers to the scope that is currently selected
 local stack = {}
 
 ---Get the line with minimal indent within the given line range
@@ -488,7 +489,7 @@ local function incremental_selection()
         select_border = true
     end
     visual_select_scope(scope, select_border)
-    stack[#stack + 1] = { scope, select_border }
+    stack[#stack + 1] = { scope, select_border } -- push
 end
 
 -- Expand
@@ -508,10 +509,10 @@ end)
 
 -- Shrink
 vim.keymap.set('x', '<C-m>', function()
-    stack[#stack] = nil
-    local top = stack[#stack]
-    if not top then
+    if #stack == 1 then
         return
     end
+    stack[#stack] = nil -- pop
+    local top = stack[#stack] -- peek
     visual_select_scope(unpack(top))
 end)

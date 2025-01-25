@@ -4,8 +4,6 @@
 -- nvim-lualine/lualine.nvim
 
 local icons = require('rockyz.icons')
-local powerline_left = icons.separators.chevron_right
-local powerline_right = icons.separators.chevron_left
 local special_filetypes = require('rockyz.special_filetypes')
 
 local M = {}
@@ -23,7 +21,7 @@ end
 -- Left section
 ---------------
 
-function M.mode_component()
+function M.mode()
     -- See :h mode()
     -- Note that: \19 = ^S and \22 = ^V.
     local mode_to_str = {
@@ -80,13 +78,10 @@ function M.mode_component()
     elseif mode:find('PENDING') then
         hl = 'Pending'
     end
-    return table.concat({
-        string.format('%%#StlMode%s#[%s]', hl, mode),
-        string.format('%%#StlModeSep%s#%s%%*', hl, icons.separators.triangle_right),
-    }, '')
+    return string.format('%%#StlMode%s#[%s]%%*', hl, mode)
 end
 
-function M.git_branch_component(trunc_width)
+function M.git_branch(trunc_width)
     local head = vim.b.gitsigns_head
     if not head then
         return ''
@@ -98,7 +93,7 @@ function M.git_branch_component(trunc_width)
     return string.format('%%#StlIcon#%s%%*%s', icons.git.branch, head)
 end
 
-function M.git_diff_component(trunc_width)
+function M.git_diff(trunc_width)
     local status = vim.b.gitsigns_status_dict
     if not status or is_truncated(trunc_width) then
         return ''
@@ -112,11 +107,11 @@ function M.git_diff_component(trunc_width)
     for _, type in ipairs({ 'added', 'deleted', 'modified' }) do
         if git_diff[type] and git_diff[type] > 0 then
             local format_str = '%%#StlGit' .. type .. '#%s%s%%*'
-            table.insert(result, string.format(format_str, icons.git[type], git_diff[type]))
+            table.insert(result, string.format(format_str, icons.minimal.git[type], git_diff[type]))
         end
     end
     if #result > 0 then
-        return table.concat(result, ' ')
+        return '[' .. table.concat(result, ' ') .. ']'
     else
         return ''
     end
@@ -124,7 +119,7 @@ end
 
 -- LSP clients of all buffers
 -- Mark (e.g., using green color) the clients attaching to the current buffer
-function M.lsp_component(trunc_width)
+function M.lsp_clients(trunc_width)
     if is_truncated(trunc_width) then
         return ''
     end
@@ -147,118 +142,17 @@ function M.lsp_component(trunc_width)
 end
 
 -- Cscope DB build status
-function M.cscope_component()
-    return vim.g.cscope_maps_statusline_indicator
-end
-
-----------------
--- Right section
-----------------
-
--- Search count
-function M.search_component()
-    if vim.v.hlsearch == 0 then
-        return ''
-    end
-    local ok, s_count = pcall(vim.fn.searchcount, { recompute = true })
-    if not ok or s_count.current == nil or s_count.total == 0 then
-        return ''
-    end
-    if s_count.incomplete == 1 then
-        return string.format('%%#StlSearchCnt#%s%s%%*', icons.misc.search, '[?/?]')
-    end
-    local too_many = string.format('>%d', s_count.maxcount)
-    local current = s_count.current > s_count.maxcount and too_many or s_count.current
-    local total = s_count.total > s_count.maxcount and too_many or s_count.total
-    return string.format('%%#StlSearchCnt#%s[%s/%s]%%*', icons.misc.search, current, total)
-end
-
--- Autoformat (format-on-save)
-function M.autoformat_component()
-    if not vim.g.autoformat and not vim.b.autoformat then
-        return ''
-    end
-    -- Type of the autoformat: G for global and B for buffer-local
-    local type = vim.g.autoformat and '[G]' or (vim.b.autoformat and '[B]' or '')
-    return string.format('%%#StlComponentOn#%s%%*%s', icons.misc.format, type)
-end
-
--- Diagnostics
-local diagnostic_levels = {
-    { name = 'ERROR', icon = icons.diagnostics.ERROR },
-    { name = 'WARN', icon = icons.diagnostics.WARN },
-    { name = 'INFO', icon = icons.diagnostics.INFO },
-    { name = 'HINT', icon = icons.diagnostics.HINT },
-}
-function M.diagnostic_component()
-    local counts = vim.diagnostic.count(0)
-    local res = {}
-    for _, level in ipairs(diagnostic_levels) do
-        local n = counts[vim.diagnostic.severity[level.name]] or 0
-        if n > 0 then
-            if vim.diagnostic.is_enabled() then
-                table.insert(res, string.format('%%#StlDiagnostic%s#%s%s%%*', level.name, level.icon, n))
-            else
-                -- Use gray color if diagnostic is disabled
-                table.insert(res, string.format('%%#StlComponentInactive#%s%s%%* ', level.icon, n))
-            end
-        end
-    end
-    return table.concat(res, ' ')
-end
-
-function M.spell_component(trunc_width)
+function M.cscope(trunc_width)
     if is_truncated(trunc_width) then
         return ''
     end
-    if vim.o.spell then
-        return string.format('%%#StlComponentOn#%s%%*', icons.misc.check)
-    end
-    return ''
+    local indicator = vim.g.cscope_maps_statusline_indicator
+    return indicator and indicator ~= '' and '[' .. indicator .. ']' or ''
 end
 
--- Treesitter status
--- Use different colors to denote whether it has a parser for the
--- current file and whether the highlight is enabled:
--- * gray  : no parser
--- * green : has parser and highlight is enabled
--- * red   : has parser but highlight is disabled
-function M.treesitter_component()
-    local res = icons.misc.tree
-    local buf = vim.api.nvim_get_current_buf()
-    local hl_enabled = vim.treesitter.highlighter.active[buf]
-    local has_parser = require('nvim-treesitter.parsers').has_parser()
-    if not has_parser then
-        return string.format('%%#StlComponentInactive#%s%%*', res)
-    end
-    local format_str = hl_enabled and '%%#StlComponentOn#%s%%*' or '%%#StlComponentOff#%s%%*'
-    return string.format(format_str, res)
-end
-
--- Indent type (tab or space) and number of spaces
-function M.indent_component(trunc_width)
-    if is_truncated(trunc_width) then
-        return ''
-    end
-    local get_local_option = function(option_name)
-        return vim.api.nvim_get_option_value(option_name, { scope = 'local' })
-    end
-    local expandtab = get_local_option('expandtab')
-    local spaces_cnt = expandtab and get_local_option('shiftwidth') or get_local_option('tabstop')
-    local res = (expandtab and 'SP:' or 'TAB:') .. spaces_cnt
-    return string.format('%%#StlIcon#%s%%*%s', icons.misc.indent, res)
-end
-
-function M.encoding_component(trunc_width)
-    if is_truncated(trunc_width) then
-        return ''
-    end
-    local encoding = vim.bo.fileencoding
-    if vim.bo.bomb then
-        return encoding .. ' [BOM]'
-    end
-    return encoding
-end
+-----------------
+-- Middle section
+-----------------
 
 local function get_filesize()
     local file = vim.api.nvim_buf_get_name(0)
@@ -279,26 +173,142 @@ local function get_filesize()
     return string.format(format, size, suffixes[i])
 end
 
--- Icon, filetype and filesize
-function M.fileinfo_component(trunc_width)
-    local filetype = vim.bo.filetype
-    local size = ''
-    -- Only display size when not truncated
-    if not is_truncated(trunc_width) then
-        size = get_filesize()
-        if size ~= '' then
-            size = string.format(' [%s]', size)
+function M.filename()
+    local ft = vim.bo.filetype
+    if ft == 'fzf' then
+        return ''
+    end
+    local name = vim.fn.expand('%:~:.')
+    if name == '' then
+        name = '[No Name]'
+    end
+    local size = get_filesize()
+    if size ~= '' then
+        size = '[' .. size .. ']'
+    end
+    local symbols = {}
+    if vim.bo.modified then
+        table.insert(symbols, '[+]')
+    end
+    if not vim.bo.modifiable or vim.bo.readonly then
+        table.insert(symbols, '[-]')
+    end
+    return name .. size .. (#symbols > 0 and table.concat(symbols, '') or '')
+end
+
+----------------
+-- Right section
+----------------
+
+-- Search count
+function M.search()
+    if vim.v.hlsearch == 0 then
+        return ''
+    end
+    local ok, s_count = pcall(vim.fn.searchcount, { recompute = true })
+    if not ok or s_count.current == nil or s_count.total == 0 then
+        return ''
+    end
+    if s_count.incomplete == 1 then
+        return string.format('%%#StlIcon#%s [?/?]%%*', icons.misc.search)
+    end
+    local too_many = string.format('>%d', s_count.maxcount)
+    local current = s_count.current > s_count.maxcount and too_many or s_count.current
+    local total = s_count.total > s_count.maxcount and too_many or s_count.total
+    return string.format('%%#StlIcon#%s [%s/%s]%%*', icons.misc.search, current, total)
+end
+
+-- Autoformat (format-on-save) on/off indicator
+function M.autoformat(trunc_width)
+    if is_truncated(trunc_width) or (not vim.g.autoformat and not vim.b.autoformat) then
+        return ''
+    end
+    -- Type of the autoformat: G for global and B for buffer-local
+    local type = vim.g.autoformat and '[G]' or (vim.b.autoformat and '[B]' or '')
+    return type ~= '' and string.format('%%#StlComponentOn#%s%%* %s', icons.misc.format, type) or ''
+end
+
+-- Diagnostics
+local diagnostic_levels = { 'ERROR', 'WARN', 'INFO', 'HINT' }
+function M.diagnostic()
+    local counts = vim.diagnostic.count(0)
+    local res = {}
+    for _, level in ipairs(diagnostic_levels) do
+        local n = counts[vim.diagnostic.severity[level]] or 0
+        if n > 0 then
+            local icon = icons.diagnostics[level]
+            if vim.diagnostic.is_enabled() then
+                table.insert(res, string.format('%%#StlDiagnostic%s#%s%s%%*', level, icon, n))
+            else
+                -- Use gray color if diagnostic is disabled
+                table.insert(res, string.format('%%#StlComponentInactive#%s%s%%* ', icon, n))
+            end
         end
     end
+    return table.concat(res, ' ')
+end
+
+function M.spell(trunc_width)
+    if is_truncated(trunc_width) then
+        return ''
+    end
+    return vim.o.spell and string.format('%%#StlComponentOn#%s%%*', icons.misc.check) or ''
+end
+
+-- Treesitter status
+-- Use different colors to denote whether it has a parser for the
+-- current file and whether the highlight is enabled:
+-- * gray  : no parser
+-- * green : has parser and highlight is enabled
+-- * red   : has parser but highlight is disabled
+function M.treesitter()
+    local buf = vim.api.nvim_get_current_buf()
+    local hl_enabled = vim.treesitter.highlighter.active[buf]
+    local has_parser = require('nvim-treesitter.parsers').has_parser()
+    return not has_parser and '[%#StlComponentInactive#TS%*]'
+        or string.format('[%%#%s#TS%%*]', hl_enabled and 'StlComponentOn' or 'StlComponentOff')
+end
+
+-- Indent type (tab or space) and number of spaces
+function M.indent(trunc_width)
+    if is_truncated(trunc_width) then
+        return ''
+    end
+    local get_local_option = function(option_name)
+        return vim.api.nvim_get_option_value(option_name, { scope = 'local' })
+    end
+    local expandtab = get_local_option('expandtab')
+    local spaces_cnt = expandtab and get_local_option('shiftwidth') or get_local_option('tabstop')
+    local res = (expandtab and 'S:' or 'T:') .. spaces_cnt
+    return '[' .. res .. ']'
+end
+
+function M.encoding(trunc_width)
+    if is_truncated(trunc_width) then
+        return ''
+    end
+    local encoding = vim.bo.fileencoding:upper()
+    if encoding == '' then
+        return ''
+    end
+    if vim.bo.bomb then
+        encoding = encoding .. ' BOM'
+    end
+    return '[' .. encoding .. ']'
+end
+
+-- Icon, filetype and filesize
+function M.filetype()
+    local filetype = vim.bo.filetype
     -- No file
     if filetype == '' then
-        return string.format('%%#StlComponentInactive#%s%s%%*%s', icons.misc.file, '[No File]', size)
+        return string.format('%%#StlComponentInactive#%s [No File]%%*', icons.misc.file)
     end
     -- Handle special filetype
     local sp_ft = special_filetypes[filetype]
     if sp_ft then
         local icon = sp_ft.icon
-        return string.format('%%#StlIcon#%s %%#StlFiletype#%s%%*%s', icon, filetype, size)
+        return string.format('%%#StlIcon#%s %%#StlFiletype#%s%%*', icon, filetype)
     end
     -- Normal filetype
     local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
@@ -310,50 +320,58 @@ function M.fileinfo_component(trunc_width)
             vim.api.nvim_set_hl(0, icon_hl, { fg = icon_color, bg = bg_color })
             cached_hls[icon_hl] = true
         end
-        return string.format('%%#%s#%s %%#StlFiletype#%s%%*%s', icon_hl, icon, filetype, size)
+        return string.format('%%#%s#%s %%#StlFiletype#%s%%*', icon_hl, icon, filetype)
     end
-    return string.format('%s%%#StlFiletype#%s%%*%s', icons.misc.file, filetype, size)
+    return string.format('%s %%#StlFiletype#%s%%*', icons.misc.file, filetype)
 end
 
-function M.location_component()
+function M.location()
     local res = '%3l/%-3L:%-2v [%3p%%]'
-    return table.concat({
-        string.format('%%#StlLocComponentSep#%s', icons.separators.triangle_left),
-        string.format('%%#StlLocComponent# %s%%*', res)
-    })
+    return string.format('%%#StlLocComponent# %s%%*', res)
 end
 
 function M.render()
 
+    ---Concatenate the non-empty items in the list
+    ---@param components table
+    ---@param sep string The separator
+    ---@return string
     local function concat_components(components, sep)
         return vim.iter(components):fold('', function(acc, component)
-            if #component > 0 then
-                return #acc == 0 and component or string.format('%s%s%s', acc, sep, component)
+            if #acc == 0 then
+                return component
             end
-            return acc
+            if #component == 0 then
+                return acc
+            end
+            return (component == '%<' or component == '%=') and acc .. component
+                or acc .. sep .. component
         end)
     end
 
-    return table.concat({
-        M.mode_component(),
+    return concat_components({
+        M.mode(),
+        '%<',
         concat_components({
-            M.git_branch_component(120),
-            M.git_diff_component(120),
-            M.lsp_component(120),
-            M.cscope_component(),
-        }, ' ' .. powerline_left .. ' '),
+            M.git_branch(120),
+            M.git_diff(120),
+        }, ''),
+        M.lsp_clients(120),
+        M.cscope(120),
         '%=',
+        M.filename(),
+        '%=',
+        M.search(),
+        M.diagnostic(),
+        M.autoformat(120),
+        M.spell(120),
         concat_components({
-            M.search_component(),
-            M.autoformat_component(),
-            M.diagnostic_component(),
-            M.spell_component(120),
-            M.treesitter_component(),
-            M.indent_component(120),
-            M.encoding_component(120),
-            M.fileinfo_component(120),
-        }, ' ' .. powerline_right .. ' '),
-        M.location_component(),
+            M.treesitter(),
+            M.indent(120),
+            M.encoding(120),
+        }, ''),
+        M.filetype(),
+        M.location(),
     }, ' ')
 end
 

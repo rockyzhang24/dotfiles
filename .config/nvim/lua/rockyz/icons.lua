@@ -1,4 +1,5 @@
 local icons = {}
+icons.minimal = {}
 
 icons.symbol_kinds = {
     -- Predefined in CompletionItemKind from runtime/lua/vim/lsp/protocl.lua
@@ -55,8 +56,15 @@ icons.lines = {
 icons.diagnostics = {
     ERROR = ' ',
     WARN = ' ',
-    HINT = ' ',
     INFO = ' ',
+    HINT = ' ',
+}
+
+icons.minimal.diagnostics = {
+    ERROR = 'E',
+    WARN = 'W',
+    HINT = 'H',
+    INFO = 'I',
 }
 
 icons.git = {
@@ -67,6 +75,12 @@ icons.git = {
     diff = ' ',
     git = '󰊢 ',
     modified = ' ',
+}
+
+icons.minimal.git = {
+    added = '+',
+    deleted = '-',
+    modified = '~',
 }
 
 icons.separators = {
@@ -91,41 +105,41 @@ icons.access = {
 }
 
 icons.misc = {
-    book = ' ',
-    check = ' ',
+    book = '',
+    check = '󰓆',
     circle_filled = '',
-    color = ' ',
-    command = ' ',
-    disconnect = ' ',
-    edit = ' ',
-    ellipsis = ' ',
-    explorer = ' ',
-    file = ' ',
-    file_code = ' ',
-    folder = '󰉋 ',
-    format = ' ',
-    graph = ' ',
-    help = ' ',
+    color = '',
+    command = '',
+    disconnect = '',
+    edit = '',
+    ellipsis = '',
+    explorer = '',
+    file = '',
+    file_code = '',
+    folder = '󰉋',
+    format = '',
+    graph = '',
+    help = '',
     lightbulb = '',
     lightning_bolt = '󱐋',
-    list = ' ',
+    list = '',
     location = '',
-    indent = ' ',
-    logo = '󰀘 ',
-    maximized = ' ',
-    neovim = ' ',
-    note = ' ',
-    outline = ' ',
-    page_previous = '󰮳 ',
-    quickfix = ' ',
-    rocket = ' ',
-    search = ' ',
-    source_control = ' ',
-    switch_on = ' ',
-    switch_off = ' ',
-    task = ' ',
-    term = ' ',
-    tree = ' ',
+    indent = '',
+    logo = '󰀘',
+    maximized = '',
+    neovim = '',
+    note = '',
+    outline = '',
+    page_previous = '󰮳',
+    quickfix = '',
+    rocket = '',
+    search = '',
+    source_control = '',
+    switch_on = '',
+    switch_off = '',
+    task = '',
+    term = '',
+    tree = '󰐅',
 }
 
 return icons

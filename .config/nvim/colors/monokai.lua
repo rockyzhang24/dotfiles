@@ -362,8 +362,6 @@ local groups = {
     StlDiagnosticINFO = { fg = info_blue, bg = stl_bg },
     StlDiagnosticHINT = { fg = hint_gray, bg = stl_bg },
 
-    StlSearchCnt = { fg = icon_fg, bg = stl_bg },
-
     StlMacroRecording = 'StlComponentOff',
     StlMacroRecorded = 'StlComponentOn',
 

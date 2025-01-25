@@ -1,6 +1,10 @@
 local gitsigns = require('gitsigns')
 
 gitsigns.setup({
+
+    -- Experimental features
+    _new_sign_calc = true,
+
     signs = {
         add = { show_count = false },
         change = { show_count = false },

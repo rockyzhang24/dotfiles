@@ -1,10 +1,6 @@
-# font-family = ""
-# font-family = "JetBrains Mono"
-# font-size = 14
-
 font-family = ""
 font-family = "Berkeley Mono"
-font-size = 14
+font-size = 15
 
 # Disable ligatures
 font-feature = -calt
@@ -13,12 +9,13 @@ font-feature = -dlig
 
 window-padding-x = 0
 window-padding-y = 0
+window-decoration = false
 
 theme = arctic
 
 # macOS specific
 macos-option-as-alt = left
-macos-titlebar-style = tabs
+macos-titlebar-style = transparent
 font-thicken = true
 
 #

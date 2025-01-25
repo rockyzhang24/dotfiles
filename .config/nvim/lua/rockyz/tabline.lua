@@ -40,7 +40,7 @@ local function get_icon_and_title(winid, is_cur, title_hl)
         title = 'Git'
     end
     if vim.wo[winid].diff then
-        title = title .. ' (diff)'
+        title = title .. '[diff]'
     end
     local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
     if has_devicons then
@@ -117,7 +117,7 @@ function M.render()
         if total_diag > 0 then
             table.insert(
                 items,
-                string.format('%%#%s#(%s/%s)%%#%s#', diag_hl, cur_diag, total_diag, tab_hl)
+                string.format('%%#%s#[%s/%s]%%#%s#', diag_hl, cur_diag, total_diag, tab_hl)
             )
         end
 

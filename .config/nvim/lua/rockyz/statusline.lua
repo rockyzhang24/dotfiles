@@ -90,7 +90,7 @@ function M.git_branch(trunc_width)
     if is_truncated(trunc_width) then
         return head
     end
-    return string.format('%%#StlIcon#%s%%*%s', icons.git.branch, head)
+    return string.format('%%#StlIcon#%s%%* %s', icons.git.branch, head)
 end
 
 function M.git_diff(trunc_width)
@@ -238,10 +238,10 @@ function M.diagnostic()
         if n > 0 then
             local icon = icons.diagnostics[level]
             if vim.diagnostic.is_enabled() then
-                table.insert(res, string.format('%%#StlDiagnostic%s#%s%s%%*', level, icon, n))
+                table.insert(res, string.format('%%#StlDiagnostic%s#%s %s%%*', level, icon, n))
             else
                 -- Use gray color if diagnostic is disabled
-                table.insert(res, string.format('%%#StlComponentInactive#%s%s%%* ', icon, n))
+                table.insert(res, string.format('%%#StlComponentInactive#%s %s%%* ', icon, n))
             end
         end
     end

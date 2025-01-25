@@ -23,14 +23,9 @@ local function header_component()
     table.insert(items, winnr)
     -- "Maximized" indicator
     if vim.w.maximized == 1 then
-        table.insert(items, icons.misc.maximized)
+        table.insert(items, icons.misc.maximized .. ' ')
     end
-
-    local header = string.format(
-        '%%#WinbarHeader# %s %%#WinbarTriangleSep#%s%%*',
-        table.concat(items, ' '),
-        icons.separators.triangle_right
-    )
+    local header = string.format('%%#WinbarHeader#%s%%*', table.concat(items, ' '))
     return header
 end
 
@@ -52,7 +47,7 @@ local function path_component()
         icon = icons.misc.source_control
     end
     local path = vim.fn.fnamemodify(fullpath, ':~:h')
-    return string.format('%%#WinbarPath#%s%s%%*', icon, path)
+    return string.format('%%#WinbarPath#%s %s%%*', icon, path)
 end
 
 local function icon_component()
@@ -109,14 +104,14 @@ local function name_component()
         local what = { title = 0, size = 0, idx = 0 }
         local list = is_loclist and vim.fn.getloclist(0, what) or vim.fn.getqflist(what)
         -- The output format is like {list type} > {list title} > {current idx}
-        -- E.g., "Quickfix List > Diagnostics > [1/10]"
+        -- E.g., "Quickfix List > Diagnostics [1/10]"
         local items = {}
         table.insert(items, type) -- type
         if list.title ~= '' then
             table.insert(items, list.title) -- title
         end
-        table.insert(items, string.format('[%s/%s]', list.idx, list.size)) -- index
-        return table.concat(items, ' ' .. delimiter .. ' ')
+        local idx = string.format('[%s/%s]', list.idx, list.size) -- index
+        return table.concat(items, ' ' .. delimiter .. ' ') .. ' ' .. idx
     end
     if ft == 'tagbar' then
         return 'Tagbar'
@@ -163,7 +158,7 @@ M.render = function()
     -- Diagnostic count
     local diag_total = error_cnt + warn_cnt
     if diag_total ~= 0 then
-        table.insert(items, string.format('%%#%s#(%s)%%*', hl, diag_total))
+        table.insert(items, string.format('%%#%s#[%s]%%*', hl, diag_total))
     end
 
     -- "Modified" indicator

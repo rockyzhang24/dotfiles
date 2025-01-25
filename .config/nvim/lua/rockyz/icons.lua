@@ -54,10 +54,10 @@ icons.lines = {
 }
 
 icons.diagnostics = {
-    ERROR = ' ',
-    WARN = ' ',
-    INFO = ' ',
-    HINT = ' ',
+    ERROR = '',
+    WARN = '',
+    INFO = '',
+    HINT = '',
 }
 
 icons.minimal.diagnostics = {
@@ -68,13 +68,13 @@ icons.minimal.diagnostics = {
 }
 
 icons.git = {
-    added = ' ',
-    branch = ' ',
+    added = '',
+    branch = '',
     commit = '',
-    deleted = ' ',
-    diff = ' ',
-    git = '󰊢 ',
-    modified = ' ',
+    deleted = '',
+    diff = '',
+    git = '󰊢',
+    modified = '',
 }
 
 icons.minimal.git = {
@@ -131,7 +131,7 @@ icons.misc = {
     note = '',
     outline = '',
     page_previous = '󰮳',
-    quickfix = '',
+    quickfix = '',
     rocket = '',
     search = '',
     source_control = '',

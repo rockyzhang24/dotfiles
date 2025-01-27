@@ -25,8 +25,7 @@ local function header_component()
     if vim.w.maximized == 1 then
         table.insert(items, icons.misc.maximized .. ' ')
     end
-    local header = string.format('%%#WinbarHeader#%s%%*', table.concat(items, ' '))
-    return header
+    return string.format('%%#WinbarHeader#%s%%*', table.concat(items, ' '))
 end
 
 local function path_component()

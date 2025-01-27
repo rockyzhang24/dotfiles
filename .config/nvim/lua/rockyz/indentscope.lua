@@ -222,7 +222,7 @@ end
 
 ---Check whether or not displaying indent scope is enabled globally/buffer-locally
 local function is_disabled()
-    return not vim.g.indentscope_enabled and not vim.b.indentscope_enabled
+    return vim.b.indentscope_enabled == false or vim.g.indentscope_enabled == false
 end
 
 local function undraw_scope(opts)
@@ -516,3 +516,23 @@ vim.keymap.set('x', '<C-m>', function()
     local top = stack[#stack] -- peek
     visual_select_scope(unpack(top))
 end)
+
+-- Exclude filetypes
+local disabled_filetypes = {
+    'fzf',
+    'help',
+    'minpac',
+    'minpacprgs',
+    'Outline',
+    'tagbar',
+    'term',
+}
+vim.api.nvim_create_autocmd('FileType', {
+    group = vim.api.nvim_create_augroup('rockyz.indentscope.exclude', { clear = true }),
+    callback = function(arg)
+        local ft = vim.bo[arg.buf].filetype
+        if vim.list_contains(disabled_filetypes, ft) then
+            vim.b[arg.buf].indentscope_enabled = false
+        end
+    end,
+})

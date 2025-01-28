@@ -236,6 +236,11 @@ local function undraw_scope(opts)
 end
 
 local function draw_scope(scope, opts)
+    -- This function is deferred to be called. When it gets called, a buffer with indentscope
+    -- disabled maybe open.
+    if is_disabled() then
+        return
+    end
     scope = scope or {}
     opts = opts or {}
     local indent = get_draw_indent(scope)
@@ -255,8 +260,9 @@ local function draw_scope(scope, opts)
         virt_text_pos = 'overlay',
         virt_text_repeat_linebreak = true,
     }
+    local bufnr = vim.api.nvim_get_current_buf()
     for l = scope.body.top, scope.body.bottom do
-        vim.api.nvim_buf_set_extmark(vim.api.nvim_get_current_buf(), ns_id, l - 1, 0, extmark_opts)
+        vim.api.nvim_buf_set_extmark(bufnr, ns_id, l - 1, 0, extmark_opts)
     end
     current.draw_status = 'finished'
 end

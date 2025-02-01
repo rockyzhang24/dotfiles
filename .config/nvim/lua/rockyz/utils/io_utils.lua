@@ -54,4 +54,24 @@ function M.write_file(filepath, contents)
     assert(uv.fs_close(fd))
 end
 
+---Write data to a file asynchronously
+function M.write_file_async(filepath, contents)
+    uv.fs_open(filepath, 'w', 438, function(err_open, fd)
+        if err_open then
+            vim.schedule(function()
+                vim.notify(
+                    string.format('Unable to open file %s, error: %s', filepath, err_open),
+                    vim.log.levels.WARN
+                )
+            end)
+        end
+        uv.fs_write(fd, contents, -1, function(err_write, _)
+            assert(not err_write, err_write)
+            uv.fs_close(fd, function(err_close)
+                assert(not err_close, err_close)
+            end)
+        end)
+    end)
+end
+
 return M

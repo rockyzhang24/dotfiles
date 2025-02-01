@@ -5,10 +5,13 @@ local M = {}
 ---Read a file synchronously
 ---Taken from fzf-lua
 function M.read_file(filepath)
-    local fd = assert(uv.fs_open(filepath, 'r', 438))
+    local fd = uv.fs_open(filepath, 'r', 438)
+    if fd == nil then
+        return ''
+    end
     local stat = assert(uv.fs_stat(filepath))
     if stat.type ~= 'file' then
-        return
+        return ''
     end
     local data = assert(uv.fs_read(fd, stat.size, 0))
     assert(uv.fs_close(fd))

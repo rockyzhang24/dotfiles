@@ -219,101 +219,119 @@ end)
 -- vim-unimpaired style mappings. Ref: See: https://github.com/tpope/vim-unimpaired
 --
 
+---Execute a command and print errors without a stacktrace
+---@param opts table Arguments to vim.api.nvim_cmd()
+local function cmd(opts)
+    local ok, err = pcall(vim.api.nvim_cmd, opts, {})
+    if not ok then
+        vim.api.nvim_echo({ { err:sub(#'Vim:' + 1) } }, true, { err = true })
+    end
+end
+
+-- TODO: count doesn't work with some commands such as :next, :tprevious, etc. See #30641
+
 -- Argument list
 vim.keymap.set('n', '[a', function()
-    vim.cmd.previous({ count = vim.v.count1 })
+    cmd({ cmd = 'previous', count = vim.v.count1 })
 end)
 vim.keymap.set('n', ']a', function()
-    vim.cmd.next({ count = vim.v.count1 })
+    cmd({ cmd = 'next', range = { vim.v.count1 } })
 end)
 vim.keymap.set('n', '[A', function()
     if vim.v.count ~= 0 then
-        vim.cmd.argument({ count = vim.v.count })
+        cmd({ cmd = 'argument', count = vim.v.count })
     else
-        vim.cmd.first()
+        cmd({ cmd = 'first' })
     end
 end)
 vim.keymap.set('n', ']A', function()
     if vim.v.count ~= 0 then
-        vim.cmd.argument({ count = vim.v.count })
+        cmd({ cmd = 'argument', count = vim.v.count })
     else
-        vim.cmd.last()
+        cmd({ cmd = 'last' })
     end
 end)
 -- Buffers
 vim.keymap.set('n', '[b', function()
-    vim.cmd.bprevious({ count = vim.v.count1 })
+    cmd({ cmd = 'bprevious', count = vim.v.count1 })
 end)
 vim.keymap.set('n', ']b', function()
-    vim.cmd.bnext({ count = vim.v.count1 })
+    cmd({ cmd = 'bnext', count = vim.v.count1 })
 end)
 vim.keymap.set('n', '[B', function()
     if vim.v.count ~= 0 then
-        vim.cmd.buffer({ count = vim.v.count })
+        cmd({ cmd = 'buffer', count = vim.v.count })
     else
-        vim.cmd.bfirst()
+        cmd({ cmd = 'bfirst' })
     end
 end)
 vim.keymap.set('n', ']B', function()
     if vim.v.count ~= 0 then
-        vim.cmd.buffer({ count = vim.v.count })
+        cmd({ cmd = 'buffer', count = vim.v.count })
     else
-        vim.cmd.blast()
+        cmd({ cmd = 'blast' })
     end
 end)
 -- Quickfix
 vim.keymap.set('n', '[q', function()
-    vim.cmd.cprevious({ count = vim.v.count1 })
+    cmd({ cmd = 'cprevious', count = vim.v.count1 })
 end)
 vim.keymap.set('n', ']q', function()
-    vim.cmd.cnext({ count = vim.v.count1 })
+    cmd({ cmd = 'cnext', count = vim.v.count1 })
 end)
 vim.keymap.set('n', '[Q', function()
-    if vim.v.count ~= 0 then
-        vim.cmd.cc({ count = vim.v.count })
-    else
-        vim.cmd.cfirst()
-    end
+    cmd({ cmd = 'cfirst', count = vim.v.count ~= 0 and vim.v.count or nil })
 end)
 vim.keymap.set('n', ']Q', function()
-    if vim.v.count ~= 0 then
-        vim.cmd.cc({ count = vim.v.count })
-    else
-        vim.cmd.clast()
-    end
+    cmd({ cmd = 'clast', count = vim.v.count ~= 0 and vim.v.count or nil })
 end)
-vim.keymap.set('n', '[<C-Q>', function()
-    vim.cmd.cpfile({ count = vim.v.count1 })
+vim.keymap.set('n', '[<C-q>', function()
+    cmd({ cmd = 'cpfile', count = vim.v.count1 })
 end)
-vim.keymap.set('n', ']<C-Q>', function()
-    vim.cmd.cnfile({ count = vim.v.count1 })
+vim.keymap.set('n', ']<C-q>', function()
+    cmd({ cmd = 'cnfile', count = vim.v.count1 })
 end)
 -- Location List
 vim.keymap.set('n', '[l', function()
-    vim.cmd.lprevious({ count = vim.v.count1 })
+    cmd({ cmd = 'lprevious', count = vim.v.count1 })
 end)
 vim.keymap.set('n', ']l', function()
-    vim.cmd.lnext({ count = vim.v.count1 })
+    cmd({ cmd = 'lnext', count = vim.v.count1 })
 end)
 vim.keymap.set('n', '[L', function()
-    if vim.v.count ~= 0 then
-        vim.cmd.ll({ count = vim.v.count })
-    else
-        vim.cmd.lfirst()
-    end
+    cmd({ cmd = 'lfirst', count = vim.v.count ~= 0 and vim.v.count or nil })
 end)
 vim.keymap.set('n', ']L', function()
-    if vim.v.count ~= 0 then
-        vim.cmd.ll({ count = vim.v.count })
-    else
-        vim.cmd.llast()
-    end
+    cmd({ cmd = 'llast', count = vim.v.count ~= 0 and vim.v.count or nil })
 end)
 vim.keymap.set('n', '[<C-l>', function()
-    vim.cmd.lpfile({ count = vim.v.count })
+    cmd({ cmd = 'lpfile', count = vim.v.count1 })
 end)
 vim.keymap.set('n', ']<C-l>', function()
-    vim.cmd.lnfile({ count = vim.v.count })
+    cmd({ cmd = 'lnfile', count = vim.v.count1 })
+end)
+-- Tags
+vim.keymap.set('n', '[t', function()
+    cmd({ cmd = 'tprevious', range = { vim.v.count1 } })
+end)
+vim.keymap.set('n', ']t', function()
+    cmd({ cmd = 'tnext', range = { vim.v.count1 } })
+end)
+vim.keymap.set('n', '[T', function()
+    cmd({ cmd = 'tfirst', range = vim.v.count ~= 0 and { vim.v.count } or nil })
+end)
+vim.keymap.set('n', ']T', function()
+    if vim.v.count ~= 0 then
+        cmd({ cmd = 'tfirst', range = { vim.v.count } })
+    else
+        cmd({ cmd = 'tlast' })
+    end
+end)
+vim.keymap.set('n', '[<C-t>', function()
+    cmd({ cmd = 'ptprevious', range = { vim.v.count1 } })
+end)
+vim.keymap.set('n', ']<C-t>', function()
+    cmd({ cmd = 'ptnext', range = { vim.v.count1 } })
 end)
 -- Make section-jump work if '{' or '}' are not in the first column (see :h [[)
 vim.keymap.set('n', '[[', ":<C-u>eval search('{', 'b')<CR>w99[{", { silent = true })

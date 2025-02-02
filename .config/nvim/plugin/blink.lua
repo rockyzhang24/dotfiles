@@ -56,12 +56,12 @@ require('blink.cmp').setup({
     sources = {
         default = { 'lsp', 'snippets', 'buffer', 'path' },
         providers = {
-            lsp = {
-                -- By default it fallbacks to 'buffer'. It means buffer items will only be listed
-                -- when lsp returns 0 items. Remove 'buffer' from the fallbacks to make buffer items
-                -- be always listed.
-                fallbacks = {},
-            },
+            -- lsp = {
+            --     -- By default it fallbacks to 'buffer'. It means buffer items will only be listed
+            --     -- when lsp returns 0 items. Remove 'buffer' from the fallbacks to make buffer items
+            --     -- be always listed.
+            --     fallbacks = {},
+            -- },
             buffer = {
                 min_keyword_length = 4,
             },
@@ -85,7 +85,6 @@ require('blink.cmp').setup({
         menu = {
             border = vim.g.border_style,
             draw = {
-                gap = 0,
                 columns = {
                     { 'kind_icon' },
                     { 'label', 'label_description', gap = 1 },

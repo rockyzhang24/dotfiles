@@ -5,6 +5,9 @@ navic.setup({
     icons = symbol_kinds,
     highlight = true,
     separator = '  ',
+    format_text = function(text)
+        return ' ' .. text
+    end,
 })
 
 vim.api.nvim_create_autocmd('LspAttach', {

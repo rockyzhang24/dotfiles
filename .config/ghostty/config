@@ -1,6 +1,7 @@
 font-family = ""
-font-family = "Berkeley Mono"
-font-size = 15
+font-family = "PragmataPro"
+font-size = 16.5
+adjust-underline-thickness = 2
 
 # Disable ligatures
 font-feature = -calt
@@ -21,7 +22,9 @@ font-thicken = true
 #
 # Keybindings
 #
-# ctrl+shift+key for those keybindings that needs to be pressed repeatedly
+# ctrl+shift+key for those keybindings suitable for actions that need to be pressed repeatedly in
+# succession, e.g., page scrolling.
+#
 # ctrl+; as the leader key for other keybindings
 #
 
@@ -39,6 +42,7 @@ keybind = ctrl+shift+z=jump_to_prompt:-1
 keybind = ctrl+shift+x=jump_to_prompt:1
 
 # Tab
+keybind = cmd+shift+w=close_tab
 keybind = ctrl+shift+[=previous_tab
 keybind = ctrl+shift+]=next_tab
 keybind = ctrl+shift+,=move_tab:-1
@@ -49,8 +53,8 @@ keybind = ctrl+;>\=new_split:right
 keybind = ctrl+;>-=new_split:down
 keybind = ctrl+shift+enter=new_split:auto
 keybind = ctrl+shift+h=goto_split:left
-keybind = ctrl+shift+j=goto_split:bottom
-keybind = ctrl+shift+k=goto_split:top
+keybind = ctrl+shift+j=goto_split:down
+keybind = ctrl+shift+k=goto_split:up
 keybind = ctrl+shift+l=goto_split:right
 keybind = ctrl+;>m=toggle_split_zoom
 keybind = ctrl+shift+up=resize_split:up,10

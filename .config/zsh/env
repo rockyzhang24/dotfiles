@@ -65,6 +65,9 @@ export LSCOLORS='ExfxcxdxbxGxDxabagacad'
 [[ $COLOR_THEME == 'monokai' ]] && export BAT_THEME='Monokai Extended Origin'
 [[ $COLOR_THEME == 'arctic' ]] && export BAT_THEME='arctic'
 
+# Ripgrep
+export RIPGREP_CONFIG_PATH=$HOME/.config/ripgrep/ripgreprc
+
 #
 # User-defined
 #

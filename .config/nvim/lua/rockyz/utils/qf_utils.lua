@@ -15,8 +15,8 @@ local type_hl = {
     I = 'DiagnosticSignInfo',
     H = 'DiagnosticSignHint',
 }
-local fname_hl = 'Directory'
-local lnum_col_hl = 'Number'
+local fname_hl = 'QuickfixFilename'
+local lnum_col_hl = 'QuickfixLnumCol'
 
 -- Truncate the filename from the beginnign if its length exceeds the threshold
 local function trim_path(path)

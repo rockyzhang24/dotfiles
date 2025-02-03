@@ -371,6 +371,13 @@ local groups = {
     StlLocComponentSep = 'StlModeSepNormal',
 
     --
+    -- Quickfix
+    --
+
+    QuickfixFilename = { fg = blue },
+    QuickfixLnumCol = 'Number',
+
+    --
     -- Syntax
     --
     -- There are the common vim syntax groups.

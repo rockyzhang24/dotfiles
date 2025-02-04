@@ -525,8 +525,12 @@ end)
 
 -- Exclude filetypes
 local disabled_filetypes = {
+    'floggraph',
+    'fugitive',
     'fzf',
+    'git',
     'help',
+    'man',
     'minpac',
     'minpacprgs',
     'Outline',

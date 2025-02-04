@@ -7,15 +7,15 @@ local icons = require('rockyz.icons')
 local special_filetypes = {
     aerial = {
         icon = icons.misc.outline,
-        title = 'Outline',
+        title = 'Outline [Aerial]',
     },
     ['ccc-ui'] = {
         icon = icons.misc.color,
         title = 'Color Picker',
     },
     cmdwin = { -- for Command-line window
-        icon = icons.misc.command,
-        title = 'Command-line Window',
+        icon = icons.misc.code,
+        title = 'Command-line',
     },
     floggraph = {
         icon = icons.misc.graph,

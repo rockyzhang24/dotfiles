@@ -143,7 +143,6 @@ local groups = {
     WinbarHeader = { fg = stl_mode_fg, bg = stl_normal }, -- the very beginning part of winbar
     WinbarTriangleSep = { fg = stl_normal }, -- the triangle separator in winbar
     WinbarPath = { fg = icon_fg, bg = norm_bg, italic = true },
-    WinbarSpecialIcon = { fg = icon_fg, bg = norm_bg }, -- icon for special filetype
     WinbarFilename = { fg = winbar_fg, bg = norm_bg }, -- filename
     WinbarModified = { fg = norm_fg, bg = norm_bg }, -- the modification indicator
     WinbarError = { fg = error_list, bg = norm_bg }, -- the filename color if the current buffer has errors

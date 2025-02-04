@@ -1,10 +1,12 @@
 -- The winbar's structure:
--- Header | Path_prefix > Path > Icon > Name [diagnostics/modified indicator] > Breadcrumbs
--- ^            ^          ^       ^     ^
--- |            |__________|       |     |___ name_component()
--- |                 |             |___ icon_component()
--- |                 |___ path_component()
+--
+-- Header | Path > Icon > Name [diagnostics and modified indicator] > Breadcrumbs
+-- ^          ^      ^     ^
+-- |          |      |     |___ name_component()
+-- |          |      |___ icon_component()
+-- |          |____ path_component()
 -- |___ header_component()
+--
 
 local M = {}
 
@@ -13,30 +15,59 @@ local icons  = require('rockyz.icons')
 local delimiter = icons.caret.right
 local special_filetypes = require('rockyz.special_filetypes')
 
--- Cache the highlight groups created for different icons
+-- Cache the highlight groups of filetype icons
 local cached_hls = {}
 
+-- Header has the window number and the indicator of maximization
 local function header_component()
     local items = {}
-    -- Window number: used for window switching
+    -- Window number
     local winnr = string.format('[%s]', vim.api.nvim_win_get_number(0))
     table.insert(items, winnr)
-    -- "Maximized" indicator
+    -- Indicator of window maximization
     if vim.w.maximized == 1 then
         table.insert(items, icons.misc.maximized .. ' ')
     end
     return string.format('%%#WinbarHeader#%s%%*', table.concat(items, ' '))
 end
 
-local function path_component()
-    -- Window with special filetype (like term, aerial, etc) does not have path component
-    local ft = vim.bo.filetype
-    local winid = vim.api.nvim_get_current_win()
-    if special_filetypes[ft] or ft == 'git' or vim.fn.win_gettype(winid) == 'command' then
-        return ''
+-- Check if the current window is special
+local function is_special_ft(ft, winid)
+    return special_filetypes[ft] ~= nil or vim.fn.win_gettype(winid) == 'command'
+end
+
+-- Handle the window with special filetype
+local function special_ft_component(ft, winid)
+    if vim.fn.win_gettype(winid) == 'command' then
+        ft = 'cmdwin'
     end
-    -- Window with normal filetype displays the path of the file
-    -- Winbar displays the path with two parts: prefix (icon and a pre-defined name) and path
+
+    local icon = special_filetypes[ft].icon
+    local title
+    local rest = {}
+    if ft == 'floggraph' or ft == 'fugitive' or ft == 'oil' or ft == 'term' then
+        title = vim.fn.expand('%')
+    elseif ft == 'qf' then
+        local is_loclist = vim.fn.win_gettype(winid) == 'loclist'
+        title = is_loclist and 'Location List' or 'Quickfix List'
+        local what = { title = 0, size = 0, idx = 0 }
+        local list = is_loclist and vim.fn.getloclist(0, what) or vim.fn.getqflist(what)
+        if list.title ~= '' then
+            table.insert(rest, list.title)
+        end
+        table.insert(rest, string.format('[%s/%s]', list.idx, list.size))
+    elseif vim.fn.win_gettype(winid) == 'command' then
+        title = 'Command-line'
+    else
+        title = special_filetypes[ft].title
+    end
+    local rest_str = table.concat(rest, ' ' .. delimiter .. ' ')
+    return string.format('%%#WinbarPath#%s %s%%*', icon, title)
+        .. (rest_str ~= '' and (' ' .. delimiter .. ' ' .. rest_str) or '')
+end
+
+-- Get the file path for the window with normal filetype
+local function path_component()
     local fullpath = vim.fn.expand('%')
     if fullpath == '' then
         return ''
@@ -49,18 +80,9 @@ local function path_component()
     return string.format('%%#WinbarPath#%s %s%%*', icon, path)
 end
 
+-- Get the filetype icon
 local function icon_component()
     local ft = vim.bo.filetype
-    local winid = vim.api.nvim_get_current_win()
-    -- Window with special filetype
-    local fmt_str = '%%#WinbarSpecialIcon#%s%%*'
-    if special_filetypes[ft] then
-        return string.format(fmt_str, special_filetypes[ft].icon)
-    end
-    if vim.fn.win_gettype(winid) == 'command' then
-        return string.format(fmt_str, special_filetypes.cmdwin.icon)
-    end
-    -- Window with normal filetype
     local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
     if has_devicons then
         local icon, icon_color = devicons.get_icon_color_by_filetype(ft, { default = true })
@@ -75,50 +97,8 @@ local function icon_component()
     return icons.misc.file
 end
 
+-- Get the filename
 local function name_component()
-    -- For window with special filetype
-    local ft = vim.bo.filetype
-    local winid = vim.api.nvim_get_current_win()
-    if ft == 'aerial' then
-        return 'Outline [Aerial]'
-    end
-    if ft == 'Outline' then
-        return 'Outline'
-    end
-    if ft == 'floggraph' or ft == 'fugitive' or ft == 'oil' or ft == 'term' then
-        return vim.fn.expand('%')
-    end
-    if ft == 'fugitiveblame' then
-        return 'Fugitive Blame'
-    end
-    if ft == 'gitsigns.blame' then
-        return 'Gitsigns Blame'
-    end
-    if ft == 'kitty_scrollback' then
-        return 'Kitty Scrollback'
-    end
-    if ft == 'qf' then
-        local is_loclist = vim.fn.win_gettype(winid) == 'loclist'
-        local type = is_loclist and 'Location List' or 'Quickfix List'
-        local what = { title = 0, size = 0, idx = 0 }
-        local list = is_loclist and vim.fn.getloclist(0, what) or vim.fn.getqflist(what)
-        -- The output format is like {list type} > {list title} > {current idx}
-        -- E.g., "Quickfix List > Diagnostics [1/10]"
-        local items = {}
-        table.insert(items, type) -- type
-        if list.title ~= '' then
-            table.insert(items, list.title) -- title
-        end
-        local idx = string.format('[%s/%s]', list.idx, list.size) -- index
-        return table.concat(items, ' ' .. delimiter .. ' ') .. ' ' .. idx
-    end
-    if ft == 'tagbar' then
-        return 'Tagbar'
-    end
-    if vim.fn.win_gettype(winid) == 'command' then
-        return 'Command-line Window'
-    end
-    -- For window with normal filetype
     local filename = vim.fn.expand('%:t')
     if filename == '' then
         filename = '[No Name]'
@@ -127,11 +107,20 @@ local function name_component()
 end
 
 M.render = function()
-    local items = {}
+    local ft = vim.bo.filetype
+    local winid = vim.api.nvim_get_current_win()
 
-    -- Header
-    -- It is the first part of the winbar with powerline style
     local header = header_component()
+
+    -- 1. Window with special filetype
+
+    if is_special_ft(ft, winid) then
+        return header .. ' ' .. special_ft_component(ft, winid)
+    end
+
+    -- 2. Window with normal filetype
+
+    local items = {}
     table.insert(items, header)
 
     -- Path

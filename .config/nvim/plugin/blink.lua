@@ -105,6 +105,11 @@ require('blink.cmp').setup({
             enabled = true,
         },
     },
+    fuzzy = {
+        max_typos = function()
+            return 0
+        end,
+    },
     appearance = {
         kind_icons = kind_icons,
     },

@@ -79,7 +79,29 @@ local color_utils = require('rockyz.utils.color_utils')
 local io_utils = require('rockyz.utils.io_utils')
 local icons = require('rockyz.icons')
 
--- Use the globally set statusline
+vim.g.fzf_layout = {
+    window = {
+        width = 0.8,
+        height = 0.85,
+    },
+}
+
+vim.g.fzf_action = {
+    ['ctrl-x'] = 'split',
+    ['ctrl-v'] = 'vsplit',
+    ['ctrl-t'] = 'tab split',
+}
+
+-- The layout of the preview window. vim#fzf#with_preview must be used to make this option
+-- effective.
+vim.g.fzf_vim = {
+    preview_window = {
+        'right,60%',
+        'ctrl-/',
+    },
+}
+
+-- Use the general statusline
 vim.api.nvim_create_autocmd('User', {
     group = vim.api.nvim_create_augroup('rockyz.fzf.statusline', { clear = true }),
     pattern = 'FzfStatusLine',
@@ -109,33 +131,12 @@ local function get_colored_devicon(filename)
     local devicon = ''
     local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
     if has_devicons then
-        local file_icon, file_icon_hl = devicons.get_icon(filename, vim.fn.fnamemodify(filename, ':e'), { default = true })
+        local ext = vim.fn.fnamemodify(filename, ':e')
+        local file_icon, file_icon_hl = devicons.get_icon(filename, ext, { default = true })
         devicon = color_str(file_icon, file_icon_hl)
     end
     return devicon
 end
-
-vim.g.fzf_layout = {
-    window = {
-        width = 0.8,
-        height = 0.85,
-    },
-}
-
-vim.g.fzf_action = {
-    ['ctrl-x'] = 'split',
-    ['ctrl-v'] = 'vsplit',
-    ['ctrl-t'] = 'tab split',
-}
-
--- The layout of the preview window. vim#fzf#with_preview must be used to make this option
--- effective.
-vim.g.fzf_vim = {
-    preview_window = {
-        'right,60%',
-        'ctrl-/',
-    },
-}
 
 local cached_fzf_query -- cached the last fzf query
 local cached_rg_query -- cached the last rg query (for live greps)
@@ -172,16 +173,57 @@ local function get_fzf_opts(from_resume, extra_opts)
     return vim.list_extend(common_opts, extra_opts)
 end
 
--- Run the fzf finder and cache it for fzf resume
+-- Run the given finder and cache it for fzf resume
 local function run(finder)
     cached_finder = finder
     finder()
 end
 
----@param spec table The spec dictionary, see
----https://github.com/junegunn/fzf/blob/master/README-VIM.md for details
+--
+-- Launch fzf and connect it to a fifo pipe waiting for the contents. With this approach, fzf's UI
+-- will display immediately without blocking. Once the contents are processed, they are written into
+-- the pipe, and then they appear in fzf.
+--
+-- In addition, we set a temporary env FZF_DEFAULT_COMMAND instead of setting `source` in the spec
+-- table to pipe the commmand to fzf to avoid the block when quitting fzf before the LSP request
+-- finishes.
+--
+
+local fd, output_pipe = nil, nil
+
+local function write_pipe(entries)
+    for _, line in ipairs(entries) do
+        if not output_pipe then
+            return
+        end
+        output_pipe:write(line .. '\n', function(_)
+        end)
+    end
+end
+
+local function close_pipe()
+    if output_pipe then
+        output_pipe:close()
+        output_pipe = nil
+    end
+end
+
+---@param spec table The spec dictionary, see https://github.com/junegunn/fzf/blob/master/README-VIM.md
 local function fzf(spec)
+    local fifotmpname = vim.fn.tempname()
+    vim.fn.system({ "mkfifo", fifotmpname })
+
+    local old_fzf_cmd = vim.env.FZF_DEFAULT_COMMAND
+    vim.env.FZF_DEFAULT_COMMAND = 'cat ' .. fifotmpname
+
     vim.fn['fzf#run'](vim.fn['fzf#wrap'](spec))
+
+    vim.env.FZF_DEFAULT_COMMAND = old_fzf_cmd
+
+    -- Have to open this after there is a reader, otherwise this will block neovim.
+    fd = vim.uv.fs_open(fifotmpname, "w", -1)
+    output_pipe = vim.uv.new_pipe(false)
+    output_pipe:open(fd)
 end
 
 -- Path completion in INSERT mode
@@ -428,7 +470,7 @@ local function dotfiles(from_resume)
             source = 'ls-dotfiles',
             options = get_fzf_opts(from_resume, {
                 '--prompt',
-                'Dotfiles> ',
+                '.dotfiles> ',
             }),
         })
     )
@@ -479,54 +521,14 @@ end)
 
 -- Tabs
 local function tabs(from_resume)
-    local entries = {}
-    local cur_tab = vim.api.nvim_get_current_tabpage()
-    for idx, tid in ipairs(vim.api.nvim_list_tabpages()) do
-        local filenames = {}
-        -- Store winids in each tab. They are used for closing the tab via CTRL-D.
-        local winids = {}
-        local cur_winid = vim.api.nvim_tabpage_get_win(tid)
-        local cur_bufname
-        local cur_lnum
-        for _, winid in ipairs(vim.api.nvim_tabpage_list_wins(tid)) do
-            -- Only consider the normal windows and ignore the floating windows
-            if vim.api.nvim_win_get_config(winid).relative == '' then
-                table.insert(winids, winid)
-                local bufnr = vim.api.nvim_win_get_buf(winid)
-                local bufname = vim.api.nvim_buf_get_name(bufnr)
-                if bufname == '' then
-                    bufname = '[No Name]'
-                end
-                local filename = vim.fn.fnamemodify(bufname, ':t')
-                -- Handle current window in each tab
-                if winid == cur_winid then
-                    -- Space is the default delimiter in fzf, so temporarily replacing it with a
-                    -- special string such as "@@@@". When the bufname is needed in the preview
-                    -- later on, replace it back.
-                    cur_bufname = bufname:gsub(" ", "@@@@")
-                    cur_lnum = vim.api.nvim_win_get_cursor(winid)[1]
-                    -- Mark the current window in a tab by a distinct color
-                    filename = color_str(filename, 'DiagnosticOk')
-                end
-                table.insert(filenames, filename)
-            end
-        end
-        -- prefix is used by fzf itself for preview and sink, and it won't be presented in each
-        -- entry
-        local prefix = cur_bufname .. ' ' .. cur_lnum .. ' ' .. tid .. ' ' .. table.concat(winids, ',')
-        local entry = prefix .. ' ' .. idx .. ': ' .. table.concat(filenames, ', ')
-        -- Indicator for current tab
-        if tid == cur_tab then
-            entry = entry .. ' ' .. icons.caret.left
-        end
-        table.insert(entries, entry)
-    end
+    local win = vim.api.nvim_get_current_win()
 
-    fzf({
-        source = entries,
+    local spec = {
         ['sink*'] = function(lines)
             local key = lines[1]
-            if key == 'ctrl-d' and #vim.api.nvim_list_tabpages() > 1 then
+            if key == 'esc' then
+                close_pipe()
+            elseif key == 'ctrl-d' and #vim.api.nvim_list_tabpages() > 1 then
                 -- CTRL-D: delete tabs
                 for i = 2, #lines do
                     for winid in lines[i]:match('%S+%s%S+%s%S+%s(%S+)'):gmatch('[^,]+') do
@@ -536,13 +538,11 @@ local function tabs(from_resume)
                         end
                     end
                 end
-            else
+            elseif #lines == 2 then
                 -- ENTER with single selection: select tab
-                if #lines == 2 then
-                    local tid = tonumber(string.match(lines[2], '%S+%s%S+%s(%S+)'))
-                    if tid then
-                        vim.api.nvim_set_current_tabpage(tid)
-                    end
+                local tid = tonumber(string.match(lines[2], '%S+%s%S+%s(%S+)'))
+                if tid then
+                    vim.api.nvim_set_current_tabpage(tid)
                 end
             end
         end,
@@ -554,13 +554,63 @@ local function tabs(from_resume)
             '--header',
             ':: CTRL-D (close tabs)',
             '--expect',
-            'ctrl-d',
+            'ctrl-d,esc',
             '--preview',
             'file=$(echo {1} | sed "s/@@@@/ /g"); [[ -f $file ]] && ' .. bat_prefix .. ' --highlight-line {2} -- $file || echo "No preview support!"',
             '--bind',
             'focus:transform-preview-label:echo [ $(echo {1} | sed "s/@@@@/ /g; s|^$HOME|~|") ]',
         }),
-    })
+    }
+
+    fzf(spec)
+
+    local entries = {}
+    vim.api.nvim_win_call(win, function()
+        local cur_tab = vim.api.nvim_get_current_tabpage()
+        for idx, tid in ipairs(vim.api.nvim_list_tabpages()) do
+            local filenames = {}
+            -- Store winids in each tab. They are used for closing the tab via CTRL-D.
+            local winids = {}
+            local cur_winid = vim.api.nvim_tabpage_get_win(tid)
+            local cur_bufname
+            local cur_lnum
+            for _, winid in ipairs(vim.api.nvim_tabpage_list_wins(tid)) do
+                -- Only consider the normal windows and ignore the floating windows
+                if vim.api.nvim_win_get_config(winid).relative == '' then
+                    table.insert(winids, winid)
+                    local bufnr = vim.api.nvim_win_get_buf(winid)
+                    local bufname = vim.api.nvim_buf_get_name(bufnr)
+                    if bufname == '' then
+                        bufname = '[No Name]'
+                    end
+                    local filename = vim.fn.fnamemodify(bufname, ':t')
+                    -- Handle current window in each tab
+                    if winid == cur_winid then
+                        -- Space is the default delimiter in fzf, so temporarily replacing it with a
+                        -- special string such as "@@@@". When the bufname is needed in the preview
+                        -- later on, replace it back.
+                        cur_bufname = bufname:gsub(" ", "@@@@")
+                        cur_lnum = vim.api.nvim_win_get_cursor(winid)[1]
+                        -- Mark the current window in a tab by a distinct color
+                        filename = color_str(filename, 'DiagnosticOk')
+                    end
+                    table.insert(filenames, filename)
+                end
+            end
+            -- prefix is used by fzf itself for preview and sink, and it won't be presented in each
+            -- entry
+            local prefix = cur_bufname .. ' ' .. cur_lnum .. ' ' .. tid .. ' ' .. table.concat(winids, ',')
+            local entry = prefix .. ' ' .. idx .. ': ' .. table.concat(filenames, ', ')
+            -- Indicator for current tab
+            if tid == cur_tab then
+                entry = entry .. ' ' .. icons.caret.left
+            end
+            table.insert(entries, entry)
+        end
+    end)
+
+    write_pipe(entries)
+    close_pipe()
 end
 
 vim.keymap.set('n', '<Leader>ft', function()
@@ -572,30 +622,12 @@ end)
 --
 
 local function args(from_resume)
-    local argc = vim.fn.argc()
-    if argc == 0 then
-        vim.notify('Argument list is empty', vim.log.levels.WARN)
-        return
-    end
-    local entries = {}
-    for i = 0, argc - 1 do
-        local f = vim.fn.argv(i)
-        ---@diagnostic disable-next-line: param-type-mismatch
-        local fs = vim.uv.fs_stat(f)
-        if fs and fs.type == 'file' then
-            local devicon = get_colored_devicon(f)
-            -- Fzf entry consists of 3 parts: index, devicon, filename
-            -- Index is used for file switch and it won't be displayed in fzf
-            local entry = string.format('%s %s %s', #entries + 1, devicon, f)
-            table.insert(entries, entry)
-        end
-    end
-
-    fzf({
-        source = entries,
+    local spec = {
         ['sink*'] = function(lines)
             local key = lines[1]
-            if key == 'ctrl-d' then
+            if key == 'esc' then
+                close_pipe()
+            elseif key == 'ctrl-d' then
                 -- CTRL-D: delete from arglist
                 for i = 2, #lines do
                     vim.cmd.argdelete(string.match(lines[i], '%S+%s%S+%s(%S+)'))
@@ -620,13 +652,37 @@ local function args(from_resume)
             '--header',
             ':: CTRL-D (delete from arglist)',
             '--expect',
-            'ctrl-x,ctrl-v,ctrl-t,ctrl-d',
+            'ctrl-x,ctrl-v,ctrl-t,ctrl-d,esc',
             '--preview',
             bat_prefix .. ' -- {3}',
             '--bind',
             'focus:transform-preview-label:echo [ {3} ]',
         }),
-    })
+    }
+
+    fzf(spec)
+
+    local entries = {}
+    local argc = vim.fn.argc()
+    if argc == 0 then
+        vim.notify('Argument list is empty', vim.log.levels.WARN)
+        return
+    end
+    for i = 0, argc - 1 do
+        local f = vim.fn.argv(i)
+        ---@diagnostic disable-next-line: param-type-mismatch
+        local fs = vim.uv.fs_stat(f)
+        if fs and fs.type == 'file' then
+            local devicon = get_colored_devicon(f)
+            -- Fzf entry consists of 3 parts: index, devicon, filename
+            -- Index is used for file switch and it won't be displayed in fzf
+            local entry = string.format('%s %s %s', #entries + 1, devicon, f)
+            table.insert(entries, entry)
+        end
+    end
+
+    write_pipe(entries)
+    close_pipe()
 end
 
 vim.keymap.set('n', '<Leader>fa', function()
@@ -639,8 +695,54 @@ end)
 
 -- Inspired by fzf-lua
 local function helptags(from_resume)
-    local langs = vim.split(vim.o.helplang, ',')
+    local win = vim.api.nvim_get_current_win()
 
+    local spec = {
+        ['sink*'] = function(lines)
+            if #lines > 2 then
+                vim.notify('No support multiple selections', vim.log.levels.WARN)
+            end
+            local key = lines[1]
+            if key == 'esc' then
+                close_pipe()
+                return
+            end
+            local tag = string.match(lines[2], '^%S+')
+            if key == '' or key == 'ctrl-x' then
+                -- ENTER
+                vim.cmd('help ' .. tag)
+            elseif key == 'ctrl-v' then
+                vim.cmd('vert help ' .. tag)
+            elseif key == 'ctrl-t' then
+                vim.cmd('tab help ' .. tag)
+            end
+        end,
+        options = get_fzf_opts(from_resume, {
+            '--with-nth',
+            '..2',
+            '--nth',
+            '1',
+            '--no-multi',
+            '--prompt',
+            'Helptags> ',
+            '--expect',
+            'ctrl-x,ctrl-v,ctrl-t,esc',
+            '--header',
+            ':: CTRL-V (open in vertical split), CTRL-T (open in new tab)',
+            '--preview',
+            -- This script is taken from fzf.vim/bin/tagpreview.sh
+            'TARGET_LINE="$(nvim -R -i NONE -u NONE -e -m -s {3} -c "set nomagic" -c "silent "{4} -c \'let l=line(".") | new | put =l | print | qa!\')"; \
+            START_LINE="$(( TARGET_LINE - 5 ))"; \
+            (( START_LINE <= 0 )) && START_LINE=1; \
+            END_LINE="$(( START_LINE + FZF_PREVIEW_LINES - 1 ))"; ' .. bat_prefix .. ' --style plain --language VimHelp --highlight-line "${TARGET_LINE}" --line-range="${START_LINE}:${END_LINE}" -- {3}',
+            '--bind',
+            'focus:transform-preview-label:echo [ {1} {2} ]',
+        }),
+    }
+
+    fzf(spec)
+
+    local langs = vim.split(vim.o.helplang, ',')
     local langs_map = {}
     for _, lang in ipairs(langs) do
         langs_map[lang] = true
@@ -706,45 +808,8 @@ local function helptags(from_resume)
         end
     end
 
-    fzf({
-        source = fzf_entries,
-        ['sink*'] = function(lines)
-            if #lines > 2 then
-                vim.notify('No support multiple selections', vim.log.levels.WARN)
-            end
-            local key = lines[1]
-            local tag = string.match(lines[2], '^%S+')
-            if key == '' or key == 'ctrl-x' then
-                -- ENTER
-                vim.cmd('help ' .. tag)
-            elseif key == 'ctrl-v' then
-                vim.cmd('vert help ' .. tag)
-            elseif key == 'ctrl-t' then
-                vim.cmd('tab help ' .. tag)
-            end
-        end,
-        options = get_fzf_opts(from_resume, {
-            '--with-nth',
-            '..2',
-            '--nth',
-            '1',
-            '--no-multi',
-            '--prompt',
-            'Helptags> ',
-            '--expect',
-            'ctrl-x,ctrl-v,ctrl-t',
-            '--header',
-            ':: CTRL-V (open in vertical split), CTRL-T (open in new tab)',
-            '--preview',
-            -- This script is taken from fzf.vim/bin/tagpreview.sh
-            'TARGET_LINE="$(nvim -R -i NONE -u NONE -e -m -s {3} -c "set nomagic" -c "silent "{4} -c \'let l=line(".") | new | put =l | print | qa!\')"; \
-            START_LINE="$(( TARGET_LINE - 5 ))"; \
-            (( START_LINE <= 0 )) && START_LINE=1; \
-            END_LINE="$(( START_LINE + FZF_PREVIEW_LINES - 1 ))"; ' .. bat_prefix .. ' --style plain --language VimHelp --highlight-line "${TARGET_LINE}" --line-range="${START_LINE}:${END_LINE}" -- {3}',
-            '--bind',
-            'focus:transform-preview-label:echo [ {1} {2} ]',
-        }),
-    })
+    write_pipe(fzf_entries)
+    close_pipe()
 end
 
 vim.keymap.set('n', '<Leader>fh', function()
@@ -757,6 +822,36 @@ end)
 
 -- Inspired by fzf-lua
 local function commands(from_resume)
+    local spec = {
+        ['sink*'] = function(lines)
+            if lines[1] == 'esc' then
+                close_pipe()
+                return
+            end
+            local cmd = lines[1]:match('^%S+')
+            vim.cmd('stopinsert')
+            vim.api.nvim_feedkeys(':' .. cmd, 'n', true)
+        end,
+        options = get_fzf_opts(from_resume, {
+            '--ansi',
+            '--no-multi',
+            '--with-nth',
+            '2',
+            '--prompt',
+            'Commands> ',
+            '--expect',
+            'esc',
+            '--preview',
+            'echo {3..}',
+            '--preview-window',
+            'down,3',
+            '--bind',
+            'focus:transform-preview-label:echo [ {1} ]',
+        }),
+    }
+
+    fzf(spec)
+
     -- The structure of each entry is as follows (3 parts):
     -- command colored_command description
     --    |       |                  |____________ shown in preview
@@ -843,28 +938,8 @@ local function commands(from_resume)
         end
     end
 
-    fzf({
-        source = fzf_entries,
-        ['sink*'] = function(lines)
-            local cmd = lines[1]:match('^%S+')
-            vim.cmd('stopinsert')
-            vim.api.nvim_feedkeys(':' .. cmd, 'n', true)
-        end,
-        options = get_fzf_opts(from_resume, {
-            '--ansi',
-            '--no-multi',
-            '--with-nth',
-            '2',
-            '--prompt',
-            'Commands> ',
-            '--preview',
-            'echo {3..}',
-            '--preview-window',
-            'down,3',
-            '--bind',
-            'focus:transform-preview-label:echo [ {1} ]',
-        }),
-    })
+    write_pipe(fzf_entries)
+    close_pipe()
 end
 
 vim.keymap.set('n', '<Leader>fc', function()
@@ -880,7 +955,7 @@ end)
 local function get_qf_entry(item)
     local entry = {}
     if item.fname ~= '' then
-        table.insert(entry, color_str(item.fname, 'Directory'))
+        table.insert(entry, color_str(item.fname, 'QuickfixFilename'))
     end
     local lnum_col = item.lnum
     if item.col ~= '' then
@@ -917,27 +992,12 @@ end
 local function qf_items_fzf(win_local, from_resume)
     local what = { items = 0, title = 0 }
     local list = win_local and vim.fn.getloclist(0, what) or vim.fn.getqflist(what)
-    local entries = {}
-    local index = 1
-    for _, item in ipairs(list.items) do
-        local bufnr = item.bufnr
-        local bufname = vim.api.nvim_buf_get_name(bufnr)
-        local lnum = item.lnum
-        -- The formatted entries will be fed to fzf.
-        -- Each entry is like "index bufname lnum path/to/the/file:134:20 [E] error"
-        -- The first three parts are used for fzf itself and won't be presented in fzf window.
-        -- * index: display the error by :[nr]cc!
-        -- * bufname and lnum: fzf preview
-        table.insert(entries, index .. ' ' .. bufname .. ' ' .. lnum .. ' ' .. get_qf_entry(qf_utils.format_qf_item(item)))
-        index = index + 1
-    end
-
-    local prompt = win_local and 'Location List' or 'Quickfix List'
-    fzf({
-        source = entries,
+    local spec = {
         ['sink*'] = function(lines)
             local key = lines[1]
-            if key == 'ctrl-q' or key == 'ctrl-l' or key == 'ctrl-r' then
+            if key == 'esc' then
+                close_pipe()
+            elseif key == 'ctrl-q' or key == 'ctrl-l' or key == 'ctrl-r' then
                 -- CTRL-Q: send to a new quickfix
                 -- CTRL-L: send to a new location list
                 -- CTRL-R: refine the current quickfix with selections
@@ -984,13 +1044,13 @@ local function qf_items_fzf(win_local, from_resume)
         end,
         options = get_fzf_opts(from_resume, {
             '--prompt',
-            prompt .. '> ',
+            win_local and 'Location List' or 'Quickfix List' .. '> ',
             '--header',
             ':: ENTER (display the error), CTRL-R (refine the current ' .. (win_local and 'loclist' or 'quickfix') .. ')\n:: CTRL-Q (send to quickfix), CTRL-L (send to loclist)',
             '--with-nth',
             '4..',
             '--expect',
-            'ctrl-x,ctrl-v,ctrl-t,ctrl-q,ctrl-l,ctrl-r',
+            'ctrl-x,ctrl-v,ctrl-t,ctrl-q,ctrl-l,ctrl-r,esc',
             '--preview',
             bat_prefix .. ' --highlight-line {3} -- {2}',
             '--preview-window',
@@ -998,7 +1058,27 @@ local function qf_items_fzf(win_local, from_resume)
             '--bind',
             'focus:transform-preview-label:echo [ $(echo {2} | sed "s|^$HOME|~|") ]',
         }),
-    })
+    }
+
+    fzf(spec)
+
+    local fzf_entries = {}
+    local index = 1
+    for _, item in ipairs(list.items) do
+        local bufnr = item.bufnr
+        local bufname = vim.api.nvim_buf_get_name(bufnr)
+        local lnum = item.lnum
+        -- The formatted entries will be fed to fzf.
+        -- Each entry is like "index bufname lnum path/to/the/file:134:20 [E] error"
+        -- The first three parts are used for fzf itself and won't be presented in fzf window.
+        -- * index: display the error by :[nr]cc!
+        -- * bufname and lnum: fzf preview
+        table.insert(fzf_entries, index .. ' ' .. bufname .. ' ' .. lnum .. ' ' .. get_qf_entry(qf_utils.format_qf_item(item)))
+        index = index + 1
+    end
+
+    write_pipe(fzf_entries)
+    close_pipe()
 end
 
 local function quickfix_items(from_resume)
@@ -1032,8 +1112,43 @@ local err_tmpfile = ''
 -- Dump the errors in each list into a separate temp file, and cat this file to preview the list.
 ---@param win_local boolean Whether it's a window-local location list or quickfix list
 local function qf_history_fzf(win_local, from_resume)
+    local hist_cmd = win_local and 'lhistory' or 'chistory'
+    local open_cmd = win_local and 'lopen' or 'copen'
+    local prompt = win_local and 'Location List History' or 'Quickfix List History'
+    local spec = {
+        ['sink*'] = function(lines)
+            if lines[1] == 'esc' then
+                close_pipe()
+                return
+            end
+            local count = string.match(lines[2], '^(%d+)')
+            vim.cmd('silent! ' .. count .. hist_cmd)
+            vim.cmd(open_cmd)
+        end,
+        placeholder = '',
+        options = get_fzf_opts(from_resume, {
+            '--with-nth',
+            '3..',
+            '--no-multi',
+            '--prompt',
+            prompt.. '> ',
+            '--header',
+            ':: ENTER (switch to selected list)',
+            '--expect',
+            'esc',
+            '--preview-window',
+            'down,45%',
+            '--preview',
+            'cat {2}',
+            '--bind',
+            'focus:transform-preview-label:echo [ {3..} ]',
+        }),
+    }
+
+    fzf(spec)
+
     local cur_nr = win_local and vim.fn.getloclist(0, { nr = 0 }).nr or vim.fn.getqflist({ nr = 0 }).nr
-    local entries = {}
+    local fzf_entries = {}
     for i = 1, 10 do
         local what = { nr = i, id = 0, title = true, items = true, size = true }
         local list = win_local and vim.fn.getloclist(0, what) or vim.fn.getqflist(what)
@@ -1048,14 +1163,15 @@ local function qf_history_fzf(win_local, from_resume)
             err_tmpfile = err_tmpfile .. '-' .. vim.api.nvim_get_current_win()
         end
 
-        -- Build fzf entry: "tmpfile [3] 1 items    Diagnostics"
-        -- The first part "tmpfile" is the path of the temporary file used by cat in --preview. The
+        -- Build fzf entry: "3 tmpfile [3] 1 items    Diagnostics"
+        -- The first part is quickfix-id that is used to switch the specific quickfix.
+        -- The second part "tmpfile" is the path of the temporary file used by cat in --preview. The
         -- other parts will be displayed in fzf.
-        local entry = err_tmpfile .. ' [' .. i .. '] ' .. list.size .. ' items    ' .. list.title
+        local entry = i .. ' ' .. err_tmpfile .. ' [' .. i .. '] ' .. list.size .. ' items    ' .. list.title
         if list.nr == cur_nr then
             entry = entry .. ' ' .. icons.caret.left
         end
-        table.insert(entries, entry)
+        table.insert(fzf_entries, entry)
 
         -- Write errors in the list into the temporary file for previewing
         local errors = {}
@@ -1069,34 +1185,8 @@ local function qf_history_fzf(win_local, from_resume)
         io_utils.write_file_async(err_tmpfile, table.concat(errors, '\n'))
     end
 
-    local hist_cmd = win_local and 'lhistory' or 'chistory'
-    local open_cmd = win_local and 'lopen' or 'copen'
-    local prompt = win_local and 'Location List History' or 'Quickfix List History'
-
-    fzf({
-        source = entries,
-        ['sink'] = function(line)
-            local count = string.match(line, '[(%d+)]')
-            vim.cmd('silent! ' .. count .. hist_cmd)
-            vim.cmd(open_cmd)
-        end,
-        placeholder = '',
-        options = get_fzf_opts(from_resume, {
-            '--with-nth',
-            '2..',
-            '--no-multi',
-            '--prompt',
-            prompt.. '> ',
-            '--header',
-            ':: ENTER (switch to selected list)',
-            '--preview-window',
-            'down,45%',
-            '--preview',
-            'cat {1}',
-            '--bind',
-            'focus:transform-preview-label:echo [ {2..} ]',
-        }),
-    })
+    write_pipe(fzf_entries)
+    close_pipe()
 end
 
 local function quickfix_history(from_resume)
@@ -1337,16 +1427,6 @@ end)
 --
 -- LSP
 --
--- LSP client sends the request to the server and asynchronously waits for the response that carrys
--- the data for fzf entries. If execute fzf in the callback, there maybe noticable delay for fzf UI
--- pop up. Instead, we run fzf to display its UI first and connect it to a fifo pipe waiting for the
--- contents. The callback will process the data and sends contents to the pipe and then the contents
--- will display in fzf.
---
--- In addition, we set a temporary env FZF_DEFAULT_COMMAND instead of setting `source` in the spec
--- table to pipe the commmand to fzf to avoid the block when quitting fzf before the LSP request
--- finishes.
---
 -- Each fzf entry consists of 6 parts: index, offset_encoding, filename, lnum, col, fzf_text.
 --
 -- Only fzf_text will be displayed in fzf. index is used to fetch the corresponding qf items from
@@ -1383,7 +1463,7 @@ local function symbols_to_entries_and_items(symbols, ctx, child_prefix, all_entr
         for _, symbol in ipairs(_symbols) do
             local kind = vim.lsp.protocol.SymbolKind[symbol.kind] or 'Unknown'
             local icon = icons.symbol_kinds[kind]
-            local colored_icon_kind = color_str(icon .. kind, 'SymbolKind' .. kind)
+            local colored_icon_kind = color_str(icon .. ' ' .. kind, 'SymbolKind' .. kind)
             if symbol.location then
                 --
                 -- LSP's WorkspaceSymbol[]
@@ -1473,98 +1553,76 @@ local function lsp_symbols(method, params, title, symbol_query, from_resume)
     local all_entries = {} -- fzf entries
     local all_items = {} -- qf items
 
-    local fifotmpname = vim.fn.tempname()
-    vim.fn.system({ "mkfifo", fifotmpname })
-
-    local fd, output_pipe = nil, nil
-
-    local function fzf_exec()
-        local fzf_header = ':: CTRL-Q (send to quickfix), CTRL-L (send to loclist)'
-        local fzf_preview_window = '+{4}-/2'
-        if symbol_query ~= '' then
-            fzf_header = ':: Query: ' .. color_str(symbol_query, 'RipgrepQuery') .. '\n' .. fzf_header
-            fzf_preview_window = 'down,45%,' .. fzf_preview_window
-        end
-
-        local old_fzf_cmd = vim.env.FZF_DEFAULT_COMMAND
-        vim.env.FZF_DEFAULT_COMMAND = 'cat ' .. fifotmpname
-
-        fzf({
-            ['sink*'] = function(lines)
-                local key = lines[1]
-                if key == 'esc' then
-                    -- If we press ESC to exit fzf before the callback finish, we should close the
-                    -- pipe.
-                    if output_pipe then
-                        output_pipe:close()
-                        output_pipe = nil
-                    end
-                elseif key == 'ctrl-q' or key == 'ctrl-l' then
-                    -- CTRL-Q: send to quickfix; CTRL-L: send to location list
-                    local loclist = key == 'ctrl-l'
-                    local qf_items = {}
-                    for i = 2, #lines do
-                        local idx = tonumber(lines[i]:match('^%S+'))
-                        table.insert(qf_items, all_items[idx])
-                    end
-                    if loclist then
-                        vim.fn.setloclist(0, {}, ' ', { title = title, items = qf_items })
-                        vim.cmd('botright lopen')
-                    else
-                        vim.fn.setqflist({}, ' ', { title = title, items = qf_items })
-                        vim.cmd('botright copen')
-                    end
-                else
-                    -- ENTER/CTRL-X/CTRL-V/CTRL-T with multiple selections
-                    local action = vim.g.fzf_action[key]
-                    for i = 2, #lines do
-                        if action then
-                            vim.cmd(action)
-                        end
-                        local idx = tonumber(lines[i]:match('^%S+'))
-                        local item = all_items[idx]
-                        local offset_encoding = lines[i]:match('^%S+%s(%S+)')
-                        if symbol_query ~= '' then
-                            -- For workspace symbol
-                            vim.lsp.util.show_document(item.user_data, offset_encoding)
-                        else
-                            -- For document symbol
-                            vim.cmd("normal! m'") -- save position to jumplist
-                            vim.api.nvim_win_set_cursor(0, { item.lnum, item.col - 1 })
-                            vim.cmd('normal! zvzz')
-                        end
-                    end
-                end
-            end,
-            options = get_fzf_opts(from_resume, {
-                '--delimiter',
-                ' ',
-                '--with-nth',
-                '6..',
-                '--prompt',
-                title .. '> ',
-                '--header',
-                fzf_header,
-                '--expect',
-                'ctrl-x,ctrl-v,ctrl-t,ctrl-q,ctrl-l,esc',
-                '--preview',
-                bat_prefix .. ' --highlight-line {4} -- {3}',
-                '--preview-window',
-                fzf_preview_window,
-                '--bind',
-                'focus:transform-preview-label:echo [ $(echo {3}:{4}:{5} | sed "s|^$HOME|~|") ]',
-            }),
-        })
-
-        vim.env.FZF_DEFAULT_COMMAND = old_fzf_cmd
+    local fzf_header = ':: CTRL-Q (send to quickfix), CTRL-L (send to loclist)'
+    local fzf_preview_window = '+{4}-/2'
+    if symbol_query ~= '' then
+        fzf_header = ':: Query: ' .. color_str(symbol_query, 'RipgrepQuery') .. '\n' .. fzf_header
+        fzf_preview_window = 'down,45%,' .. fzf_preview_window
     end
 
-    fzf_exec()
+    local spec = {
+        ['sink*'] = function(lines)
+            local key = lines[1]
+            if key == 'esc' then
+                close_pipe()
+            elseif key == 'ctrl-q' or key == 'ctrl-l' then
+                -- CTRL-Q: send to quickfix; CTRL-L: send to location list
+                local loclist = key == 'ctrl-l'
+                local qf_items = {}
+                for i = 2, #lines do
+                    local idx = tonumber(lines[i]:match('^%S+'))
+                    table.insert(qf_items, all_items[idx])
+                end
+                if loclist then
+                    vim.fn.setloclist(0, {}, ' ', { title = title, items = qf_items })
+                    vim.cmd('botright lopen')
+                else
+                    vim.fn.setqflist({}, ' ', { title = title, items = qf_items })
+                    vim.cmd('botright copen')
+                end
+            else
+                -- ENTER/CTRL-X/CTRL-V/CTRL-T with multiple selections
+                local action = vim.g.fzf_action[key]
+                for i = 2, #lines do
+                    if action then
+                        vim.cmd(action)
+                    end
+                    local idx = tonumber(lines[i]:match('^%S+'))
+                    local item = all_items[idx]
+                    local offset_encoding = lines[i]:match('^%S+%s(%S+)')
+                    if symbol_query ~= '' then
+                        -- For workspace symbol
+                        vim.lsp.util.show_document(item.user_data, offset_encoding)
+                    else
+                        -- For document symbol
+                        vim.cmd("normal! m'") -- save position to jumplist
+                        vim.api.nvim_win_set_cursor(0, { item.lnum, item.col - 1 })
+                        vim.cmd('normal! zvzz')
+                    end
+                end
+            end
+        end,
+        options = get_fzf_opts(from_resume, {
+            '--delimiter',
+            ' ',
+            '--with-nth',
+            '6..',
+            '--prompt',
+            title .. '> ',
+            '--header',
+            fzf_header,
+            '--expect',
+            'ctrl-x,ctrl-v,ctrl-t,ctrl-q,ctrl-l,esc',
+            '--preview',
+            bat_prefix .. ' --highlight-line {4} -- {3}',
+            '--preview-window',
+            fzf_preview_window,
+            '--bind',
+            'focus:transform-preview-label:echo [ $(echo {3}:{4}:{5} | sed "s|^$HOME|~|") ]',
+        }),
+    }
 
-    -- Have to open this after there is a reader, otherwise this will block neovim.
-    fd = vim.uv.fs_open(fifotmpname, "w", -1)
-    output_pipe = vim.uv.new_pipe(false)
-    output_pipe:open(fd)
+    fzf(spec)
 
     local remaining = #clients
     for _, client in ipairs(clients) do
@@ -1572,15 +1630,8 @@ local function lsp_symbols(method, params, title, symbol_query, from_resume)
             symbols_to_entries_and_items(result, ctx, '', all_entries, all_items)
             remaining = remaining - 1
             if remaining == 0 then
-                for _, line in ipairs(all_entries) do
-                    if not output_pipe then
-                        return
-                    end
-                    output_pipe:write(line .. '\n', function(_)
-                    end)
-                end
-                output_pipe:close()
-                output_pipe = nil
+                write_pipe(all_entries)
+                close_pipe()
             end
         end, bufnr)
     end
@@ -1657,78 +1708,59 @@ local function lsp_locations(method, title, from_resume)
     local all_entries = {}
     local all_items = {}
 
-    local fifotmpname = vim.fn.tempname()
-    vim.fn.system({ "mkfifo", fifotmpname })
-
-    local fd, output_pipe = nil, nil
-
-    local function fzf_exec()
-        local old_fzf_cmd = vim.env.FZF_DEFAULT_COMMAND
-        vim.env.FZF_DEFAULT_COMMAND = 'cat ' .. fifotmpname
-
-        fzf({
-            ['sink*'] = function(lines)
-                local key = lines[1]
-                if key == 'esc' then
-                    if output_pipe then
-                        output_pipe:close()
-                        output_pipe = nil
-                    end
-                elseif key == 'ctrl-q' or key == 'ctrl-l' then
-                    -- CTRL-Q: send to quickfix; CTRL-L: send to location list
-                    local loclist = key == 'ctrl-l'
-                    local qf_items = {}
-                    for i = 2, #lines do
-                        local idx = tonumber(lines[i]:match('^%S+'))
-                        table.insert(qf_items, all_items[idx])
-                    end
-                    if loclist then
-                        vim.fn.setloclist(0, {}, ' ', { title = title, items = qf_items })
-                        vim.cmd('botright lopen')
-                    else
-                        vim.fn.setqflist({}, ' ', { title = title, items = qf_items })
-                        vim.cmd('botright copen')
-                    end
-                else
-                    -- ENTER/CTRL-X/CTRL-V/CTRL-T with multiple selections
-                    local action = vim.g.fzf_action[key]
-                    for i = 2, #lines do
-                        if action then
-                            vim.cmd(action)
-                        end
-                        local idx = tonumber(lines[i]:match('^%S+'))
-                        local item = all_items[idx]
-                        local offset_encoding = lines[i]:match('^%S+%s(%S+)')
-                        vim.lsp.util.show_document(item.user_data, offset_encoding)
-                    end
+    local spec = {
+        ['sink*'] = function(lines)
+            local key = lines[1]
+            if key == 'esc' then
+                close_pipe()
+            elseif key == 'ctrl-q' or key == 'ctrl-l' then
+                -- CTRL-Q: send to quickfix; CTRL-L: send to location list
+                local loclist = key == 'ctrl-l'
+                local qf_items = {}
+                for i = 2, #lines do
+                    local idx = tonumber(lines[i]:match('^%S+'))
+                    table.insert(qf_items, all_items[idx])
                 end
-            end,
-            options = get_fzf_opts(from_resume, {
-                '--with-nth',
-                '6..',
-                '--prompt',
-                title .. '> ',
-                '--header',
-                ':: CTRL-Q (send to quickfix), CTRL-L (send to loclist)',
-                '--expect',
-                'ctrl-x,ctrl-v,ctrl-t,ctrl-q,ctrl-l,esc',
-                '--preview',
-                bat_prefix .. ' --highlight-line {4} -- {3}',
-                '--preview-window',
-                'down,45%,+{4}-/2',
-                '--bind',
-                'focus:transform-preview-label:echo [ $(echo {3}:{4}:{5} | sed "s|^$HOME|~|") ]',
-            }),
-        })
+                if loclist then
+                    vim.fn.setloclist(0, {}, ' ', { title = title, items = qf_items })
+                    vim.cmd('botright lopen')
+                else
+                    vim.fn.setqflist({}, ' ', { title = title, items = qf_items })
+                    vim.cmd('botright copen')
+                end
+            else
+                -- ENTER/CTRL-X/CTRL-V/CTRL-T with multiple selections
+                local action = vim.g.fzf_action[key]
+                for i = 2, #lines do
+                    if action then
+                        vim.cmd(action)
+                    end
+                    local idx = tonumber(lines[i]:match('^%S+'))
+                    local item = all_items[idx]
+                    local offset_encoding = lines[i]:match('^%S+%s(%S+)')
+                    vim.lsp.util.show_document(item.user_data, offset_encoding)
+                end
+            end
+        end,
+        options = get_fzf_opts(from_resume, {
+            '--with-nth',
+            '6..',
+            '--prompt',
+            title .. '> ',
+            '--header',
+            ':: CTRL-Q (send to quickfix), CTRL-L (send to loclist)',
+            '--expect',
+            'ctrl-x,ctrl-v,ctrl-t,ctrl-q,ctrl-l,esc',
+            '--preview',
+            bat_prefix .. ' --highlight-line {4} -- {3}',
+            '--preview-window',
+            'down,45%,+{4}-/2',
+            '--bind',
+            'focus:transform-preview-label:echo [ $(echo {3}:{4}:{5} | sed "s|^$HOME|~|") ]',
+        }),
+    }
 
-        vim.env.FZF_DEFAULT_COMMAND = old_fzf_cmd
-    end
-
-    fzf_exec()
-
-    fd = vim.uv.fs_open(fifotmpname, "w", -1)
-    output_pipe = vim.uv.new_pipe(false)
-    output_pipe:open(fd)
+    fzf(spec)
 
     local remaining = #clients
     for _, client in ipairs(clients) do
@@ -1741,15 +1773,8 @@ local function lsp_locations(method, title, from_resume)
             locations_to_entries_and_items(result or {}, ctx, all_entries, all_items)
             remaining = remaining - 1
             if remaining == 0 then
-                for _, line in ipairs(all_entries) do
-                    if not output_pipe then
-                        return
-                    end
-                    output_pipe:write(line .. '\n', function(_)
-                    end)
-                end
-                output_pipe:close()
-                output_pipe = nil
+                write_pipe(all_entries)
+                close_pipe()
             end
         end, bufnr)
     end
@@ -1799,59 +1824,16 @@ local function diagnostics(from_resume, opts)
         return
     end
 
-    local diag_icons = {
-        { text = 'E', hl = 'DiagnosticError', }, -- Error
-        { text = 'W', hl = 'DiagnosticWarn', }, -- Warn
-        { text = 'I', hl = 'DiagnosticInfo', }, -- Info
-        { text = 'H', hl = 'DiagnosticHint', }, -- Hint
-    }
-
     local title = string.format('Diagnostics (%s)', opts.all and 'workspace' or 'document')
-
-    -- Fzf entries
-    local entries = {}
-
-    for _, diag in ipairs(diags) do
-        local bufnr = diag.bufnr
-        local filename = vim.api.nvim_buf_get_name(bufnr)
-        local devicon = get_colored_devicon(filename)
-        local diag_icon = color_str(diag_icons[diag.severity].text, diag_icons[diag.severity].hl)
-        -- Fzf entry
-        -- Each entry consists of 5 parts:
-        -- index, filename, lnum, col, fzf_text
-        -- Only fzf_text will be displayed in fzf. The first part, index, is used to retrieve the
-        -- corresponding original diagnostic item from the selected entry in fzf.
-        local fzf_text = string.format(
-            -- Use `\0` and fzf's `--read0` to support multi-line items
-            -- Ref: https://junegunn.github.io/fzf/tips/processing-multi-line-items/
-            '%s %s %s:%s:%s:\n%s%s\0',
-            diag_icon,
-            devicon,
-            vim.fn.fnamemodify(filename, ':~:.'),
-            color_str(tostring(diag.lnum), 'RipgrepLineNum'),
-            color_str(tostring(diag.col), 'RipgrepColNum'),
-            string.rep(' ', 2) .. (diag.source and '[' .. diag.source .. '] ' or ''),
-            string.gsub(diag.message, '\n', '\n' .. string.rep(' ', 2))
-        )
-        table.insert(entries, table.concat({
-            #entries + 1,
-            filename,
-            diag.lnum,
-            diag.col,
-            fzf_text
-        }, ' '))
-    end
-
-    local diags_tempfile = vim.fn.tempname()
-
     local spec = {
-        source = 'cat ' .. diags_tempfile,
         -- Even though diagnostics are multi-line items, `lines` contains linewise contents
         -- rather than the whole item. However, we can get the index of each item easily because
         -- it is the number in the beginning of the item.
         ['sink*'] = function(lines)
             local key = lines[1]
-            if key == 'ctrl-q' or key == 'ctrl-l' then
+            if key == 'esc' then
+                close_pipe()
+            elseif key == 'ctrl-q' or key == 'ctrl-l' then
                 -- CTRL-Q: send to quickfix; CTRL-L: send to location list
                 local loclist = key == 'ctrl-l'
                 local selected_diags = {}
@@ -1900,7 +1882,7 @@ local function diagnostics(from_resume, opts)
             '--header',
             ':: CTRL-Q (send to quickfix), CTRL-L (send to loclist)',
             '--expect',
-            'ctrl-x,ctrl-v,ctrl-t,ctrl-q,ctrl-l',
+            'ctrl-x,ctrl-v,ctrl-t,ctrl-q,ctrl-l,esc',
             '--preview',
             bat_prefix .. ' --highlight-line {3} -- {2}',
             '--preview-window',
@@ -1910,15 +1892,50 @@ local function diagnostics(from_resume, opts)
         }),
     }
 
-    vim.uv.fs_open(diags_tempfile, 'w', 438, function(_, fd)
-        vim.uv.fs_write(fd, entries, 0, function()
-            -- Use schedule_wrap to avoid E5560 "vimscript function must be called in a fast event",
-            -- see :h E5560.
-            vim.uv.fs_close(fd, vim.schedule_wrap(function()
-                fzf(spec)
-            end))
-        end)
-    end)
+    fzf(spec)
+
+    local diag_icons = {
+        { text = 'E', hl = 'DiagnosticError', }, -- Error
+        { text = 'W', hl = 'DiagnosticWarn', }, -- Warn
+        { text = 'I', hl = 'DiagnosticInfo', }, -- Info
+        { text = 'H', hl = 'DiagnosticHint', }, -- Hint
+    }
+    -- Fzf entries
+    local fzf_entries = {}
+
+    for _, diag in ipairs(diags) do
+        local bufnr = diag.bufnr
+        local filename = vim.api.nvim_buf_get_name(bufnr)
+        local devicon = get_colored_devicon(filename)
+        local diag_icon = color_str(diag_icons[diag.severity].text, diag_icons[diag.severity].hl)
+        -- Fzf entry
+        -- Each entry consists of 5 parts:
+        -- index, filename, lnum, col, fzf_text
+        -- Only fzf_text will be displayed in fzf. The first part, index, is used to retrieve the
+        -- corresponding original diagnostic item from the selected entry in fzf.
+        local fzf_text = string.format(
+            -- Use `\0` and fzf's `--read0` to support multi-line items
+            -- Ref: https://junegunn.github.io/fzf/tips/processing-multi-line-items/
+            '%s %s %s:%s:%s:\n%s%s\0',
+            diag_icon,
+            devicon,
+            color_str(vim.fn.fnamemodify(filename, ':~:.'), 'QuickfixFilename'),
+            color_str(tostring(diag.lnum), 'QuickfixLnumCol'),
+            color_str(tostring(diag.col), 'QuickfixLnumCol'),
+            string.rep(' ', 2) .. (diag.source and '[' .. diag.source .. '] ' or ''),
+            string.gsub(diag.message, '\n', '\n' .. string.rep(' ', 2))
+        )
+        table.insert(fzf_entries, table.concat({
+            #fzf_entries + 1,
+            filename,
+            diag.lnum,
+            diag.col,
+            fzf_text
+        }, ' '))
+    end
+
+    write_pipe(fzf_entries)
+    close_pipe()
 end
 
 -- Diagnostics (document)

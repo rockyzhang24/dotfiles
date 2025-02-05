@@ -5,7 +5,7 @@
 --
 -- This is implemented by using window-local extmark
 
-local icon = require('rockyz.icons').misc.lightning_bolt
+local icon = require('rockyz.icons').misc.lightbulb
 
 local method = 'textDocument/codeAction'
 

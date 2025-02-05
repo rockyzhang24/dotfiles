@@ -375,7 +375,7 @@ local groups = {
     --
 
     QuickfixFilename = { fg = dark_pink },
-    QuickfixLnumCol = 'Number',
+    QuickfixLnumCol = { fg = blue_green },
 
     --
     -- Syntax

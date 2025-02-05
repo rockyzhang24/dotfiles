@@ -4,6 +4,7 @@ require('nvim-highlight-colors').setup({
     enable_short_hex = false,
     enable_tailwind = true,
     exclude_filetypes = {
+        'man',
         'minpac',
     },
 })

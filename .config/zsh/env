@@ -16,14 +16,14 @@ export PAGER=less
 export GOPATH=$HOME/go
 
 # PATH
-export PATH=/Users/rockyzhang/Development/apache-maven-3.6.1/bin:$PATH
-export PATH=/Users/rockyzhang/.emacs.d/bin:$PATH  # Doom Emacs
-export PATH=/Users/rockyzhang/Library/Python/2.7/bin:$PATH  # pip, pip2, pip2.7
+export PATH=$HOME/Development/apache-maven-3.6.1/bin:$PATH
+export PATH=$HOME/.emacs.d/bin:$PATH  # Doom Emacs
+export PATH=$HOME/Library/Python/2.7/bin:$PATH  # pip, pip2, pip2.7
 export PATH=/opt/local/bin:/opt/local/sbin:$PATH  # MacPorts
 export PATH=$(/opt/homebrew/bin/gfind $HOME/.config/bin -type d -printf "%p:")$PATH # my own scripts under ~/.config/bin/
 export PATH=$HOME/.config/fzf/bin:$PATH # fzf scripts
 export PATH=$GOPATH/bin:$PATH   # Golong programs
-export PATH=/Users/rockyzhang/gitrepos/diff-so-fancy:$PATH  # diff-so-fancy
+export PATH=$HOME/gitrepos/diff-so-fancy:$PATH  # diff-so-fancy
 export PATH=/opt/homebrew/opt/llvm/bin:$PATH  # Use the latest llvm instead of macOS builtin
 
 # Use Neovim as "preferred editor"

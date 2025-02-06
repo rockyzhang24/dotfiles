@@ -3,7 +3,12 @@
 file="${1/#\~/$HOME}"
 
 if [[ $(file -b "$file") == directory ]]; then
-  tree -C "$file"
+  # tree -C "$file"
+  if command -v eza &> /dev/null; then
+    eza -la --color=always --icons -g --group-directories-first "$file"
+  else
+    gls -hFNla --color=always --group-directories-first --hyperlink=auto "$file"
+  fi
   exit
 fi
 

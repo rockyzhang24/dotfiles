@@ -35,12 +35,10 @@ local plugins = {
         { ['do'] = 'packloadall! | call fzf#install()' },
     },
     'junegunn/fzf.vim',
-    'nvim-telescope/telescope.nvim',
     {
         'nvim-telescope/telescope-fzf-native.nvim',
         { ['do'] = 'make' },
     },
-    'ibhagwan/fzf-lua',
 
     -- LSP
     'neovim/nvim-lspconfig',

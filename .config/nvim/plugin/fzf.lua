@@ -41,6 +41,8 @@
 -- <Leader>f/ : Search history
 -- <Leader>f: : Command history
 
+-- <Leader>fz : Zoxide
+
 -- <Leader>fm : Marks
 -- <Leader>ft : Tabs
 -- <Leader>fa : Argument list
@@ -828,7 +830,7 @@ local function commands(from_resume)
                 close_pipe()
                 return
             end
-            local cmd = lines[1]:match('^%S+')
+            local cmd = lines[2]:match('^%S+')
             vim.cmd('stopinsert')
             vim.api.nvim_feedkeys(':' .. cmd, 'n', true)
         end,
@@ -944,6 +946,70 @@ end
 
 vim.keymap.set('n', '<Leader>fc', function()
     run(commands)
+end)
+
+--
+-- Zoxide
+--
+
+local function zoxide(from_resume)
+    local preview_cmd = ''
+    if vim.fn.executable('eza') == 1 then
+        preview_cmd = 'eza -la --color=always --icons -g --group-directories-first {2}'
+    else
+        preview_cmd = 'gls -hFNla --color=always --group-directories-first --hyperlink=auto {2}'
+    end
+    local spec = {
+        ['sink*'] = function(lines)
+            if lines[1] == 'esc' then
+                close_pipe()
+                return
+            end
+            -- ENTER will cd to the selected directory
+            local cwd = lines[2]:match('[^\t]+$')
+            if vim.uv.fs_stat(cwd) then
+                vim.cmd('cd ' .. cwd)
+                vim.notify('cwd set to ' .. cwd, vim.log.levels.INFO)
+            end
+        end,
+        options = get_fzf_opts(from_resume, {
+            '--nth',
+            '2',
+            '--no-multi',
+            '--delimiter',
+            '\t',
+            '--tiebreak',
+            'end,index',
+            '--prompt',
+            'Zoxide> ',
+            '--expect',
+            'esc',
+            '--header',
+            ':: ENTER (cd to the dir)\n' .. string.format('%8s\t%s', 'score', 'directory'),
+            '--preview',
+            preview_cmd,
+            '--bind',
+            'focus:transform-preview-label:echo [ {2} ]',
+        }),
+    }
+
+    fzf(spec)
+
+    local fzf_entries = {}
+    vim.system({'zoxide', 'query', '--list', '--score'}, { text = true }, function(obj)
+        for line in obj.stdout:gmatch('[^\n]+') do
+            local score, dir = line:match("(%d+%.%d+)%s+(.-)$")
+            local entry = string.format('%8s\t%s', score, dir)
+            table.insert(fzf_entries, entry)
+        end
+        write_pipe(fzf_entries)
+        close_pipe()
+    end)
+
+end
+
+vim.keymap.set('n', '<Leader>fz', function()
+    run(zoxide)
 end)
 
 --

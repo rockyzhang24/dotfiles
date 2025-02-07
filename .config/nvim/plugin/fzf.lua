@@ -806,7 +806,7 @@ local function helptags(from_resume)
                         local entry = string.format(
                             '%s %s %s %s',
                             color_str(tag, 'Label'),
-                            color_str('[' .. filename .. ']', 'Comment'),
+                            color_str('[' .. filename .. ']', 'FzfDesc'),
                             file_fullpath,
                             excmd
                         )
@@ -1564,7 +1564,7 @@ local function grep_word(from_resume)
                 -- Show the current rg query in header. Set its style to bold, red foreground via ANSI
                 -- color code.
                 '--header',
-                ':: Query: ' .. color_str(header, 'RipgrepQuery'),
+                ':: Query: ' .. color_str(header, 'FzfRgQuery'),
                 '--bind',
                 'focus:transform-preview-label:echo [ {1}:{2}:{3} ]',
             }),
@@ -1606,7 +1606,7 @@ local function symbols_to_entries_and_items(symbols, ctx, child_prefix, all_entr
     end
 
     local client_name = client.name
-    local colored_client_name = color_str(client_name, 'Comment')
+    local colored_client_name = color_str(client_name, 'FzfDesc')
     local offset_encoding = client.offset_encoding
     local bufnr = ctx.bufnr
 
@@ -1634,9 +1634,9 @@ local function symbols_to_entries_and_items(symbols, ctx, child_prefix, all_entr
                     .. colored_client_name
                     .. string.rep(' ', 6)
                     .. (devicon == '' and devicon or devicon .. ' ')
-                    .. color_str(vim.fn.fnamemodify(filename, ':~:.'), 'RipgrepFilename') .. ':'
-                    .. color_str(tostring(lnum), 'RipgrepLineNum').. ':'
-                    .. color_str(tostring(col), 'RipgrepColNum')
+                    .. color_str(vim.fn.fnamemodify(filename, ':~:.'), 'FzfFilename') .. ':'
+                    .. color_str(tostring(lnum), 'FzfLnum').. ':'
+                    .. color_str(tostring(col), 'FzfCol')
                 table.insert(all_entries, table.concat({
                     #all_entries + 1,
                     offset_encoding,
@@ -1708,7 +1708,7 @@ local function lsp_symbols(method, params, title, symbol_query, from_resume)
     local fzf_header = ':: CTRL-Q (send to quickfix), CTRL-L (send to loclist)'
     local fzf_preview_window = '+{4}-/2'
     if symbol_query ~= '' then
-        fzf_header = ':: Query: ' .. color_str(symbol_query, 'RipgrepQuery') .. '\n' .. fzf_header
+        fzf_header = ':: Query: ' .. color_str(symbol_query, 'FzfRgQuery') .. '\n' .. fzf_header
         fzf_preview_window = 'down,45%,' .. fzf_preview_window
     end
 
@@ -1833,9 +1833,9 @@ local function locations_to_entries_and_items(locations, ctx, all_entries, all_i
         local col = item.col
         local icon = get_colored_devicon(filename)
         local fzf_text = icon == '' and icon or icon .. ' '
-            .. color_str(vim.fn.fnamemodify(filename, ':~:.'), 'RipgrepFilename')
-            .. ':' .. color_str(tostring(lnum), 'RipgrepLineNum')
-            .. ':' .. color_str(tostring(col), 'RipgrepColNum')
+            .. color_str(vim.fn.fnamemodify(filename, ':~:.'), 'FzfFilename')
+            .. ':' .. color_str(tostring(lnum), 'FzfLnum')
+            .. ':' .. color_str(tostring(col), 'FzfCol')
             .. ': ' .. item.text
         table.insert(all_entries, table.concat({
             #all_entries + 1,

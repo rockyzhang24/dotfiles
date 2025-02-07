@@ -374,7 +374,7 @@ local groups = {
     --
 
     QuickfixFilename = { fg = blue },
-    QuickfixLnumCol = 'Number',
+    QuickfixLnumCol = { fg = purple },
 
     --
     -- Syntax
@@ -966,13 +966,14 @@ local groups = {
     TagbarFoldIcon = 'Normal',
 
     --
-    -- Ripgrep
+    -- Fzf
     --
 
-    RipgrepQuery = { fg = pink },
-    RipgrepFilename = { fg = purple },
-    RipgrepLineNum = { fg = green },
-    RipgrepColNum = { fg = blue },
+    FzfRgQuery = { fg = pink },
+    FzfFilename = { fg = blue },
+    FzfLnum = { fg = purple },
+    FzfCol = { fg = green },
+    FzfDesc = { fg = util.lighten(norm_bg, 0.4) },
 }
 
 for k, v in pairs(groups) do

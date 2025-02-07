@@ -23,7 +23,7 @@ fi
 if [[ $COLOR_THEME == 'arctic' ]]; then
   [[ $bg != -1 ]] && bg='#1f1f1f'
   fg='#cccccc'
-  colors="dark,fg:$fg,bg:$bg,hl:#ffdd33,fg+:#ffffff,bg+:#04395e,gutter:$bg,hl+:#ffdd33,query:$fg,disabled:#808080,border:$fg,separator:#454545,label:$fg,header:#3794ff:underline"
+  colors="dark,fg:$fg,bg:$bg,hl:#ffdd33,fg+:#ffffff,bg+:#04395e,gutter:$bg,hl+:#ffdd33,query:$fg,disabled:#808080,border:$fg,separator:#454545,label:$fg,header:#f9ae28:underline"
 fi
 # monokai theme
 if [[ $COLOR_THEME == 'monokai' ]]; then
@@ -50,7 +50,6 @@ export FZF_DEFAULT_OPTS=" \
   --reverse \
   --height 85% \
   --multi \
-  --no-mouse \
   --scrollbar '█' \
   --history /tmp/fzfhistory \
   --prompt 'FZF> ' \

@@ -192,7 +192,7 @@ end
 -- finishes.
 --
 
-local fd, output_pipe = nil, nil
+local output_pipe = nil
 
 ---@param entries table
 ---@param multiline boolean? Whether the entry is a multiline entry
@@ -217,7 +217,16 @@ end
 ---@param spec table The spec dictionary, see https://github.com/junegunn/fzf/blob/master/README-VIM.md
 local function fzf(spec)
     local fifotmpname = vim.fn.tempname()
-    vim.fn.system({ "mkfifo", fifotmpname })
+    vim.system({ "mkfifo", fifotmpname }):wait()
+    -- Have to open this after there is a reader, otherwise this will block neovim. So use async
+    -- version to ensure pipe opens after fzf execution.
+    vim.uv.fs_open(fifotmpname, 'w', -1, function(err, fd)
+        if err then
+            error(err)
+        end
+        output_pipe = vim.uv.new_pipe(false)
+        output_pipe:open(fd)
+    end)
 
     local old_fzf_cmd = vim.env.FZF_DEFAULT_COMMAND
     vim.env.FZF_DEFAULT_COMMAND = 'cat ' .. fifotmpname
@@ -225,11 +234,6 @@ local function fzf(spec)
     vim.fn['fzf#run'](vim.fn['fzf#wrap'](spec))
 
     vim.env.FZF_DEFAULT_COMMAND = old_fzf_cmd
-
-    -- Have to open this after there is a reader, otherwise this will block neovim.
-    fd = vim.uv.fs_open(fifotmpname, "w", -1)
-    output_pipe = vim.uv.new_pipe(false)
-    output_pipe:open(fd)
 end
 
 -- Path completion in INSERT mode

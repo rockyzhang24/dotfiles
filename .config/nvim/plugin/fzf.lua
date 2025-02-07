@@ -41,13 +41,14 @@
 -- <Leader>f/ : Search history
 -- <Leader>f: : Command history
 
--- <Leader>fz : Zoxide
-
 -- <Leader>fm : Marks
 -- <Leader>ft : Tabs
 -- <Leader>fa : Argument list
 -- <Leader>fh : Helptags
 -- <Leader>fc : Commands
+-- <Leader>f" : Registers
+
+-- <Leader>fz : Zoxide
 
 -- <Leader>fq : Quickfix list items
 -- <Leader>fl : Location list items
@@ -193,12 +194,15 @@ end
 
 local fd, output_pipe = nil, nil
 
-local function write_pipe(entries)
+---@param entries table
+---@param multiline boolean? Whether the entry is a multiline entry
+local function write_pipe(entries, multiline)
     for _, line in ipairs(entries) do
         if not output_pipe then
             return
         end
-        output_pipe:write(line .. '\n', function(_)
+        line = not multiline and (line .. '\n') or line
+        output_pipe:write(line, function(_)
         end)
     end
 end
@@ -946,6 +950,84 @@ end
 
 vim.keymap.set('n', '<Leader>fc', function()
     run(commands)
+end)
+
+--
+-- Registers
+--
+
+local function registers(from_resume)
+    local spec = {
+        ['sink*'] = function(lines)
+            if lines[1] == 'esc' then
+                close_pipe()
+                return
+            end
+            -- ENTER will paster the content in the selected register at the cursor position
+            local reg = lines[2]:match("%[(.-)%]")
+            local ok, text = pcall(vim.fn.getreg, reg)
+            if ok and #text > 0 then
+                vim.api.nvim_paste(text, false, -1)
+            end
+        end,
+        options = get_fzf_opts(from_resume, {
+            '--read0',
+            '--no-multi',
+            '--prompt',
+            'Registers> ',
+            '--expect',
+            'esc',
+            '--header',
+            ':: ENTER (paste at cursor)',
+            '--preview', -- show register content in preview
+            "echo {} | sed '1s/^\\[[0-9A-Z\"-\\#\\=_/\\*\\+:\\.%]\\] //'",
+            '--bind',
+            'focus:transform-preview-label:echo [ Register {1} ]',
+        }),
+    }
+
+    fzf(spec)
+
+    local regs = { [["]], "-", "#", "=", "_", "/", "*", "+", ":", ".", "%" }
+    -- Numbered registers
+    for i = 0, 9 do
+        table.insert(regs, tostring(i))
+    end
+    -- Named registers
+    for i = 65, 90 do
+        table.insert(regs, string.char(i))
+    end
+
+    local function escape_special(text)
+        local gsub_map = {
+            ['\3']  = '^C', -- <C-c>
+            ['\27'] = '^[', -- <Esc>
+            ['\18'] = '^R', -- <C-r>
+        }
+        for k, v in pairs(gsub_map) do
+            text = text:gsub(k, color_str(v, 'PreProc')):gsub('\n$', '')
+        end
+        return text
+    end
+
+    local fzf_entries = {}
+    for _, r in ipairs(regs) do
+        local _, text = pcall(vim.fn.getreg, r)
+        text = escape_special(text)
+        if text and #text > 0 then
+            table.insert(
+                fzf_entries,
+                string.format('[%s] %s\0', color_str(r, 'QuickfixLnumCol'), text)
+            )
+        end
+    end
+
+    write_pipe(fzf_entries, true)
+    close_pipe()
+end
+
+vim.keymap.set('n', '<Leader>f"', function()
+    run(registers)
 end)
 
 --
@@ -2000,7 +2082,7 @@ local function diagnostics(from_resume, opts)
         }, ' '))
     end
 
-    write_pipe(fzf_entries)
+    write_pipe(fzf_entries, true)
     close_pipe()
 end
 

@@ -531,20 +531,106 @@ end)
 
 -- Marks
 local function marks(from_resume)
-    local filename = '$([[ -f {4} ]] && echo {4} || echo ' .. vim.api.nvim_buf_get_name(0) .. ')'
-    vim.fn['fzf#vim#marks'](vim.fn['fzf#vim#with_preview']({
-        placeholder = '',
+    local buf = vim.api.nvim_get_current_buf()
+    local win = vim.api.nvim_get_current_win()
+    local spec = {
+        ['sink*'] = function(lines)
+            local key = lines[1]
+            if key == 'esc' then
+                close_pipe()
+            elseif key == 'ctrl-d' then
+                -- CTRL-D to delete marks
+                for i = 2, #lines do
+                    local mark = lines[i]:match('[^ ]+')
+                    vim.api.nvim_win_call(win, function()
+                        local ok, res = pcall(vim.api.nvim_buf_del_mark, buf, mark)
+                        if ok and res then
+                            return
+                        end
+                        vim.cmd.delmarks(mark)
+                    end)
+                end
+            else
+                -- ENTER/CTRL-X/CTRL-V/CTRL-T to open file
+                local action = vim.g.fzf_action[key]
+                for i = 2, #lines do
+                    if action then
+                        vim.cmd(action)
+                    end
+                    local mark = lines[i]:match('[^ ]+')
+                    vim.cmd('stopinsert')
+                    vim.cmd('normal! `' .. mark)
+                end
+            end
+        end,
         options = get_fzf_opts(from_resume, {
+            '--with-nth',
+            '..-2',
+            '--header-lines',
+            '1',
             '--prompt',
             'Marks> ',
+            '--header',
+            ':: CTRL-D (delete marks)',
+            '--expect',
+            'ctrl-x,ctrl-v,ctrl-t,ctrl-d,esc',
+            '--preview',
+            ' [[ -f {-1} ]] && ' .. bat_prefix .. ' --highlight-line {2} -- {-1} || echo File does not exist, no preview!',
             '--preview-window',
             '+{2}-/2',
-            '--preview',
-            bat_prefix .. ' --highlight-line {2} -- ' .. filename,
             '--bind',
-            'focus:transform-preview-label:echo [ {1}:{2}:{3} ]',
-        }),
-    }))
+            'focus:transform-preview-label:echo [ {-1} ]',
+        })
+    }
+
+    fzf(spec)
+
+    -- Each fzf entry has 5 parts: mark, line, col, file/text and filepath
+    -- The first 4 parts are displayed in fzf; the last part, filepath, is used for preview
+    local fzf_entries = {}
+
+    local all_marks = vim.api.nvim_win_call(win, function()
+        return vim.api.nvim_buf_call(buf, function()
+            return vim.fn.execute('marks')
+        end)
+    end)
+
+    all_marks = vim.split(all_marks, '\n')
+
+    -- First entry as the header
+    table.insert(fzf_entries, string.format('%s  %s  %s %s %s', 'mark', 'line', 'col', 'file/text', 'filepath_for_preview'))
+
+    for i = 3, #all_marks do
+        local mark, line, col, text = all_marks[i]:match('(.)%s+(%d+)%s+(%d+)%s+(.*)')
+        col = tostring(tonumber(col) + 1)
+
+        -- Get the file path of the mark. It won't be displayed in fzf, but is used for
+        -- preview.
+        local filepath = text
+        -- nvim_buf_get_mark cannot get `'` mark correctly without curwin
+        -- https://github.com/neovim/neovim/issues/29807
+        local pos = vim.api.nvim_win_call(win, function()
+            return vim.api.nvim_buf_get_mark(buf, mark)
+        end)
+        if pos and pos[1] > 0 then
+            filepath = vim.api.nvim_buf_get_name(buf)
+        end
+        if filepath == '' then
+            filepath = 'No_File'
+        end
+
+        local entry = string.format(
+            ' %-26s %25s %25s %s %s',
+            color_str(mark, 'FzfFilename'), -- 23 chars
+            color_str(line, 'FzfLnum'), -- 22 chars if line is 1 digit
+            color_str(col, 'FzfCol'), -- 22 chars if col is 1 digit
+            text,
+            filepath
+        )
+        table.insert(fzf_entries, entry)
+    end
+
+    send_to_fzf(fzf_entries)
 end
 
 vim.keymap.set('n', '<Leader>fm', function()

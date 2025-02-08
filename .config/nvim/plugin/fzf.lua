@@ -176,12 +176,6 @@ local function get_fzf_opts(from_resume, extra_opts)
     return vim.list_extend(common_opts, extra_opts)
 end
 
--- Run the given finder and cache it for fzf resume
-local function run(finder)
-    cached_finder = finder
-    finder()
-end
-
 --
 -- Launch fzf and connect it to a fifo pipe waiting for the contents. With this approach, fzf's UI
 -- will display immediately without blocking. Once the contents are processed, they are written into
@@ -193,6 +187,10 @@ end
 --
 
 local output_pipe = nil
+
+-- We need a coroutine to ensure that when writing fzf entries to the fifo pipe, the pipe has
+-- already been created and opened.
+local co = nil
 
 ---@param entries table
 ---@param multiline boolean? Whether the entry is a multiline entry
@@ -214,6 +212,7 @@ local function close_pipe()
     end
 end
 
+---Launch fzf UI
 ---@param spec table The spec dictionary, see https://github.com/junegunn/fzf/blob/master/README-VIM.md
 local function fzf(spec)
     local fifotmpname = vim.fn.tempname()
@@ -226,6 +225,9 @@ local function fzf(spec)
         end
         output_pipe = vim.uv.new_pipe(false)
         output_pipe:open(fd)
+        if co and coroutine.status(co) == 'suspended' then
+            coroutine.resume(co)
+        end
     end)
 
     local old_fzf_cmd = vim.env.FZF_DEFAULT_COMMAND
@@ -234,6 +236,26 @@ local function fzf(spec)
     vim.fn['fzf#run'](vim.fn['fzf#wrap'](spec))
 
     vim.env.FZF_DEFAULT_COMMAND = old_fzf_cmd
+end
+
+---@param multiline boolean? Whether the entry is a multiline entry
+local function send_to_fzf(entries, multiline)
+    -- Send entries to the fifo pipe after it gets ready
+    if output_pipe == nil and co and coroutine.status(co) == 'running' then
+        coroutine.yield()
+    end
+    write_pipe(entries, multiline)
+    close_pipe()
+end
+
+---Cache the given finder for later fzf resume and run the finder (launch fzf UI, process entries
+---and send the entries to fzf for display)
+---@param finder function
+---@param from_resume boolean? Whether it is called from fzf resume
+local function run(finder, from_resume)
+    cached_finder = finder
+    co = coroutine.create(finder)
+    coroutine.resume(co, from_resume)
 end
 
 -- Path completion in INSERT mode
@@ -257,7 +279,7 @@ vim.keymap.set('n', '<Leader>fr', function()
         return
     end
     if type(cached_finder) == 'function' then
-        cached_finder(true)
+        run(cached_finder, true)
     elseif type(cached_finder) == 'table' then
         -- The last executed command-line command
         -- A special argument `@@from_resume@@` is used to tell the command that it is executed via
@@ -619,8 +641,7 @@ local function tabs(from_resume)
         end
     end)
 
-    write_pipe(entries)
-    close_pipe()
+    send_to_fzf(entries)
 end
 
 vim.keymap.set('n', '<Leader>ft', function()
@@ -691,8 +712,7 @@ local function args(from_resume)
         end
     end
 
-    write_pipe(entries)
-    close_pipe()
+    send_to_fzf(entries)
 end
 
 vim.keymap.set('n', '<Leader>fa', function()
@@ -818,8 +838,7 @@ local function helptags(from_resume)
         end
     end
 
-    write_pipe(fzf_entries)
-    close_pipe()
+    send_to_fzf(fzf_entries)
 end
 
 vim.keymap.set('n', '<Leader>fh', function()
@@ -948,8 +967,7 @@ local function commands(from_resume)
         end
     end
 
-    write_pipe(fzf_entries)
-    close_pipe()
+    send_to_fzf(fzf_entries)
 end
 
 vim.keymap.set('n', '<Leader>fc', function()
@@ -1021,13 +1039,12 @@ local function registers(from_resume)
         if text and #text > 0 then
             table.insert(
                 fzf_entries,
-                string.format('[%s] %s\0', color_str(r, 'QuickfixLnumCol'), text)
+                string.format('[%s] %s\0', color_str(r, 'FzfLnum'), text)
             )
         end
     end
 
-    write_pipe(fzf_entries, true)
-    close_pipe()
+    send_to_fzf(fzf_entries, true)
 end
 
 vim.keymap.set('n', '<Leader>f"', function()
@@ -1088,8 +1105,7 @@ local function zoxide(from_resume)
             local entry = string.format('%8s\t%s', score, dir)
             table.insert(fzf_entries, entry)
         end
-        write_pipe(fzf_entries)
-        close_pipe()
+        send_to_fzf(fzf_entries)
     end)
 
 end
@@ -1229,8 +1245,7 @@ local function qf_items_fzf(win_local, from_resume)
         index = index + 1
     end
 
-    write_pipe(fzf_entries)
-    close_pipe()
+    send_to_fzf(fzf_entries)
 end
 
 local function quickfix_items(from_resume)
@@ -1337,8 +1352,7 @@ local function qf_history_fzf(win_local, from_resume)
         io_utils.write_file_async(err_tmpfile, table.concat(errors, '\n'))
     end
 
-    write_pipe(fzf_entries)
-    close_pipe()
+    send_to_fzf(fzf_entries)
 end
 
 local function quickfix_history(from_resume)
@@ -1782,8 +1796,7 @@ local function lsp_symbols(method, params, title, symbol_query, from_resume)
             symbols_to_entries_and_items(result, ctx, '', all_entries, all_items)
             remaining = remaining - 1
             if remaining == 0 then
-                write_pipe(all_entries)
-                close_pipe()
+                send_to_fzf(all_entries)
             end
         end, bufnr)
     end
@@ -1925,8 +1938,7 @@ local function lsp_locations(method, title, from_resume)
             locations_to_entries_and_items(result or {}, ctx, all_entries, all_items)
             remaining = remaining - 1
             if remaining == 0 then
-                write_pipe(all_entries)
-                close_pipe()
+                send_to_fzf(all_entries)
             end
         end, bufnr)
     end
@@ -2086,8 +2098,7 @@ local function diagnostics(from_resume, opts)
         }, ' '))
     end
 
-    write_pipe(fzf_entries, true)
-    close_pipe()
+    send_to_fzf(fzf_entries)
 end
 
 -- Diagnostics (document)

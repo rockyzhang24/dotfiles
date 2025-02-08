@@ -922,9 +922,11 @@ local groups = {
     -- nvim-treesitter-context
     --
 
-    -- TreesitterContext = { bg = norm_bg },
-    TreesitterContextLineNumber = { fg = util.darken(gray2, 0.3) }, -- 30% darker than LineNr
-    TreesitterContextBottom = { underline = true, sp = floatwin_border },
+    -- TreesitterContext = {},
+    TreesitterContextLineNumber = 'LineNr',
+    -- TreesitterContextSeparator = {},
+    TreesitterContextBottom = { underline = true, sp = '#000000' },
+    -- TreesitterContextLineNumberBottom = {},
 
     --
     -- nvim-scrollview

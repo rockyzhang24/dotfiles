@@ -66,6 +66,7 @@ local plugins = {
         'nvim-treesitter/nvim-treesitter',
         { ['do'] = 'TSUpdate' },
     },
+    'nvim-treesitter/nvim-treesitter-context',
     'nvim-treesitter/nvim-treesitter-textobjects',
     'mizlan/iswap.nvim',
     'm-demare/hlargs.nvim',

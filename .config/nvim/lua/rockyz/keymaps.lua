@@ -78,10 +78,6 @@ vim.keymap.set('n', 'U', "<Cmd>execute 'earlier ' .. vim.v.count1 .. 'f'<CR>")
 vim.keymap.set('n', '<M-r>', "<Cmd>execute 'later ' .. vim.v.count1 .. 'f'<CR>")
 -- Format the whole buffer and preserve the cursor position
 vim.keymap.set('n', 'gQ', 'mzgggqG`z<Cmd>delmarks z<CR>')
--- close diff windows
-vim.keymap.set('n', 'dq', require('rockyz.utils.win_utils').close_diff)
--- close diff windows in all tabs
-vim.keymap.set('n', 'dQ', [[<Cmd>tabdo lua require("rockyz.utils.win_utils").close_diff()<CR>]])
 -- Toggle the quickfix window
 vim.keymap.set('n', 'yoq', function()
     if vim.fn.getqflist({ winid = 0 }).winid ~= 0 then
@@ -129,6 +125,19 @@ vim.keymap.set('v', '<Leader>x', ':lua<CR>') -- execute the selected lines
 --     local snippet = vim.fn.getreg 's'
 --     vim.snippet.expand(snippet)
 -- end)
+
+--
+-- Quit/Close
+--
+
+-- Close diff windows
+vim.keymap.set('n', '\\d', require('rockyz.utils.win_utils').close_diff)
+-- Close diff windows in all tabs
+vim.keymap.set('n', '\\D', [[<Cmd>tabdo lua require("rockyz.utils.win_utils").close_diff()<CR>]])
+-- Close quickfix
+vim.keymap.set('n', '\\q', '<Cmd>cclose<CR>')
+-- Close location list
+vim.keymap.set('n', '\\l', '<Cmd>lclose<CR>')
 
 --
 -- Search

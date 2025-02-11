@@ -11,6 +11,7 @@ $directory\
 [](fg:color_yellow bg:color_aqua)\
 $git_branch\
 $git_status\
+$git_commit\
 [](fg:color_aqua bg:color_blue)\
 $all\
 [](fg:color_blue bg:color_bg3)\
@@ -79,6 +80,10 @@ symbol = ' '
 style = 'bg:color_aqua'
 format = '[ $symbol$branch(:$remote_branch) ](fg:color_fg0 bg:color_aqua)'
 truncation_symbol = ' '
+
+[git_commit]
+style = 'bg:color_aqua'
+format = '[\($hash$tag\)](fg:color_fg0 bg:color_aqua)'
 
 [git_status]
 style = 'bg:color_aqua'
@@ -164,6 +169,11 @@ format = '[ $symbol( $version) ](fg:color_fg0 bg:color_blue)'
 
 [python]
 symbol = ' '
+style = 'bg:color_blue'
+format = '[ $symbol( $version) ](fg:color_fg0 bg:color_blue)'
+
+[ruby]
+symbol = ' '
 style = 'bg:color_blue'
 format = '[ $symbol( $version) ](fg:color_fg0 bg:color_blue)'
 

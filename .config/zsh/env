@@ -72,18 +72,19 @@ export RIPGREP_CONFIG_PATH=$HOME/.config/ripgrep/ripgreprc
 # User-defined
 #
 
-# Build options to exclude specified files for some search commands like fd, rg
-export EXCLUDE_FILE="$HOME/exclude"
+# Build options for fd and rg to exclude files and directories
+
+export EXCLUDE=".git,.Trash,.vscode,.cache,.local,.DS_Store,Library,Music,Movies,Pictures"
 FD_EXCLUDE=""
 RG_EXCLUDE=""
-while IFS= read -r line; do
+while IFS=',' read -d ',' item; do
   # Build --exclude options for fd (i.e., --exclude .git --exclude .Trash --exclude ...)
-  FD_EXCLUDE+="--exclude $line "
+  FD_EXCLUDE+="--exclude $item "
   # Build -g options for rg (i.e., -g !.git -g !.Trash -g ...)
-  RG_EXCLUDE+="-g !$line "
-done < "$EXCLUDE_FILE"
-export FD_EXCLUDE
-export RG_EXCLUDE
+  RG_EXCLUDE+="-g !$item "
+done <<< "$EXCLUDE,"
+export FD_EXCLUDE=${FD_EXCLUDE% } # trim trailing space
+export RG_EXCLUDE=${RG_EXCLUDE% }
 
 #
 # Configs below are taken from zimfw utility: https://github.com/zimfw/utility/blob/master/init.zsh

@@ -148,12 +148,10 @@ cmd copy-absolute-path ${{
 
 # toggle the selections in fzf
 cmd fzf-select ${{
-  IFS=' '
-  exclude=$(cat $HOME/exclude | sed 's/^/--exclude /' | tr '\n' ' ')
-  selections=$(fd --max-depth 1 --hidden --follow $exclude | fzf \
+  selections=$(eval "fd --max-depth 1 --hidden --follow $FD_EXCLUDE" | fzf \
       --multi \
       --header ':: ENTER (toggle the selections), CTRL-R (recursively, no depth limit), CTRL-L (limited to depth 1)' \
-      --bind "ctrl-r:reload(fd --hidden --follow $exclude),ctrl-l:reload(fd --max-depth 1 --hidden --follow $exclude)" \
+      --bind "ctrl-r:reload(fd --hidden --follow $FD_EXCLUDE),ctrl-l:reload(fd --max-depth 1 --hidden --follow $FD_EXCLUDE)" \
       --prompt 'Files> ') || true
   if [[ -n $selections ]]; then
     # Escape white spaces and format multi-line string to a single line one
@@ -164,9 +162,7 @@ cmd fzf-select ${{
 
 # cd into the selected directory in fzf
 cmd fzf-cd ${{
-  IFS=' '
-  exclude=$(cat $HOME/exclude | sed 's/^/--exclude /' | tr '\n' ' ')
-  select=$(fd --type d --hidden --follow $exclude | fzf --no-multi --header ':: ENTER (cd into the selected directory)' --prompt 'Dirs> ') || true
+  select=$(eval "fd --type d --hidden --follow $FD_EXCLUDE" | fzf --no-multi --header ':: ENTER (cd into the selected directory)' --prompt 'Dirs> ') || true
   if [[ -n $select ]]; then
     lf -remote "send $id cd $select"
   fi

@@ -77,10 +77,11 @@
 -- [RANGE]GitBufCommits [GIT LOG OPTIONS]
 -- RGU [RG OPTIONS] [QUERY] [PATH]
 
-local qf_utils = require('rockyz.utils.qf_utils')
-local color_utils = require('rockyz.utils.color_utils')
-local io_utils = require('rockyz.utils.io_utils')
+local qf = require('rockyz.utils.qf_utils')
+local color = require('rockyz.utils.color_utils')
+local io = require('rockyz.utils.io_utils')
 local icons = require('rockyz.icons')
+local notify = require('rockyz.utils.notify_utils')
 
 vim.g.fzf_layout = {
     window = {
@@ -124,7 +125,7 @@ local bat_prefix = 'bat --color=always --paging=never --style=numbers'
 local function color_str(str, hl, from_type, to_type)
     from_type = from_type or 'fg'
     to_type = to_type or 'fg'
-    local ansi = color_utils.hl2ansi(hl, from_type, to_type)
+    local ansi = color.hl2ansi(hl, from_type, to_type)
     local ansi_reset = '\x1b[m'
     return  ansi .. str .. ansi_reset
 end
@@ -275,7 +276,7 @@ end)
 -- Resume
 vim.keymap.set('n', '<Leader>fr', function()
     if not cached_finder then
-        vim.notify('No resume finder available!', vim.log.levels.WARN)
+        notify.warn('No resume finder available!')
         return
     end
     if type(cached_finder) == 'function' then
@@ -405,6 +406,111 @@ end)
 
 vim.keymap.set({ 'n', 'x' }, ',fC', function()
     run_git_commit_cmd('GitCommits')
+end)
+
+--
+-- Git branches
+--
+
+local function git_branches(from_resume)
+    -- Extract the branch name for fzf preview and border label
+    --
+    --   entry                            |  extracted branch
+    --------------------------------------|-----------------
+    --   branch                           |    branch
+    --   remotes/origin/branch            |    remotes/origin/branch
+    -- * (HEAD detached at origin/branch) |    origin/branch
+    --
+    local cmd_extract_branch = '[[ {1} == "*" ]] && branch={2} || branch={1}; [[ $branch == "(HEAD" ]] && entry={} && branch=${entry#*\\(HEAD detached at } && branch=${branch%%\\)*}; echo $branch'
+    local spec = {
+        ['sink*'] = function(lines)
+            local key = lines[1]
+            if key == 'esc' then
+                close_pipe()
+                return
+            end
+            if key == '' and #lines == 2 then
+                -- ENTER to checkout the branch
+                local cmd = { 'git', '-C', vim.uv.cwd(), 'switch' }
+                local branch = lines[2]:match('[^ ]+')
+                -- Do nothing of the selected branch is the currently active
+                if branch:find('%*') ~= nil then
+                    return
+                end
+                if branch:find('^remotes/') then
+                    branch = branch:match('remotes/.-/(.-)$')
+                    print(branch)
+                end
+                table.insert(cmd, branch)
+                notify.info('[Git] switching to ' .. branch .. ' branch...')
+                vim.system(cmd, {}, function(obj)
+                    if obj.code ~= 0 then
+                    else
+                        vim.schedule(function()
+                            vim.notify('[Git] switched to ' .. branch .. ' branch.', vim.log.levels.INFO)
+                            vim.cmd('checktime')
+                        end)
+                    end
+                end)
+            elseif key == 'ctrl-d' then
+                -- CTRL-D to delete branches
+                local cmd_del_branch = { 'git', '-C', vim.uv.cwd(), 'branch', '--delete' }
+                local cmd_cur_branch = { 'git', '-C', vim.uv.cwd(), 'rev-parse', '--abbrev-ref', 'HEAD' }
+                local cur_branch = vim.system(cmd_cur_branch):wait().stdout
+                local del_branches = {}
+                for i = 2, #lines do
+                    local branch = lines[i]:match('[^%s%*]+')
+                    if branch ~= cur_branch then
+                        table.insert(del_branches, branch)
+                    end
+                end
+                local msg = string.format(
+                    'Delete %s %s?',
+                    #del_branches > 1 and 'branches' or 'branch',
+                    table.concat(del_branches, ', ')
+                )
+                if vim.fn.confirm(msg, '&Yes\n&No') == 1 then
+                    cmd_del_branch = vim.list_extend(cmd_del_branch, del_branches)
+                    vim.system(cmd_del_branch, {}, function(obj)
+                        local output = (obj.stderr and obj.stderr or '') .. (obj.stdout and obj.stdout or '')
+                        if obj.code == 0 then
+                            notify.info(output)
+                        else
+                            notify.err(output)
+                        end
+                    end)
+                end
+            end
+        end,
+        options = get_fzf_opts(from_resume, {
+            '--prompt',
+            'Git Branches> ',
+            '--expect',
+            'ctrl-d,esc',
+            '--header',
+            ':: ENTER (checkout), CTRL-D (delete branches)',
+            '--preview-window',
+            'down,60%',
+            '--preview',
+            'git log --graph --pretty=oneline --abbrev-commit --color $(' .. cmd_extract_branch .. ')',
+            '--bind',
+            'focus:transform-preview-label:echo [ Branch: $(' .. cmd_extract_branch .. ') ]',
+        })
+    }
+
+    fzf(spec)
+
+    local fzf_entries = {}
+    vim.system({'git', 'branch', '--all', '-vv', '--color'}, { text = true }, function(obj)
+        for line in obj.stdout:gmatch('[^\n]+') do
+            table.insert(fzf_entries, line)
+        end
+        send_to_fzf(fzf_entries)
+    end)
+end
+
+vim.keymap.set('n', ',fb', function()
+    run(git_branches)
 end)
 
 -- Search history
@@ -782,7 +888,7 @@ local function args(from_resume)
     local entries = {}
     local argc = vim.fn.argc()
     if argc == 0 then
-        vim.notify('Argument list is empty', vim.log.levels.WARN)
+        notify.warn('Argument list is empty')
         return
     end
     for i = 0, argc - 1 do
@@ -816,7 +922,7 @@ local function helptags(from_resume)
     local spec = {
         ['sink*'] = function(lines)
             if #lines > 2 then
-                vim.notify('No support multiple selections', vim.log.levels.WARN)
+                notify.warn('No support multiple selections')
             end
             local key = lines[1]
             if key == 'esc' then
@@ -896,7 +1002,7 @@ local function helptags(from_resume)
     local delimiter = string.char(9)
     for _, lang in ipairs(langs) do
         for _, file in ipairs(tag_files[lang] or {}) do
-            local lines = vim.split(io_utils.read_file(file), '\n')
+            local lines = vim.split(io.read_file(file), '\n')
             for _, line in ipairs(lines) do
                 if not line:match('^!_TAG_') then
                     local fields = vim.split(line, delimiter)
@@ -1030,7 +1136,7 @@ local function commands(from_resume)
     local help = vim.fn.globpath(vim.o.runtimepath, 'doc/index.txt')
     if vim.uv.fs_stat(help) then
         local cmd, desc
-        for line in io_utils.read_file(help):gmatch('[^\n]*\n') do
+        for line in io.read_file(help):gmatch('[^\n]*\n') do
             -- Builtin command is in the line starting with `|:FOO`
             if line:match('^|:[^|]') then
                 if cmd then
@@ -1158,7 +1264,7 @@ local function zoxide(from_resume)
             local cwd = lines[2]:match('[^\t]+$')
             if vim.uv.fs_stat(cwd) then
                 vim.cmd('cd ' .. cwd)
-                vim.notify('cwd set to ' .. cwd, vim.log.levels.INFO)
+                notify.info('cwd set to ' .. cwd)
             end
         end,
         options = get_fzf_opts(from_resume, {
@@ -1327,7 +1433,7 @@ local function qf_items_fzf(win_local, from_resume)
         -- The first three parts are used for fzf itself and won't be presented in fzf window.
         -- * index: display the error by :[nr]cc!
         -- * bufname and lnum: fzf preview
-        table.insert(fzf_entries, index .. ' ' .. bufname .. ' ' .. lnum .. ' ' .. get_qf_entry(qf_utils.format_qf_item(item)))
+        table.insert(fzf_entries, index .. ' ' .. bufname .. ' ' .. lnum .. ' ' .. get_qf_entry(qf.format_qf_item(item)))
         index = index + 1
     end
 
@@ -1432,10 +1538,10 @@ local function qf_history_fzf(win_local, from_resume)
             if item == nil then
                 break
             end
-            local str = get_qf_entry(qf_utils.format_qf_item(item))
+            local str = get_qf_entry(qf.format_qf_item(item))
             table.insert(errors, str)
         end
-        io_utils.write_file_async(err_tmpfile, table.concat(errors, '\n'))
+        io.write_file_async(err_tmpfile, table.concat(errors, '\n'))
     end
 
     send_to_fzf(fzf_entries)
@@ -1560,7 +1666,7 @@ vim.api.nvim_create_user_command('RGU', function(opts)
         elseif query == '' then
             query = arg
         else
-            vim.notify('Error: more than one query string are given!', vim.log.levels.ERROR)
+            notify.error('Error: more than one query string are given!')
             return
         end
     end
@@ -1609,7 +1715,7 @@ local function grep_buffer(from_resume)
     local rg = rg_prefix .. ' --'
     local filename = vim.api.nvim_buf_get_name(0)
     if #filename == 0 or not vim.uv.fs_stat(filename) then
-        vim.notify('Live grep in current buffer requires a valid buffer!', vim.log.levels.WARN)
+        notify.warn('Live grep in current buffer requires a valid buffer!')
         return
     end
     vim.fn['fzf#vim#grep2'](rg, '', {
@@ -1798,7 +1904,7 @@ local function lsp_symbols(method, params, title, symbol_query, from_resume)
     local bufnr = vim.api.nvim_get_current_buf()
     local clients = vim.lsp.get_clients({ method = method, bufnr = bufnr })
     if not next(clients) then
-        vim.notify(string.format('No active clients supporting %s method', method), vim.log.levels.WARN)
+        notify.warn(string.format('No active clients supporting %s method', method))
         return
     end
 
@@ -1951,7 +2057,7 @@ local function lsp_locations(method, title, from_resume)
     local bufnr = vim.api.nvim_get_current_buf()
     local clients = vim.lsp.get_clients({ method = method, bufnr = bufnr })
     if not next(clients) then
-        vim.notify(string.format('No active clients supporting %s method', method), vim.log.levels.WARN)
+        notify.warn(string.format('No active clients supporting %s method', method))
         return
     end
     local win = vim.api.nvim_get_current_win()
@@ -2070,7 +2176,7 @@ local function diagnostics(from_resume, opts)
     local curbuf = vim.api.nvim_get_current_buf()
     local diags = vim.diagnostic.get(not opts.all and curbuf or nil)
     if vim.tbl_isempty(diags) then
-        vim.notify('No diagnostics!', vim.log.levels.WARN)
+        notify.warn('No diagnostics!')
         return
     end
 

@@ -215,24 +215,29 @@ end
 
 ---Launch fzf UI
 ---@param spec table The spec dictionary, see https://github.com/junegunn/fzf/blob/master/README-VIM.md
-local function fzf(spec)
-    local fifotmpname = vim.fn.tempname()
-    vim.system({ "mkfifo", fifotmpname }):wait()
-    -- Have to open this after there is a reader, otherwise this will block neovim. So use async
-    -- version to ensure pipe opens after fzf execution.
-    vim.uv.fs_open(fifotmpname, 'w', -1, function(err, fd)
-        if err then
-            error(err)
-        end
-        output_pipe = vim.uv.new_pipe(false)
-        output_pipe:open(fd)
-        if co and coroutine.status(co) == 'suspended' then
-            coroutine.resume(co)
-        end
-    end)
-
+---@param fzf_cmd string Command that pipes to fzf
+local function fzf(spec, fzf_cmd)
     local old_fzf_cmd = vim.env.FZF_DEFAULT_COMMAND
-    vim.env.FZF_DEFAULT_COMMAND = 'cat ' .. fifotmpname
+    vim.env.FZF_DEFAULT_COMMAND = fzf_cmd
+
+    if fzf_cmd == nil then
+        local fifotmpname = vim.fn.tempname()
+        vim.system({ "mkfifo", fifotmpname }):wait()
+        -- Have to open this after there is a reader, otherwise this will block neovim. So use async
+        -- version to ensure pipe opens after fzf execution.
+        vim.uv.fs_open(fifotmpname, 'w', -1, function(err, fd)
+            if err then
+                error(err)
+            end
+            output_pipe = vim.uv.new_pipe(false)
+            output_pipe:open(fd)
+            if co and coroutine.status(co) == 'suspended' then
+                coroutine.resume(co)
+            end
+        end)
+
+        vim.env.FZF_DEFAULT_COMMAND = 'cat ' .. fifotmpname
+    end
 
     vim.fn['fzf#run'](vim.fn['fzf#wrap'](spec))
 
@@ -298,12 +303,34 @@ end)
 
 -- Files
 local function files(from_resume)
-    vim.fn['fzf#vim#files'](
-        '',
-        vim.fn['fzf#vim#with_preview']({
-            options = get_fzf_opts(from_resume)
-        })
-    )
+    local fd_cmd = 'fd --hidden --follow --color=never --type f --type l'
+    fd_cmd = fd_cmd .. ' ' .. vim.env.FD_EXCLUDE
+
+    local function shortpath()
+        local short = vim.fn.fnamemodify(vim.uv.cwd(), ':~:.')
+        short = vim.fn.pathshorten(short)
+        return short == '' and '~/' or (short:match('/$') and short or short .. '/')
+    end
+
+    local spec = {
+        ['sink*'] = function(lines)
+            local key = lines[1]
+            local cmd = vim.g.fzf_action[key] or 'edit'
+            for i = 2, #lines do
+                if vim.fn.fnamemodify(lines[i], ':p') ~= vim.fn.expand('%:p') then
+                    vim.cmd(cmd .. ' ' .. lines[i])
+                end
+            end
+        end,
+        options = get_fzf_opts(from_resume, {
+            '--prompt',
+            shortpath(),
+            '--expect',
+            'ctrl-x,ctrl-v,ctrl-t',
+        }),
+    }
+
+    fzf(spec, fd_cmd)
 end
 
 vim.keymap.set('n', '<Leader>ff', function()

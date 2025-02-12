@@ -12,7 +12,7 @@ eval "$(fzf --zsh)"
 FD="fd --hidden --follow $FD_EXCLUDE"
 
 # Use fd instead of default find
-export FZF_DEFAULT_COMMAND="$FD --type f"
+export FZF_DEFAULT_COMMAND="$FD --type f --type l"
 
 # Define color themes
 # Default colors are defined in https://github.com/junegunn/fzf/blob/master/src/tui/tui.go

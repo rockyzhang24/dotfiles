@@ -25,7 +25,7 @@ local function trim_path(path)
         fname = '[No Name]'
     end
     if MAX_FILENAME_LEN > 0 and #fname > MAX_FILENAME_LEN then
-        fname = TRUNCATE_PREFIX .. fname:sub(-MAX_FILENAME_LEN)
+        fname = TRUNCATE_PREFIX .. ' ' .. fname:sub(-MAX_FILENAME_LEN)
     end
     return fname
 end

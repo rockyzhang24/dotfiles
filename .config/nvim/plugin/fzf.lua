@@ -116,6 +116,7 @@ vim.api.nvim_create_autocmd('User', {
 
 local rg_prefix = 'rg --column --line-number --no-heading --color=always --smart-case --with-filename'
 local bat_prefix = 'bat --color=always --paging=never --style=numbers'
+local fzf_previewer = '~/.config/fzf/fzf-previewer.sh'
 
 ---Color a string by ANSI color code that is converted from a highlight group
 ---@param str string string to be colored
@@ -215,7 +216,7 @@ end
 
 ---Launch fzf UI
 ---@param spec table The spec dictionary, see https://github.com/junegunn/fzf/blob/master/README-VIM.md
----@param fzf_cmd string Command that pipes to fzf
+---@param fzf_cmd string? Command that pipes to fzf
 local function fzf(spec, fzf_cmd)
     local old_fzf_cmd = vim.env.FZF_DEFAULT_COMMAND
     vim.env.FZF_DEFAULT_COMMAND = fzf_cmd
@@ -339,12 +340,45 @@ end)
 
 -- Old files
 local function old_files(from_resume)
-    vim.fn['fzf#vim#history']({
+    local spec = {
+        ['sink*'] = function(lines)
+            local key = lines[1]
+            local cmd = vim.g.fzf_action[key] or 'edit'
+            for i = 2, #lines do
+                if vim.fn.fnamemodify(lines[i], ':p') ~= vim.fn.expand('%:p') then
+                    vim.cmd(cmd .. ' ' .. lines[i])
+                end
+            end
+        end,
         options = get_fzf_opts(from_resume, {
             '--prompt',
-            'Old Files> ',
+            'Old files> ',
+            '--tiebreak',
+            'index',
+            '--expect',
+            'ctrl-x,ctrl-v,ctrl-t',
+            '--preview',
+            fzf_previewer .. ' {2}',
+            '--bind',
+            'focus:transform-preview-label:echo [ {2} ]',
+            '--accept-nth',
+            '2',
         }),
-    })
+    }
+
+    fzf(spec)
+
+    local entries = {}
+
+    for _, file in ipairs(vim.v.oldfiles) do
+        if vim.fn.filereadable(file) == 1 then
+            local icon = get_colored_devicon(file)
+            file = vim.fn.fnamemodify(file, ':~:.')
+            table.insert(entries, icon .. ' ' .. file)
+        end
+    end
+
+    send_to_fzf(entries)
 end
 
 vim.keymap.set('n', '<Leader>fo', function()
@@ -1885,15 +1919,21 @@ local function symbols_to_entries_and_items(symbols, ctx, child_prefix, all_entr
                 local filename = vim.api.nvim_buf_get_name(bufnr)
                 local start_pos = symbol.selectionRange.start
                 local end_pos = symbol.selectionRange['end']
-                local lnum = start_pos.line + 1
+
                 local line = vim.api.nvim_buf_get_lines(bufnr, start_pos.line, start_pos.line + 1, false)[1]
-                local col = vim.str_byteindex(line, offset_encoding, start_pos.character, false) + 1
-                local end_lnum = end_pos.line + 1
                 local end_line = vim.api.nvim_buf_get_lines(bufnr, end_pos.line, end_pos.line + 1, false)[1]
-                local end_col = vim.str_byteindex(end_line, offset_encoding, end_pos.character, false) + 1
+
+                local lnum = start_pos.line + 1
+                local col = start_pos.character == 0 and start_pos.character
+                    or vim.str_byteindex(line, offset_encoding, start_pos.character, false) + 1
+                local end_lnum = end_pos.line + 1
+                local end_col = end_pos.character == 0 and end_pos.character
+                    or vim.str_byteindex(end_line, offset_encoding, end_pos.character, false) + 1
                 local text = '[' .. icon .. kind .. '] ' .. symbol.name .. ' ' .. client_name
+
                 -- Use two whitespaces for each level of indentation to show the hierarchical structure
                 local fzf_text = _child_prefix .. '[' .. colored_icon_kind .. '] ' .. symbol.name .. ' ' .. colored_client_name
+
                 -- Fzf entries
                 table.insert(all_entries, table.concat({
                     #all_entries + 1,

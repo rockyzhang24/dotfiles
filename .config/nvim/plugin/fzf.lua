@@ -29,12 +29,12 @@
 
 -- <Leader>ff : Files
 -- <Leader>fo : Old files
--- <C-p>      : Git files
 -- <Leader>f. : Files for my dotfiles
 -- <Leader>f~ : Files under $HOME
 -- <Leader>fb : Buffers
 -- <C-\>      : Buffers
 
+-- <C-p>      : Git files
 -- ,fc        : Git commits for current buffer
 -- ,fC        : Git commits
 
@@ -176,6 +176,11 @@ local function get_fzf_opts(from_resume, extra_opts)
         })
     end
     return vim.list_extend(common_opts, extra_opts)
+end
+
+---@param label string The label or a shell command to generate the label
+local function set_preview_label(label)
+    return string.format('focus:transform-preview-label:echo [ %s ]', label)
 end
 
 --
@@ -348,7 +353,7 @@ local function files(from_resume)
             '--preview',
             fzf_previewer .. ' {2}',
             '--bind',
-            'focus:transform-preview-label:echo [ {2} ]',
+            set_preview_label('{2}'),
             '--accept-nth',
             '2',
         }),
@@ -375,7 +380,7 @@ local function old_files(from_resume)
             '--preview',
             fzf_previewer .. ' {2}',
             '--bind',
-            'focus:transform-preview-label:echo [ {2} ]',
+            set_preview_label('{2}'),
             '--accept-nth',
             '2',
         }),
@@ -400,6 +405,37 @@ vim.keymap.set('n', '<Leader>fo', function()
     run(old_files)
 end)
 
+-- Find files for my dotfiles
+local function dot_files(from_resume)
+    local git_root = vim.env.HOME
+    local git_cmd = 'git -C '
+        .. git_root
+        .. ' --git-dir "$HOME/dotfiles" --work-tree "$HOME" ls-files --exclude-standard | '
+        .. headless_add_icon
+
+    local spec = {
+        ['sink*'] = sink_file,
+        options = get_fzf_opts(from_resume, {
+            '--prompt',
+            '.dotfiles> ',
+            '--expect',
+            'ctrl-x,ctrl-v,ctrl-t',
+            '--preview',
+            fzf_previewer .. ' ' .. git_root .. '/{2}',
+            '--accept-nth',
+            git_root .. '/{2}',
+            '--bind',
+            set_preview_label('{2}'),
+        }),
+    }
+
+    fzf(spec, git_cmd)
+end
+
+vim.keymap.set('n', '<Leader>f.', function()
+    run(dot_files)
+end)
+
 -- Git files
 local function git_files(from_resume)
     local git_root = get_git_root()
@@ -419,7 +455,7 @@ local function git_files(from_resume)
             '--header',
             'Git Root: ' .. vim.fn.fnamemodify(git_root, ':~'),
             '--bind',
-            'focus:transform-preview-label:echo [ {2} ]',
+            set_preview_label('{2}'),
         }),
     }
 
@@ -588,7 +624,7 @@ local function git_branches(from_resume)
             '--preview',
             'git log --graph --pretty=oneline --abbrev-commit --color $(' .. cmd_extract_branch .. ')',
             '--bind',
-            'focus:transform-preview-label:echo [ Branch: $(' .. cmd_extract_branch .. ') ]',
+            set_preview_label('Branch: $(' .. cmd_extract_branch .. ')'),
         })
     }
 
@@ -681,7 +717,7 @@ local function buffers(from_resume)
             '--expect',
             'ctrl-d,ctrl-x,ctrl-v,ctrl-t',
             '--bind',
-            'focus:transform-preview-label:echo [ {3..} ]',
+            set_preview_label('{3..}'),
         }),
     }))
 end
@@ -692,24 +728,6 @@ end)
 
 vim.keymap.set('n', '<C-\\>', function()
     run(buffers)
-end)
-
--- Find files for my dotfiles
-local function dotfiles(from_resume)
-    vim.fn['fzf#vim#files'](
-        '',
-        vim.fn['fzf#vim#with_preview']({
-            source = 'ls-dotfiles',
-            options = get_fzf_opts(from_resume, {
-                '--prompt',
-                '.dotfiles> ',
-            }),
-        })
-    )
-end
-
-vim.keymap.set('n', '<Leader>f.', function()
-    run(dotfiles)
 end)
 
 -- Find files under home directory
@@ -779,7 +797,7 @@ local function marks(from_resume)
             '--preview-window',
             '+{2}-/2',
             '--bind',
-            'focus:transform-preview-label:echo [ {-1} ]',
+            set_preview_label('{-1}'),
         })
     }
 
@@ -876,7 +894,7 @@ local function tabs(from_resume)
             '--preview',
             'file=$(echo {1} | sed "s/@@@@/ /g"); [[ -f $file ]] && ' .. bat_prefix .. ' --highlight-line {2} -- $file || echo "No preview support!"',
             '--bind',
-            'focus:transform-preview-label:echo [ $(echo {1} | sed "s/@@@@/ /g; s|^$HOME|~|") ]',
+            set_preview_label('$(echo {1} | sed "s/@@@@/ /g; s|^$HOME|~|")'),
         }),
     }
 
@@ -973,7 +991,7 @@ local function args(from_resume)
             '--preview',
             bat_prefix .. ' -- {3}',
             '--bind',
-            'focus:transform-preview-label:echo [ {3} ]',
+            set_preview_label('{3}'),
         }),
     }
 
@@ -1052,7 +1070,7 @@ local function helptags(from_resume)
             (( START_LINE <= 0 )) && START_LINE=1; \
             END_LINE="$(( START_LINE + FZF_PREVIEW_LINES - 1 ))"; ' .. bat_prefix .. ' --style plain --language VimHelp --highlight-line "${TARGET_LINE}" --line-range="${START_LINE}:${END_LINE}" -- {3}',
             '--bind',
-            'focus:transform-preview-label:echo [ {1} {2} ]',
+            set_preview_label('{1} {2}'),
         }),
     }
 
@@ -1161,7 +1179,7 @@ local function commands(from_resume)
             '--preview-window',
             'down,3',
             '--bind',
-            'focus:transform-preview-label:echo [ {1} ]',
+            set_preview_label('{1}'),
         }),
     }
 
@@ -1290,7 +1308,7 @@ local function registers(from_resume)
             '--preview', -- show register content in preview
             "echo {} | sed '1s/^\\[[0-9A-Z\"-\\#\\=_/\\*\\+:\\.%]\\] //'",
             '--bind',
-            'focus:transform-preview-label:echo [ Register {1} ]',
+            set_preview_label('Register {1}'),
         }),
     }
 
@@ -1378,7 +1396,7 @@ local function zoxide(from_resume)
             '--preview',
             preview_cmd,
             '--bind',
-            'focus:transform-preview-label:echo [ {2} ]',
+            set_preview_label('{2}'),
         }),
     }
 
@@ -1510,7 +1528,7 @@ local function qf_items_fzf(win_local, from_resume)
             '--preview-window',
             'down,45%,+{3}-/2',
             '--bind',
-            'focus:transform-preview-label:echo [ $(echo {2} | sed "s|^$HOME|~|") ]',
+            set_preview_label('$(echo {2} | sed "s|^$HOME|~|")'),
         }),
     }
 
@@ -1594,7 +1612,7 @@ local function qf_history_fzf(win_local, from_resume)
             '--preview',
             'cat {2}',
             '--bind',
-            'focus:transform-preview-label:echo [ {3..} ]',
+            set_preview_label('{3..}'),
         }),
     }
 
@@ -1726,7 +1744,7 @@ local function get_fzf_opts_for_live_grep(rg, rg_query, path, prompt, extra_opts
             echo "change-prompt(' .. prompt .. ' [RG]> )+disable-search+reload(' .. rg .. ' {q} || true)+rebind(change)+transform-query(cat ' .. cached_rg_query .. ')"\
         }',
         '--bind',
-        'focus:transform-preview-label:echo [ {1}:{2}:{3} ]',
+        set_preview_label('{1}:{2}:{3}'),
         '--delimiter',
         ':',
         '--header',
@@ -1866,7 +1884,7 @@ local function grep_word(from_resume)
                 '--header',
                 ':: Query: ' .. color_str(header, 'FzfRgQuery'),
                 '--bind',
-                'focus:transform-preview-label:echo [ {1}:{2}:{3} ]',
+                set_preview_label('{1}:{2}:{3}'),
             }),
         }
     )
@@ -2076,7 +2094,7 @@ local function lsp_symbols(method, params, title, symbol_query, from_resume)
             '--preview-window',
             fzf_preview_window,
             '--bind',
-            'focus:transform-preview-label:echo [ $(echo {3}:{4}:{5} | sed "s|^$HOME|~|") ]',
+            set_preview_label('$(echo {3}:{4}:{5} | sed "s|^$HOME|~|")'),
         }),
     }
 
@@ -2213,7 +2231,7 @@ local function lsp_locations(method, title, from_resume)
             '--preview-window',
             'down,45%,+{4}-/2',
             '--bind',
-            'focus:transform-preview-label:echo [ $(echo {3}:{4}:{5} | sed "s|^$HOME|~|") ]',
+            set_preview_label('$(echo {3}:{4}:{5} | sed "s|^$HOME|~|")'),
         }),
     }
 
@@ -2344,7 +2362,7 @@ local function diagnostics(from_resume, opts)
             '--preview-window',
             '+{3}-/2',
             '--bind',
-            'focus:transform-preview-label:echo [ $(echo {2}:{3}:{4} | sed "s|^$HOME|~|") ]',
+            set_preview_label('$(echo {2}:{3}:{4} | sed "s|^$HOME|~|")'),
         }),
     }
 

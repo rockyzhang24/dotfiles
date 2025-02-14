@@ -130,14 +130,18 @@ vim.keymap.set('v', '<Leader>x', ':lua<CR>') -- execute the selected lines
 -- Quit/Close
 --
 
--- Close diff windows
+-- Diff windows
 vim.keymap.set('n', '\\d', require('rockyz.utils.win_utils').close_diff)
--- Close diff windows in all tabs
+-- Diff windows in all tabs
 vim.keymap.set('n', '\\D', [[<Cmd>tabdo lua require("rockyz.utils.win_utils").close_diff()<CR>]])
--- Close quickfix
-vim.keymap.set('n', '\\q', '<Cmd>cclose<CR>')
--- Close location list
+-- Location list
 vim.keymap.set('n', '\\l', '<Cmd>lclose<CR>')
+-- Quickfix
+vim.keymap.set('n', '\\q', '<Cmd>cclose<CR>')
+-- Current tab
+vim.keymap.set('n', '\\t', '<Cmd>tabclose<CR>')
+-- Current window
+vim.keymap.set('n', '\\w', '<Cmd>q<CR>')
 
 --
 -- Search

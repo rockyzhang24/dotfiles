@@ -82,6 +82,7 @@ local color = require('rockyz.utils.color_utils')
 local io = require('rockyz.utils.io_utils')
 local icons = require('rockyz.icons')
 local notify = require('rockyz.utils.notify_utils')
+local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
 
 vim.g.fzf_layout = {
     window = {
@@ -117,6 +118,7 @@ vim.api.nvim_create_autocmd('User', {
 local rg_prefix = 'rg --column --line-number --no-heading --color=always --smart-case --with-filename'
 local bat_prefix = 'bat --color=always --paging=never --style=numbers'
 local fzf_previewer = '~/.config/fzf/fzf-previewer.sh'
+local headless_add_icon = 'nvim -n --headless -u NONE -i NONE --cmd "lua require(\'rockyz.headless.fzf_devicons\')" +q'
 
 ---Color a string by ANSI color code that is converted from a highlight group
 ---@param str string string to be colored
@@ -132,15 +134,13 @@ local function color_str(str, hl, from_type, to_type)
 end
 
 -- Get ANSI colored devicon for a filename
-local function get_colored_devicon(filename)
-    local devicon = ''
-    local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
-    if has_devicons then
-        local ext = vim.fn.fnamemodify(filename, ':e')
-        local file_icon, file_icon_hl = devicons.get_icon(filename, ext, { default = true })
-        devicon = color_str(file_icon, file_icon_hl)
+local function color_devicon(filename)
+    if not has_devicons then
+        return ''
     end
-    return devicon
+    local ext = vim.fn.fnamemodify(filename, ':e')
+    local file_icon, file_icon_hl = devicons.get_icon(filename, ext, { default = true })
+    return color_str(file_icon, file_icon_hl)
 end
 
 local cached_fzf_query -- cached the last fzf query
@@ -302,10 +302,35 @@ vim.keymap.set('n', '<Leader>fr', function()
     end
 end)
 
+-- Helper function for sink* to handle selected files
+-- ENTER/CTRL-X/CTRL-V/CTRL-T to open files
+local function sink_file(lines)
+    local key = lines[1]
+    local cmd = vim.g.fzf_action[key] or 'edit'
+    for i = 2, #lines do
+        if vim.fn.fnamemodify(lines[i], ':p') ~= vim.fn.expand('%:p') then
+            vim.cmd(cmd .. ' ' .. lines[i])
+        end
+    end
+end
+
+-- Helper function to get git root dir
+local function get_git_root()
+    local cmd = { 'git', 'rev-parse', '--show-toplevel' }
+    local obj = vim.system(cmd):wait()
+    if obj.code ~= 0 then
+        notify.info(obj.stderr:gsub('\n$', ''))
+        return nil
+    end
+    return obj.stdout:gsub('\n$', '')
+end
+
 -- Files
 local function files(from_resume)
-    local fd_cmd = 'fd --hidden --follow --color=never --type f --type l'
-    fd_cmd = fd_cmd .. ' ' .. vim.env.FD_EXCLUDE
+    local fd_cmd = 'fd --hidden --follow --color=never --type f --type l '
+        .. vim.env.FD_EXCLUDE
+        .. ' | '
+        .. headless_add_icon
 
     local function shortpath()
         local short = vim.fn.fnamemodify(vim.uv.cwd(), ':~:.')
@@ -314,20 +339,18 @@ local function files(from_resume)
     end
 
     local spec = {
-        ['sink*'] = function(lines)
-            local key = lines[1]
-            local cmd = vim.g.fzf_action[key] or 'edit'
-            for i = 2, #lines do
-                if vim.fn.fnamemodify(lines[i], ':p') ~= vim.fn.expand('%:p') then
-                    vim.cmd(cmd .. ' ' .. lines[i])
-                end
-            end
-        end,
+        ['sink*'] = sink_file,
         options = get_fzf_opts(from_resume, {
             '--prompt',
             shortpath(),
             '--expect',
             'ctrl-x,ctrl-v,ctrl-t',
+            '--preview',
+            fzf_previewer .. ' {2}',
+            '--bind',
+            'focus:transform-preview-label:echo [ {2} ]',
+            '--accept-nth',
+            '2',
         }),
     }
 
@@ -341,18 +364,10 @@ end)
 -- Old files
 local function old_files(from_resume)
     local spec = {
-        ['sink*'] = function(lines)
-            local key = lines[1]
-            local cmd = vim.g.fzf_action[key] or 'edit'
-            for i = 2, #lines do
-                if vim.fn.fnamemodify(lines[i], ':p') ~= vim.fn.expand('%:p') then
-                    vim.cmd(cmd .. ' ' .. lines[i])
-                end
-            end
-        end,
+        ['sink*'] = sink_file,
         options = get_fzf_opts(from_resume, {
             '--prompt',
-            'Old files> ',
+            'Old Files> ',
             '--tiebreak',
             'index',
             '--expect',
@@ -372,7 +387,7 @@ local function old_files(from_resume)
 
     for _, file in ipairs(vim.v.oldfiles) do
         if vim.fn.filereadable(file) == 1 then
-            local icon = get_colored_devicon(file)
+            local icon = color_devicon(file)
             file = vim.fn.fnamemodify(file, ':~:.')
             table.insert(entries, icon .. ' ' .. file)
         end
@@ -387,16 +402,30 @@ end)
 
 -- Git files
 local function git_files(from_resume)
-    vim.fn['fzf#vim#gitfiles'](
-        '',
-        vim.fn['fzf#vim#with_preview']({
-            options = get_fzf_opts(from_resume, {
-                '--prompt',
-                'Git Files> ',
-            }),
-        })
-    )
+    local git_root = get_git_root()
+    local git_cmd = 'git -C ' .. git_root .. ' ls-files --exclude-standard | ' .. headless_add_icon
+
+    local spec = {
+        ['sink*'] = sink_file,
+        options = get_fzf_opts(from_resume, {
+            '--prompt',
+            'Git Files> ',
+            '--expect',
+            'ctrl-x,ctrl-v,ctrl-t',
+            '--preview',
+            fzf_previewer .. ' ' .. git_root .. '/{2}',
+            '--accept-nth',
+            git_root .. '/{2}',
+            '--header',
+            'Git Root: ' .. vim.fn.fnamemodify(git_root, ':~'),
+            '--bind',
+            'focus:transform-preview-label:echo [ {2} ]',
+        }),
+    }
+
+    fzf(spec, git_cmd)
 end
+
 vim.keymap.set('n', '<C-p>', function()
     run(git_files)
 end)
@@ -483,6 +512,10 @@ local function git_branches(from_resume)
     -- * (HEAD detached at origin/branch) |    origin/branch
     --
     local cmd_extract_branch = '[[ {1} == "*" ]] && branch={2} || branch={1}; [[ $branch == "(HEAD" ]] && entry={} && branch=${entry#*\\(HEAD detached at } && branch=${branch%%\\)*}; echo $branch'
+    local root_dir = get_git_root()
+    if root_dir == nil then
+        return
+    end
     local spec = {
         ['sink*'] = function(lines)
             local key = lines[1]
@@ -492,7 +525,7 @@ local function git_branches(from_resume)
             end
             if key == '' and #lines == 2 then
                 -- ENTER to checkout the branch
-                local cmd = { 'git', '-C', vim.uv.cwd(), 'switch' }
+                local cmd = { 'git', '-C', root_dir, 'switch' }
                 local branch = lines[2]:match('[^ ]+')
                 -- Do nothing of the selected branch is the currently active
                 if branch:find('%*') ~= nil then
@@ -515,8 +548,8 @@ local function git_branches(from_resume)
                 end)
             elseif key == 'ctrl-d' then
                 -- CTRL-D to delete branches
-                local cmd_del_branch = { 'git', '-C', vim.uv.cwd(), 'branch', '--delete' }
-                local cmd_cur_branch = { 'git', '-C', vim.uv.cwd(), 'rev-parse', '--abbrev-ref', 'HEAD' }
+                local cmd_del_branch = { 'git', '-C', root_dir, 'branch', '--delete' }
+                local cmd_cur_branch = { 'git', '-C', root_dir, 'rev-parse', '--abbrev-ref', 'HEAD' }
                 local cur_branch = vim.system(cmd_cur_branch):wait().stdout
                 local del_branches = {}
                 for i = 2, #lines do
@@ -957,7 +990,7 @@ local function args(from_resume)
         ---@diagnostic disable-next-line: param-type-mismatch
         local fs = vim.uv.fs_stat(f)
         if fs and fs.type == 'file' then
-            local devicon = get_colored_devicon(f)
+            local devicon = color_devicon(f)
             -- Fzf entry consists of 3 parts: index, devicon, filename
             -- Index is used for file switch and it won't be displayed in fzf
             local entry = string.format('%s %s %s', #entries + 1, devicon, f)
@@ -1896,7 +1929,7 @@ local function symbols_to_entries_and_items(symbols, ctx, child_prefix, all_entr
                 local filename = item.filename
                 local lnum = item.lnum
                 local col = item.col
-                local devicon = get_colored_devicon(filename)
+                local devicon = color_devicon(filename)
                 local fzf_text = '[' .. colored_icon_kind .. '] ' .. symbol.name .. ' '
                     .. colored_client_name
                     .. string.rep(' ', 6)
@@ -2103,7 +2136,7 @@ local function locations_to_entries_and_items(locations, ctx, all_entries, all_i
         local filename = item.filename
         local lnum = item.lnum
         local col = item.col
-        local icon = get_colored_devicon(filename)
+        local icon = color_devicon(filename)
         local fzf_text = icon == '' and icon or icon .. ' '
             .. color_str(vim.fn.fnamemodify(filename, ':~:.'), 'FzfFilename')
             .. ':' .. color_str(tostring(lnum), 'FzfLnum')
@@ -2329,7 +2362,7 @@ local function diagnostics(from_resume, opts)
     for _, diag in ipairs(diags) do
         local bufnr = diag.bufnr
         local filename = vim.api.nvim_buf_get_name(bufnr)
-        local devicon = get_colored_devicon(filename)
+        local devicon = color_devicon(filename)
         local diag_icon = color_str(diag_icons[diag.severity].text, diag_icons[diag.severity].hl)
         -- Fzf entry
         -- Each entry consists of 5 parts:

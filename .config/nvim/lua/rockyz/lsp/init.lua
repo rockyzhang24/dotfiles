@@ -23,6 +23,7 @@ vim.diagnostic.config({
             return string.format('%s %s ', icon, diagnostic.message)
         end,
     },
+    virtual_lines = false,
     signs = false,
     severity_sort = true,
     jump = {

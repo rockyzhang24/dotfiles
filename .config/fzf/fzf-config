@@ -105,7 +105,7 @@ export FZF_CTRL_R_OPTS=" \
 bindkey '^j' fzf-cd-widget
 export FZF_ALT_C_COMMAND="$FD --type d"
 export FZF_ALT_C_OPTS=" \
-  --preview 'tree -C {} | head -200' \
+  --preview '[[ \$(command -v eza) ]] && eza -la --color=always --icons -g --group-directories-first {} || tree -C {} | head -200' \
   --header ':: ALT-P (show parent dirs)' \
   --prompt 'SubDirs> ' \
   --bind 'alt-p:reload(print-parent-dirs)+change-header(:: ALT-S (show subdirs))+change-prompt(ParentDirs> )' \

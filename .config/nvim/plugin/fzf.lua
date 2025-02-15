@@ -30,7 +30,7 @@
 -- <Leader>ff : Files
 -- <Leader>fo : Old files
 -- <Leader>f. : Files for my dotfiles
--- <Leader>f~ : Files under $HOME
+-- <Leader>f` : Files under $HOME
 -- <Leader>fb : Buffers
 -- <C-\>      : Buffers
 
@@ -117,6 +117,7 @@ vim.api.nvim_create_autocmd('User', {
 
 local rg_prefix = 'rg --column --line-number --no-heading --color=always --smart-case --with-filename'
 local bat_prefix = 'bat --color=always --paging=never --style=numbers'
+local fd_prefix = 'fd --hidden --follow --color=never --type f --type l ' .. vim.env.FD_EXCLUDE
 local fzf_previewer = '~/.config/fzf/fzf-previewer.sh'
 local headless_add_icon = 'nvim -n --headless -u NONE -i NONE --cmd "lua require(\'rockyz.headless.fzf_devicons\')" +q'
 
@@ -309,6 +310,7 @@ end)
 
 -- Helper function for sink* to handle selected files
 -- ENTER/CTRL-X/CTRL-V/CTRL-T to open files
+---@param lines table The first item is the key; others are filenames.
 local function sink_file(lines)
     local key = lines[1]
     local cmd = vim.g.fzf_action[key] or 'edit'
@@ -332,10 +334,7 @@ end
 
 -- Files
 local function files(from_resume)
-    local fd_cmd = 'fd --hidden --follow --color=never --type f --type l '
-        .. vim.env.FD_EXCLUDE
-        .. ' | '
-        .. headless_add_icon
+    local fd_cmd = fd_prefix .. ' | ' .. headless_add_icon
 
     local function shortpath()
         local short = vim.fn.fnamemodify(vim.uv.cwd(), ':~:.')
@@ -434,6 +433,33 @@ end
 
 vim.keymap.set('n', '<Leader>f.', function()
     run(dot_files)
+end)
+
+-- Find files under $HOME
+local function home_files(from_resume)
+    local fd_cmd = 'cd ' .. vim.env.HOME .. ' && ' .. fd_prefix .. ' | ' .. headless_add_icon
+
+    local spec = {
+        ['sink*'] = sink_file,
+        options = get_fzf_opts(from_resume, {
+            '--prompt',
+            'Home Files> ',
+            '--expect',
+            'ctrl-x,ctrl-v,ctrl-t',
+            '--preview',
+            fzf_previewer .. ' ' .. vim.env.HOME .. '/{2}',
+            '--accept-nth',
+            vim.env.HOME .. '/{2}',
+            '--bind',
+            set_preview_label('"~/"{2}')
+        }),
+    }
+
+    fzf(spec, fd_cmd)
+end
+
+vim.keymap.set('n', '<Leader>f`', function()
+    run(home_files)
 end)
 
 -- Git files
@@ -728,23 +754,6 @@ end)
 
 vim.keymap.set('n', '<C-\\>', function()
     run(buffers)
-end)
-
--- Find files under home directory
-local function home_files(from_resume)
-    vim.fn['fzf#vim#files'](
-        '~',
-        vim.fn['fzf#vim#with_preview']({
-            options = get_fzf_opts(from_resume, {
-                '--prompt',
-                'Home Files> ',
-            }),
-        })
-    )
-end
-
-vim.keymap.set('n', '<Leader>f~', function()
-    run(home_files)
 end)
 
 -- Marks

@@ -1,6 +1,8 @@
 local kind_icons = require('rockyz.icons').symbol_kinds
 
 require('blink.cmp').setup({
+    -- NOTE:
+    -- keymaps for snippet jumping forward and backward are defined in luasnip config
     keymap = {
         ['<C-Enter>'] = { 'show', 'show_documentation', 'hide_documentation' },
         ['<C-e>'] = { 'cancel', 'fallback' },
@@ -28,30 +30,6 @@ require('blink.cmp').setup({
 
         ['<C-b>'] = { 'scroll_documentation_up', 'fallback' },
         ['<C-f>'] = { 'scroll_documentation_down', 'fallback' },
-
-        -- NOTE:
-        -- keymaps for snippet jumping forward and backward are defined in luasnip config
-
-        cmdline = {
-            ['<Tab>'] = {
-                function(cmp)
-                    if cmp.is_visible() then
-                        cmp.select_next()
-                    else
-                        cmp.show()
-                    end
-                end
-            },
-            ['<M-Tab>'] = {
-                function(cmp)
-                    if cmp.is_visible() then
-                        cmp.select_prev()
-                    else
-                        cmp.show()
-                    end
-                end
-            },
-        },
     },
     sources = {
         default = { 'lsp', 'snippets', 'buffer', 'path' },
@@ -62,9 +40,9 @@ require('blink.cmp').setup({
             --     -- be always listed.
             --     fallbacks = {},
             -- },
-            buffer = {
-                min_keyword_length = 4,
-            },
+            -- buffer = {
+            --     min_keyword_length = 4,
+            -- },
         },
     },
     snippets = {
@@ -112,5 +90,29 @@ require('blink.cmp').setup({
     },
     appearance = {
         kind_icons = kind_icons,
+    },
+
+    -- Command line
+    cmdline = {
+        keymap = {
+            ['<Tab>'] = {
+                function(cmp)
+                    if cmp.is_visible() then
+                        cmp.select_next()
+                    else
+                        cmp.show()
+                    end
+                end
+            },
+            ['<M-Tab>'] = {
+                function(cmp)
+                    if cmp.is_visible() then
+                        cmp.select_prev()
+                    else
+                        cmp.show()
+                    end
+                end
+            },
+        },
     },
 })

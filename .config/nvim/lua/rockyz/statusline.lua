@@ -241,7 +241,7 @@ function M.diagnostic()
                 table.insert(res, string.format('%%#StlDiagnostic%s#%s %s%%*', level, icon, n))
             else
                 -- Use gray color if diagnostic is disabled
-                table.insert(res, string.format('%%#StlComponentInactive#%s %s%%* ', icon, n))
+                table.insert(res, string.format('%%#StlComponentInactive#%s %s%%*', icon, n))
             end
         end
     end

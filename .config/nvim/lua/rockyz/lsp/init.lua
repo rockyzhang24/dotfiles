@@ -3,35 +3,50 @@ local methods = vim.lsp.protocol.Methods
 
 local M = {}
 
--- Config diagnostic globally
+-- Diagnostic config
+
+-- The format for diagnostic display is: diagnostic.code: diagnostic.message [diagnostic.source]
+-- Virtual text, virtual lines and float should all follow this format
+--
+-- TODO: The message in the virtual lines already includes the code. I'm not sure if this is a bug.
+
+local virtual_text_opts = {
+    source = false,
+    prefix = '●',
+    spacing = 4,
+    format = function(d)
+        return string.format('%s: %s', d.code and d.code or 'Unknown', d.message)
+    end,
+    suffix = function(d)
+        return string.format(' [%s]', d.source and d.source or 'Unknown')
+    end,
+}
+local float_opts = {
+    source = false,
+    border = vim.g.border_style,
+    severity_sort = true,
+    format = function(d)
+        return string.format('%s: %s', d.code and d.code or 'Unknown', d.message)
+    end,
+    suffix = function(d)
+        return string.format(' [%s]', d.source and d.source or 'Unknown')
+    end,
+}
+local virtual_lines_opts = {
+    format = function(d)
+        return string.format('%s [%s]', d.message, d.source and d.source or 'Unknown')
+    end,
+}
+
 vim.diagnostic.config({
-    float = {
-        source = true,
-        border = vim.g.border_style,
-        severity_sort = true,
-        prefix = function(diagnostic)
-            local level = vim.diagnostic.severity[diagnostic.severity]
-            local prefix = string.format(' %s ', diagnostic_icons[level])
-            return prefix, 'Diagnostic' .. level:gsub('^%l', string.upper)
-        end,
-    },
-    virtual_text = {
-        prefix = '',
-        spacing = 4,
-        format = function(diagnostic)
-            local icon = diagnostic_icons[vim.diagnostic.severity[diagnostic.severity]]
-            return string.format('%s %s ', icon, diagnostic.message)
-        end,
-    },
+    float = float_opts,
+    virtual_text = virtual_text_opts,
     virtual_lines = false,
     signs = false,
     severity_sort = true,
-    jump = {
-        float = {
-            scope = 'cursor',
-        },
-    },
 })
+
+-- Capabilities
 
 M.client_capabilities = function()
     local capabilities = vim.tbl_deep_extend(
@@ -79,6 +94,8 @@ local function on_attach(client, bufnr)
     --  * ]d and [d: jump to the next or previous diagnostic
     --  * ]D and [D: jump to the last or first diagnostic
     --  * <C-w>d and <C-w><C-d> map to vim.diagnostic.open_float()
+    --
+
     local opts = { buffer = bufnr }
     vim.keymap.set('n', 'gd', vim.lsp.buf.definition, opts)
     vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, opts)
@@ -97,6 +114,7 @@ local function on_attach(client, bufnr)
     -- TODO: modify this keymap to only get the code actions for the current cursor position after the
     -- API is fixed.
     vim.keymap.set({ 'n', 'x' }, '<Leader>la', vim.lsp.buf.code_action, opts)
+
     -- Diagnostics
     vim.keymap.set('n', 'go', vim.diagnostic.open_float, opts)
     vim.keymap.set('n', '[d', function() -- previous
@@ -117,9 +135,30 @@ local function on_attach(client, bufnr)
     vim.keymap.set('n', ']e', function() -- next error
         vim.diagnostic.jump({ count = vim.v.count1, severity = vim.diagnostic.severity.ERROR })
     end, opts)
+    -- Toggle diagnostics (buffer-local)
+    vim.keymap.set('n', 'yod', function()
+        vim.diagnostic.enable(not vim.diagnostic.is_enabled({ bufnr = 0 }), { bufnr = 0 })
+    end, opts)
+    -- Toggle diagnostics (global)
+    vim.keymap.set('n', 'yoD', function()
+        vim.diagnostic.enable(not vim.diagnostic.is_enabled())
+    end, opts)
+    -- Switch the way diagnostics are displayed (virtual text or virtual line)
+    vim.keymap.set('n', 'gK', function()
+        local old_opts = vim.diagnostic.config()
+        if not old_opts then
+            return
+        end
+        local new_opts = {}
+        new_opts.virtual_text = not old_opts.virtual_text and virtual_text_opts or false
+        new_opts.virtual_lines = not old_opts.virtual_lines and virtual_lines_opts or false
+        vim.diagnostic.config(new_opts)
+    end, opts)
+
     -- Feed all diagnostics to quickfix list, or buffer diagnostics to location list
     vim.keymap.set('n', '<Leader>dq', vim.diagnostic.setqflist, opts)
     vim.keymap.set('n', '<Leader>dl', vim.diagnostic.setloclist, opts)
+
     -- Format
     -- vim.keymap.set({ 'n', 'x' }, '<leader>F', function()
     --     vim.lsp.buf.format({ async = true })

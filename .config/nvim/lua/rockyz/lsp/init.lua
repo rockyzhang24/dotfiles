@@ -5,36 +5,43 @@ local M = {}
 
 -- Diagnostic config
 
--- The format for diagnostic display is: diagnostic.code: diagnostic.message [diagnostic.source]
+--
+-- Diagnostic is displayed as: diagnostic.source: diagnostic.message [diagnostic.code]
 -- Virtual text, virtual lines and float should all follow this format
 --
--- TODO: The message in the virtual lines already includes the code. I'm not sure if this is a bug.
+
+local function format(d)
+    return string.format('%s: %s', d.source and d.source or 'Unknown', d.message)
+end
+
+local function suffix(d)
+    return string.format(' [%s]', d.code and d.code or 'Unknown')
+end
 
 local virtual_text_opts = {
     source = false,
     prefix = '●',
     spacing = 4,
-    format = function(d)
-        return string.format('%s: %s', d.code and d.code or 'Unknown', d.message)
-    end,
-    suffix = function(d)
-        return string.format(' [%s]', d.source and d.source or 'Unknown')
-    end,
+    format = format,
+    suffix = suffix,
 }
+
 local float_opts = {
     source = false,
     border = vim.g.border_style,
     severity_sort = true,
-    format = function(d)
-        return string.format('%s: %s', d.code and d.code or 'Unknown', d.message)
-    end,
-    suffix = function(d)
-        return string.format(' [%s]', d.source and d.source or 'Unknown')
-    end,
+    format = format,
+    suffix = suffix,
 }
+
 local virtual_lines_opts = {
     format = function(d)
-        return string.format('%s [%s]', d.message, d.source and d.source or 'Unknown')
+    return string.format(
+        '%s: %s [%s]',
+        d.source and d.source or 'Unknown',
+        d.message,
+        d.code and d.code or 'Unknown'
+    )
     end,
 }
 

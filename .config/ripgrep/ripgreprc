@@ -4,11 +4,11 @@
 # #c586c0
 path:fg:197,134,192
 --colors
-# Number (#569cd6)
-line:fg:86,156,214
+# 90ee8f
+line:fg:144,238,143
 --colors
-# Number (#6a9955)
-column:fg:106,153,85
+# 97f5ff
+column:fg:151,245,255
 --colors
 # #f44747
 match:fg:244,71,71

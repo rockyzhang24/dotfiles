@@ -116,17 +116,19 @@ vim.api.nvim_create_autocmd('User', {
 })
 
 local rg_prefix = 'rg --column --line-number --no-heading --color=always --smart-case --with-filename'
-local bat_prefix = 'bat --color=always --paging=never --style=numbers'
+local bat_prefix = 'bat --color=always --paging=never --style=numbers' -- used to preview text file
 local fd_prefix = 'fd --hidden --follow --color=never --type f --type l ' .. vim.env.FD_EXCLUDE
-local fzf_previewer = '~/.config/fzf/fzf-previewer.sh'
+local fzf_previewer = '~/.config/fzf/fzf-previewer.sh' -- used to preview various types of files (text, image, etc)
 local headless_add_icon = 'nvim -n --headless -u NONE -i NONE --cmd "lua require(\'rockyz.headless.fzf_devicons\')" +q'
+
+local common_expect = 'ctrl-x,ctrl-v,ctrl-t'
 
 ---Color a string by ANSI color code that is converted from a highlight group
 ---@param str string string to be colored
 ---@param hl string highlight group name
 ---@param from_type string? which color type in the highlight group will be used, 'fg', 'bg' or 'sp'
 ---@param to_type string? which ANSI color type will be output, 'fg' or 'bg'
-local function color_str(str, hl, from_type, to_type)
+local function ansi_string(str, hl, from_type, to_type)
     from_type = from_type or 'fg'
     to_type = to_type or 'fg'
     local ansi = color.hl2ansi(hl, from_type, to_type)
@@ -135,13 +137,13 @@ local function color_str(str, hl, from_type, to_type)
 end
 
 -- Get ANSI colored devicon for a filename
-local function color_devicon(filename)
+local function ansi_devicon(filename)
     if not has_devicons then
         return ''
     end
     local ext = vim.fn.fnamemodify(filename, ':e')
     local file_icon, file_icon_hl = devicons.get_icon(filename, ext, { default = true })
-    return color_str(file_icon, file_icon_hl)
+    return ansi_string(file_icon, file_icon_hl)
 end
 
 local cached_fzf_query -- cached the last fzf query
@@ -348,7 +350,7 @@ local function files(from_resume)
             '--prompt',
             shortpath(),
             '--expect',
-            'ctrl-x,ctrl-v,ctrl-t',
+            common_expect,
             '--preview',
             fzf_previewer .. ' {2}',
             '--bind',
@@ -375,7 +377,7 @@ local function old_files(from_resume)
             '--tiebreak',
             'index',
             '--expect',
-            'ctrl-x,ctrl-v,ctrl-t',
+            common_expect,
             '--preview',
             fzf_previewer .. ' {2}',
             '--bind',
@@ -391,7 +393,7 @@ local function old_files(from_resume)
 
     for _, file in ipairs(vim.v.oldfiles) do
         if vim.fn.filereadable(file) == 1 then
-            local icon = color_devicon(file)
+            local icon = ansi_devicon(file)
             file = vim.fn.fnamemodify(file, ':~:.')
             table.insert(entries, icon .. ' ' .. file)
         end
@@ -418,7 +420,7 @@ local function dot_files(from_resume)
             '--prompt',
             '.dotfiles> ',
             '--expect',
-            'ctrl-x,ctrl-v,ctrl-t',
+            common_expect,
             '--preview',
             fzf_previewer .. ' ' .. git_root .. '/{2}',
             '--accept-nth',
@@ -445,7 +447,7 @@ local function home_files(from_resume)
             '--prompt',
             'Home Files> ',
             '--expect',
-            'ctrl-x,ctrl-v,ctrl-t',
+            common_expect,
             '--preview',
             fzf_previewer .. ' ' .. vim.env.HOME .. '/{2}',
             '--accept-nth',
@@ -462,6 +464,117 @@ vim.keymap.set('n', '<Leader>f`', function()
     run(home_files)
 end)
 
+-- Buffers
+local function buffers(from_resume)
+    local spec = {
+        ['sink*'] = function(lines)
+            local key = lines[1]
+            if key == 'ctrl-d' then
+                -- CTRL-D to delete selected buffers
+                for i = 2, #lines do
+                    local bufnr = tonumber(string.match(lines[i], '%[(%d+)%]'))
+                    require('rockyz.utils.buf_utils').bufdelete({ bufnr = bufnr, wipe = true })
+                end
+            else
+                -- ENTER with only a single selection: switch to the buffer
+                -- CTRL-X/V/T supports multiple selections
+                if key == '' and #lines ~= 2 then
+                    return
+                end
+                local action = vim.g.fzf_action[key]
+                action = action and action .. ' | buffer ' or 'buffer '
+                for i = 2, #lines do
+                    local bufnr = string.match(lines[i], '%[(%d+)%]')
+                    vim.cmd(action .. bufnr)
+                end
+            end
+        end,
+        options = get_fzf_opts(from_resume, {
+            '--multi',
+            '--header-lines',
+            '1',
+            '--with-nth',
+            '3..',
+            '--prompt',
+            'Buffers> ',
+            '--header',
+            ':: CTRL-D (delete buffers)',
+            '--expect',
+            common_expect .. ',ctrl-d',
+            '--preview',
+            '[[ {1} == "No_Name" ]] && echo "" || ' .. bat_prefix .. ' --highlight-line {2} -- {1}',
+            '--preview-window',
+            '+{2}-/2',
+            '--bind',
+            set_preview_label('{3..}'),
+        }),
+    }
+
+    fzf(spec)
+
+    local entries = {}
+
+    local buflist = vim.api.nvim_list_bufs()
+    local max_bufnr = 0
+    local bufinfos = vim.iter(buflist):map(function(b)
+        if vim.api.nvim_buf_is_valid(b) and vim.fn.buflisted(b) == 1 and vim.bo[b].filetype ~= 'qf' then
+            max_bufnr = b > max_bufnr and b or max_bufnr
+            return vim.fn.getbufinfo(b)[1]
+        end
+    end):totable()
+
+    table.sort(bufinfos, function(a, b)
+        return a.lastused > b.lastused
+    end)
+
+    local hls = {
+        bufnr = 'Number',
+        lnum = 'FzfLnum',
+        col = 'FzfCol',
+    }
+
+    local max_bufnr_width = #ansi_string('', hls.bufnr) + #tostring(max_bufnr) + 2
+
+    for _, bufinfo in ipairs(bufinfos) do
+        local bufnr = bufinfo.bufnr
+        local fullname = bufinfo.name
+        local icon = ansi_devicon(fullname)
+        local dispname = #fullname == 0 and '[No Name]' or vim.fn.fnamemodify(fullname, ':~:.')
+        local current_buf = vim.api.nvim_get_current_buf()
+        local alternate_buf = vim.fn.bufnr('#')
+        local lnum = bufinfo.lnum
+        local flags = {
+            bufnr == current_buf and '%' or (bufnr == alternate_buf and '#' or ''),
+            bufinfo.hidden == 1 and 'h' or 'a',
+            vim.bo[bufnr].readonly and '=' or (vim.bo[bufnr].modifiable and '' or '-'),
+            bufinfo.changed == 1 and '+' or '',
+        }
+        -- Entry: <fullname> <lnum> <[bufnr]> <flags> <bufname>:<lnum>
+        -- {3..} will be presented.
+        local entry = string.format(
+            '%s %s %-' .. max_bufnr_width .. 's %3s %s %s:%s',
+            #fullname == 0 and 'No_Name' or fullname,
+            lnum,
+            '[' .. ansi_string(bufnr, hls.bufnr) .. ']',
+            table.concat(flags, ''),
+            icon,
+            dispname,
+            ansi_string(tostring(lnum), hls.lnum)
+        )
+        table.insert(entries, entry)
+    end
+
+    send_to_fzf(entries)
+end
+
+vim.keymap.set('n', '<Leader>fb', function()
+    run(buffers)
+end)
+
+vim.keymap.set('n', '<C-\\>', function()
+    run(buffers)
+end)
+
 -- Git files
 local function git_files(from_resume)
     local git_root = get_git_root()
@@ -473,7 +586,7 @@ local function git_files(from_resume)
             '--prompt',
             'Git Files> ',
             '--expect',
-            'ctrl-x,ctrl-v,ctrl-t',
+            common_expect,
             '--preview',
             fzf_previewer .. ' ' .. git_root .. '/{2}',
             '--accept-nth',
@@ -705,57 +818,6 @@ vim.keymap.set('n', '<Leader>f:', function()
     run(command_history)
 end)
 
--- Buffers
--- CTRL-D: delete selected buffers
-local function buffers(from_resume)
-    vim.fn['fzf#vim#buffers']('', vim.fn['fzf#vim#with_preview']({
-        ['sink*'] = function(lines)
-            local key = lines[1]
-            if key == 'ctrl-d' then
-                -- CTRL-D to delete selected buffers
-                for i = 2, #lines do
-                    local bufnr = tonumber(string.match(lines[i], '%[(%d+)%]'))
-                    require('rockyz.utils.buf_utils').bufdelete({ bufnr = bufnr, wipe = true })
-                end
-            else
-                -- ENTER with only a single selection: switch to the buffer
-                -- CTRL-X/V/T supports multiple selections
-                if key == '' and #lines ~= 2 then
-                    return
-                end
-                local action = vim.g.fzf_action[key]
-                action = action and action .. ' | buffer ' or 'buffer '
-                for i = 2, #lines do
-                    local bufnr = string.match(lines[i], '%[(%d+)%]')
-                    vim.cmd(action .. bufnr)
-                end
-            end
-        end,
-        placeholder = '{1}',
-        options = get_fzf_opts(from_resume, {
-            '--multi',
-            '--header-lines',
-            '0',
-            '--prompt',
-            'Buffers> ',
-            '--header',
-            ':: CTRL-D (delete buffers)',
-            '--expect',
-            'ctrl-d,ctrl-x,ctrl-v,ctrl-t',
-            '--bind',
-            set_preview_label('{3..}'),
-        }),
-    }))
-end
-
-vim.keymap.set('n', '<Leader>fb', function()
-    run(buffers)
-end)
-
-vim.keymap.set('n', '<C-\\>', function()
-    run(buffers)
-end)
-
 -- Marks
 local function marks(from_resume)
     local buf = vim.api.nvim_get_current_buf()
@@ -800,7 +862,7 @@ local function marks(from_resume)
             '--header',
             ':: CTRL-D (delete marks)',
             '--expect',
-            'ctrl-x,ctrl-v,ctrl-t,ctrl-d,esc',
+            common_expect .. ',ctrl-d,esc',
             '--preview',
             ' [[ -f {-1} ]] && ' .. bat_prefix .. ' --highlight-line {2} -- {-1} || echo File does not exist, no preview!',
             '--preview-window',
@@ -813,7 +875,7 @@ local function marks(from_resume)
     fzf(spec)
 
     -- Each fzf entry has 5 parts: mark, line, col, file/text and filepath
-    -- The first 4 parts are displayed in fzf; the last part, filepath, is used for preview
+    -- The first 4 parts are presented in fzf; the last part, filepath, is used for preview
     local fzf_entries = {}
 
     local all_marks = vim.api.nvim_win_call(win, function()
@@ -831,8 +893,7 @@ local function marks(from_resume)
         local mark, line, col, text = all_marks[i]:match('(.)%s+(%d+)%s+(%d+)%s+(.*)')
         col = tostring(tonumber(col) + 1)
 
-        -- Get the file path of the mark. It won't be displayed in fzf, but is used for
-        -- preview.
+        -- Get the file path of the mark. It won't be presented in fzf, but is used for preview.
         local filepath = text
         -- nvim_buf_get_mark cannot get `'` mark correctly without curwin
         -- https://github.com/neovim/neovim/issues/29807
@@ -848,9 +909,9 @@ local function marks(from_resume)
 
         local entry = string.format(
             ' %-26s %25s %25s %s %s',
-            color_str(mark, 'FzfFilename'), -- 23 chars
-            color_str(line, 'FzfLnum'), -- 22 chars if line is 1 digit
-            color_str(col, 'FzfCol'), -- 22 chars if col is 1 digit
+            ansi_string(mark, 'FzfFilename'), -- 23 chars
+            ansi_string(line, 'FzfLnum'), -- 22 chars if line is 1 digit
+            ansi_string(col, 'FzfCol'), -- 22 chars if col is 1 digit
             text,
             filepath
         )
@@ -937,7 +998,7 @@ local function tabs(from_resume)
                         cur_bufname = bufname:gsub(" ", "@@@@")
                         cur_lnum = vim.api.nvim_win_get_cursor(winid)[1]
                         -- Mark the current window in a tab by a distinct color
-                        filename = color_str(filename, 'DiagnosticOk')
+                        filename = ansi_string(filename, 'DiagnosticOk')
                     end
                     table.insert(filenames, filename)
                 end
@@ -996,7 +1057,7 @@ local function args(from_resume)
             '--header',
             ':: CTRL-D (delete from arglist)',
             '--expect',
-            'ctrl-x,ctrl-v,ctrl-t,ctrl-d,esc',
+            common_expect .. ',ctrl-d,esc',
             '--preview',
             bat_prefix .. ' -- {3}',
             '--bind',
@@ -1017,9 +1078,9 @@ local function args(from_resume)
         ---@diagnostic disable-next-line: param-type-mismatch
         local fs = vim.uv.fs_stat(f)
         if fs and fs.type == 'file' then
-            local devicon = color_devicon(f)
+            local devicon = ansi_devicon(f)
             -- Fzf entry consists of 3 parts: index, devicon, filename
-            -- Index is used for file switch and it won't be displayed in fzf
+            -- Index is used for file switch and it won't be presented in fzf
             local entry = string.format('%s %s %s', #entries + 1, devicon, f)
             table.insert(entries, entry)
         end
@@ -1069,7 +1130,7 @@ local function helptags(from_resume)
             '--prompt',
             'Helptags> ',
             '--expect',
-            'ctrl-x,ctrl-v,ctrl-t,esc',
+            common_expect .. ',esc',
             '--header',
             ':: CTRL-V (open in vertical split), CTRL-T (open in new tab)',
             '--preview',
@@ -1130,7 +1191,7 @@ local function helptags(from_resume)
                     if #fields == 3 and not tags_map[fields[1]] then
                         -- fzf entry
                         -- It consists of three parts: tag, filename, file_fullpath
-                        -- Only the first two parts are displayed in fzf. The third part
+                        -- Only the first two parts are presented in fzf. The third part
                         -- file_fullpath is used to open the help file.
                         local tag = fields[1]
                         local filename = fields[2] -- help file name
@@ -1138,8 +1199,8 @@ local function helptags(from_resume)
                         local file_fullpath = help_files[filename] -- help file fullpath
                         local entry = string.format(
                             '%s %s %s %s',
-                            color_str(tag, 'Label'),
-                            color_str('[' .. filename .. ']', 'FzfDesc'),
+                            ansi_string(tag, 'Label'),
+                            ansi_string('[' .. filename .. ']', 'FzfDesc'),
                             file_fullpath,
                             excmd
                         )
@@ -1197,7 +1258,7 @@ local function commands(from_resume)
     -- The structure of each entry is as follows (3 parts):
     -- command colored_command description
     --    |       |                  |____________ shown in preview
-    --    |       |___ displayed in fzf
+    --    |       |___ presented in fzf
     --    |___ used for sink
     local fzf_entries = {}
 
@@ -1229,7 +1290,7 @@ local function commands(from_resume)
         for _, cmd in ipairs(cmds) do
             local entry = cmd
                 .. ' '
-                .. (buffer_local and color_str(cmd, 'Function') or color_str(cmd, 'Directory'))
+                .. (buffer_local and ansi_string(cmd, 'Function') or ansi_string(cmd, 'Directory'))
             local info = buffer_local and buf_commands[cmd] or global_commands[cmd]
             local desc = {}
             if info.bang then
@@ -1261,7 +1322,7 @@ local function commands(from_resume)
             -- Builtin command is in the line starting with `|:FOO`
             if line:match('^|:[^|]') then
                 if cmd then
-                    table.insert(fzf_entries, cmd .. ' ' .. color_str(cmd, 'PreProc') .. ' Description: ' .. desc)
+                    table.insert(fzf_entries, cmd .. ' ' .. ansi_string(cmd, 'PreProc') .. ' Description: ' .. desc)
                 end
                 cmd, desc = line:match('^|:(%S+)|%s+%S+%s+(.*%S)')
             elseif cmd then
@@ -1276,7 +1337,7 @@ local function commands(from_resume)
             end
         end
         if cmd then
-            table.insert(fzf_entries, cmd .. ' ' .. color_str(cmd, 'PreProc') .. ' Description: ' .. desc)
+            table.insert(fzf_entries, cmd .. ' ' .. ansi_string(cmd, 'PreProc') .. ' Description: ' .. desc)
         end
     end
 
@@ -1340,7 +1401,7 @@ local function registers(from_resume)
             ['\18'] = '^R', -- <C-r>
         }
         for k, v in pairs(gsub_map) do
-            text = text:gsub(k, color_str(v, 'PreProc')):gsub('\n$', '')
+            text = text:gsub(k, ansi_string(v, 'PreProc')):gsub('\n$', '')
         end
         return text
     end
@@ -1352,7 +1413,7 @@ local function registers(from_resume)
         if text and #text > 0 then
             table.insert(
                 fzf_entries,
-                string.format('[%s] %s\0', color_str(r, 'FzfLnum'), text)
+                string.format('[%s] %s\0', ansi_string(r, 'FzfLnum'), text)
             )
         end
     end
@@ -1436,14 +1497,14 @@ end)
 local function get_qf_entry(item)
     local entry = {}
     if item.fname ~= '' then
-        table.insert(entry, color_str(item.fname, 'QuickfixFilename'))
+        table.insert(entry, ansi_string(item.fname, 'QuickfixFilename'))
     end
     local lnum_col = item.lnum
     if item.col ~= '' then
         lnum_col = item.lnum .. ':' .. item.col
     end
     if lnum_col ~= '' then
-        table.insert(entry, color_str(lnum_col, 'Number'))
+        table.insert(entry, ansi_string(lnum_col, 'Number'))
     end
     local type_hl = {
         E = 'DiagnosticError',
@@ -1455,14 +1516,14 @@ local function get_qf_entry(item)
     if item.type ~= '' then
         local type = '[' .. item.type .. ']'
         if hl then
-            type = color_str(type, hl)
+            type = ansi_string(type, hl)
         end
         table.insert(entry, type)
     end
     if item.text ~= '' then
         local text = item.text
         if hl then
-            text = color_str(text, hl)
+            text = ansi_string(text, hl)
         end
         table.insert(entry, text)
     end
@@ -1531,7 +1592,7 @@ local function qf_items_fzf(win_local, from_resume)
             '--with-nth',
             '4..',
             '--expect',
-            'ctrl-x,ctrl-v,ctrl-t,ctrl-q,ctrl-l,ctrl-r,esc',
+            common_expect .. ',ctrl-q,ctrl-l,ctrl-r,esc',
             '--preview',
             bat_prefix .. ' --highlight-line {3} -- {2}',
             '--preview-window',
@@ -1646,7 +1707,7 @@ local function qf_history_fzf(win_local, from_resume)
         -- Build fzf entry: "3 tmpfile [3] 1 items    Diagnostics"
         -- The first part is quickfix-id that is used to switch the specific quickfix.
         -- The second part "tmpfile" is the path of the temporary file used by cat in --preview. The
-        -- other parts will be displayed in fzf.
+        -- other parts will be presented in fzf.
         local entry = i .. ' ' .. err_tmpfile .. ' [' .. i .. '] ' .. list.size .. ' items    ' .. list.title
         if list.nr == cur_nr then
             entry = entry .. ' ' .. icons.caret.left
@@ -1891,7 +1952,7 @@ local function grep_word(from_resume)
                 -- Show the current rg query in header. Set its style to bold, red foreground via ANSI
                 -- color code.
                 '--header',
-                ':: Query: ' .. color_str(header, 'FzfRgQuery'),
+                ':: Query: ' .. ansi_string(header, 'FzfRgQuery'),
                 '--bind',
                 set_preview_label('{1}:{2}:{3}'),
             }),
@@ -1908,7 +1969,7 @@ end)
 --
 -- Each fzf entry consists of 6 parts: index, offset_encoding, filename, lnum, col, fzf_text.
 --
--- Only fzf_text will be displayed in fzf. index is used to fetch the corresponding qf items from
+-- Only fzf_text will be presented in fzf. index is used to fetch the corresponding qf items from
 -- the selected fzf entries. offset_encoding is used for jumping to the location. filename, lnum and
 -- col are used for fzf preview and border label.
 --
@@ -1933,7 +1994,7 @@ local function symbols_to_entries_and_items(symbols, ctx, child_prefix, all_entr
     end
 
     local client_name = client.name
-    local colored_client_name = color_str(client_name, 'FzfDesc')
+    local colored_client_name = ansi_string(client_name, 'FzfDesc')
     local offset_encoding = client.offset_encoding
     local bufnr = ctx.bufnr
 
@@ -1942,7 +2003,7 @@ local function symbols_to_entries_and_items(symbols, ctx, child_prefix, all_entr
         for _, symbol in ipairs(_symbols) do
             local kind = vim.lsp.protocol.SymbolKind[symbol.kind] or 'Unknown'
             local icon = icons.symbol_kinds[kind]
-            local colored_icon_kind = color_str(icon .. ' ' .. kind, 'SymbolKind' .. kind)
+            local colored_icon_kind = ansi_string(icon .. ' ' .. kind, 'SymbolKind' .. kind)
             if symbol.location then
                 --
                 -- LSP's WorkspaceSymbol[]
@@ -1956,14 +2017,14 @@ local function symbols_to_entries_and_items(symbols, ctx, child_prefix, all_entr
                 local filename = item.filename
                 local lnum = item.lnum
                 local col = item.col
-                local devicon = color_devicon(filename)
+                local devicon = ansi_devicon(filename)
                 local fzf_text = '[' .. colored_icon_kind .. '] ' .. symbol.name .. ' '
                     .. colored_client_name
                     .. string.rep(' ', 6)
                     .. (devicon == '' and devicon or devicon .. ' ')
-                    .. color_str(vim.fn.fnamemodify(filename, ':~:.'), 'FzfFilename') .. ':'
-                    .. color_str(tostring(lnum), 'FzfLnum').. ':'
-                    .. color_str(tostring(col), 'FzfCol')
+                    .. ansi_string(vim.fn.fnamemodify(filename, ':~:.'), 'FzfFilename') .. ':'
+                    .. ansi_string(tostring(lnum), 'FzfLnum').. ':'
+                    .. ansi_string(tostring(col), 'FzfCol')
                 table.insert(all_entries, table.concat({
                     #all_entries + 1,
                     offset_encoding,
@@ -2041,7 +2102,7 @@ local function lsp_symbols(method, params, title, symbol_query, from_resume)
     local fzf_header = ':: CTRL-Q (send to quickfix), CTRL-L (send to loclist)'
     local fzf_preview_window = '+{4}-/2'
     if symbol_query ~= '' then
-        fzf_header = ':: Query: ' .. color_str(symbol_query, 'FzfRgQuery') .. '\n' .. fzf_header
+        fzf_header = ':: Query: ' .. ansi_string(symbol_query, 'FzfRgQuery') .. '\n' .. fzf_header
         fzf_preview_window = 'down,45%,' .. fzf_preview_window
     end
 
@@ -2097,7 +2158,7 @@ local function lsp_symbols(method, params, title, symbol_query, from_resume)
             '--header',
             fzf_header,
             '--expect',
-            'ctrl-x,ctrl-v,ctrl-t,ctrl-q,ctrl-l,esc',
+            common_expect .. ',ctrl-q,ctrl-l,esc',
             '--preview',
             bat_prefix .. ' --highlight-line {4} -- {3}',
             '--preview-window',
@@ -2163,11 +2224,11 @@ local function locations_to_entries_and_items(locations, ctx, all_entries, all_i
         local filename = item.filename
         local lnum = item.lnum
         local col = item.col
-        local icon = color_devicon(filename)
+        local icon = ansi_devicon(filename)
         local fzf_text = icon == '' and icon or icon .. ' '
-            .. color_str(vim.fn.fnamemodify(filename, ':~:.'), 'FzfFilename')
-            .. ':' .. color_str(tostring(lnum), 'FzfLnum')
-            .. ':' .. color_str(tostring(col), 'FzfCol')
+            .. ansi_string(vim.fn.fnamemodify(filename, ':~:.'), 'FzfFilename')
+            .. ':' .. ansi_string(tostring(lnum), 'FzfLnum')
+            .. ':' .. ansi_string(tostring(col), 'FzfCol')
             .. ': ' .. item.text
         table.insert(all_entries, table.concat({
             #all_entries + 1,
@@ -2234,7 +2295,7 @@ local function lsp_locations(method, title, from_resume)
             '--header',
             ':: CTRL-Q (send to quickfix), CTRL-L (send to loclist)',
             '--expect',
-            'ctrl-x,ctrl-v,ctrl-t,ctrl-q,ctrl-l,esc',
+            common_expect .. ',ctrl-q,ctrl-l,esc',
             '--preview',
             bat_prefix .. ' --highlight-line {4} -- {3}',
             '--preview-window',
@@ -2350,7 +2411,7 @@ local function diagnostics(from_resume, opts)
                         else
                             vim.cmd('edit! ' .. vim.fn.bufname(bufnr))
                         end
-                        vim.api.nvim_win_set_cursor(0, { diag.lnum, diag.col - 1 })
+                        vim.api.nvim_win_set_cursor(0, { diag.lnum + 1, diag.col })
                         vim.cmd('normal! zvzz')
                     end
                 end
@@ -2365,7 +2426,7 @@ local function diagnostics(from_resume, opts)
             '--header',
             ':: CTRL-Q (send to quickfix), CTRL-L (send to loclist)',
             '--expect',
-            'ctrl-x,ctrl-v,ctrl-t,ctrl-q,ctrl-l,esc',
+            common_expect .. ',ctrl-q,ctrl-l,esc',
             '--preview',
             bat_prefix .. ' --highlight-line {3} -- {2}',
             '--preview-window',
@@ -2389,12 +2450,14 @@ local function diagnostics(from_resume, opts)
     for _, diag in ipairs(diags) do
         local bufnr = diag.bufnr
         local filename = vim.api.nvim_buf_get_name(bufnr)
-        local devicon = color_devicon(filename)
-        local diag_icon = color_str(diag_icons[diag.severity].text, diag_icons[diag.severity].hl)
+        local devicon = ansi_devicon(filename)
+        local diag_icon = ansi_string(diag_icons[diag.severity].text, diag_icons[diag.severity].hl)
+        local lnum = diag.lnum + 1
+        local col = diag.col + 1
         -- Fzf entry
         -- Each entry consists of 5 parts:
         -- index, filename, lnum, col, fzf_text
-        -- Only fzf_text will be displayed in fzf. The first part, index, is used to retrieve the
+        -- Only fzf_text will be presented in fzf. The first part, index, is used to retrieve the
         -- corresponding original diagnostic item from the selected entry in fzf.
         local fzf_text = string.format(
             -- Use `\0` and fzf's `--read0` to support multi-line items
@@ -2402,17 +2465,17 @@ local function diagnostics(from_resume, opts)
             '%s %s %s:%s:%s:\n%s%s\0',
             diag_icon,
             devicon,
-            color_str(vim.fn.fnamemodify(filename, ':~:.'), 'QuickfixFilename'),
-            color_str(tostring(diag.lnum), 'QuickfixLnumCol'),
-            color_str(tostring(diag.col), 'QuickfixLnumCol'),
+            ansi_string(vim.fn.fnamemodify(filename, ':~:.'), 'QuickfixFilename'),
+            ansi_string(tostring(lnum), 'QuickfixLnumCol'),
+            ansi_string(tostring(col), 'QuickfixLnumCol'),
             string.rep(' ', 2) .. (diag.source and '[' .. diag.source .. '] ' or ''),
             string.gsub(diag.message, '\n', '\n' .. string.rep(' ', 2))
         )
         table.insert(fzf_entries, table.concat({
             #fzf_entries + 1,
             filename,
-            diag.lnum,
-            diag.col,
+            lnum,
+            col,
             fzf_text
         }, ' '))
     end

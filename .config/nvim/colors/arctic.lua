@@ -94,6 +94,10 @@ local colors256_144_brown = '#afaf87' -- 144
 local colors256_161_pink = '#d7005f' -- 161
 local colors256_168_pink2 = '#d75f87' -- 168
 
+local filename = dark_pink -- filename in Quickfix and fzf finders
+local lnum = '#90ee8f' -- line number in Quickfix window and fzf finders
+local col = '#97f5ff' -- column number in fzf finders
+
 local groups = {
 
     --
@@ -379,8 +383,8 @@ local groups = {
     -- Quickfix
     --
 
-    QuickfixFilename = { fg = dark_pink },
-    QuickfixLnumCol = { fg = dark_blue },
+    QuickfixFilename = { fg = filename },
+    QuickfixLnumCol = { fg = lnum },
 
     --
     -- Syntax
@@ -979,9 +983,9 @@ local groups = {
     -- Fzf
     --
 
-    FzfFilename = { fg = dark_pink },
-    FzfLnum = { fg = dark_blue },
-    FzfCol = { fg = green },
+    FzfFilename = { fg = filename },
+    FzfLnum = { fg = lnum },
+    FzfCol = { fg = col },
     FzfDesc = { fg = util.lighten(norm_bg, 0.4) },
     FzfRgQuery = { fg = red },
 }

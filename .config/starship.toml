@@ -137,6 +137,11 @@ symbol = ' '
 style = 'bg:color_blue'
 format = '[ $symbol( $version) ](fg:color_fg0 bg:color_blue)'
 
+[jobs]
+symbol = '✦ '
+style = 'bg:color_blue'
+format = '[ $symbol$number ](fg:color_fg0 bg:color_blue)'
+
 [kotlin]
 symbol = ' '
 style = 'bg:color_blue'

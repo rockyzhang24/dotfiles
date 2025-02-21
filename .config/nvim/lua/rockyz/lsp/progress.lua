@@ -318,11 +318,11 @@ local function handler(args)
     end
     local cur_client = clients[client_id]
 
-    -- Create buffer for the floating window showing the progress message and the timer used to close
-    -- the window when progress report is done.
+    -- Create a buffer of the floating window showing the progress message
     if cur_client.bufnr == nil then
         cur_client.bufnr = vim.api.nvim_create_buf(false, true)
     end
+    -- Create a timer to delay window close when progress report is done
     if cur_client.timer == nil then
         cur_client.timer = vim.uv.new_timer()
     end
@@ -333,10 +333,9 @@ local function handler(args)
     -- Show progress message in floating window
     show_message(cur_client)
 
-    -- Close the window when finished and adjust the positions of other windows if they exist.
-    -- Let the window stay briefly on the screen before closing it (say 2s). When closing, attempt to
-    -- close at intervals (say 100ms) to handle the potential textlock. We can use uv.timer to
-    -- implement it.
+    -- Close the window when progress finishes and adjust the positions of other windows.
+    -- Let the window stay briefly on the screen before closing it (say 2s). When closing, attempt
+    -- to close at intervals (say 100ms) to handle the potential textlock.
     --
     -- NOTE:
     -- During the waiting period, if it is set for a long duration like 3s, the same server may report
@@ -369,7 +368,7 @@ local function handler(args)
                 cur_client.timer:close()
                 total_wins = total_wins - 1
                 -- Move all windows above this closed window down by one position
-                for _, c in ipairs(clients) do
+                for _, c in pairs(clients) do
                     if c.winid ~= nil and c.pos > cur_client.pos then
                         c.pos = c.pos - 1
                         win_update_config(c)

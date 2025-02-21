@@ -77,6 +77,58 @@
 -- [RANGE]GitBufCommits [GIT LOG OPTIONS]
 -- RGU [RG OPTIONS] [QUERY] [PATH]
 
+--
+-- Template to add a new finder
+--
+-- 1. Based on entries in a Lua table
+--
+-- local function demo_finder(from_resume)
+--     local spec = {
+--         ['sink*'] = function(lines)
+--             -- lines[1] is the key we pressed if it's declared in --expect
+--             -- lines[2..] are the selected entries
+--         end,
+--         options = get_fzf_opts(from_resume, {
+--             -- fzf options go here
+--         }),
+--     }
+--
+--     local function handle_contents()
+--         local entries = {}
+--         -- Build each fzf entry and insert it into entries.
+--
+--         -- Call write() to write all entries into the pipe to display in fzf
+--         write(entries)
+--     end
+--
+--     fzf(spec, handle_contents)
+-- end
+--
+-- 2. Based on an external bash command
+--
+-- local function demo_finder(from_resume)
+--     local spec = {
+--         ['sink*'] = function(lines)
+--         end,
+--         options = get_fzf_opts(from_resume, {
+--         })
+--     }
+--
+--     -- The external bash command
+--     local bash_cmd = ''
+--
+--     fzf(spec, nil, bash_cmd)
+-- end
+--
+-- To bind it to a keymap:
+--
+-- vim.keymap.set('n', '<Leader>ff', function()
+--     run(demo_finder)
+-- end)
+--
+-- Now, this finder can be brought up by the keymap and also it supports resume by <Leader>fr
+--
+
 local qf = require('rockyz.utils.qf_utils')
 local color = require('rockyz.utils.color_utils')
 local io_utils = require('rockyz.utils.io_utils')
@@ -187,10 +239,11 @@ local function set_preview_label(label)
 end
 
 --
--- There are two ways to provide input to fzf: output from an external command like fd, or directly
--- feet it data.
--- For the first case, we can simply set FZF_DEFAULT_COMMAND to the external command.
--- For the second case, we can connect fzf to a fifo pipe waiting for the contents. With this
+-- There are two ways to provide input to fzf: raw output from an external command like fd or git,
+-- or feed entries by a Lua table.
+--
+-- * For the first case, we can simply set FZF_DEFAULT_COMMAND to the external command.
+-- * For the second case, we can connect fzf to a fifo pipe waiting for the contents. With this
 -- approach, fzf's UI will display immediately without blocking. Once the contents are processed, we
 -- write them into the pipe, and they will be displayed in fzf.
 --
@@ -348,10 +401,6 @@ local function files(from_resume)
 
     fzf(spec, nil, fd_cmd)
 end
-
-vim.keymap.set('n', '<Leader>ff', function()
-    run(files)
-end)
 
 -- Old files
 local function old_files(from_resume)
@@ -767,18 +816,60 @@ vim.keymap.set('n', ',fb', function()
     run(git_branches)
 end)
 
+---Helper function to get history
+local function get_history(name)
+    local entries = {}
+    local history = vim.fn.execute('history ' .. name)
+    ---@diagnostic disable-next-line: cast-local-type
+    history = vim.split(history, '\n')
+    for i = #history, 3, -1 do
+        local item = history[i]
+        table.insert(entries, item:match('%d+ +(.+)$'))
+    end
+    return entries
+end
+
 -- Search history
 local function search_history(from_resume)
-    vim.fn['fzf#vim#search_history']({
+    local spec = {
+        ['sink*'] = function(lines)
+            -- ENTER to run the search
+            -- CTRL-E to input the query for further edit
+            local key = lines[1]
+            if key == '' or key == 'ctrl-e' then
+                local query = lines[2]
+                vim.cmd('stopinsert')
+                vim.api.nvim_feedkeys('/' .. query, 'n', true)
+            end
+            if key == '' then
+            vim.api.nvim_feedkeys(
+                vim.api.nvim_replace_termcodes('<CR>', true, false, true),
+                'n',
+                false
+            )
+            end
+        end,
         options = get_fzf_opts(from_resume, {
+            '--no-multi',
             '--prompt',
             'Search History> ',
             '--bind',
             'ctrl-/:ignore',
             '--preview-window',
             'hidden',
+            '--header',
+            ':: ENTER (run), CTRL-E (edit)',
+            '--expect',
+            'ctrl-e',
         }),
-    })
+    }
+
+    local function handle_contents()
+        local entries = get_history('search')
+        write(entries)
+    end
+
+    fzf(spec, handle_contents)
 end
 
 vim.keymap.set('n', '<Leader>f/', function()
@@ -787,16 +878,41 @@ end)
 
 -- Command history
 local function command_history(from_resume)
-    vim.fn['fzf#vim#command_history']({
+    local spec = {
+        ['sink*'] = function(lines)
+            local key = lines[1]
+            local cmd = lines[2]
+            if key == '' then
+                -- ENTER to run the command
+                vim.cmd(cmd)
+                vim.fn.histadd('cmd', cmd)
+            elseif key == 'ctrl-e' then
+                -- CTRL-E to input the command for further edit
+                vim.cmd('stopinsert')
+                vim.api.nvim_feedkeys(':' .. cmd, 'n', true)
+            end
+        end,
         options = get_fzf_opts(from_resume, {
+            '--no-multi',
             '--prompt',
             'Command History> ',
             '--bind',
             'ctrl-/:ignore',
             '--preview-window',
             'hidden',
+            '--header',
+            ':: ENTER (run), CTRL-E (edit)',
+            '--expect',
+            'ctrl-e',
         }),
-    })
+    }
+
+    local function handle_contents()
+        local entries = get_history('cmd')
+        write(entries)
+    end
+
+    fzf(spec, handle_contents)
 end
 
 vim.keymap.set('n', '<Leader>f:', function()

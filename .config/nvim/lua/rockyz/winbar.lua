@@ -53,7 +53,7 @@ local function special_ft_component(ft, winid)
         local what = { title = 0, size = 0, idx = 0 }
         local list = is_loclist and vim.fn.getloclist(0, what) or vim.fn.getqflist(what)
         if list.title ~= '' then
-            table.insert(rest, list.title)
+            table.insert(rest, string.format('%%#WinbarQuickfixTitle#%s%%*', list.title))
         end
         table.insert(rest, string.format('[%s/%s]', list.idx, list.size))
     elseif vim.fn.win_gettype(winid) == 'command' then

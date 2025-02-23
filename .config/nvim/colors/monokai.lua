@@ -151,6 +151,7 @@ local groups = {
     WinbarModified = { fg = norm_fg, bg = norm_bg }, -- the modification indicator
     WinbarError = { fg = error_list, bg = norm_bg }, -- the filename color if the current buffer has errors
     WinbarWarn = { fg = warn_list, bg = norm_bg }, -- the filename color if the current buffer has warnings
+    WinbarQuickfixTitle = { fg = orange }, -- the title of the quickfix
     -- Tabline
     TabDefaultIcon = { fg = icon_fg, bg = tab_inactive_bg }, -- icon for special filetype on inactive tab
     TabDefaultIconActive = { fg = icon_fg, bg = tab_active_bg }, -- icon for special filetype on active tab

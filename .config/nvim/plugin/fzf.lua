@@ -1,26 +1,3 @@
---------------------------------------------------
--- This is the configurations for junegunn/fzf.vim
---------------------------------------------------
-
--- fzf#vim#with_preview()
---
--- 1. It uses the value of g:fzf_vim.preview_window to set the preview window of fzf through its
---    --preview-window option.
--- 2. It sets the --preview option of fzf to `--preview fzf.vim/bin/preview.sh {FILENAME}:{LINENO}`.
---    {FILENAME} and {LINENO} are placeholders of fzf. In this case, {FILENAME} will be the file
---    name for bat and {LINENO} the line number to be highlighted for bat's --highlight-line option.
--- 3. The placeholders in fzf's --preview option can be specified through the placeholder field in
---    the table passed to this function. This table is the spec dictionary similar to vim#wrap.
--- 4. If the placeholder is assigned to an empty string, fzf#vim#with_preview won't set --preview
---    option for fzf. The outer function calling fzf#vim#with_preview may set --preview instead
---    (e.g., fzf#vim#commits set --preview to use delta), or we can explicitly set the --preview
---    option in the `options` table in the spec dictionary (e.g., see the BCommits keymap below). If
---    --preview option is not set anywhere, the one defined in FZF_DEFAULT_OPTS will be used.
---
--- sink and sink*
--- The implementation of sink and sink* in fzf.vim handles fzf_action. If we overwrite sink or
--- sink*, we need to handle fzf_action by ourselves.
-
 -----------------------------------
 -- The support finders are as below
 -----------------------------------
@@ -33,10 +10,6 @@
 -- <Leader>f` : Files under $HOME
 -- <Leader>fb : Buffers
 -- <C-\>      : Buffers
-
--- <C-p>      : Git files
--- ,fc        : Git commits for current buffer
--- ,fC        : Git commits
 
 -- <Leader>f/ : Search history
 -- <Leader>f: : Command history
@@ -72,9 +45,8 @@
 -- <Leader>fd : document diagnostics
 -- <Leader>fD : workspace diagnostics
 
--- Commands
--- [RANGE]GitCommits [GIT LOG OPTIONS]
--- [RANGE]GitBufCommits [GIT LOG OPTIONS]
+-- <C-p>      : Git files
+-- ,fb        : Git branches
 
 --
 -- Template to add a new finder
@@ -146,15 +118,6 @@ vim.g.fzf_action = {
     ['ctrl-x'] = 'split',
     ['ctrl-v'] = 'vsplit',
     ['ctrl-t'] = 'tab split',
-}
-
--- The layout of the preview window. vim#fzf#with_preview must be used to make this option
--- effective.
-vim.g.fzf_vim = {
-    preview_window = {
-        'right,60%',
-        'ctrl-/',
-    },
 }
 
 -- Use the general statusline
@@ -317,41 +280,13 @@ local function run(finder, from_resume)
     finder(from_resume)
 end
 
--- Path completion in INSERT mode
-vim.keymap.set('i', '<C-x><C-f>', function()
-    vim.fn['fzf#vim#complete#path'](
-        'fd',
-        vim.fn['fzf#wrap'](vim.fn['fzf#vim#with_preview']({
-            placeholder = '',
-            options = {
-                '--prompt',
-                'Paths> ',
-            },
-        }))
-    )
-end)
-
 -- Resume
 vim.keymap.set('n', '<Leader>fr', function()
     if not cached_finder then
         notify.warn('No resume finder available!')
         return
     end
-    if type(cached_finder) == 'function' then
-        run(cached_finder, true)
-    elseif type(cached_finder) == 'table' then
-        -- The last executed command-line command
-        -- A special argument `@@from_resume@@` is used to tell the command that it is executed via
-        -- fzf resume
-        local command = string.format(
-            ':%s%s %s @@from_resume@@<CR>',
-            cached_finder.range and cached_finder.range or '',
-            cached_finder.cmd,
-            cached_finder.args
-        )
-        local keys = vim.api.nvim_replace_termcodes(command, true, false, true)
-        vim.api.nvim_feedkeys(keys, 'n', false)
-    end
+    run(cached_finder, true)
 end)
 
 -- Helper function for sink* to handle selected files
@@ -619,211 +554,6 @@ end)
 
 vim.keymap.set('n', '<C-\\>', function()
     run(buffers)
-end)
-
--- Git files
-local function git_files(from_resume)
-    local git_root = get_git_root()
-    local git_cmd = 'git -C ' .. git_root .. ' ls-files --exclude-standard | ' .. file_add_icon
-
-    local spec = {
-        ['sink*'] = sink_file,
-        options = get_fzf_opts(from_resume, {
-            '--prompt',
-            'Git Files> ',
-            '--expect',
-            get_expect(),
-            '--preview',
-            fzf_previewer .. ' ' .. git_root .. '/{2}',
-            '--accept-nth',
-            git_root .. '/{2}',
-            '--header',
-            'Git Root: ' .. vim.fn.fnamemodify(git_root, ':~'),
-            '--bind',
-            set_preview_label('{2}'),
-        }),
-    }
-
-    fzf(spec, nil, git_cmd)
-end
-
-vim.keymap.set('n', '<C-p>', function()
-    run(git_files)
-end)
-
---
--- Git commits (for the whole project) and Git buffer commits (for current buffer)
---
-
--- Create two commands, GitCommits and GitBufCommits
--- Any command accepts git log options and supports a range
--- E.g., :GitCommits 'foo' --name-only
--- A special argument `@@from_resume@@` is used internally for fzf resume
-
-local function create_commands(name, func)
-    vim.api.nvim_create_user_command(name, function(opts)
-        local from_resume = opts.args:match('@@from_resume@@') and true or false
-        local args = opts.args:gsub('@@from_resume@@', '')
-        cached_finder = {
-            range = opts.line1 .. ',' .. opts.line2,
-            cmd =  opts.name,
-            args = args,
-        }
-        vim.cmd(
-            string.format(
-                [[%s,%scall %s(%s, {
-                    \ "options": [
-                    \     "--prompt",
-                    \     %s,
-                    \     "--preview-window",
-                    \     "down,45%%",
-                    \     "--header",
-                    \     ":: CTRL-S (toggle sort), CTRL-Y (yank commmit hashes), CTRL-D (diff)",
-                    \     "--bind",
-                    \     "focus:transform-preview-label:echo [ Diff with commit %s ]",
-                    \     "--bind",
-                    \     "result:execute-silent(echo {q} > ]] .. cached_fzf_query .. [[)",
-                    \     "--bind",
-                    \     "start:transform-query:%s"
-                    \ ]
-                \ }, 0)]],
-                opts.line1,
-                opts.line2,
-                func,
-                string.format("'%s'", args),
-                string.format("'%s> '", name),
-                string.format("'%s'", name == 'GitCommits' and '{2}' or '{1}'),
-                from_resume and ('cat ' .. cached_fzf_query) or ''
-            )
-        )
-    end, {
-        nargs = '*',
-        range = '%',
-    })
-end
-
-create_commands('GitBufCommits', 'fzf#vim#buffer_commits')
-create_commands('GitCommits', 'fzf#vim#commits')
-
-local function run_git_commit_cmd(cmd)
-    local str = string.format(":%s<CR>", cmd)
-    local keys = vim.api.nvim_replace_termcodes(str, true, false, true)
-    vim.api.nvim_feedkeys(keys, 'n', false)
-end
-
-vim.keymap.set({ 'n', 'x' }, ',fc', function()
-    run_git_commit_cmd('GitBufCommits')
-end)
-
-vim.keymap.set({ 'n', 'x' }, ',fC', function()
-    run_git_commit_cmd('GitCommits')
-end)
-
---
--- Git branches
---
-
-local function git_branches(from_resume)
-    -- Extract the branch name for fzf preview and border label
-    --
-    --   entry                            |  extracted branch
-    --------------------------------------|-----------------
-    --   branch                           |    branch
-    --   remotes/origin/branch            |    remotes/origin/branch
-    -- * (HEAD detached at origin/branch) |    origin/branch
-    --
-    local cmd_extract_branch = '[[ {1} == "*" ]] && branch={2} || branch={1}; [[ $branch == "(HEAD" ]] && entry={} && branch=${entry#*\\(HEAD detached at } && branch=${branch%%\\)*}; echo $branch'
-    local root_dir = get_git_root()
-    if root_dir == nil then
-        return
-    end
-    local spec = {
-        ['sink*'] = function(lines)
-            local key = lines[1]
-            if key == '' and #lines == 2 then
-                -- ENTER to checkout the branch
-                local cmd = { 'git', '-C', root_dir, 'switch' }
-                local branch = lines[2]:match('[^ ]+')
-                -- Do nothing of the selected branch is the currently active
-                if branch:find('%*') ~= nil then
-                    return
-                end
-                if branch:find('^remotes/') then
-                    branch = branch:match('remotes/.-/(.-)$')
-                    print(branch)
-                end
-                table.insert(cmd, branch)
-                notify.info('[Git] switching to ' .. branch .. ' branch...')
-                vim.system(cmd, {}, function(obj)
-                    if obj.code ~= 0 then
-                    else
-                        vim.schedule(function()
-                            vim.notify('[Git] switched to ' .. branch .. ' branch.', vim.log.levels.INFO)
-                            vim.cmd('checktime')
-                        end)
-                    end
-                end)
-            elseif key == 'ctrl-d' then
-                -- CTRL-D to delete branches
-                local cmd_del_branch = { 'git', '-C', root_dir, 'branch', '--delete' }
-                local cmd_cur_branch = { 'git', '-C', root_dir, 'rev-parse', '--abbrev-ref', 'HEAD' }
-                local cur_branch = vim.system(cmd_cur_branch):wait().stdout
-                local del_branches = {}
-                for i = 2, #lines do
-                    local branch = lines[i]:match('[^%s%*]+')
-                    if branch ~= cur_branch then
-                        table.insert(del_branches, branch)
-                    end
-                end
-                local msg = string.format(
-                    'Delete %s %s?',
-                    #del_branches > 1 and 'branches' or 'branch',
-                    table.concat(del_branches, ', ')
-                )
-                if vim.fn.confirm(msg, '&Yes\n&No') == 1 then
-                    cmd_del_branch = vim.list_extend(cmd_del_branch, del_branches)
-                    vim.system(cmd_del_branch, {}, function(obj)
-                        local output = (obj.stderr and obj.stderr or '') .. (obj.stdout and obj.stdout or '')
-                        if obj.code == 0 then
-                            notify.info(output)
-                        else
-                            notify.err(output)
-                        end
-                    end)
-                end
-            end
-        end,
-        options = get_fzf_opts(from_resume, {
-            '--prompt',
-            'Git Branches> ',
-            '--expect',
-            'ctrl-d',
-            '--header',
-            ':: ENTER (checkout), CTRL-D (delete branches)',
-            '--preview-window',
-            'down,60%',
-            '--preview',
-            'git log --graph --pretty=oneline --abbrev-commit --color $(' .. cmd_extract_branch .. ')',
-            '--bind',
-            set_preview_label('Branch: $(' .. cmd_extract_branch .. ')'),
-        })
-    }
-
-    local function handle_contents()
-        local entries = {}
-        vim.system({'git', 'branch', '--all', '-vv', '--color'}, { text = true }, function(obj)
-            for line in obj.stdout:gmatch('[^\n]+') do
-                table.insert(entries, line)
-            end
-            write(entries)
-        end)
-    end
-
-    fzf(spec, handle_contents)
-end
-
-vim.keymap.set('n', ',fb', function()
-    run(git_branches)
 end)
 
 ---Helper function to get history
@@ -2632,4 +2362,142 @@ vim.keymap.set('n', '<Leader>fD', function()
     run(function(from_resume)
         diagnostics(from_resume, { all = true })
     end)
+end)
+
+--
+-- Git
+--
+
+-- Git files
+local function git_files(from_resume)
+    local git_root = get_git_root()
+    local git_cmd = 'git -C ' .. git_root .. ' ls-files --exclude-standard | ' .. file_add_icon
+
+    local spec = {
+        ['sink*'] = sink_file,
+        options = get_fzf_opts(from_resume, {
+            '--prompt',
+            'Git Files> ',
+            '--expect',
+            get_expect(),
+            '--preview',
+            fzf_previewer .. ' ' .. git_root .. '/{2}',
+            '--accept-nth',
+            git_root .. '/{2}',
+            '--header',
+            'Git Root: ' .. vim.fn.fnamemodify(git_root, ':~'),
+            '--bind',
+            set_preview_label('{2}'),
+        }),
+    }
+
+    fzf(spec, nil, git_cmd)
+end
+
+vim.keymap.set('n', '<C-p>', function()
+    run(git_files)
+end)
+
+-- Git branches
+local function git_branches(from_resume)
+    -- Extract the branch name for fzf preview and border label
+    --
+    --   entry                            |  extracted branch
+    --------------------------------------|-----------------
+    --   branch                           |    branch
+    --   remotes/origin/branch            |    remotes/origin/branch
+    -- * (HEAD detached at origin/branch) |    origin/branch
+    --
+    local extract_branch_cmd = '[[ {1} == "*" ]] && branch={2} || branch={1}; [[ $branch == "(HEAD" ]] && entry={} && branch=${entry#*\\(HEAD detached at } && branch=${branch%%\\)*}; echo $branch'
+    local root_dir = get_git_root()
+    if root_dir == nil then
+        return
+    end
+    local spec = {
+        ['sink*'] = function(lines)
+            local key = lines[1]
+            if key == '' and #lines == 2 then
+                -- ENTER to checkout the branch
+                local cmd = { 'git', '-C', root_dir, 'switch' }
+                local branch = lines[2]:match('[^ ]+')
+                -- Do nothing of the selected branch is the currently active
+                if branch:find('%*') ~= nil then
+                    return
+                end
+                if branch:find('^remotes/') then
+                    branch = branch:match('remotes/.-/(.-)$')
+                    print(branch)
+                end
+                table.insert(cmd, branch)
+                notify.info('[Git] switching to ' .. branch .. ' branch...')
+                vim.system(cmd, {}, function(obj)
+                    if obj.code ~= 0 then
+                    else
+                        vim.schedule(function()
+                            vim.notify('[Git] switched to ' .. branch .. ' branch.', vim.log.levels.INFO)
+                            vim.cmd('checktime')
+                        end)
+                    end
+                end)
+            elseif key == 'ctrl-d' then
+                -- CTRL-D to delete branches
+                local cmd_del_branch = { 'git', '-C', root_dir, 'branch', '--delete' }
+                local cmd_cur_branch = { 'git', '-C', root_dir, 'rev-parse', '--abbrev-ref', 'HEAD' }
+                local cur_branch = vim.system(cmd_cur_branch):wait().stdout
+                local del_branches = {}
+                for i = 2, #lines do
+                    local branch = lines[i]:match('[^%s%*]+')
+                    if branch ~= cur_branch then
+                        table.insert(del_branches, branch)
+                    end
+                end
+                local msg = string.format(
+                    'Delete %s %s?',
+                    #del_branches > 1 and 'branches' or 'branch',
+                    table.concat(del_branches, ', ')
+                )
+                if vim.fn.confirm(msg, '&Yes\n&No') == 1 then
+                    cmd_del_branch = vim.list_extend(cmd_del_branch, del_branches)
+                    vim.system(cmd_del_branch, {}, function(obj)
+                        local output = (obj.stderr and obj.stderr or '') .. (obj.stdout and obj.stdout or '')
+                        if obj.code == 0 then
+                            notify.info(output)
+                        else
+                            notify.err(output)
+                        end
+                    end)
+                end
+            end
+        end,
+        options = get_fzf_opts(from_resume, {
+            '--prompt',
+            'Git Branches> ',
+            '--expect',
+            'ctrl-d',
+            '--header',
+            ':: ENTER (checkout), CTRL-D (delete branches)',
+            '--preview-window',
+            'down,60%',
+            '--preview',
+            'git log --graph --pretty=oneline --abbrev-commit --color $(' .. extract_branch_cmd .. ')',
+            '--bind',
+            set_preview_label('Branch: $(' .. extract_branch_cmd .. ')'),
+        })
+    }
+
+    local function handle_contents()
+        local entries = {}
+        vim.system({'git', 'branch', '--all', '-vv', '--color'}, { text = true }, function(obj)
+            for line in obj.stdout:gmatch('[^\n]+') do
+                table.insert(entries, line)
+            end
+            write(entries)
+        end)
+    end
+
+    fzf(spec, handle_contents)
+end
+
+vim.keymap.set('n', ',fb', function()
+    run(git_branches)
 end)

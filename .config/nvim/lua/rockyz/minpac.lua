@@ -32,12 +32,9 @@ local plugins = {
     -- Fuzzy Finder
     {
         'junegunn/fzf',
-        { ['do'] = 'packloadall! | call fzf#install()' },
-    },
-    'junegunn/fzf.vim',
-    {
-        'nvim-telescope/telescope-fzf-native.nvim',
-        { ['do'] = 'make' },
+        {
+            ['do'] = 'packloadall! | call fzf#install()',
+        },
     },
 
     -- LSP
@@ -50,21 +47,32 @@ local plugins = {
     -- Autocomplete
     {
         'saghen/blink.cmp',
-        { ['do'] = function()
-            vim.system({ 'cargo', 'build', '--release' })
-        end},
+        {
+            ['do'] = function()
+                local obj = vim.system({ 'cargo', 'build', '--release' }):wait()
+                if obj.code == 0 then
+                    vim.notify('Building blink.cmp done', vim.log.levels.INFO)
+                else
+                    vim.notify('Building blink.cmp failed', vim.log.levels.ERROR)
+                end
+            end,
+        },
     },
 
     -- Snippets
     {
         'L3MON4D3/LuaSnip',
-        { ['do'] = 'make install_jsregexp' },
+        {
+            ['do'] = 'make install_jsregexp',
+        },
     },
 
     -- Treesitter
     {
         'nvim-treesitter/nvim-treesitter',
-        { ['do'] = 'TSUpdate' },
+        {
+            ['do'] = 'TSUpdate',
+        },
     },
     'nvim-treesitter/nvim-treesitter-context',
     'nvim-treesitter/nvim-treesitter-textobjects',

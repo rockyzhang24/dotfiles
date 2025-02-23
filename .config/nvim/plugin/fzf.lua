@@ -75,7 +75,6 @@
 -- Commands
 -- [RANGE]GitCommits [GIT LOG OPTIONS]
 -- [RANGE]GitBufCommits [GIT LOG OPTIONS]
--- RGU [RG OPTIONS] [QUERY] [PATH]
 
 --
 -- Template to add a new finder
@@ -171,7 +170,7 @@ local rg_prefix = 'rg --column --line-number --no-heading --color=always --smart
 local bat_prefix = 'bat --color=always --paging=never --style=numbers' -- used to preview text file
 local fd_prefix = 'fd --hidden --follow --color=never --type f --type l ' .. vim.env.FD_EXCLUDE
 local fzf_previewer = '~/.config/fzf/fzf-previewer.sh' -- used to preview various types of files (text, image, etc)
-local headless_add_icon = 'nvim -n --headless -u NONE -i NONE --cmd "lua require(\'rockyz.headless.fzf_devicons\')" +q'
+local file_add_icon = 'nvim -n --headless -u NONE -i NONE --cmd "lua require(\'rockyz.headless.fzf_files_devicons\')" +q'
 
 local common_expect = 'ctrl-x,ctrl-v,ctrl-t'
 
@@ -356,9 +355,10 @@ local function sink_file(lines)
     local key = lines[1]
     local cmd = vim.g.fzf_action[key] or 'edit'
     for i = 2, #lines do
-        if vim.fn.fnamemodify(lines[i], ':p') ~= vim.fn.expand('%:p') then
-            vim.cmd(cmd .. ' ' .. lines[i])
-        end
+        -- Do nothing if it's the current file
+        -- if vim.fn.fnamemodify(lines[i], ':p') ~= vim.fn.expand('%:p') then
+        -- end
+        vim.cmd(cmd .. ' ' .. lines[i])
     end
 end
 
@@ -375,7 +375,7 @@ end
 
 -- Files
 local function files(from_resume)
-    local fd_cmd = fd_prefix .. ' | ' .. headless_add_icon
+    local fd_cmd = fd_prefix .. ' | ' .. file_add_icon
 
     local function shortpath()
         local short = vim.fn.fnamemodify(vim.uv.cwd(), ':~:.')
@@ -401,6 +401,10 @@ local function files(from_resume)
 
     fzf(spec, nil, fd_cmd)
 end
+
+vim.keymap.set('n', '<Leader>ff', function()
+    run(files)
+end)
 
 -- Old files
 local function old_files(from_resume)
@@ -448,7 +452,7 @@ local function dot_files(from_resume)
     local git_cmd = 'git -C '
         .. git_root
         .. ' --git-dir "$HOME/dotfiles" --work-tree "$HOME" ls-files --exclude-standard | '
-        .. headless_add_icon
+        .. file_add_icon
 
     local spec = {
         ['sink*'] = sink_file,
@@ -475,7 +479,7 @@ end)
 
 -- Find files under $HOME
 local function home_files(from_resume)
-    local fd_cmd = 'cd ' .. vim.env.HOME .. ' && ' .. fd_prefix .. ' | ' .. headless_add_icon
+    local fd_cmd = 'cd ' .. vim.env.HOME .. ' && ' .. fd_prefix .. ' | ' .. file_add_icon
 
     local spec = {
         ['sink*'] = sink_file,
@@ -614,7 +618,7 @@ end)
 -- Git files
 local function git_files(from_resume)
     local git_root = get_git_root()
-    local git_cmd = 'git -C ' .. git_root .. ' ls-files --exclude-standard | ' .. headless_add_icon
+    local git_cmd = 'git -C ' .. git_root .. ' ls-files --exclude-standard | ' .. file_add_icon
 
     local spec = {
         ['sink*'] = sink_file,
@@ -1850,7 +1854,7 @@ local function get_fzf_opts_for_live_grep(rg, rg_query, path, prompt, extra_opts
     local search_enabled = is_fzf_mode and true or false
     -- Initial rg query
     if from_resume and vim.uv.fs_stat(cached_rg_query) then
-        rg_query = '$(cat ' .. cached_rg_query .. ')'
+        rg_query = '"$(cat ' .. cached_rg_query .. ')"'
     else
         rg_query = vim.fn.shellescape(rg_query)
     end
@@ -1867,8 +1871,13 @@ local function get_fzf_opts_for_live_grep(rg, rg_query, path, prompt, extra_opts
     if from_resume and is_fzf_mode then
         unbind_change = '+unbind(change)'
     end
+    -- Print quickfix title used in winbar of quickfix window
+    -- E.g., "Live Grep: Rg Query foo | Fzf Query bar"
+    local print_qf_title = 'transform(rg_query=$(cat ' .. cached_rg_query .. '); rg_query=${rg_query:-[empty]}; fzf_query=$(cat ' .. cached_fzf_query .. '); fzf_query=${fzf_query:-[empty]}; echo "print(' .. prompt .. ': Rg Query $rg_query | Fzf Query $fzf_query)")'
+
     local opts =  {
         '--ansi',
+        '--multi',
         '--prompt',
         string.format('%s [%s]> ', prompt, mode),
         '--bind',
@@ -1892,113 +1901,152 @@ local function get_fzf_opts_for_live_grep(rg, rg_query, path, prompt, extra_opts
         '--delimiter',
         ':',
         '--header',
-        ':: ALT-F (toggle FZF mode and RG mode)',
+        ':: ALT-F (toggle FZF mode and RG mode), CTRL-Q (send to quickfix), CTRL-L (send to loclist)',
+        '--bind',
+        'enter:print()+accept,ctrl-x:print(ctrl-x)+accept,ctrl-v:print(ctrl-v)+accept,ctrl-t:print(ctrl-t)+accept',
+        '--bind',
+        'ctrl-l:print(ctrl-l)+' .. print_qf_title .. '+accept',
+        '--bind',
+        'ctrl-q:print(ctrl-q)+' .. print_qf_title .. '+accept',
         '--preview-window',
         'down,45%,+{2}-/2',
         '--preview',
         bat_prefix .. ' --highlight-line {2} -- {1}',
     }
+
     if not search_enabled then
         table.insert(opts, '--disabled')
     end
     return vim.list_extend(opts, extra_opts)
 end
 
--- Define a new command :RGU (U for Ultimate) that accepts rg options
--- Synopsis: :RGU [RG OPTIONS] [QUERY] [PATH]. The QUERY PATH can be placed anywhere
--- A special argument `@@from_resume@@` is used internally for fzf resume
-vim.api.nvim_create_user_command('RGU', function(opts)
-    local extra_flags = {}
-    local query = ''
-    local path = ''
-    local from_resume
-    for _, arg in ipairs(opts.fargs) do
-        if arg:match('^-') ~= nil then
-            table.insert(extra_flags, arg)
-        elseif arg:match('@@from_resume@@') then
-            from_resume = true
-        elseif vim.uv.fs_stat(arg) then
-            path = arg
-        elseif query == '' then
-            query = arg
+---Send selections in grep to quickfix or location list
+---@param lines table lines[1] is the key (ctrl-q or ctrl-l); lines[2] is the title for quickfix or
+---loclist; lines[3..] are selected lines.
+---@param is_loclist boolean? Send to location list or not
+local function grep_sel_to_qf(lines, is_loclist)
+    local qf_items = {}
+    for i = 3, #lines do
+        local filename, lnum, col, text = lines[i]:match('^([^:]+):([^:]+):([^:]+):(.*)$')
+        local bufnr = vim.fn.bufnr(filename)
+        table.insert(qf_items, {
+            bufnr = bufnr ~= -1 and bufnr or nil,
+            filename = filename,
+            lnum = tonumber(lnum),
+            col = tonumber(col),
+            text = text,
+        })
+    end
+    table.sort(qf_items, function(a, b)
+        if a.filename == b.filename then
+            if a.lnum == b.lnum then
+                return math.max(0, a.col) < math.max(0, b.col)
+            else
+                return math.max(0, a.lnum) < math.max(0, b.lnum)
+            end
         else
-            notify.error('Error: more than one query string are given!')
-            return
+            return a.filename < b.filename
+        end
+    end)
+    local title = lines[2]
+    if is_loclist then
+        vim.fn.setloclist(0, {}, ' ', { nr = '$', title = title, items = qf_items })
+        vim.cmd('botright lopen')
+    else
+        ---@diagnostic disable-next-line: assign-type-mismatch
+        vim.fn.setqflist({}, ' ', { nr = '$', title = title, items = qf_items })
+        vim.cmd('botright copen')
+    end
+end
+
+---sink* for live grep
+---ENTER/CTRL-X/CTRL-V/CTRL-T to open files and set cursor position
+---CTRL-Q/CTRL-L to send selections to quickfix or location list
+---@param lines table lines[1] is the query used as the title when sent to qf. For CTRL-Q/CTRL-L,
+---lines[2] is the title for quickfix or loclist and lines[3..] are selected lines. For other keys,
+---lines[2..] are selected lines.
+local function sink_grep(lines)
+    local key = lines[1]
+    if key == 'ctrl-q' then
+        grep_sel_to_qf(lines)
+    elseif key == 'ctrl-l' then
+        grep_sel_to_qf(lines, true)
+    else
+        for i = 2, #lines do
+            local filename, lnum, col = lines[i]:match('^([^:]+):([^:]+):([^:]+):.*$')
+            local cmd = vim.g.fzf_action[key] or 'edit'
+            -- if vim.fn.fnamemodify(lines[i], ':p') ~= vim.fn.expand('%:p') then
+            -- end
+            vim.cmd(cmd .. ' ' .. filename)
+            vim.api.nvim_win_set_cursor(0, { tonumber(lnum), tonumber(col) - 1 })
         end
     end
-    cached_finder = {
-        cmd = opts.name,
-        args = opts.args:gsub('@@from_resume@@', ''),
+end
+
+-- Live grep
+local function live_grep(from_resume)
+    local rg_cmd = rg_prefix .. ' --'
+    local spec = {
+        ['sink*'] = sink_grep,
+        options = get_fzf_opts_for_live_grep(rg_cmd, '', '', 'Live Grep', {}, from_resume)
     }
-    local rg_args = table.concat(extra_flags, ' ')
-    local rg = rg_prefix .. ' ' .. rg_args .. ' --'
-    vim.fn['fzf#vim#grep2'](rg, query, {
-        options = get_fzf_opts_for_live_grep(rg, query, path, 'RGU', {}, from_resume),
-    })
-end, { nargs = '*' })
+    fzf(spec, nil, rg_cmd)
+end
 
 vim.keymap.set('n', '<Leader>gg', function()
-    vim.cmd('RGU')
+    run(live_grep)
 end)
 
 vim.keymap.set('n', '<C-g>', function()
-    vim.cmd('RGU')
+    run(live_grep)
 end)
 
--- Live grep in nvim config
+-- Live grep in Neovim config
 local function live_grep_nvim_config(from_resume)
-    local rg = rg_prefix .. ' --glob=!minpac -- '
-    local query = ''
-    vim.fn['fzf#vim#grep2'](
-        rg,
-        query,
-        {
-            dir = '~/.config/nvim',
-            options = get_fzf_opts_for_live_grep(rg, query, '', 'Nvim Config', {}, from_resume),
-        }
-    )
+    local rg_cmd = rg_prefix .. ' --glob=!minpac --'
+    local path = vim.env.HOME .. '/.config/nvim'
+    local spec = {
+        ['sink*'] = sink_grep,
+        -- Instead of specify the path in rg command, we can set dir field in spec dict. fzf#run
+        -- will lcd to this dir.
+        -- dir = path,
+        options = get_fzf_opts_for_live_grep(rg_cmd, '', path, 'Nvim Config [LGrep]', {}, from_resume)
+    }
+    fzf(spec, nil, rg_cmd)
 end
 
 vim.keymap.set('n', '<Leader>gv', function()
     run(live_grep_nvim_config)
 end)
 
---
--- Live grep in current buffer
---
-
-local function grep_buffer(from_resume)
-    local rg = rg_prefix .. ' --'
+-- Live grep for current buffer
+local function live_grep_cur_buffer(from_resume)
+    local rg_cmd = rg_prefix .. ' --'
     local filename = vim.api.nvim_buf_get_name(0)
     if #filename == 0 or not vim.uv.fs_stat(filename) then
         notify.warn('Live grep in current buffer requires a valid buffer!')
         return
     end
-    vim.fn['fzf#vim#grep2'](rg, '', {
-        options = get_fzf_opts_for_live_grep(rg, '', filename, 'Buffer', {
+    local spec = {
+        ['sink*'] = sink_grep,
+        options = get_fzf_opts_for_live_grep(rg_cmd, '', filename, 'Buffer [LGrep]', {
             '--with-nth',
             '2..',
             '--header',
-            ':: Current buffer: ' .. vim.fn.expand('%:~:.'),
+            ':: Current Buf: ' .. vim.fn.expand('%:~:.'),
         }, from_resume)
-    })
+    }
+    fzf(spec, nil, rg_cmd)
 end
 
 vim.keymap.set('n', '<Leader>gb', function()
-    run(grep_buffer)
+    run(live_grep_cur_buffer)
 end)
 
---
--- Grep for the current word (normal mode) or the current selection (visual mode)
---
-
--- Cache the rg query for fzf resume
-local cached_grep_word_rg_query = ''
-
----@param from_resume boolean? Whether or not this function is called from fzf resume
-local function grep_word(from_resume)
+-- Grep for current word or VISUAL selection
+local cached_grep_word_rg_query = '' -- cache rg query for fzf resume
+local function grep_cur_word(from_resume)
     local rg_query
-    local header
     if from_resume then
         rg_query = cached_grep_word_rg_query
     elseif vim.fn.mode() == 'v' then
@@ -2010,32 +2058,43 @@ local function grep_word(from_resume)
         rg_query = vim.fn.expand('<cword>')
     end
     cached_grep_word_rg_query = rg_query
-    header = rg_query
+
+    -- Print quickfix title used in winbar of quickfix window
+    -- E.g., "Word Grep: Word/Selection foo | Fzf Query bar"
+    local print_qf_title = 'transform(echo "print(Word Grep: Word/Selection ' .. (rg_query == '' and '[empty]' or rg_query) .. ' | Fzf Query xxxxxx)")'
+
+    local spec = {
+        ['sink*'] = sink_grep,
+        options = get_fzf_opts(from_resume, {
+            '--delimiter',
+            ':',
+            '--prompt',
+            'Word [Grep]> ',
+            '--preview-window',
+            'down,45%,+{2}-/2',
+            '--preview',
+            bat_prefix .. ' --highlight-line {2} -- {1}',
+            '--header',
+            ':: Word/Selection: ' .. ansi_string(rg_query, 'FzfRgQuery'),
+            '--bind',
+            set_preview_label('{1}:{2}:{3}'),
+            '--bind',
+            'enter:print()+accept,ctrl-x:print(ctrl-x)+accept,ctrl-v:print(ctrl-v)+accept,ctrl-t:print(ctrl-t)+accept',
+            '--bind',
+            'ctrl-q:print(ctrl-q)+' .. print_qf_title .. '+accept',
+            '--bind',
+            'ctrl-l:print(ctrl-l)+' .. print_qf_title .. '+accept',
+        }),
+    }
+
     rg_query = vim.fn.escape(rg_query, '.*+?()[]{}\\|^$')
-    local rg = rg_prefix .. ' -- ' .. vim.fn['fzf#shellescape'](rg_query)
-    vim.fn['fzf#vim#grep'](
-        rg,
-        {
-            options = get_fzf_opts(from_resume, {
-                '--prompt',
-                'Word [Rg]> ',
-                '--preview-window',
-                'down,45%,+{2}-/2',
-                '--preview',
-                bat_prefix .. ' --highlight-line {2} -- {1}',
-                -- Show the current rg query in header. Set its style to bold, red foreground via ANSI
-                -- color code.
-                '--header',
-                ':: Query: ' .. ansi_string(header, 'FzfRgQuery'),
-                '--bind',
-                set_preview_label('{1}:{2}:{3}'),
-            }),
-        }
-    )
+    local rg_cmd = rg_prefix .. ' -- ' .. vim.fn['fzf#shellescape'](rg_query)
+
+    fzf(spec, nil, rg_cmd)
 end
 
 vim.keymap.set({ 'n', 'x' }, '<Leader>g*', function()
-    run(grep_word)
+    run(grep_cur_word)
 end)
 
 --

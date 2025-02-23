@@ -1,3 +1,5 @@
+-- Get filenames from stdin, prepend devicon to each one and output them to stdout
+
 local devicons = require('nvim-web-devicons')
 local color = require('rockyz.utils.color_utils')
 

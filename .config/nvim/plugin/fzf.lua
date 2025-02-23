@@ -172,8 +172,6 @@ local fd_prefix = 'fd --hidden --follow --color=never --type f --type l ' .. vim
 local fzf_previewer = '~/.config/fzf/fzf-previewer.sh' -- used to preview various types of files (text, image, etc)
 local file_add_icon = 'nvim -n --headless -u NONE -i NONE --cmd "lua require(\'rockyz.headless.fzf_files_devicons\')" +q'
 
-local common_expect = 'ctrl-x,ctrl-v,ctrl-t'
-
 ---Color a string by ANSI color code that is converted from a highlight group
 ---@param str string string to be colored
 ---@param hl string highlight group name
@@ -235,6 +233,14 @@ end
 ---@param label string The label or a shell command to generate the label
 local function set_preview_label(label)
     return string.format('focus:transform-preview-label:echo [ %s ]', label)
+end
+
+---@param exclude_common boolean? Whether exclude the common keys, i.e., ctrl-x, ctrl-v and ctrl-t
+---@param extra_keys table? Extra keys for --expect
+local function get_expect(exclude_common, extra_keys)
+    extra_keys = extra_keys or {}
+    local extra = table.concat(extra_keys, ',')
+    return exclude_common and extra or ('ctrl-x,ctrl-v,ctrl-t,' .. extra)
 end
 
 --
@@ -389,7 +395,7 @@ local function files(from_resume)
             '--prompt',
             shortpath(),
             '--expect',
-            common_expect,
+            get_expect(),
             '--preview',
             fzf_previewer .. ' {2}',
             '--bind',
@@ -416,7 +422,7 @@ local function old_files(from_resume)
             '--tiebreak',
             'index',
             '--expect',
-            common_expect,
+            get_expect(),
             '--preview',
             fzf_previewer .. ' {2}',
             '--bind',
@@ -460,7 +466,7 @@ local function dot_files(from_resume)
             '--prompt',
             '.dotfiles> ',
             '--expect',
-            common_expect,
+            get_expect(),
             '--preview',
             fzf_previewer .. ' ' .. git_root .. '/{2}',
             '--accept-nth',
@@ -487,7 +493,7 @@ local function home_files(from_resume)
             '--prompt',
             'Home Files> ',
             '--expect',
-            common_expect,
+            get_expect(),
             '--preview',
             fzf_previewer .. ' ' .. vim.env.HOME .. '/{2}',
             '--accept-nth',
@@ -540,7 +546,7 @@ local function buffers(from_resume)
             '--header',
             ':: CTRL-D (delete buffers)',
             '--expect',
-            common_expect .. ',ctrl-d',
+            get_expect(false, {'ctrl-d'}),
             '--preview',
             '[[ {1} == "No_Name" ]] && echo "" || ' .. bat_prefix .. ' --highlight-line {2} -- {1}',
             '--preview-window',
@@ -626,7 +632,7 @@ local function git_files(from_resume)
             '--prompt',
             'Git Files> ',
             '--expect',
-            common_expect,
+            get_expect(),
             '--preview',
             fzf_previewer .. ' ' .. git_root .. '/{2}',
             '--accept-nth',
@@ -965,7 +971,7 @@ local function marks(from_resume)
             '--header',
             ':: CTRL-D (delete marks)',
             '--expect',
-            common_expect .. ',ctrl-d',
+            get_expect(false, { 'ctrl-d' }),
             '--preview',
             ' [[ -f {-1} ]] && ' .. bat_prefix .. ' --highlight-line {2} -- {-1} || echo File does not exist, no preview!',
             '--preview-window',
@@ -1159,7 +1165,7 @@ local function args(from_resume)
             '--header',
             ':: CTRL-D (delete from arglist)',
             '--expect',
-            common_expect .. ',ctrl-d',
+            get_expect(false, { 'ctrl-d' }),
             '--preview',
             bat_prefix .. ' -- {3}',
             '--bind',
@@ -1227,7 +1233,7 @@ local function helptags(from_resume)
             '--prompt',
             'Helptags> ',
             '--expect',
-            common_expect,
+            get_expect(),
             '--header',
             ':: CTRL-V (open in vertical split), CTRL-T (open in new tab)',
             '--preview',
@@ -1675,7 +1681,7 @@ local function qf_items_fzf(win_local, from_resume)
             '--with-nth',
             '4..',
             '--expect',
-            common_expect .. ',ctrl-q,ctrl-l,ctrl-r',
+            get_expect(false, { 'ctrl-q', 'ctrl-l', 'ctrl-r' }),
             '--preview',
             bat_prefix .. ' --highlight-line {3} -- {2}',
             '--preview-window',
@@ -2289,7 +2295,7 @@ local function lsp_symbols(method, params, title, symbol_query, from_resume)
             '--header',
             fzf_header,
             '--expect',
-            common_expect .. ',ctrl-q,ctrl-l',
+            get_expect(false, { 'ctrl-q', 'ctrl-l' }),
             '--preview',
             bat_prefix .. ' --highlight-line {4} -- {3}',
             '--preview-window',
@@ -2427,7 +2433,7 @@ local function lsp_locations(method, title, from_resume)
             '--header',
             ':: CTRL-Q (send to quickfix), CTRL-L (send to loclist)',
             '--expect',
-            common_expect .. ',ctrl-q,ctrl-l',
+            get_expect(false, { 'ctrl-q', 'ctrl-l' }),
             '--preview',
             bat_prefix .. ' --highlight-line {4} -- {3}',
             '--preview-window',
@@ -2558,7 +2564,7 @@ local function diagnostics(from_resume, opts)
             '--header',
             ':: CTRL-Q (send to quickfix), CTRL-L (send to loclist)',
             '--expect',
-            common_expect .. ',ctrl-q,ctrl-l',
+            get_expect(false, { 'ctrl-q', 'ctrl-l' }),
             '--preview',
             bat_prefix .. ' --highlight-line {3} -- {2}',
             '--preview-window',

@@ -11,7 +11,7 @@ local method = 'textDocument/codeAction'
 
 local opts = {
     virt_text = {
-        { icon, 'LightBulb' },
+        { icon .. ' ', 'LightBulb' },
     },
     virt_text_win_col = 0,
 }

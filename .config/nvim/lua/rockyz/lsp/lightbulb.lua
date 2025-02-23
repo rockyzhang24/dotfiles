@@ -33,18 +33,19 @@ end
 local function lightbulb_remove(winid, bufnr)
     if
         not vim.api.nvim_win_is_valid(winid)
+        or not vim.api.nvim_buf_is_valid(bufnr)
         or vim.w[winid].bulb_ns_id == nil and vim.w[winid].bulb_mark_id == nil
     then
         return
     end
     vim.api.nvim_buf_del_extmark(bufnr, vim.w[winid].bulb_ns_id, vim.w[winid].bulb_mark_id)
-    vim.w[winid].prev_bulb_line = nil
+    vim.w[winid].prev_bulb_linenr = nil
 end
 
 -- Create or update the lightbulb
-local function lightbulb_update(winid, bufnr, bulb_line)
+local function lightbulb_update(winid, bufnr, bulb_linenr)
     -- No need to update the bulb if its position does not change
-    if not vim.api.nvim_win_is_valid(winid) or bulb_line == vim.w[winid].prev_bulb_line then
+    if not vim.api.nvim_win_is_valid(winid) or bulb_linenr == vim.w[winid].prev_bulb_linenr then
         return
     end
     -- Create a window-local namespace for the extmark
@@ -55,14 +56,14 @@ local function lightbulb_update(winid, bufnr, bulb_line)
     end
     -- Create an extmark or update the existing one
     if vim.w[winid].bulb_mark_id == nil then
-        vim.w[winid].bulb_mark_id = vim.api.nvim_buf_set_extmark(bufnr, vim.w[winid].bulb_ns_id, bulb_line, 0, opts)
+        vim.w[winid].bulb_mark_id = vim.api.nvim_buf_set_extmark(bufnr, vim.w[winid].bulb_ns_id, bulb_linenr, 0, opts)
         vim.w[winid].bulb_mark_opts = vim.tbl_extend('keep', opts, {
             id = vim.w[winid].bulb_mark_id,
         })
     else
-        vim.api.nvim_buf_set_extmark(bufnr, vim.w[winid].bulb_ns_id, bulb_line, 0, vim.w[winid].bulb_mark_opts)
+        vim.api.nvim_buf_set_extmark(bufnr, vim.w[winid].bulb_ns_id, bulb_linenr, 0, vim.w[winid].bulb_mark_opts)
     end
-    vim.w[winid].prev_bulb_line = bulb_line
+    vim.w[winid].prev_bulb_linenr = bulb_linenr
 end
 
 local function lightbulb()
@@ -73,7 +74,7 @@ local function lightbulb()
 
     local winid = vim.api.nvim_get_current_win()
     local bufnr = vim.api.nvim_get_current_buf()
-    local bulb_line = get_bulb_linenr() - 1 -- 0-based for extmark
+    local bulb_linenr = get_bulb_linenr() - 1 -- 0-based for extmark
     local clients = vim.lsp.get_clients({ bufnr = bufnr, method = method })
     local has_action = false
     local cursor_row, cursor_col = unpack(vim.api.nvim_win_get_cursor(0))
@@ -125,7 +126,7 @@ local function lightbulb()
                 end
             end
             if has_action then
-                lightbulb_update(winid, bufnr, bulb_line)
+                lightbulb_update(winid, bufnr, bulb_linenr)
             else
                 lightbulb_remove(winid, bufnr)
             end

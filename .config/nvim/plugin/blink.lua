@@ -4,6 +4,7 @@ require('blink.cmp').setup({
     -- NOTE:
     -- keymaps for snippet jumping forward and backward are defined in luasnip config
     keymap = {
+        preset = 'none',
         ['<C-Enter>'] = { 'show', 'show_documentation', 'hide_documentation' },
         ['<C-e>'] = { 'cancel', 'fallback' },
         ['<C-\\>'] = { 'hide', 'fallback' },
@@ -94,7 +95,23 @@ require('blink.cmp').setup({
 
     -- Command line
     cmdline = {
+        enabled = true,
+        completion = {
+            menu = {
+                auto_show = function(_)
+                    local cmdtype = vim.fn.getcmdtype()
+                    return cmdtype == ':' or cmdtype == '/' or cmdtype == '?'
+                end,
+            },
+            list = {
+                selection = {
+                    preselect = false,
+                    auto_insert = true,
+                },
+            },
+        },
         keymap = {
+            preset = 'none',
             ['<Tab>'] = {
                 function(cmp)
                     if cmp.is_visible() then

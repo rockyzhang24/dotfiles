@@ -29,14 +29,6 @@ local plugins = {
     'preservim/tagbar',
     'dhananjaylatkar/cscope_maps.nvim',
 
-    -- Fuzzy Finder
-    {
-        'junegunn/fzf',
-        {
-            ['do'] = 'packloadall! | call fzf#install()',
-        },
-    },
-
     -- LSP
     'neovim/nvim-lspconfig',
     'SmiteshP/nvim-navic',

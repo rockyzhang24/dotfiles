@@ -47,6 +47,8 @@
 
 -- <C-p>      : Git files
 -- ,fb        : Git branches
+-- ,fc        : Git commits (buffer)
+-- ,fC        : Git commits
 
 --
 -- Template to add a new finder
@@ -198,12 +200,15 @@ local function set_preview_label(label)
     return string.format('focus:transform-preview-label:echo [ %s ]', label)
 end
 
----@param exclude_common boolean? Whether exclude the common keys, i.e., ctrl-x, ctrl-v and ctrl-t
 ---@param extra_keys table? Extra keys for --expect
-local function get_expect(exclude_common, extra_keys)
+---@param with_defaults boolean? Whether include the default keys, i.e., ctrl-x, ctrl-v and ctrl-t
+local function get_expect(extra_keys, with_defaults)
     extra_keys = extra_keys or {}
+    if with_defaults == nil then
+        with_defaults = true
+    end
     local extra = table.concat(extra_keys, ',')
-    return exclude_common and extra or ('ctrl-x,ctrl-v,ctrl-t,' .. extra)
+    return with_defaults and ('ctrl-x,ctrl-v,ctrl-t,' .. extra) or extra
 end
 
 --
@@ -301,17 +306,6 @@ local function sink_file(lines)
         -- end
         vim.cmd(cmd .. ' ' .. lines[i])
     end
-end
-
--- Helper function to get git root dir
-local function get_git_root()
-    local cmd = { 'git', 'rev-parse', '--show-toplevel' }
-    local obj = vim.system(cmd):wait()
-    if obj.code ~= 0 then
-        notify.info(obj.stderr:gsub('\n$', ''))
-        return nil
-    end
-    return obj.stdout:gsub('\n$', '')
 end
 
 -- Files
@@ -481,7 +475,7 @@ local function buffers(from_resume)
             '--header',
             ':: CTRL-D (delete buffers)',
             '--expect',
-            get_expect(false, {'ctrl-d'}),
+            get_expect({'ctrl-d'}),
             '--preview',
             '[[ {1} == "No_Name" ]] && echo "" || ' .. bat_prefix .. ' --highlight-line {2} -- {1}',
             '--preview-window',
@@ -701,7 +695,7 @@ local function marks(from_resume)
             '--header',
             ':: CTRL-D (delete marks)',
             '--expect',
-            get_expect(false, { 'ctrl-d' }),
+            get_expect({ 'ctrl-d' }),
             '--preview',
             ' [[ -f {-1} ]] && ' .. bat_prefix .. ' --highlight-line {2} -- {-1} || echo File does not exist, no preview!',
             '--preview-window',
@@ -895,7 +889,7 @@ local function args(from_resume)
             '--header',
             ':: CTRL-D (delete from arglist)',
             '--expect',
-            get_expect(false, { 'ctrl-d' }),
+            get_expect({ 'ctrl-d' }),
             '--preview',
             bat_prefix .. ' -- {3}',
             '--bind',
@@ -1411,7 +1405,7 @@ local function qf_items_fzf(win_local, from_resume)
             '--with-nth',
             '4..',
             '--expect',
-            get_expect(false, { 'ctrl-q', 'ctrl-l', 'ctrl-r' }),
+            get_expect({ 'ctrl-q', 'ctrl-l', 'ctrl-r' }),
             '--preview',
             bat_prefix .. ' --highlight-line {3} -- {2}',
             '--preview-window',
@@ -2025,7 +2019,7 @@ local function lsp_symbols(method, params, title, symbol_query, from_resume)
             '--header',
             fzf_header,
             '--expect',
-            get_expect(false, { 'ctrl-q', 'ctrl-l' }),
+            get_expect({ 'ctrl-q', 'ctrl-l' }),
             '--preview',
             bat_prefix .. ' --highlight-line {4} -- {3}',
             '--preview-window',
@@ -2163,7 +2157,7 @@ local function lsp_locations(method, title, from_resume)
             '--header',
             ':: CTRL-Q (send to quickfix), CTRL-L (send to loclist)',
             '--expect',
-            get_expect(false, { 'ctrl-q', 'ctrl-l' }),
+            get_expect({ 'ctrl-q', 'ctrl-l' }),
             '--preview',
             bat_prefix .. ' --highlight-line {4} -- {3}',
             '--preview-window',
@@ -2294,7 +2288,7 @@ local function diagnostics(from_resume, opts)
             '--header',
             ':: CTRL-Q (send to quickfix), CTRL-L (send to loclist)',
             '--expect',
-            get_expect(false, { 'ctrl-q', 'ctrl-l' }),
+            get_expect({ 'ctrl-q', 'ctrl-l' }),
             '--preview',
             bat_prefix .. ' --highlight-line {3} -- {2}',
             '--preview-window',
@@ -2367,6 +2361,26 @@ end)
 --
 -- Git
 --
+
+---Helper function to get git root dir
+---@param dir string?
+local function get_git_root(dir)
+    if not dir then
+        local path = vim.fn.expand('%:p:h')
+        -- Extract everything before ".git"
+        dir = path:match('^(.-)[/\\]%.git[/\\]?.*$') or path
+        -- Remove "fugitive://" from the beginning
+        dir = dir:gsub('^fugitive://', '')
+    end
+    local cmd = { 'git', '-C', dir, 'rev-parse', '--show-toplevel' }
+    local obj = vim.system(cmd):wait()
+    if obj.code ~= 0 then
+        notify.error(obj.stderr)
+        notify.error(obj.stdout)
+        return nil
+    end
+    return obj.stdout:gsub('\n$', '')
+end
 
 -- Git files
 local function git_files(from_resume)
@@ -2452,21 +2466,25 @@ local function git_branches(from_resume)
                     end
                 end
                 local msg = string.format(
-                    'Delete %s %s?',
+                    'Delete %s %s',
                     #del_branches > 1 and 'branches' or 'branch',
                     table.concat(del_branches, ', ')
                 )
-                if vim.fn.confirm(msg, '&Yes\n&No') == 1 then
-                    cmd_del_branch = vim.list_extend(cmd_del_branch, del_branches)
-                    vim.system(cmd_del_branch, {}, function(obj)
-                        local output = (obj.stderr and obj.stderr or '') .. (obj.stdout and obj.stdout or '')
-                        if obj.code == 0 then
-                            notify.info(output)
-                        else
-                            notify.err(output)
-                        end
-                    end)
-                end
+                vim.ui.input({
+                    prompt = msg .. '? (y/N)',
+                }, function(input)
+                    if input and input:lower() == 'y' then
+                        cmd_del_branch = vim.list_extend(cmd_del_branch, del_branches)
+                        vim.system(cmd_del_branch, {}, function(obj)
+                            if obj.code == 0 then
+                                notify.info(obj.stdout)
+                            else
+                                notify.error(obj.stderr)
+                                notify.error(obj.stdout)
+                            end
+                        end)
+                    end
+                end)
             end
         end,
         options = get_fzf_opts(from_resume, {
@@ -2500,4 +2518,192 @@ end
 
 vim.keymap.set('n', ',fb', function()
     run(git_branches)
+end)
+
+-- Git commits
+
+---Build the command for fzf preview
+---@param root_dir string Git root directory
+---@param range table? { start_line, end_line } as the range of VISUAL selection
+local function get_preview_cmd_git_commits(root_dir, range)
+    -- orderfile used for "git show -O" to display the current file as the first one
+    local orderfile = vim.fn.tempname()
+    local bufname = vim.api.nvim_buf_get_name(0)
+    local file = io.open(orderfile, 'w')
+    if file then
+        file:write(bufname:sub(#root_dir + 2))
+        file:close()
+    end
+
+    local preview_cmd = ''
+    local pager = '| delta --width $FZF_PREVIEW_COLUMNS'
+
+    if range then
+        preview_cmd = string.format('git log -L %d,%d:%s', range[1], range[2], bufname)
+    else
+        -- Extract the hash commit and use git show to preview it
+        preview_cmd = 'hash=$(echo {} | grep -o "[a-f0-9]\\{7,\\}" | head -1); git show -O' .. orderfile .. ' --format=format: --color=always $hash'
+    end
+    return preview_cmd .. ' ' .. pager
+end
+
+---Get the sink function for git commits
+local function get_sink_fn_git_commits(root_dir)
+    ---Extract the commit hash from git log output
+    ---"* 81055ee nvim(fzf): remove fzf.vim 3 days ago <Rocky Zhang>" --> "81055ee"
+    local function extract_hash(line)
+        local s, e = vim.regex('[0-9a-f]\\{7,40}'):match_str(line)
+        return line:sub(s + 1, e)
+    end
+
+    return function(lines)
+        local key = lines[1]
+        if key == 'ctrl-y' then
+            -- CTRL-Y to copy the commit hashes
+            local hashes = table.concat(vim.iter({unpack(lines, 2)}):map(function(v)
+                return extract_hash(v)
+            end):totable(), ' ')
+            if not hashes then
+                return
+            end
+            local reg
+            local selection_regs = { unnamed = [[*]], unnamedplus = [[+]] }
+            reg = selection_regs[vim.o.clipboard] and selection_regs[vim.o.clipboard] or [["]]
+            vim.fn.setreg(reg, hashes)
+            vim.fn.setreg([[0]], hashes)
+            notify.info(string.format('commit hashes copied to register %s', reg))
+        elseif key == 'ctrl-d' then
+            -- CTRL-D to diff against the commits (only available for buffer commits)
+            for i = 2, #lines do
+                local hash = extract_hash(lines[i])
+                if hash and hash ~= '' then
+                    vim.cmd('tab sb')
+                    vim.cmd('Gdiffsplit ' .. hash)
+                end
+            end
+        elseif key == '' then
+            -- ENTER to checkout the commit
+            if #lines > 2 then
+                notify.warn('To checkout a commit, select only one and do not choose multiple.')
+                return
+            end
+            local cur_commit_hash = vim.system({ 'git', '-C', root_dir, 'rev-parse', '--short', 'HEAD' }):wait()
+            local s, e = vim.regex('[0-9a-f]\\{7,40}'):match_str(lines[2])
+            local sele_commit_hash = lines[2]:sub(s + 1, e)
+            if sele_commit_hash == cur_commit_hash then
+                return
+            end
+            vim.ui.input({
+                prompt = 'Checkout commit ' .. sele_commit_hash .. '? (y/N)',
+            }, function(input)
+                if input and input:lower() == 'y' then
+                    local obj = vim.system({ 'git', '-C', root_dir, 'checkout', sele_commit_hash }):wait()
+                    if obj.code ~= 0 then
+                        notify.error(obj.stderr)
+                        notify.error(obj.stdout)
+                    else
+                        notify.info(obj.stdout)
+                    end
+                end
+            end)
+        end
+    end
+end
+
+local function git_commits(from_resume)
+    local root_dir = get_git_root()
+    if root_dir == nil then
+        return
+    end
+
+    local preview_cmd = get_preview_cmd_git_commits(root_dir)
+
+    local spec = {
+        ['sink*'] = get_sink_fn_git_commits(root_dir),
+        options = get_fzf_opts(from_resume, {
+            '--prompt',
+            'Git Commits> ',
+            '--header',
+            ':: ENTER (checkout commit), CTRL-Y (yank commits)',
+            '--expect',
+            get_expect({ 'ctrl-y' }, false),
+            '--preview-window',
+            'down,45%',
+            '--preview',
+            preview_cmd,
+            '--bind',
+            set_preview_label('Preview'),
+        }),
+    }
+
+    local git_cmd = 'git log --graph --color=always --format="%C(auto)%h%d %s %C(green)%cr %C(blue dim)<%an>"'
+
+    fzf(spec, nil, git_cmd)
+end
+
+vim.keymap.set('n', ',fC', function()
+    run(git_commits)
+end)
+
+-- Git commit (buffer)
+local function git_buf_commit(from_resume)
+    local root_dir = get_git_root()
+    if root_dir == nil then
+        return
+    end
+
+    local bufname = vim.api.nvim_buf_get_name(0)
+    if #bufname == 0 then
+        notify.info('Git commits (buffer) is not available for unnamed buffers.')
+        return
+    end
+
+    local obj = vim.system({ 'git', '-C', root_dir, 'ls-files', '--error-unmatch', bufname }):wait()
+    if obj.code ~= 0 then
+        notify.warn(obj.stderr)
+        notify.warn(obj.stdout)
+        return
+    end
+
+    local git_cmd = 'git log --color=always --format="%C(auto)%h%d %s %C(green)%cr %C(blue dim)<%an>"'
+    local preview_cmd
+
+    local mode = vim.api.nvim_get_mode().mode
+    if mode == 'v' or mode == 'V' or mode == '\22' then
+        local start_line = vim.fn.getpos('.')[2]
+        local end_line = vim.fn.getpos('v')[2]
+        if end_line < start_line then
+            start_line, end_line = end_line, start_line
+        end
+        local range = string.format('-L %d,%d:%s --no-patch', start_line, end_line, bufname)
+        git_cmd = git_cmd .. ' ' .. range
+        preview_cmd = get_preview_cmd_git_commits(root_dir, { start_line, end_line })
+    else
+        git_cmd = git_cmd .. ' --follow ' .. bufname
+        preview_cmd = get_preview_cmd_git_commits(root_dir)
+    end
+
+    local spec = {
+        ['sink*'] = get_sink_fn_git_commits(root_dir),
+        options = get_fzf_opts(from_resume, {
+            '--prompt',
+            'Git Commits (buffer)> ',
+            '--header',
+            ':: ENTER (checkout commit), CTRL-Y (yank commits), CTRL-D (diff against commits)',
+            '--expect',
+            get_expect({ 'ctrl-d', 'ctrl-y' }, false),
+            '--preview-window',
+            'down,45%',
+            '--preview',
+            preview_cmd,
+            '--bind',
+            set_preview_label('Preview'),
+        }),
+    }
+
+    fzf(spec, nil, git_cmd)
+end
+
+vim.keymap.set({ 'n', 'x' }, ',fc', function()
+    run(git_buf_commit)
 end)

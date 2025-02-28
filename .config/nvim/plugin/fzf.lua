@@ -49,6 +49,7 @@
 -- ,fb        : Git branches
 -- ,fc        : Git commits (buffer)
 -- ,fC        : Git commits
+-- ,fs        : Git stash
 
 --
 -- Template to add a new finder
@@ -68,8 +69,8 @@
 --
 --     local function handle_contents()
 --         local entries = {}
---         -- Build each fzf entry and insert it into entries.
---
+--         -- Below we build each fzf entry and insert it into entries.
+--         -- ......
 --         -- Call write() to write all entries into the pipe to display in fzf
 --         write(entries)
 --     end
@@ -107,6 +108,7 @@ local color = require('rockyz.utils.color_utils')
 local io_utils = require('rockyz.utils.io_utils')
 local icons = require('rockyz.icons')
 local notify = require('rockyz.utils.notify_utils')
+local system = require('rockyz.utils.system_utils')
 local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
 
 vim.g.fzf_layout = {
@@ -136,6 +138,7 @@ local bat_prefix = 'bat --color=always --paging=never --style=numbers' -- used t
 local fd_prefix = 'fd --hidden --follow --color=never --type f --type l ' .. vim.env.FD_EXCLUDE
 local fzf_previewer = '~/.config/fzf/fzf-previewer.sh' -- used to preview various types of files (text, image, etc)
 local file_add_icon = 'nvim -n --headless -u NONE -i NONE --cmd "lua require(\'rockyz.headless.fzf_files_devicons\')" +q'
+local diff_pager = '| delta --width $FZF_PREVIEW_COLUMNS'
 
 ---Color a string by ANSI color code that is converted from a highlight group
 ---@param str string string to be colored
@@ -158,6 +161,14 @@ local function ansi_devicon(filename)
     local ext = vim.fn.fnamemodify(filename, ':e')
     local file_icon, file_icon_hl = devicons.get_icon(filename, ext, { default = true })
     return ansi_string(file_icon, file_icon_hl)
+end
+
+---system.async's on_error callback
+---@param error string obj.stderr
+---@param output string obj.stdout
+local function system_async_on_error(error, output)
+    notify.error(error)
+    notify.error(output)
 end
 
 local cached_fzf_query -- cached the last fzf query
@@ -240,7 +251,7 @@ local function fzf(spec, handle_contents, fzf_cmd)
 
     if handle_contents and not fzf_cmd then
         fifopipe = vim.fn.tempname()
-        vim.system({ "mkfifo", fifopipe }):wait()
+        system.sync('mkfifo ' .. fifopipe)
         -- vim.env.FZF_DEFAULT_COMMAND = 'cat ' .. fifopipe
         vim.env.FZF_DEFAULT_COMMAND = 'tail -n +1 -f ' .. fifopipe .. ' & echo $! > ' .. tail_pid
         vim.uv.fs_open(fifopipe, 'w', -1, vim.schedule_wrap(function(err, fd)
@@ -260,7 +271,12 @@ end
 
 -- Close the pipe and kill tail process to terminate fzf's "loading" indicator
 local function finish()
-    vim.system({ 'bash', '-c', 'kill -9 $(<' .. tail_pid .. ')' })
+    system.async(
+        { 'bash', '-c', 'kill -9 $(<' .. tail_pid .. ')' },
+        {},
+        nil,
+        system_async_on_error
+    )
     output_pipe:close()
     output_pipe = nil
 end
@@ -1286,14 +1302,14 @@ local function zoxide(from_resume)
 
     local function handle_contents()
         local entries = {}
-        vim.system({'zoxide', 'query', '--list', '--score'}, { text = true }, function(obj)
-            for line in obj.stdout:gmatch('[^\n]+') do
-                local score, dir = line:match("(%d+%.%d+)%s+(.-)$")
+        system.async('zoxide query --list --score', { text = true }, function(output)
+            for line in output:gmatch('[^\n]+') do
+                local score, dir = line:match('(%d+%.%d+)%s+(.-)$')
                 local entry = string.format('%8s\t%s', score, dir)
                 table.insert(entries, entry)
             end
             write(entries)
-        end)
+        end, system_async_on_error)
     end
 
     fzf(spec, handle_contents)
@@ -2373,7 +2389,7 @@ local function get_git_root(dir)
         dir = dir:gsub('^fugitive://', '')
     end
     local cmd = { 'git', '-C', dir, 'rev-parse', '--show-toplevel' }
-    local obj = vim.system(cmd):wait()
+    local obj = system.sync(cmd)
     if obj.code ~= 0 then
         notify.error(obj.stderr)
         notify.error(obj.stdout)
@@ -2444,20 +2460,17 @@ local function git_branches(from_resume)
                 end
                 table.insert(cmd, branch)
                 notify.info('[Git] switching to ' .. branch .. ' branch...')
-                vim.system(cmd, {}, function(obj)
-                    if obj.code ~= 0 then
-                    else
-                        vim.schedule(function()
-                            vim.notify('[Git] switched to ' .. branch .. ' branch.', vim.log.levels.INFO)
-                            vim.cmd('checktime')
-                        end)
-                    end
-                end)
+                system.async(cmd, {}, function(_)
+                    vim.schedule(function()
+                        notify.info('[Git] switched to ' .. branch .. ' branch.')
+                        vim.cmd('checktime')
+                    end)
+                end, system_async_on_error)
             elseif key == 'ctrl-d' then
                 -- CTRL-D to delete branches
                 local cmd_del_branch = { 'git', '-C', root_dir, 'branch', '--delete' }
                 local cmd_cur_branch = { 'git', '-C', root_dir, 'rev-parse', '--abbrev-ref', 'HEAD' }
-                local cur_branch = vim.system(cmd_cur_branch):wait().stdout
+                local cur_branch = system.sync(cmd_cur_branch).stdout
                 local del_branches = {}
                 for i = 2, #lines do
                     local branch = lines[i]:match('[^%s%*]+')
@@ -2475,14 +2488,9 @@ local function git_branches(from_resume)
                 }, function(input)
                     if input and input:lower() == 'y' then
                         cmd_del_branch = vim.list_extend(cmd_del_branch, del_branches)
-                        vim.system(cmd_del_branch, {}, function(obj)
-                            if obj.code == 0 then
-                                notify.info(obj.stdout)
-                            else
-                                notify.error(obj.stderr)
-                                notify.error(obj.stdout)
-                            end
-                        end)
+                        system.async(cmd_del_branch, {}, function(output)
+                            notify.info(output)
+                        end, system_async_on_error)
                     end
                 end)
             end
@@ -2505,12 +2513,12 @@ local function git_branches(from_resume)
 
     local function handle_contents()
         local entries = {}
-        vim.system({'git', 'branch', '--all', '-vv', '--color'}, { text = true }, function(obj)
-            for line in obj.stdout:gmatch('[^\n]+') do
+        system.async('git branch --all -vv --color', { text = true }, function(output)
+            for line in output:gmatch('[^\n]+') do
                 table.insert(entries, line)
             end
             write(entries)
-        end)
+        end, system_async_on_error)
     end
 
     fzf(spec, handle_contents)
@@ -2536,7 +2544,6 @@ local function get_preview_cmd_git_commits(root_dir, range)
     end
 
     local preview_cmd = ''
-    local pager = '| delta --width $FZF_PREVIEW_COLUMNS'
 
     if range then
         preview_cmd = string.format('git log -L %d,%d:%s', range[1], range[2], bufname)
@@ -2544,7 +2551,7 @@ local function get_preview_cmd_git_commits(root_dir, range)
         -- Extract the hash commit and use git show to preview it
         preview_cmd = 'hash=$(echo {} | grep -o "[a-f0-9]\\{7,\\}" | head -1); git show -O' .. orderfile .. ' --format=format: --color=always $hash'
     end
-    return preview_cmd .. ' ' .. pager
+    return preview_cmd .. ' ' .. diff_pager
 end
 
 ---Get the sink function for git commits
@@ -2587,7 +2594,7 @@ local function get_sink_fn_git_commits(root_dir)
                 notify.warn('To checkout a commit, select only one and do not choose multiple.')
                 return
             end
-            local cur_commit_hash = vim.system({ 'git', '-C', root_dir, 'rev-parse', '--short', 'HEAD' }):wait()
+            local cur_commit_hash = system.sync({ 'git', '-C', root_dir, 'rev-parse', '--short', 'HEAD' }).stdout
             local s, e = vim.regex('[0-9a-f]\\{7,40}'):match_str(lines[2])
             local sele_commit_hash = lines[2]:sub(s + 1, e)
             if sele_commit_hash == cur_commit_hash then
@@ -2597,7 +2604,7 @@ local function get_sink_fn_git_commits(root_dir)
                 prompt = 'Checkout commit ' .. sele_commit_hash .. '? (y/N)',
             }, function(input)
                 if input and input:lower() == 'y' then
-                    local obj = vim.system({ 'git', '-C', root_dir, 'checkout', sele_commit_hash }):wait()
+                    local obj = system.sync({ 'git', '-C', root_dir, 'checkout', sele_commit_hash })
                     if obj.code ~= 0 then
                         notify.error(obj.stderr)
                         notify.error(obj.stdout)
@@ -2628,7 +2635,7 @@ local function git_commits(from_resume)
             '--expect',
             get_expect({ 'ctrl-y' }, false),
             '--preview-window',
-            'down,45%',
+            'down,60%',
             '--preview',
             preview_cmd,
             '--bind',
@@ -2658,7 +2665,7 @@ local function git_buf_commit(from_resume)
         return
     end
 
-    local obj = vim.system({ 'git', '-C', root_dir, 'ls-files', '--error-unmatch', bufname }):wait()
+    local obj = system.sync({ 'git', '-C', root_dir, 'ls-files', '--error-unmatch', bufname })
     if obj.code ~= 0 then
         notify.warn(obj.stderr)
         notify.warn(obj.stdout)
@@ -2693,7 +2700,7 @@ local function git_buf_commit(from_resume)
             '--expect',
             get_expect({ 'ctrl-d', 'ctrl-y' }, false),
             '--preview-window',
-            'down,45%',
+            'down,60%',
             '--preview',
             preview_cmd,
             '--bind',
@@ -2706,4 +2713,96 @@ end
 
 vim.keymap.set({ 'n', 'x' }, ',fc', function()
     run(git_buf_commit)
+end)
+
+-- Git stash
+local function git_stash(from_resume)
+    local root_dir = get_git_root()
+    if root_dir == nil then
+        return
+    end
+
+    local spec = {
+        ['sink*'] = function(lines)
+            local key = lines[1]
+            if key == '' and #lines == 2 then
+                -- ENTER to apply the stash
+                vim.ui.input({
+                    prompt = lines[2] .. '\nApply this stash? (y/N)',
+                }, function(input)
+                    if input and input:lower() == 'y' then
+                        -- Extract the stash name , e.g., stash@{1}
+                        local name = lines[2]:match('^(%S+):')
+                        system.async('git stash apply ' .. name, {}, function(output)
+                            notify.info(output)
+                        end, system_async_on_error)
+                    end
+                end)
+            elseif key == 'ctrl-d' then
+                -- CTRL-D to drop stashes
+                vim.ui.input({
+                    prompt = table.concat(lines, '\n', 2)  .. '\nDrop ' .. (#lines > 2 and 'these stashes' or 'the stash') .. '? (y/N)',
+                }, function(input)
+                    if input and input:lower() == 'y' then
+                        for i = 2, #lines do
+                            local name = lines[i]:match('^(%S+):')
+                            system.async('git stash drop ' .. name, {}, function(output)
+                                notify.info(output)
+                            end, system_async_on_error)
+                        end
+                    end
+                end)
+            elseif key == 'alt-enter' and #lines == 2 then
+                -- ALT-ENTER to pop the stash
+                vim.ui.input({
+                    prompt = lines[2] .. '\nPop this stash? (y/N)',
+                }, function(input)
+                    if input and input:lower() == 'y' then
+                        local name = lines[2]:match('^(%S+):')
+                        system.async('git stash pop ' .. name, {}, function(output)
+                            notify.info(output)
+                        end, system_async_on_error)
+                    end
+                end)
+            end
+        end,
+        options = get_fzf_opts(from_resume, {
+            '--delimiter',
+            ':',
+            '--prompt',
+            'Git Stash> ',
+            '--header',
+            ':: ENTER (apply), ALT-ENTER (pop), CTRL-D (drop)',
+            '--expect',
+            get_expect({ 'ctrl-d', 'alt-enter' }, false),
+            '--preview',
+            'git --no-pager stash show --patch --color {1} ' .. diff_pager,
+            '--preview-window',
+            'down,60%',
+            '--bind',
+            set_preview_label('{1}'),
+        }),
+    }
+
+    local function handle_contents()
+        local entries = {}
+        system.async('git --no-pager stash list', { text = true }, vim.schedule_wrap(function(output)
+            for line in output:gmatch('[^\n]+') do
+                local stash, revision, rest = line:match('^(%S+)({%d+})(:.*)')
+                if stash then
+                    stash = ansi_string(stash, 'FzfFilename')
+                    revision = ansi_string(revision, 'Number')
+                    local entry = stash .. revision .. rest
+                    table.insert(entries, entry)
+                end
+            end
+            write(entries)
+        end), system_async_on_error)
+    end
+
+    fzf(spec, handle_contents)
+end
+
+vim.keymap.set('n', ',fs', function()
+    run(git_stash)
 end)

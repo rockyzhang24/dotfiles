@@ -46,15 +46,16 @@
 -- <Leader>fD : workspace diagnostics
 
 -- <C-p>      : Git files
+-- ,fs        : Git status
 -- ,fb        : Git branches
 -- ,fc        : Git commits (buffer)
 -- ,fC        : Git commits
--- ,fs        : Git stash
+-- ,fh        : Git stash
 
 --
 -- Template to add a new finder
 --
--- 1. Based on entries in a Lua table
+-- 1. Use Lua table as fzf's input
 --
 -- local function demo_finder(from_resume)
 --     local spec = {
@@ -78,7 +79,7 @@
 --     fzf(spec, handle_contents)
 -- end
 --
--- 2. Based on an external bash command
+-- 2. Use the raw output of external command as fzf's input
 --
 -- local function demo_finder(from_resume)
 --     local spec = {
@@ -109,6 +110,7 @@ local io_utils = require('rockyz.utils.io_utils')
 local icons = require('rockyz.icons')
 local notify = require('rockyz.utils.notify_utils')
 local system = require('rockyz.utils.system_utils')
+local ui = require('rockyz.utils.ui_utils')
 local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
 
 vim.g.fzf_layout = {
@@ -137,8 +139,18 @@ local rg_prefix = 'rg --column --line-number --no-heading --color=always --smart
 local bat_prefix = 'bat --color=always --paging=never --style=numbers' -- used to preview text file
 local fd_prefix = 'fd --hidden --follow --color=never --type f --type l ' .. vim.env.FD_EXCLUDE
 local fzf_previewer = '~/.config/fzf/fzf-previewer.sh' -- used to preview various types of files (text, image, etc)
-local file_add_icon = 'nvim -n --headless -u NONE -i NONE --cmd "lua require(\'rockyz.headless.fzf_files_devicons\')" +q'
 local diff_pager = '| delta --width $FZF_PREVIEW_COLUMNS'
+
+---Get the command to decorate input lines, e.g., prepend a devicon to the filename. This command
+---gets input through a pipe.
+---For example, fd --type f | cmd_to_dressup('fd')
+---@param source string Different types of input such as 'fd', 'git_status', etc
+local function cmd_to_dressup(source)
+    return string.format(
+        'nvim -n --headless -u NONE -i NONE --cmd "colorscheme "' .. vim.g.colorscheme .. ' --cmd "let g:source = \'%s\'" --cmd "lua require(\'rockyz.headless.fzf_dressup\')" +q',
+        source
+    )
+end
 
 ---Color a string by ANSI color code that is converted from a highlight group
 ---@param str string string to be colored
@@ -163,12 +175,18 @@ local function ansi_devicon(filename)
     return ansi_string(file_icon, file_icon_hl)
 end
 
----system.async's on_error callback
+---Handler for vim.system's error
 ---@param error string obj.stderr
 ---@param output string obj.stdout
-local function system_async_on_error(error, output)
-    notify.error(error)
-    notify.error(output)
+---@param level string? log level. It can be 'error' (default), 'warn', or 'info'
+local function system_on_error(error, output, level)
+    level = level or 'error'
+    if error and error ~= '' then
+        notify[level](error)
+    end
+    if output and output ~= '' then
+        notify[level](output)
+    end
 end
 
 local cached_fzf_query -- cached the last fzf query
@@ -275,7 +293,7 @@ local function finish()
         { 'bash', '-c', 'kill -9 $(<' .. tail_pid .. ')' },
         {},
         nil,
-        system_async_on_error
+        system_on_error
     )
     output_pipe:close()
     output_pipe = nil
@@ -326,7 +344,7 @@ end
 
 -- Files
 local function files(from_resume)
-    local fd_cmd = fd_prefix .. ' | ' .. file_add_icon
+    local fd_cmd = fd_prefix .. ' | ' .. cmd_to_dressup('fd')
 
     local function shortpath()
         local short = vim.fn.fnamemodify(vim.uv.cwd(), ':~:.')
@@ -403,7 +421,7 @@ local function dot_files(from_resume)
     local git_cmd = 'git -C '
         .. git_root
         .. ' --git-dir "$HOME/dotfiles" --work-tree "$HOME" ls-files --exclude-standard | '
-        .. file_add_icon
+        .. cmd_to_dressup('git_ls_files')
 
     local spec = {
         ['sink*'] = sink_file,
@@ -430,7 +448,7 @@ end)
 
 -- Find files under $HOME
 local function home_files(from_resume)
-    local fd_cmd = 'cd ' .. vim.env.HOME .. ' && ' .. fd_prefix .. ' | ' .. file_add_icon
+    local fd_cmd = 'cd ' .. vim.env.HOME .. ' && ' .. fd_prefix .. ' | ' .. cmd_to_dressup('fd')
 
     local spec = {
         ['sink*'] = sink_file,
@@ -1309,7 +1327,7 @@ local function zoxide(from_resume)
                 table.insert(entries, entry)
             end
             write(entries)
-        end, system_async_on_error)
+        end, system_on_error)
     end
 
     fzf(spec, handle_contents)
@@ -2391,8 +2409,7 @@ local function get_git_root(dir)
     local cmd = { 'git', '-C', dir, 'rev-parse', '--show-toplevel' }
     local obj = system.sync(cmd)
     if obj.code ~= 0 then
-        notify.error(obj.stderr)
-        notify.error(obj.stdout)
+        system_on_error(obj.stderr, obj.stdout)
         return nil
     end
     return obj.stdout:gsub('\n$', '')
@@ -2401,7 +2418,11 @@ end
 -- Git files
 local function git_files(from_resume)
     local git_root = get_git_root()
-    local git_cmd = 'git -C ' .. git_root .. ' ls-files --exclude-standard | ' .. file_add_icon
+    if git_root == nil then
+        return
+    end
+
+    local git_cmd = 'git -C ' .. git_root .. ' ls-files --exclude-standard | ' .. cmd_to_dressup('git_ls_files')
 
     local spec = {
         ['sink*'] = sink_file,
@@ -2428,12 +2449,79 @@ vim.keymap.set('n', '<C-p>', function()
     run(git_files)
 end)
 
+-- Git status
+local function git_status(from_resume)
+    local root_dir = get_git_root()
+    if root_dir == nil then
+        return
+    end
+
+    local git = 'git -C ' .. root_dir
+
+    local spec = {
+        ['sink*'] = function(lines)
+            local key = lines[1]
+            local filenames = {}
+            -- Extract filename in each entry
+            for i = 2, #lines do
+                local file = lines[i]:sub(7) -- get filename
+                file = file:match('.*%s(.*)') -- remove devicon
+                if file:match('%s%->') then
+                    file = file:match('.*%s%->.*%s(.*)') -- get new filename for rename
+                end
+                if file and file ~= '' then
+                    table.insert(filenames, file)
+                end
+            end
+            local files_newline = table.concat(filenames, '\n')
+            local files_str = table.concat(filenames, ' ')
+            local file_or_files = #filenames > 1 and 'files' or 'the file'
+            if key == 'ctrl-h' then
+                -- CTRL-H to unstage
+                ui.input_yes(string.format('%s\nUnstage %s above? (y/N)', files_newline, file_or_files), function()
+                    system.async(git .. ' reset -- ' .. files_str, {}, function(output)
+                        notify.info(output)
+                    end, system_on_error)
+                end)
+            elseif key == 'ctrl-l' then
+                -- CTRL-L to stage
+                ui.input_yes(string.format('%s\nStage %s above? (y/N)', files_newline, file_or_files), function()
+                    system.async(git .. ' add -- ' .. files_str, {}, function(output)
+                        notify.info(output)
+                    end, system_on_error)
+                end)
+            end
+        end,
+        options = get_fzf_opts(from_resume, {
+            '--prompt',
+            'Git Status> ',
+            '--header',
+            ':: CTRL-H (unstage), CTRL-L (stage)',
+            '--expect',
+            get_expect({ 'ctrl-h', 'ctrl-l' }, false),
+            '--preview',
+            -- Each entry is [ M] original/path/for/a/file -> new/path/for/the/file
+            -- We first extract the file path by removing the status indicators, the original
+            -- file path for rename and the devicon.
+            'file=$(echo {} | sed "s/^.*]  //" | sed "s/.* -> //" | sed "s/^[^ ]* //"); (git status $file | grep "^??") &>/dev/null && ' .. git .. ' diff --no-index /dev/null $file ' .. diff_pager .. ' || ' .. git .. ' diff HEAD -- $file ' .. diff_pager,
+        }),
+    }
+
+    local git_cmd = 'git -c colors.status=false --no-optional-locks status --porcelain=v1 | ' .. cmd_to_dressup('git_status')
+
+    fzf(spec, nil, git_cmd)
+end
+
+vim.keymap.set('n', ',fs', function()
+    run(git_status)
+end)
+
 -- Git branches
 local function git_branches(from_resume)
     -- Extract the branch name for fzf preview and border label
     --
     --   entry                            |  extracted branch
-    --------------------------------------|-----------------
+    --------------------------------------+-----------------
     --   branch                           |    branch
     --   remotes/origin/branch            |    remotes/origin/branch
     -- * (HEAD detached at origin/branch) |    origin/branch
@@ -2465,7 +2553,7 @@ local function git_branches(from_resume)
                         notify.info('[Git] switched to ' .. branch .. ' branch.')
                         vim.cmd('checktime')
                     end)
-                end, system_async_on_error)
+                end, system_on_error)
             elseif key == 'ctrl-d' then
                 -- CTRL-D to delete branches
                 local cmd_del_branch = { 'git', '-C', root_dir, 'branch', '--delete' }
@@ -2490,7 +2578,7 @@ local function git_branches(from_resume)
                         cmd_del_branch = vim.list_extend(cmd_del_branch, del_branches)
                         system.async(cmd_del_branch, {}, function(output)
                             notify.info(output)
-                        end, system_async_on_error)
+                        end, system_on_error)
                     end
                 end)
             end
@@ -2518,7 +2606,7 @@ local function git_branches(from_resume)
                 table.insert(entries, line)
             end
             write(entries)
-        end, system_async_on_error)
+        end, system_on_error)
     end
 
     fzf(spec, handle_contents)
@@ -2606,8 +2694,7 @@ local function get_sink_fn_git_commits(root_dir)
                 if input and input:lower() == 'y' then
                     local obj = system.sync({ 'git', '-C', root_dir, 'checkout', sele_commit_hash })
                     if obj.code ~= 0 then
-                        notify.error(obj.stderr)
-                        notify.error(obj.stdout)
+                        system_on_error(obj.stderr, obj.stdout)
                     else
                         notify.info(obj.stdout)
                     end
@@ -2667,8 +2754,7 @@ local function git_buf_commit(from_resume)
 
     local obj = system.sync({ 'git', '-C', root_dir, 'ls-files', '--error-unmatch', bufname })
     if obj.code ~= 0 then
-        notify.warn(obj.stderr)
-        notify.warn(obj.stdout)
+        system_on_error(obj.stderr, obj.stdout, 'warn')
         return
     end
 
@@ -2735,7 +2821,7 @@ local function git_stash(from_resume)
                         local name = lines[2]:match('^(%S+):')
                         system.async('git stash apply ' .. name, {}, function(output)
                             notify.info(output)
-                        end, system_async_on_error)
+                        end, system_on_error)
                     end
                 end)
             elseif key == 'ctrl-d' then
@@ -2748,7 +2834,7 @@ local function git_stash(from_resume)
                             local name = lines[i]:match('^(%S+):')
                             system.async('git stash drop ' .. name, {}, function(output)
                                 notify.info(output)
-                            end, system_async_on_error)
+                            end, system_on_error)
                         end
                     end
                 end)
@@ -2761,7 +2847,7 @@ local function git_stash(from_resume)
                         local name = lines[2]:match('^(%S+):')
                         system.async('git stash pop ' .. name, {}, function(output)
                             notify.info(output)
-                        end, system_async_on_error)
+                        end, system_on_error)
                     end
                 end)
             end
@@ -2797,12 +2883,12 @@ local function git_stash(from_resume)
                 end
             end
             write(entries)
-        end), system_async_on_error)
+        end), system_on_error)
     end
 
     fzf(spec, handle_contents)
 end
 
-vim.keymap.set('n', ',fs', function()
+vim.keymap.set('n', ',fh', function()
     run(git_stash)
 end)

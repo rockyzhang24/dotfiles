@@ -989,6 +989,9 @@ local groups = {
     FzfCol = { fg = col },
     FzfDesc = { fg = util.lighten(norm_bg, 0.4) },
     FzfRgQuery = { fg = red },
+
+    GitStatusStaged = { fg = green },
+    GitStatusUnstaged = { fg = red },
 }
 
 for k, v in pairs(groups) do

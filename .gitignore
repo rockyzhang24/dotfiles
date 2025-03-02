@@ -1,4 +1,22 @@
 # gitignore for the git bare repo managing dotfiles
 
-.config/nvim/pack/
+.config/asciinema/install-id
+.config/fontforge/
+.config/gh/
+.config/gtk*/
+.config/iterm2/*
+!.config/iterm2/com.googlecode.iterm2.plist
+.config/karabiner/*backups/
+.config/lazygit/*
+!.config/lazygit/config.yml
 .config/misc/
+.config/nvim/pack/
+.config/ranger/plugins/
+.config/vifm/vifminfo.json
+.config/vifm/vifm-help.txt
+.config/zoxide/db*
+.config/zsh/.zsh_sessions/
+.config/zsh/.zsh_history
+.config/zsh/.zim/
+.config/zsh/.zcompdump*
+.config/zsh/*.zwc*

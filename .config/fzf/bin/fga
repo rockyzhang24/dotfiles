@@ -29,7 +29,7 @@ cleaner() {
 if [[ $# -eq 1 ]]; then
   delta_cmd="delta --width ${FZF_PREVIEW_COLUMNS:-$COLUMNS} --file-style omit"
   file=$(echo "$1" | cleaner)
-  if ($git_cmd status -s -- "$file" | grep '^??') &>/dev/null; then  # diff with /dev/null for untracked files
+  if ($git_cmd status -s -uall -- "$file" | grep '^??') &>/dev/null; then  # diff with /dev/null for untracked files
     $git_cmd diff --color=always --no-index -- /dev/null "$file" | eval "$delta_cmd"
   else
     $git_cmd diff --color=always -- "$file" | eval "$delta_cmd"
@@ -45,10 +45,10 @@ untracked=$(eval "$git_cmd config --get-color color.status.untracked red")
 while IFS= read -r file; do
   files+=("$file")
 done < <(
-  $git_cmd -c color.status=always -c status.relativePaths=true -c core.quotePath=false status -s |
+  $git_cmd -c color.status=always -c status.relativePaths=true -c core.quotePath=false status -s -uall "$XDG_CONFIG_HOME" |
     grep -F -e "$changed" -e "$unmerged" -e "$untracked" |
     sed -E 's/^(..[^[:space:]]*)[[:space:]]+(.*)$/[\1]  \2/' |
-    fzf --ansi --exit-0 --preview "$__fda {}" --preview-window down,60% --prompt="GitAdd> " --header ":: ENTER (git add files)" |
+    fzf --ansi --exit-0 --preview "$__fda {}" --preview-window down,60% --prompt="Git Add (dotfiles)> " --header ":: ENTER (git add files)" |
     cleaner
 )
 

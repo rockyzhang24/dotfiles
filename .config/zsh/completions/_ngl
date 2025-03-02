@@ -1,0 +1,4 @@
+_ngl() {
+  (( $+functions[_git-log] )) || _git
+  _git-log
+}

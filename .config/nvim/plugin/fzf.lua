@@ -28,8 +28,8 @@
 -- <Leader>fQ : Quickfix list history
 -- <Leader>fL : Location list history
 
--- <Leader>gg : live grep
--- <C-g>      : live grep
+-- <Leader>gg : Live grep
+-- <C-g>      : Live grep
 -- <Leader>gv : Live grep in my nvim config
 -- <Leader>g* : Grep for the current word/selection
 -- <Leader>gb : Live grep in current buffer
@@ -42,8 +42,8 @@
 -- <Leader>lD : LSP declarations
 -- <Leader>lt : LSP type definitions
 
--- <Leader>fd : document diagnostics
--- <Leader>fD : workspace diagnostics
+-- <Leader>fd : Diagnostics (document)
+-- <Leader>fD : Diagnostics (workspace)
 
 -- <C-p>      : Git files
 -- ,fs        : Git status
@@ -51,6 +51,9 @@
 -- ,fc        : Git commits (buffer)
 -- ,fC        : Git commits
 -- ,fh        : Git stash
+
+-- INSERT mode completion
+-- <C-x><C-f> : Complete paths
 
 --
 -- Template to add a new finder
@@ -187,6 +190,12 @@ local function system_on_error(error, output, level)
     if output and output ~= '' then
         notify[level](output)
     end
+end
+
+local function shortpath(path)
+    local short = vim.fn.fnamemodify(path, ':~:.')
+    short = vim.fn.pathshorten(short)
+    return short == '' and '~/' or (short:match('/$') and short or short .. '/')
 end
 
 local cached_fzf_query -- cached the last fzf query
@@ -346,17 +355,11 @@ end
 local function files(from_resume)
     local fd_cmd = fd_prefix .. ' | ' .. cmd_to_dressup('fd')
 
-    local function shortpath()
-        local short = vim.fn.fnamemodify(vim.uv.cwd(), ':~:.')
-        short = vim.fn.pathshorten(short)
-        return short == '' and '~/' or (short:match('/$') and short or short .. '/')
-    end
-
     local spec = {
         ['sink*'] = sink_file,
         options = get_fzf_opts(from_resume, {
             '--prompt',
-            shortpath(),
+            shortpath(vim.uv.cwd()),
             '--expect',
             get_expect(),
             '--preview',
@@ -890,10 +893,7 @@ vim.keymap.set('n', '<Leader>ft', function()
     run(tabs)
 end)
 
---
 -- Argument list
---
-
 local function args(from_resume)
     local spec = {
         ['sink*'] = function(lines)
@@ -961,10 +961,7 @@ vim.keymap.set('n', '<Leader>fa', function()
     run(args)
 end)
 
---
 -- Helptags
---
-
 local function helptags(from_resume)
 
     local spec = {
@@ -1081,10 +1078,7 @@ vim.keymap.set('n', '<Leader>fh', function()
     run(helptags)
 end)
 
---
 -- Commands
---
-
 local function commands(from_resume)
     local spec = {
         ['sink*'] = function(lines)
@@ -1206,10 +1200,7 @@ vim.keymap.set('n', '<Leader>fc', function()
     run(commands)
 end)
 
---
 -- Registers
---
-
 local function registers(from_resume)
     local spec = {
         ['sink*'] = function(lines)
@@ -1279,10 +1270,7 @@ vim.keymap.set('n', '<Leader>f"', function()
     run(registers)
 end)
 
---
 -- Zoxide
---
-
 local function zoxide(from_resume)
     local preview_cmd = ''
     if vim.fn.executable('eza') == 1 then
@@ -2891,4 +2879,53 @@ end
 
 vim.keymap.set('n', ',fh', function()
     run(git_stash)
+end)
+
+--
+-- INSERT mode completion
+--
+
+-- Complete path (include files and dirs)
+local function complete_path(from_resume)
+    local fd_cmd = 'fd ' .. vim.env.FD_EXCLUDE
+    local fd_abs_cmd = 'fd --absolute-path ' .. vim.env.FD_EXCLUDE
+    local path_type = vim.fn.tempname()
+    local prompt = shortpath(vim.uv.cwd())
+
+    local winid = vim.api.nvim_get_current_win()
+    local bufnr = vim.api.nvim_win_get_buf(winid)
+
+    local spec = {
+        ['sink*'] = function(lines)
+            -- ENTER to insert the selected path at cursor
+            local row, col = unpack(vim.api.nvim_win_get_cursor(winid))
+            local line = vim.api.nvim_buf_get_lines(bufnr, row - 1, row, false)[1]
+            local after = #line > col and line:sub(col + 1) or ''
+            local newline = line:sub(1, col) .. lines[1] .. after
+            local newcol = col + #lines[1]
+            vim.api.nvim_set_current_line(newline)
+            vim.api.nvim_win_set_cursor(winid, { row, newcol })
+            vim.api.nvim_feedkeys('i', 'n', true)
+        end,
+        options = get_fzf_opts(from_resume, {
+            '--no-multi',
+            '--prompt',
+            prompt,
+            '--preview-window',
+            'hidden',
+            '--header',
+            ':: ALT-P (switch between absolute and relative)\n:: CWD: ' .. vim.uv.cwd(),
+            '--bind',
+            'ctrl-/:ignore',
+            '--bind',
+            'start:execute(echo 0 > ' .. path_type .. ')',
+            '--bind',
+            'alt-p:transform:[[ $(cat ' .. path_type .. ') == 0 ]] && echo "reload(' .. fd_abs_cmd .. ')+change-prompt(Absolute Paths> )+execute(echo 1 > ' .. path_type .. ')" || echo "reload(' .. fd_cmd .. ')+change-prompt(' .. prompt .. ')+execute(echo 0 > ' .. path_type .. ')"',
+        }),
+    }
+    fzf(spec, nil, fd_cmd)
+end
+
+vim.keymap.set('i', '<C-x><C-f>', function()
+    run(complete_path)
 end)

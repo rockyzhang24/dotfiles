@@ -114,6 +114,7 @@ local icons = require('rockyz.icons')
 local notify = require('rockyz.utils.notify_utils')
 local system = require('rockyz.utils.system_utils')
 local ui = require('rockyz.utils.ui_utils')
+local api = require('rockyz.utils.api_utils')
 local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
 
 vim.g.fzf_layout = {
@@ -298,12 +299,7 @@ end
 
 -- Close the pipe and kill tail process to terminate fzf's "loading" indicator
 local function finish()
-    system.async(
-        { 'bash', '-c', 'kill -9 $(<' .. tail_pid .. ')' },
-        {},
-        nil,
-        system_on_error
-    )
+    system.async({ 'bash', '-c', 'kill -9 $(<' .. tail_pid .. ')' }, {}, nil, system_on_error)
     output_pipe:close()
     output_pipe = nil
 end
@@ -1649,7 +1645,7 @@ local function get_fzf_opts_for_live_grep(rg, rg_query, path, prompt, extra_opts
             echo "change-prompt(' .. prompt .. ' [RG]> )+disable-search+reload(' .. rg .. ' {q} || true)+rebind(change)+transform-query(cat ' .. cached_rg_query .. ')"\
         }',
         '--bind',
-        set_preview_label('{1}:{2}:{3}'),
+        set_preview_label('$(echo {1} | sed "s|$HOME|~|"):{2}:{3}'),
         '--delimiter',
         ':',
         '--header',
@@ -1871,8 +1867,10 @@ end)
 -- Convert symbols to fzf entries and quickfix items
 -- Reference: the source code of vim.lsp.util.symbols_to_items
 -- (https://github.com/neovim/neovim/blob/master/runtime/lua/vim/lsp/util.lua)
-local function symbols_to_entries_and_items(symbols, ctx, child_prefix, all_entries, all_items)
-
+local function symbol_conversion(symbols, ctx, child_prefix, all_entries, all_items)
+    if symbols == nil then
+        return
+    end
     local client = vim.lsp.get_client_by_id(ctx.client_id)
     if not client then
         return
@@ -1883,95 +1881,98 @@ local function symbols_to_entries_and_items(symbols, ctx, child_prefix, all_entr
     local offset_encoding = client.offset_encoding
     local bufnr = ctx.bufnr
 
-    -- Recursion (DFS) to iterate child symbols if there are any
-    local function _symbols_to_entries_and_items(_symbols, _child_prefix)
+    local function _symbol_conversion(_symbols, _child_prefix)
         for _, symbol in ipairs(_symbols) do
-            local kind = vim.lsp.protocol.SymbolKind[symbol.kind] or 'Unknown'
-            local icon = icons.symbol_kinds[kind]
-            local colored_icon_kind = ansi_string(icon .. ' ' .. kind, 'SymbolKind' .. kind)
+
+            local filename, range
             if symbol.location then
-                --
                 -- LSP's WorkspaceSymbol[]
-                --
-                -- Get quickfix item. vim.lsp.util.locations_to_items will handle the conversion from
-                -- utf-32 or utf-16 index to utf-8 index internally.
-                local item = vim.lsp.util.locations_to_items({ symbol.location }, offset_encoding)[1]
-                item.text = '[' .. icon .. kind .. '] ' .. symbol.name .. ' ' .. client_name
-                table.insert(all_items, item)
-                -- Construct fzf entries
-                local filename = item.filename
-                local lnum = item.lnum
-                local col = item.col
-                local devicon = ansi_devicon(filename)
-                local fzf_text = '[' .. colored_icon_kind .. '] ' .. symbol.name .. ' '
+                filename = vim.uri_to_fname(symbol.location.uri)
+                range = symbol.location.range
+            elseif symbol.selectionRange then
+                -- LSP's DocumentSymbol[]
+                filename = vim.api.nvim_buf_get_name(bufnr)
+                range = symbol.selectionRange
+            end
+
+            if filename and range then
+                local kind = vim.lsp.protocol.SymbolKind[symbol.kind] or 'Unknown'
+                local icon = icons.symbol_kinds[kind]
+                local colored_icon_kind = ansi_string(icon .. ' ' .. kind, 'SymbolKind' .. kind)
+
+                local row = range['start'].line
+                local end_row = range['end'].line
+
+                local lnum = row + 1
+                local end_lnum = end_row + 1
+
+                local col = range['start'].character
+                if col > 0 then
+                    local line = api.get_lines(bufnr, { row })[row] or ''
+                    col = vim.str_byteindex(line, offset_encoding, col, false)
+                end
+                col = col + 1
+
+                local end_col = range['end'].character
+                if end_col > 0 then
+                    local end_line = api.get_lines(bufnr, { end_row })[end_row] or ''
+                    end_col = vim.str_byteindex(end_line, offset_encoding, end_col, false)
+                end
+                end_col = end_col + 1
+
+                local fzf_text
+                if symbol.location then
+                    local devicon = ansi_devicon(filename)
+                    fzf_text = '[' .. colored_icon_kind .. '] ' .. symbol.name .. ' '
                     .. colored_client_name
                     .. string.rep(' ', 6)
                     .. (devicon == '' and devicon or devicon .. ' ')
                     .. ansi_string(vim.fn.fnamemodify(filename, ':~:.'), 'FzfFilename') .. ':'
                     .. ansi_string(tostring(lnum), 'FzfLnum').. ':'
                     .. ansi_string(tostring(col), 'FzfCol')
-                table.insert(all_entries, table.concat({
+                else
+                    fzf_text = _child_prefix .. '[' .. colored_icon_kind .. '] ' .. symbol.name .. ' ' .. colored_client_name
+                end
+
+                local qf_text = '[' .. icon .. ' ' .. kind .. '] ' .. symbol.name .. ' ' .. client_name
+
+                -- Use a special string as delimiter instead of whitepace as some rare filenames may
+                -- contain whitespaces, e.g., some files under ~/.cache.
+                all_entries[#all_entries+1] = table.concat({
                     #all_entries + 1,
                     offset_encoding,
                     filename,
                     lnum,
                     col,
                     fzf_text,
-                }, ' '))
-            elseif symbol.selectionRange then
-                --
-                -- LSP's DocumentSymbol[]
-                --
-                local filename = vim.api.nvim_buf_get_name(bufnr)
-                local start_pos = symbol.selectionRange.start
-                local end_pos = symbol.selectionRange['end']
+                }, '@@@@')
 
-                local line = vim.api.nvim_buf_get_lines(bufnr, start_pos.line, start_pos.line + 1, false)[1]
-                local end_line = vim.api.nvim_buf_get_lines(bufnr, end_pos.line, end_pos.line + 1, false)[1]
-
-                local lnum = start_pos.line + 1
-                local col = start_pos.character == 0 and start_pos.character
-                    or vim.str_byteindex(line, offset_encoding, start_pos.character, false) + 1
-                local end_lnum = end_pos.line + 1
-                local end_col = end_pos.character == 0 and end_pos.character
-                    or vim.str_byteindex(end_line, offset_encoding, end_pos.character, false) + 1
-                local text = '[' .. icon .. kind .. '] ' .. symbol.name .. ' ' .. client_name
-
-                -- Use two whitespaces for each level of indentation to show the hierarchical structure
-                local fzf_text = _child_prefix .. '[' .. colored_icon_kind .. '] ' .. symbol.name .. ' ' .. colored_client_name
-
-                -- Fzf entries
-                table.insert(all_entries, table.concat({
-                    #all_entries + 1,
-                    offset_encoding,
-                    filename,
-                    lnum,
-                    col,
-                    fzf_text,
-                }, ' '))
-                -- Quickfix items
-                table.insert(all_items, {
+                all_items[#all_items+1] = {
                     filename = filename,
                     lnum = lnum,
                     end_lnum = end_lnum,
                     col = col,
                     end_col = end_col,
-                    text = text,
-                })
-                if symbol.children then
-                    _symbols_to_entries_and_items(symbol.children, _child_prefix .. string.rep(' ', 2))
-                end
+                    text = qf_text,
+                    user_data = symbol.location,
+                }
+            end
+
+            -- Recursive traverse child symbols if there are any (only available for document
+            -- symbols)
+            if symbol.children then
+                _symbol_conversion(symbol.children, _child_prefix .. string.rep(' ', 2))
             end
         end
     end
 
-    _symbols_to_entries_and_items(symbols, child_prefix)
+    _symbol_conversion(symbols, child_prefix)
 end
 
 ---Send request document symbols or workspace symbols and then execute fzf
 ---@param title string The title for quickfix list and fzf prompt
----@param symbol_query string The query for requesting workspace symbols. It will be empty for document
----symbol request
+---@param symbol_query string|nil The query for requesting workspace symbols. It will be nil for
+---document symbol request
 ---@param from_resume boolean? Whether it is called from fzf resume or not
 local function lsp_symbols(method, params, title, symbol_query, from_resume)
     local bufnr = vim.api.nvim_get_current_buf()
@@ -1986,11 +1987,12 @@ local function lsp_symbols(method, params, title, symbol_query, from_resume)
 
     local fzf_header = ':: CTRL-Q (send to quickfix), CTRL-L (send to loclist)'
     local fzf_preview_window = '+{4}-/2'
-    if symbol_query ~= '' then
-        fzf_header = ':: Query: ' .. ansi_string(symbol_query, 'FzfRgQuery') .. '\n' .. fzf_header
+    if symbol_query then
+        fzf_header = ':: Query: ' .. (symbol_query == '' and '[empty]' or ansi_string(symbol_query, 'FzfRgQuery')) .. '\n' .. fzf_header
         fzf_preview_window = 'down,45%,' .. fzf_preview_window
     end
 
+    local delimiter = '@@@@'
     local spec = {
         ['sink*'] = function(lines)
             local key = lines[1]
@@ -1999,7 +2001,7 @@ local function lsp_symbols(method, params, title, symbol_query, from_resume)
                 local loclist = key == 'ctrl-l'
                 local qf_items = {}
                 for i = 2, #lines do
-                    local idx = tonumber(lines[i]:match('^%S+'))
+                    local idx = tonumber(lines[i]:match('^(%d+)' .. delimiter))
                     table.insert(qf_items, all_items[idx])
                 end
                 if loclist then
@@ -2016,10 +2018,10 @@ local function lsp_symbols(method, params, title, symbol_query, from_resume)
                     if action then
                         vim.cmd(action)
                     end
-                    local idx = tonumber(lines[i]:match('^%S+'))
+                    local idx = tonumber(lines[i]:match('^(%d+)' .. delimiter))
                     local item = all_items[idx]
-                    local offset_encoding = lines[i]:match('^%S+%s(%S+)')
-                    if symbol_query ~= '' then
+                    local offset_encoding = lines[i]:match('^%d+' .. delimiter .. '([^@]+)' .. delimiter)
+                    if symbol_query then
                         -- For workspace symbol
                         vim.lsp.util.show_document(item.user_data, offset_encoding)
                     else
@@ -2033,7 +2035,7 @@ local function lsp_symbols(method, params, title, symbol_query, from_resume)
         end,
         options = get_fzf_opts(from_resume, {
             '--delimiter',
-            ' ',
+            '@@@@',
             '--with-nth',
             '6..',
             '--prompt',
@@ -2055,7 +2057,7 @@ local function lsp_symbols(method, params, title, symbol_query, from_resume)
         local remaining = #clients
         for _, client in ipairs(clients) do
             client:request(method, params, function(_, result, ctx)
-                symbols_to_entries_and_items(result, ctx, '', all_entries, all_items)
+                symbol_conversion(result, ctx, '', all_entries, all_items)
                 remaining = remaining - 1
                 if remaining == 0 then
                     write(all_entries)
@@ -2071,7 +2073,7 @@ end
 vim.keymap.set('n', '<Leader>ls', function()
     run(function(from_resume)
         local params = { textDocument = vim.lsp.util.make_text_document_params() }
-        lsp_symbols('textDocument/documentSymbol', params, 'LSP Document Symbols', '', from_resume)
+        lsp_symbols('textDocument/documentSymbol', params, 'LSP Document Symbols', nil, from_resume)
     end)
 end)
 

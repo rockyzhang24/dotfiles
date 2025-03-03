@@ -60,11 +60,11 @@ alias -g W='| nvim -c "setlocal buftype=nofile bufhidden=wipe" -c "nnoremap <buf
 
 # Dotfiles management
 alias dot="git --git-dir=$HOME/dotfiles/ --work-tree=$HOME"
-alias doa="dot add"
-alias dos="dot status -uall $HOME/.config"
-alias doc="dot commit"
-alias dod="dot diff"
-alias dop="dot push"
+alias d.a="dot add"
+alias d.s="dot status -uall $HOME/.config"
+alias d.c="dot commit"
+alias d.d="dot diff"
+alias d.p="dot push"
 
 # Convert video to GIF (with 2K resolution) using ffmpeg
 # Usage: vtg input output, then output.gif will be generated

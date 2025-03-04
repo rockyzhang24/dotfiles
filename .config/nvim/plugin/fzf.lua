@@ -212,6 +212,10 @@ end
 -- Record whether Rg is in fzf mode or not
 local fzf_mode_enabled = ''
 
+-- A special string as delimiter instead of whitepace as some rare filenames may contain
+-- whitespaces, e.g., some files under ~/.cache.
+local special_delimiter = '@@@@'
+
 ---Get fzf options
 ---@param from_resume boolean? Whether the finder is called by fzf resume
 ---@param extra_opts table? Extra options
@@ -1325,38 +1329,32 @@ end)
 -- Find entries in quickfix and location list
 --
 
--- Construct entry in qf
--- <filename> <lnum>-<end_lnum>:<col>-<end_col> [<type>] <text>
-local function get_qf_entry(item)
+---Construct entry in the same format and colors as the entry in quickfix
+---<filename> <lnum>-<end_lnum>:<col>-<end_col> [<type>] <text>
+---@param item table The processed item returned by qf_utils.format_qf_item()
+local function build_qf_entry(item)
     local entry = {}
     if item.fname ~= '' then
-        table.insert(entry, ansi_string(item.fname, 'QuickfixFilename'))
+        table.insert(entry, ansi_string(item.fname, item.fname_hl))
     end
     local lnum_col = item.lnum
     if item.col ~= '' then
         lnum_col = item.lnum .. ':' .. item.col
     end
     if lnum_col ~= '' then
-        table.insert(entry, ansi_string(lnum_col, 'Number'))
+        table.insert(entry, ansi_string(lnum_col, item.lnum_col_hl))
     end
-    local type_hl = {
-        E = 'DiagnosticError',
-        W = 'DiagnosticWarn',
-        I = 'DiagnosticInfo',
-        H = 'DiagnosticHint',
-    }
-    local hl = type_hl[item.type]
     if item.type ~= '' then
         local type = '[' .. item.type .. ']'
-        if hl then
-            type = ansi_string(type, hl)
+        if item.type_hl then
+            type = ansi_string(type, item.type_hl)
         end
         table.insert(entry, type)
     end
     if item.text ~= '' then
         local text = item.text
-        if hl then
-            text = ansi_string(text, hl)
+        if item.type_hl then
+            text = ansi_string(text, item.type_hl)
         end
         table.insert(entry, text)
     end
@@ -1366,7 +1364,7 @@ end
 ---@param win_local boolean true for location list and false for quickfix
 local function qf_items_fzf(win_local, from_resume)
     local what = { items = 0, title = 0 }
-    local list = win_local and vim.fn.getloclist(0, what) or vim.fn.getqflist(what)
+    local list
     local spec = {
         ['sink*'] = function(lines)
             local key = lines[1]
@@ -1416,6 +1414,8 @@ local function qf_items_fzf(win_local, from_resume)
             end
         end,
         options = get_fzf_opts(from_resume, {
+            '--delimiter',
+            special_delimiter,
             '--prompt',
             win_local and 'Location List' or 'Quickfix List' .. '> ',
             '--header',
@@ -1435,6 +1435,7 @@ local function qf_items_fzf(win_local, from_resume)
 
     local function handle_contents()
         local entries = {}
+        list = win_local and vim.fn.getloclist(0, what) or vim.fn.getqflist(what)
         for _, item in ipairs(list.items) do
             local bufnr = item.bufnr
             local bufname = vim.api.nvim_buf_get_name(bufnr)
@@ -1444,8 +1445,12 @@ local function qf_items_fzf(win_local, from_resume)
             -- The first three parts are used for fzf itself and won't be presented in fzf window.
             -- * index: display the error by :[nr]cc!
             -- * bufname and lnum: fzf preview
-            local entry = #entries + 1 .. ' ' .. bufname .. ' ' .. lnum .. ' ' .. get_qf_entry(qf.format_qf_item(item))
-            table.insert(entries, entry)
+            entries[#entries+1] = table.concat({
+                #entries + 1,
+                bufname,
+                lnum,
+                build_qf_entry(qf.format_qf_item(item))
+            }, special_delimiter)
         end
         write(entries)
     end
@@ -1544,7 +1549,7 @@ local function qf_history_fzf(win_local, from_resume)
                 if item == nil then
                     break
                 end
-                local str = get_qf_entry(qf.format_qf_item(item))
+                local str = build_qf_entry(qf.format_qf_item(item))
                 table.insert(errors, str)
             end
             io_utils.write_file_async(err_tmpfile, table.concat(errors, '\n'))
@@ -1936,8 +1941,6 @@ local function symbol_conversion(symbols, ctx, child_prefix, all_entries, all_it
 
                 local qf_text = '[' .. icon .. ' ' .. kind .. '] ' .. symbol.name .. ' ' .. client_name
 
-                -- Use a special string as delimiter instead of whitepace as some rare filenames may
-                -- contain whitespaces, e.g., some files under ~/.cache.
                 all_entries[#all_entries+1] = table.concat({
                     #all_entries + 1,
                     offset_encoding,
@@ -1945,7 +1948,7 @@ local function symbol_conversion(symbols, ctx, child_prefix, all_entries, all_it
                     lnum,
                     col,
                     fzf_text,
-                }, '@@@@')
+                }, special_delimiter)
 
                 all_items[#all_items+1] = {
                     filename = filename,
@@ -1992,7 +1995,6 @@ local function lsp_symbols(method, params, title, symbol_query, from_resume)
         fzf_preview_window = 'down,45%,' .. fzf_preview_window
     end
 
-    local delimiter = '@@@@'
     local spec = {
         ['sink*'] = function(lines)
             local key = lines[1]
@@ -2001,7 +2003,7 @@ local function lsp_symbols(method, params, title, symbol_query, from_resume)
                 local loclist = key == 'ctrl-l'
                 local qf_items = {}
                 for i = 2, #lines do
-                    local idx = tonumber(lines[i]:match('^(%d+)' .. delimiter))
+                    local idx = tonumber(lines[i]:match('^(%d+)' .. special_delimiter))
                     table.insert(qf_items, all_items[idx])
                 end
                 if loclist then
@@ -2018,9 +2020,9 @@ local function lsp_symbols(method, params, title, symbol_query, from_resume)
                     if action then
                         vim.cmd(action)
                     end
-                    local idx = tonumber(lines[i]:match('^(%d+)' .. delimiter))
+                    local idx = tonumber(lines[i]:match('^(%d+)' .. special_delimiter))
                     local item = all_items[idx]
-                    local offset_encoding = lines[i]:match('^%d+' .. delimiter .. '([^@]+)' .. delimiter)
+                    local offset_encoding = lines[i]:match('^%d+' .. special_delimiter .. '([^@]+)' .. special_delimiter)
                     if symbol_query then
                         -- For workspace symbol
                         vim.lsp.util.show_document(item.user_data, offset_encoding)
@@ -2035,7 +2037,7 @@ local function lsp_symbols(method, params, title, symbol_query, from_resume)
         end,
         options = get_fzf_opts(from_resume, {
             '--delimiter',
-            '@@@@',
+            special_delimiter,
             '--with-nth',
             '6..',
             '--prompt',

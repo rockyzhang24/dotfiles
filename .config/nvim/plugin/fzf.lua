@@ -156,6 +156,9 @@ local function cmd_to_dressup(source)
     )
 end
 
+---@type table<string, string> A map from highlight group to ANSI color code
+local cached_ansi = {}
+
 ---Color a string by ANSI color code that is converted from a highlight group
 ---@param str string string to be colored
 ---@param hl string highlight group name
@@ -164,9 +167,10 @@ end
 local function ansi_string(str, hl, from_type, to_type)
     from_type = from_type or 'fg'
     to_type = to_type or 'fg'
-    local ansi = color.hl2ansi(hl, from_type, to_type)
-    local ansi_reset = '\x1b[m'
-    return  ansi .. str .. ansi_reset
+    if not cached_ansi[hl] then
+        cached_ansi[hl] = color.hl2ansi(hl, from_type, to_type)
+    end
+    return cached_ansi[hl] .. str .. '\x1b[m'
 end
 
 -- Get ANSI colored devicon for a filename

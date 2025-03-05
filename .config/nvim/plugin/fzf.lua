@@ -485,8 +485,8 @@ local function buffers(from_resume)
     local spec = {
         ['sink*'] = function(lines)
             local key = lines[1]
-            if key == 'ctrl-d' then
-                -- CTRL-D to delete selected buffers
+            if key == 'alt-bs' then
+                -- ALT-BS to delete selected buffers
                 for i = 2, #lines do
                     local bufnr = tonumber(string.match(lines[i], '%[(%d+)%]'))
                     require('rockyz.utils.buf_utils').bufdelete({ bufnr = bufnr, wipe = true })
@@ -514,9 +514,9 @@ local function buffers(from_resume)
             '--prompt',
             'Buffers> ',
             '--header',
-            ':: CTRL-D (delete buffers)',
+            ':: ALT-BS (delete buffers)',
             '--expect',
-            get_expect({'ctrl-d'}),
+            get_expect({'alt-bs'}),
             '--preview',
             '[[ {1} == "No_Name" ]] && echo "" || ' .. bat_prefix .. ' --highlight-line {2} -- {1}',
             '--preview-window',
@@ -701,8 +701,8 @@ local function marks(from_resume)
     local spec = {
         ['sink*'] = function(lines)
             local key = lines[1]
-            if key == 'ctrl-d' then
-                -- CTRL-D to delete marks
+            if key == 'alt-bs' then
+                -- ALT-BS to delete marks
                 for i = 2, #lines do
                     local mark = lines[i]:match('[^ ]+')
                     vim.api.nvim_win_call(win, function()
@@ -734,9 +734,9 @@ local function marks(from_resume)
             '--prompt',
             'Marks> ',
             '--header',
-            ':: CTRL-D (delete marks)',
+            ':: ALT-BS (delete marks)',
             '--expect',
-            get_expect({ 'ctrl-d' }),
+            get_expect({ 'alt-bs' }),
             '--preview',
             ' [[ -f {-1} ]] && ' .. bat_prefix .. ' --highlight-line {2} -- {-1} || echo File does not exist, no preview!',
             '--preview-window',
@@ -808,8 +808,8 @@ local function tabs(from_resume)
     local spec = {
         ['sink*'] = function(lines)
             local key = lines[1]
-            if key == 'ctrl-d' and #vim.api.nvim_list_tabpages() > 1 then
-                -- CTRL-D: delete tabs
+            if key == 'alt-bs' and #vim.api.nvim_list_tabpages() > 1 then
+                -- ALT-BS: delete tabs
                 for i = 2, #lines do
                     for winid in lines[i]:match('%S+%s%S+%s%S+%s(%S+)'):gmatch('[^,]+') do
                         winid = tonumber(winid)
@@ -832,9 +832,9 @@ local function tabs(from_resume)
             '--prompt',
             'Tabs> ',
             '--header',
-            ':: CTRL-D (close tabs)',
+            ':: ALT-BS (close tabs)',
             '--expect',
-            'ctrl-d',
+            'alt-bs',
             '--preview',
             'file=$(echo {1} | sed "s/@@@@/ /g"); [[ -f $file ]] && ' .. bat_prefix .. ' --highlight-line {2} -- $file || echo "No preview support!"',
             '--bind',
@@ -848,7 +848,7 @@ local function tabs(from_resume)
             local cur_tab = vim.api.nvim_get_current_tabpage()
             for idx, tid in ipairs(vim.api.nvim_list_tabpages()) do
                 local filenames = {}
-                -- Store winids in each tab. They are used for closing the tab via CTRL-D.
+                -- Store winids in each tab. They are used for closing the tab via ALT-BS.
                 local winids = {}
                 local cur_winid = vim.api.nvim_tabpage_get_win(tid)
                 local cur_bufname
@@ -902,8 +902,8 @@ local function args(from_resume)
     local spec = {
         ['sink*'] = function(lines)
             local key = lines[1]
-            if key == 'ctrl-d' then
-                -- CTRL-D: delete from arglist
+            if key == 'alt-bs' then
+                -- ALT-BS: delete from arglist
                 for i = 2, #lines do
                     vim.cmd.argdelete(string.match(lines[i], '%S+%s%S+%s(%S+)'))
                 end
@@ -925,9 +925,9 @@ local function args(from_resume)
             '--prompt',
             'Args> ',
             '--header',
-            ':: CTRL-D (delete from arglist)',
+            ':: ALT-BS (delete from arglist)',
             '--expect',
-            get_expect({ 'ctrl-d' }),
+            get_expect({ 'alt-bs' }),
             '--preview',
             bat_prefix .. ' -- {3}',
             '--bind',
@@ -2550,8 +2550,8 @@ local function git_branches(from_resume)
                         vim.cmd('checktime')
                     end)
                 end, system_on_error)
-            elseif key == 'ctrl-d' then
-                -- CTRL-D to delete branches
+            elseif key == 'alt-bs' then
+                -- ALT-BS to delete branches
                 local cmd_del_branch = { 'git', '-C', root_dir, 'branch', '--delete' }
                 local cmd_cur_branch = { 'git', '-C', root_dir, 'rev-parse', '--abbrev-ref', 'HEAD' }
                 local cur_branch = system.sync(cmd_cur_branch).stdout
@@ -2583,9 +2583,9 @@ local function git_branches(from_resume)
             '--prompt',
             'Git Branches> ',
             '--expect',
-            'ctrl-d',
+            'alt-bs',
             '--header',
-            ':: ENTER (checkout), CTRL-D (delete branches)',
+            ':: ENTER (checkout), ALT-BS (delete branches)',
             '--preview-window',
             'down,60%',
             '--preview',
@@ -2663,8 +2663,8 @@ local function get_sink_fn_git_commits(root_dir)
             vim.fn.setreg(reg, hashes)
             vim.fn.setreg([[0]], hashes)
             notify.info(string.format('commit hashes copied to register %s', reg))
-        elseif key == 'ctrl-d' then
-            -- CTRL-D to diff against the commits (only available for buffer commits)
+        elseif key == 'alt-bs' then
+            -- ALT-BS to diff against the commits (only available for buffer commits)
             for i = 2, #lines do
                 local hash = extract_hash(lines[i])
                 if hash and hash ~= '' then
@@ -2778,9 +2778,9 @@ local function git_buf_commit(from_resume)
             '--prompt',
             'Git Commits (buffer)> ',
             '--header',
-            ':: ENTER (checkout commit), CTRL-Y (yank commits), CTRL-D (diff against commits)',
+            ':: ENTER (checkout commit), CTRL-Y (yank commits), ALT-BS (diff against commits)',
             '--expect',
-            get_expect({ 'ctrl-d', 'ctrl-y' }, false),
+            get_expect({ 'alt-bs', 'ctrl-y' }, false),
             '--preview-window',
             'down,60%',
             '--preview',
@@ -2820,8 +2820,8 @@ local function git_stash(from_resume)
                         end, system_on_error)
                     end
                 end)
-            elseif key == 'ctrl-d' then
-                -- CTRL-D to drop stashes
+            elseif key == 'alt-bs' then
+                -- ALT-BS to drop stashes
                 vim.ui.input({
                     prompt = table.concat(lines, '\n', 2)  .. '\nDrop ' .. (#lines > 2 and 'these stashes' or 'the stash') .. '? (y/N)',
                 }, function(input)
@@ -2854,9 +2854,9 @@ local function git_stash(from_resume)
             '--prompt',
             'Git Stash> ',
             '--header',
-            ':: ENTER (apply), ALT-ENTER (pop), CTRL-D (drop)',
+            ':: ENTER (apply), ALT-ENTER (pop), ALT-BS (drop)',
             '--expect',
-            get_expect({ 'ctrl-d', 'alt-enter' }, false),
+            get_expect({ 'alt-bs', 'alt-enter' }, false),
             '--preview',
             'git --no-pager stash show --patch --color {1} ' .. diff_pager,
             '--preview-window',

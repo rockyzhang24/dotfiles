@@ -96,9 +96,10 @@ local colors256_144_brown = '#afaf87' -- 144
 local colors256_161_pink = '#d7005f' -- 161
 local colors256_168_pink2 = '#d75f87' -- 168
 
-local filename = blue -- filename in Quickfix and fzf finders
-local lnum = purple -- line number in Quickfix window and fzf finders
-local col = green -- column number in fzf finders
+-- Colors used in quickfix and fzf finders
+local filename = blue -- filename
+local lnum = purple -- line number
+local col = green -- column number
 
 local groups = {
 
@@ -384,7 +385,14 @@ local groups = {
     --
 
     QuickfixFilename = { fg = filename },
-    QuickfixLnumCol = { fg = lnum },
+    QuickfixSeparatorLeft = { fg = norm_fg },
+    QuickfixLnum = { fg = lnum },
+    QuickfixCol = { fg = col },
+    QuickfixSeparatorRight = { fg = norm_fg },
+    QuickfixError = 'DiagnosticError',
+    QuickfixWarn = 'DiagnosticWarn',
+    QuickfixInfo = 'DiagnosticInfo',
+    QuickfixHint = 'DiagnosticHint',
 
     --
     -- Syntax

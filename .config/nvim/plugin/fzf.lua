@@ -107,7 +107,7 @@
 -- Now, this finder can be brought up by the keymap and also it supports resume by <Leader>fr
 --
 
-local qf = require('rockyz.utils.qf_utils')
+local qf = require('rockyz.quickfix')
 local color = require('rockyz.utils.color_utils')
 local io_utils = require('rockyz.utils.io_utils')
 local icons = require('rockyz.icons')
@@ -1333,36 +1333,36 @@ end)
 -- Find entries in quickfix and location list
 --
 
----Construct entry in the same format and colors as the entry in quickfix
----<filename> <lnum>-<end_lnum>:<col>-<end_col> [<type>] <text>
----@param item table The processed item returned by qf_utils.format_qf_item()
-local function build_qf_entry(item)
-    local entry = {}
-    if item.fname ~= '' then
-        table.insert(entry, ansi_string(item.fname, item.fname_hl))
+local qf_type_hl = {
+    E = 'DiagnosticError',
+    W = 'DiagnosticWarn',
+    I = 'DiagnosticInfo',
+    H = 'DiagnosticHint',
+}
+local ansi_lnum_len = #ansi_string('', 'QuickfixLnum')
+local ansi_col_len = #ansi_string('', 'QuickfixCol')
+local qf_line_fmt = '%s |%' .. (tostring(5) + ansi_lnum_len) .. 's:%-' .. (tostring(3) + ansi_col_len) .. 's|%s %s'
+
+---Construct the line shown in fzf quickfix finder. It has the same style as the line in quickfix.
+---<filename> |<lnum>:<col>| <type> <text>
+---@param item table
+local function build_qf_fzf_line(item)
+    item = qf.normalize(item)
+    local type = item.type
+    local text = item.text
+    local type_hl = qf_type_hl[type]
+    if type_hl then
+        type = ansi_string(type, type_hl)
+        text = ansi_string(text, type_hl)
     end
-    local lnum_col = item.lnum
-    if item.col ~= '' then
-        lnum_col = item.lnum .. ':' .. item.col
-    end
-    if lnum_col ~= '' then
-        table.insert(entry, ansi_string(lnum_col, item.lnum_col_hl))
-    end
-    if item.type ~= '' then
-        local type = '[' .. item.type .. ']'
-        if item.type_hl then
-            type = ansi_string(type, item.type_hl)
-        end
-        table.insert(entry, type)
-    end
-    if item.text ~= '' then
-        local text = item.text
-        if item.type_hl then
-            text = ansi_string(text, item.type_hl)
-        end
-        table.insert(entry, text)
-    end
-    return table.concat(entry, ' ')
+    local fzf_line = qf_line_fmt:format(
+        ansi_string(item.filename, 'QuickfixFilename'),
+        ansi_string(tostring(item.lnum), 'QuickfixLnum'),
+        ansi_string(tostring(item.col), 'QuickfixCol'),
+        type == '' and '' or ' ' .. type,
+        text
+    )
+    return fzf_line
 end
 
 ---@param win_local boolean true for location list and false for quickfix
@@ -1443,7 +1443,7 @@ local function qf_items_fzf(win_local, from_resume)
         for _, item in ipairs(list.items) do
             local bufnr = item.bufnr
             local bufname = vim.api.nvim_buf_get_name(bufnr)
-            local lnum = item.lnum
+            local fzf_line = build_qf_fzf_line(item)
             -- The formatted entries will be fed to fzf.
             -- Each entry is like "index bufname lnum path/to/the/file:134:20 [E] error"
             -- The first three parts are used for fzf itself and won't be presented in fzf window.
@@ -1452,8 +1452,8 @@ local function qf_items_fzf(win_local, from_resume)
             entries[#entries+1] = table.concat({
                 #entries + 1,
                 bufname,
-                lnum,
-                build_qf_entry(qf.format_qf_item(item))
+                item.lnum,
+                fzf_line,
             }, special_delimiter)
         end
         write(entries)
@@ -1484,8 +1484,7 @@ end)
 -- Quickfix list history and location list history
 --
 
--- To preview the list, we need to dump all errors in the list to a temporary file and cat this
--- file.
+-- To preview the list, we dump all errors in the list to a temporary file and cat this file.
 local err_tmpfile_prefix = vim.fn.tempname()
 local err_tmpfile = ''
 
@@ -1553,7 +1552,7 @@ local function qf_history_fzf(win_local, from_resume)
                 if item == nil then
                     break
                 end
-                local str = build_qf_entry(qf.format_qf_item(item))
+                local str = build_qf_fzf_line(item)
                 table.insert(errors, str)
             end
             io_utils.write_file_async(err_tmpfile, table.concat(errors, '\n'))
@@ -1857,9 +1856,9 @@ end)
 --
 -- LSP
 --
--- Each fzf entry consists of 6 parts: index, offset_encoding, filename, lnum, col, fzf_text.
+-- Each fzf entry consists of 6 parts: index, offset_encoding, filename, lnum, col, fzf_line.
 --
--- Only fzf_text will be presented in fzf. index is used to fetch the corresponding qf items from
+-- Only fzf_line will be presented in fzf. index is used to fetch the corresponding qf items from
 -- the selected fzf entries. offset_encoding is used for jumping to the location. filename, lnum and
 -- col are used for fzf preview and border label.
 --
@@ -1929,10 +1928,10 @@ local function symbol_conversion(symbols, ctx, child_prefix, all_entries, all_it
                 end
                 end_col = end_col + 1
 
-                local fzf_text
+                local fzf_line
                 if symbol.location then
                     local devicon = ansi_devicon(filename)
-                    fzf_text = '[' .. colored_icon_kind .. '] ' .. symbol.name .. ' '
+                    fzf_line = '[' .. colored_icon_kind .. '] ' .. symbol.name .. ' '
                     .. colored_client_name
                     .. string.rep(' ', 6)
                     .. (devicon == '' and devicon or devicon .. ' ')
@@ -1940,7 +1939,7 @@ local function symbol_conversion(symbols, ctx, child_prefix, all_entries, all_it
                     .. ansi_string(tostring(lnum), 'FzfLnum').. ':'
                     .. ansi_string(tostring(col), 'FzfCol')
                 else
-                    fzf_text = _child_prefix .. '[' .. colored_icon_kind .. '] ' .. symbol.name .. ' ' .. colored_client_name
+                    fzf_line = _child_prefix .. '[' .. colored_icon_kind .. '] ' .. symbol.name .. ' ' .. colored_client_name
                 end
 
                 local qf_text = '[' .. icon .. ' ' .. kind .. '] ' .. symbol.name .. ' ' .. client_name
@@ -1951,7 +1950,7 @@ local function symbol_conversion(symbols, ctx, child_prefix, all_entries, all_it
                     filename,
                     lnum,
                     col,
-                    fzf_text,
+                    fzf_line,
                 }, special_delimiter)
 
                 all_items[#all_items+1] = {
@@ -2118,7 +2117,7 @@ local function locations_to_entries_and_items(locations, ctx, all_entries, all_i
         local lnum = item.lnum
         local col = item.col
         local icon = ansi_devicon(filename)
-        local fzf_text = icon == '' and icon or icon .. ' '
+        local fzf_line = icon == '' and icon or icon .. ' '
         .. ansi_string(vim.fn.fnamemodify(filename, ':~:.'), 'FzfFilename')
         .. ':' .. ansi_string(tostring(lnum), 'FzfLnum')
         .. ':' .. ansi_string(tostring(col), 'FzfCol')
@@ -2129,7 +2128,7 @@ local function locations_to_entries_and_items(locations, ctx, all_entries, all_i
             filename,
             lnum,
             col,
-            fzf_text,
+            fzf_line,
         }, ' ')
         table.insert(all_entries, entry)
     end
@@ -2346,10 +2345,10 @@ local function diagnostics(from_resume, opts)
             local col = diag.col + 1
             -- Fzf entry
             -- Each entry consists of 5 parts:
-            -- index, filename, lnum, col, fzf_text
-            -- Only fzf_text will be presented in fzf. The first part, index, is used to retrieve the
+            -- index, filename, lnum, col, fzf_line
+            -- Only fzf_line will be presented in fzf. The first part, index, is used to retrieve the
             -- corresponding original diagnostic item from the selected entry in fzf.
-            local fzf_text = string.format(
+            local fzf_line = string.format(
                 -- Use `\0` and fzf's `--read0` to support multi-line items
                 -- Ref: https://junegunn.github.io/fzf/tips/processing-multi-line-items/
                 '%s %s %s:%s:%s:\n%s%s\0',
@@ -2366,7 +2365,7 @@ local function diagnostics(from_resume, opts)
                 filename,
                 lnum,
                 col,
-                fzf_text
+                fzf_line
             }, ' '))
         end
         write(entries)

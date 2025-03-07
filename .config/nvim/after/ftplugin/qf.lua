@@ -1,5 +1,3 @@
-local qf_utils = require('rockyz.utils.qf_utils')
-
 vim.wo.colorcolumn = ''
 vim.wo.statusline = ''
 

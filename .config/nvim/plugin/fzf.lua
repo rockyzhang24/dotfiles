@@ -147,9 +147,9 @@ local diff_pager = '| delta --width $FZF_PREVIEW_COLUMNS'
 
 ---Get the command to decorate input lines, e.g., prepend a devicon to the filename. This command
 ---gets input through a pipe.
----For example, fd --type f | cmd_to_dressup('fd')
+---For example, fd --type f | cmd_dressup('fd')
 ---@param source string Different types of input such as 'fd', 'git_status', etc
-local function cmd_to_dressup(source)
+local function cmd_dressup(source)
     return string.format(
         'nvim -n --headless -u NONE -i NONE --cmd "colorscheme "' .. vim.g.colorscheme .. ' --cmd "let g:source = \'%s\'" --cmd "lua require(\'rockyz.headless.fzf_dressup\')" +q',
         source
@@ -357,7 +357,7 @@ end
 
 -- Files
 local function files(from_resume)
-    local fd_cmd = fd_prefix .. ' | ' .. cmd_to_dressup('fd')
+    local fd_cmd = fd_prefix .. ' | ' .. cmd_dressup('fd')
 
     local spec = {
         ['sink*'] = sink_file,
@@ -428,7 +428,7 @@ local function dot_files(from_resume)
     local git_cmd = 'git -C '
         .. git_root
         .. ' --git-dir "$HOME/dotfiles" --work-tree "$HOME" ls-files --exclude-standard | '
-        .. cmd_to_dressup('git_ls_files')
+        .. cmd_dressup('git_ls_files')
 
     local spec = {
         ['sink*'] = sink_file,
@@ -455,7 +455,7 @@ end)
 
 -- Find files under $HOME
 local function home_files(from_resume)
-    local fd_cmd = 'cd ' .. vim.env.HOME .. ' && ' .. fd_prefix .. ' | ' .. cmd_to_dressup('fd')
+    local fd_cmd = 'cd ' .. vim.env.HOME .. ' && ' .. fd_prefix .. ' | ' .. cmd_dressup('fd')
 
     local spec = {
         ['sink*'] = sink_file,
@@ -1942,7 +1942,7 @@ local function symbol_conversion(symbols, ctx, child_prefix, all_entries, all_it
                     fzf_line = _child_prefix .. '[' .. colored_icon_kind .. '] ' .. symbol.name .. ' ' .. colored_client_name
                 end
 
-                local qf_text = '[' .. icon .. ' ' .. kind .. '] ' .. symbol.name .. ' ' .. client_name
+                local qf_text = '[' .. icon .. ' ' .. kind .. '] ' .. symbol.name .. ' (' .. client_name .. ')'
 
                 all_entries[#all_entries+1] = table.concat({
                     #all_entries + 1,
@@ -2368,7 +2368,7 @@ local function diagnostics(from_resume, opts)
                 fzf_line
             }, ' '))
         end
-        write(entries)
+        write(entries, true)
     end
 
     fzf(spec, handle_contents)
@@ -2417,7 +2417,7 @@ local function git_files(from_resume)
         return
     end
 
-    local git_cmd = 'git -C ' .. git_root .. ' ls-files --exclude-standard | ' .. cmd_to_dressup('git_ls_files')
+    local git_cmd = 'git -C ' .. git_root .. ' ls-files --exclude-standard | ' .. cmd_dressup('git_ls_files')
 
     local spec = {
         ['sink*'] = sink_file,
@@ -2502,7 +2502,7 @@ local function git_status(from_resume)
         }),
     }
 
-    local git_cmd = 'git -c colors.status=false --no-optional-locks status --porcelain=v1 | ' .. cmd_to_dressup('git_status')
+    local git_cmd = 'git -c colors.status=false --no-optional-locks status --porcelain=v1 | ' .. cmd_dressup('git_status')
 
     fzf(spec, nil, git_cmd)
 end

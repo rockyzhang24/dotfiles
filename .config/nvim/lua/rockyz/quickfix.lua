@@ -28,7 +28,7 @@ function M.normalize(item)
         lnum = item.lnum or -1,
         col = item.col or -1,
         type = item.type == '' and '' or item.type:sub(1, 1):upper(),
-        text = item.text,
+        text = item.text:gsub('\n', ' '),
     }
 end
 

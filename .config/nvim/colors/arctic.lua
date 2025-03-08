@@ -456,8 +456,7 @@ local groups = {
     ['@variable.builtin'] = { fg = dark_blue }, -- built-in variable names (e.g. `this`)
     ['@variable.parameter'] = { fg = orange }, -- parameters of a function
     ['@variable.parameter.builtin'] = '@variable.parameter', -- special parameters (e.g. `_`, `it`)
-    ['@variable.member'] = '@variable', -- object and struct fields
-    ['@variable.member.lua'] = { fg = blue_green },
+    ['@variable.member'] = { fg = blue_green }, -- object and struct fields
 
     ['@constant'] = 'Constant', -- constant identifiers
     ['@constant.builtin'] = '@constant', -- built-in constant values

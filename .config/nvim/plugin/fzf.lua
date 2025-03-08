@@ -1875,7 +1875,7 @@ end)
 -- Convert symbols to fzf entries and quickfix items
 -- Reference: the source code of vim.lsp.util.symbols_to_items
 -- (https://github.com/neovim/neovim/blob/master/runtime/lua/vim/lsp/util.lua)
-local function symbol_conversion(symbols, ctx, child_prefix, all_entries, all_items)
+local function symbol_conversion(symbols, ctx, guide_prev, all_entries, all_items)
     if symbols == nil then
         return
     end
@@ -1884,13 +1884,19 @@ local function symbol_conversion(symbols, ctx, child_prefix, all_entries, all_it
         return
     end
 
+    -- Tree guide symbols
+    local guide_vert = icons.tree.vertical
+    local guide_mid = icons.tree.middle
+    local guide_last = icons.tree.last
+
     local client_name = client.name
     local colored_client_name = ansi_string(client_name, 'FzfDesc')
     local offset_encoding = client.offset_encoding
     local bufnr = ctx.bufnr
 
-    local function _symbol_conversion(_symbols, _child_prefix)
-        for _, symbol in ipairs(_symbols) do
+    -- For document symbols, this function will be called recursively if the symbol has children
+    local function _symbol_conversion(_symbols, _guide_prev)
+        for i, symbol in ipairs(_symbols) do
 
             local filename, range
             if symbol.location then
@@ -1939,7 +1945,11 @@ local function symbol_conversion(symbols, ctx, child_prefix, all_entries, all_it
                     .. ansi_string(tostring(lnum), 'FzfLnum').. ':'
                     .. ansi_string(tostring(col), 'FzfCol')
                 else
-                    fzf_line = _child_prefix .. '[' .. colored_icon_kind .. '] ' .. symbol.name .. ' ' .. colored_client_name
+                    local guide = ''
+                    if _guide_prev ~= '' then
+                        guide = _guide_prev .. (i == #_symbols and guide_last or guide_mid)
+                    end
+                    fzf_line = guide .. '[' .. colored_icon_kind .. '] ' .. symbol.name .. ' ' .. colored_client_name
                 end
 
                 local qf_text = '[' .. icon .. ' ' .. kind .. '] ' .. symbol.name .. ' (' .. client_name .. ')'
@@ -1967,12 +1977,12 @@ local function symbol_conversion(symbols, ctx, child_prefix, all_entries, all_it
             -- Recursive traverse child symbols if there are any (only available for document
             -- symbols)
             if symbol.children then
-                _symbol_conversion(symbol.children, _child_prefix .. string.rep(' ', 2))
+                _symbol_conversion(symbol.children, _guide_prev .. (i == #_symbols and '  ' or guide_vert))
             end
         end
     end
 
-    _symbol_conversion(symbols, child_prefix)
+    _symbol_conversion(symbols, guide_prev)
 end
 
 ---Send request document symbols or workspace symbols and then execute fzf

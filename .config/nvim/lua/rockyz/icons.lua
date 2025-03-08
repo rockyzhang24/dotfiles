@@ -104,6 +104,12 @@ icons.access = {
     private = '●',
 }
 
+icons.tree = {
+    vertical = '│ ',
+    middle = '├╴',
+    last = '└╴',
+}
+
 icons.misc = {
     book = '',
     check = '󰓆',

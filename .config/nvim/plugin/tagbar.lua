@@ -33,7 +33,7 @@ vim.g.tagbar_map_togglepause = ''
 vim.g.tagbar_map_zoomwin = 'm'
 vim.g.tagbar_map_close = 'q'
 
-vim.keymap.set('n', 'yot', '<Cmd>TagbarToggle<CR>')
+vim.keymap.set('n', '\\t', '<Cmd>TagbarToggle<CR>')
 vim.keymap.set('n', '[<M-t>', '<Cmd>TagbarJumpPrev<CR>')
 vim.keymap.set('n', ']<M-t>', '<Cmd>TagbarJumpNext<CR>')
 

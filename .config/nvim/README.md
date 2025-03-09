@@ -51,7 +51,7 @@ I assign the key mappings rationally aiming to make them efficient and easy to r
 
 * Multiple leader keys
 
-  Besides using `<Space>` as the primary leader key, `,` serves as the leader key for Git-related keymaps, `\` is used for quit-related keymaps, and `yo` is designated for toggling.
+  Besides using `<Space>` as the primary leader key, `,` serves as the leader key for Git-related keymaps, and `\` is designated for toggling.
 
 * Mnemonic
 

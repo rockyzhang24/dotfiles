@@ -41,4 +41,4 @@ require('outline').setup({
 })
 
 -- Toggle
-vim.keymap.set('n', 'yoo', '<Cmd>Outline<CR>')
+vim.keymap.set('n', '\\o', '<Cmd>Outline<CR>')

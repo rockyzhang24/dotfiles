@@ -4,4 +4,4 @@ vim.g.undotree_SetFocusWhenToggle = 1
 vim.g.undotree_SplitWidth = 30
 
 -- Toggle undotree
-vim.keymap.set('n', 'you', '<Cmd>UndotreeToggle<CR>')
+vim.keymap.set('n', '\\u', '<Cmd>UndotreeToggle<CR>')

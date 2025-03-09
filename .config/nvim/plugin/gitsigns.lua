@@ -92,8 +92,8 @@ gitsigns.setup({
         end)
 
         -- Toggle
-        buf_map('n', 'yodw', gitsigns.toggle_word_diff) -- toggle the word_diff in the buffer
-        buf_map('n', 'yob', gitsigns.toggle_current_line_blame) -- toggle displaying the blame for the current line
+        buf_map('n', '\\dw', gitsigns.toggle_word_diff) -- toggle the word_diff in the buffer
+        buf_map('n', '\\b', gitsigns.toggle_current_line_blame) -- toggle displaying the blame for the current line
 
         -- Text object
         buf_map({ 'o', 'x' }, 'ih', ':<C-U>Gitsigns select_hunk<CR>')

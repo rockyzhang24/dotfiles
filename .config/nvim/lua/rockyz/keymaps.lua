@@ -4,6 +4,8 @@ vim.g.mapleader = ' '
 
 vim.keymap.set({ 'n', 'x' }, '<Leader>', '<Nop>')
 vim.keymap.set('n', '<Leader>,', ',')
+vim.keymap.set('n', 'q', '<Nop>')
+vim.keymap.set('n', '<Leader>q', 'q')
 vim.keymap.set({ 'n', 'x' }, '_', '"_')
 vim.keymap.set('x', '<', '<gv')
 vim.keymap.set('x', '>', '>gv')
@@ -79,7 +81,7 @@ vim.keymap.set('n', '<M-r>', "<Cmd>execute 'later ' .. vim.v.count1 .. 'f'<CR>")
 -- Format the whole buffer and preserve the cursor position
 vim.keymap.set('n', 'gQ', 'mzgggqG`z<Cmd>delmarks z<CR>')
 -- Toggle the quickfix window
-vim.keymap.set('n', 'yoq', function()
+vim.keymap.set('n', '\\q', function()
     if vim.fn.getqflist({ winid = 0 }).winid ~= 0 then
         vim.cmd.cclose()
     elseif #vim.fn.getqflist() > 0 then
@@ -88,7 +90,7 @@ vim.keymap.set('n', 'yoq', function()
     end
 end)
 -- Toggle the location list window
-vim.keymap.set('n', 'yol', function()
+vim.keymap.set('n', '\\l', function()
     if vim.fn.getloclist(0, { winid = 0 }).winid ~= 0 then
         vim.cmd.lclose()
     elseif #vim.fn.getloclist(0) > 0 then
@@ -97,11 +99,11 @@ vim.keymap.set('n', 'yol', function()
     end
 end)
 -- Toggle spell
-vim.keymap.set('n', 'yos', function()
+vim.keymap.set('n', '\\s', function()
     vim.wo.spell = not vim.wo.spell
 end)
 -- Toggle diffthis for each window in the current tab page
-vim.keymap.set('n', 'yodd', function()
+vim.keymap.set('n', '\\dd', function()
     if vim.wo.diff then
         vim.cmd('windo diffoff')
     else
@@ -109,8 +111,8 @@ vim.keymap.set('n', 'yodd', function()
     end
 end)
 -- Toggle autoformat (format-on-save)
-vim.keymap.set('n', 'yof', ':ToggleAutoFormat<CR>') -- buffer-local
-vim.keymap.set('n', 'yoF', ':ToggleAutoFormat!<CR>') -- global
+vim.keymap.set('n', '\\f', ':ToggleAutoFormat<CR>') -- buffer-local
+vim.keymap.set('n', '\\F', ':ToggleAutoFormat!<CR>') -- global
 
 vim.keymap.set('n', '<C-c>', 'ciw')
 
@@ -131,17 +133,13 @@ vim.keymap.set('v', '<Leader>x', ':lua<CR>') -- execute the selected lines
 --
 
 -- Diff windows
-vim.keymap.set('n', '\\d', require('rockyz.utils.win_utils').close_diff)
+vim.keymap.set('n', 'qd', require('rockyz.utils.win_utils').close_diff)
 -- Diff windows in all tabs
-vim.keymap.set('n', '\\D', [[<Cmd>tabdo lua require("rockyz.utils.win_utils").close_diff()<CR>]])
--- Location list
-vim.keymap.set('n', '\\l', '<Cmd>lclose<CR>')
--- Quickfix
-vim.keymap.set('n', '\\q', '<Cmd>cclose<CR>')
+vim.keymap.set('n', 'qD', [[<Cmd>tabdo lua require("rockyz.utils.win_utils").close_diff()<CR>]])
 -- Current tab
-vim.keymap.set('n', '\\t', '<Cmd>tabclose<CR>')
+vim.keymap.set('n', 'qt', '<Cmd>tabclose<CR>')
 -- Current window
-vim.keymap.set('n', '\\w', '<Cmd>q<CR>')
+vim.keymap.set('n', 'qw', '<Cmd>q<CR>')
 
 --
 -- Search
@@ -419,7 +417,7 @@ vim.keymap.set({ 'n', 'i' }, '<M-d>', function()
     scroll_other_win('d')
 end)
 -- Maximize and restore the current window
-vim.keymap.set('n', 'yom', require('rockyz.utils.win_utils').win_maximize_toggle)
+vim.keymap.set('n', '\\z', require('rockyz.utils.win_utils').win_maximize_toggle)
 
 --
 -- Terminal

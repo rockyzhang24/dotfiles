@@ -25,6 +25,7 @@
   m = merge
   p = push
   r = rebase -i origin/main
+  s = status
 [interactive]
   diffFilter = delta --color-only
 [delta]

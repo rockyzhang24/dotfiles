@@ -55,6 +55,8 @@
 -- INSERT mode completion
 -- <C-x><C-f> : Complete paths
 
+-- vim.ui.select
+
 --
 -- Template to add a new finder
 --
@@ -2946,3 +2948,59 @@ end
 vim.keymap.set('i', '<C-x><C-f>', function()
     run(complete_path)
 end)
+
+--
+-- vim.ui.select
+--
+
+local function select(items, opts, on_choice)
+    assert(type(on_choice) == 'function', 'on_choice must be a function')
+    opts = opts or {}
+
+    local title = opts.prompt or 'Select'
+    title = title:gsub('^%s*', ''):gsub('[%s:]*$', '')
+
+    local spec = {
+        ['sink*'] = function(lines)
+            local choice = tonumber(lines[1]:match('^(%d+)%.'))
+            on_choice(items[choice], choice)
+        end,
+        options = get_fzf_opts(nil, {
+            '--no-multi',
+            '--prompt',
+            title .. '> ',
+            '--preview-window',
+            'hidden',
+            '--bind',
+            'ctrl-/:ignore',
+        }),
+    }
+
+    local function handle_contents()
+        local num_hl = 'Number'
+        local num_width = math.floor(math.log10(#items)) + 1
+        local num_ansi_width = #ansi_string('', num_hl)
+        local format_item = opts.format_item or tostring
+        local entries = {}
+        for i, e in ipairs(items) do
+            entries[#entries + 1] = string.format(
+                '%' .. num_width + num_ansi_width .. 's. %s',
+                ansi_string(tostring(i), num_hl),
+                format_item(e)
+            )
+        end
+        write(entries)
+    end
+
+    local prev_layout = vim.g.fzf_layout
+    vim.g.fzf_layout = {
+        window = {
+            width = 0.4,
+            height = math.floor(math.min(vim.o.lines * 0.8 - 10, #items + 4) + 0.5),
+        },
+    }
+    fzf(spec, handle_contents)
+    vim.g.fzf_layout = prev_layout
+end
+
+vim.ui.select = select

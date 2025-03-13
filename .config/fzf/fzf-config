@@ -46,6 +46,7 @@ fi
 # - ctrl-o: open the selections via default application
 # - ctrl-y: copy the selections to system clipboard
 # - ctrl-e: edit the selections via $EDITOR
+# - alt-x: exclude selected items
 export FZF_DEFAULT_OPTS=" \
   --reverse \
   --height 85% \
@@ -66,6 +67,7 @@ export FZF_DEFAULT_OPTS=" \
     `ctrl-o:execute(open {+}),`
     `ctrl-y:execute-silent(echo -n {+} | pbcopy),`
     `ctrl-e:execute(\$EDITOR {+} < /dev/tty > /dev/tty 2>&1),`
+    `alt-x:exclude-multi,`
     `change:first' \
   --bind 'focus:transform-preview-label:echo [ {} ]' \
   --preview '~/.config/fzf/fzf-previewer.sh {}' \

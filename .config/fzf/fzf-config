@@ -71,7 +71,7 @@ export FZF_DEFAULT_OPTS=" \
     `change:first' \
   --bind 'focus:transform-preview-label:echo [ {} ]' \
   --preview '~/.config/fzf/fzf-previewer.sh {}' \
-  --preview-window 'right,60%' \
+  --preview-window 'right,60%,nowrap' \
   --color=$colors"
 
 # Use fd for FZF completion

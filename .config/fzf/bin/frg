@@ -65,8 +65,8 @@ selections="$(fzf \
   --prompt '1. RG> ' \
   --delimiter : \
   --header ':: ENTER (open selections in vim), ALT-F (toggle FZF mode and RG mode)' \
-  --preview 'bat --color=always --style=numbers,changes,header --terminal-width=${FZF_PREVIEW_COLUMNS} --highlight-line {2} {1}' \
-  --preview-window 'down,45%,+{2}+1/3,~1' \
+  --preview 'bat --color=always --style=numbers,changes --highlight-line {2} -- {1}' \
+  --preview-window 'down,45%,+{2}-/2,nowrap' \
 )"
 
 if [[ -n $selections ]]; then

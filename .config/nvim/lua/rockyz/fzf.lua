@@ -52,6 +52,9 @@
 -- ,fC        : Git commits
 -- ,fh        : Git stash
 
+-- <Leader>fg : Tags (buffer)
+-- <Leader>fG : Tags
+
 -- INSERT mode completion
 -- <C-x><C-f> : Complete paths
 
@@ -142,9 +145,11 @@ vim.api.nvim_create_autocmd('User', {
 })
 
 local rg_prefix = 'rg --column --line-number --no-heading --color=always --smart-case --with-filename'
-local bat_prefix = 'bat --color=always --paging=never --style=numbers' -- used to preview text file
+-- Use bat to preview text file
+local bat_prefix = 'bat --color=always --paging=never --style=numbers'
 local fd_prefix = 'fd --hidden --follow --color=never --type f --type l ' .. vim.env.FD_EXCLUDE
-local fzf_previewer = '~/.config/fzf/fzf-previewer.sh' -- used to preview various types of files (text, image, etc)
+-- A script to preview various types of files (text, image, etc)
+local fzf_previewer = '~/.config/fzf/fzf-previewer.sh'
 local diff_pager = '| delta --width $FZF_PREVIEW_COLUMNS'
 
 ---Get the command to decorate input lines, e.g., prepend a devicon to the filename. This command
@@ -250,14 +255,12 @@ local function set_preview_label(label)
 end
 
 ---@param extra_keys table? Extra keys for --expect
----@param with_defaults boolean? Whether include the default keys, i.e., ctrl-x, ctrl-v and ctrl-t
-local function get_expect(extra_keys, with_defaults)
+---@param exclude_defaults boolean? Whether to exclude the default keys, i.e., ctrl-x, ctrl-v and
+---ctrl-t
+local function expect_keys(extra_keys, exclude_defaults)
     extra_keys = extra_keys or {}
-    if with_defaults == nil then
-        with_defaults = true
-    end
     local extra = table.concat(extra_keys, ',')
-    return with_defaults and ('ctrl-x,ctrl-v,ctrl-t,' .. extra) or extra
+    return exclude_defaults and extra or ('ctrl-x,ctrl-v,ctrl-t,' .. extra)
 end
 
 --
@@ -348,12 +351,13 @@ end)
 ---@param lines table The first item is the key; others are filenames.
 local function sink_file(lines)
     local key = lines[1]
-    local cmd = vim.g.fzf_action[key] or 'edit'
+    local action = vim.g.fzf_action[key] or 'edit'
     for i = 2, #lines do
-        -- Do nothing if it's the current file
-        -- if vim.fn.fnamemodify(lines[i], ':p') ~= vim.fn.expand('%:p') then
-        -- end
-        vim.cmd(cmd .. ' ' .. lines[i])
+        if vim.fn.fnamemodify(lines[i], ':p') ~= vim.fn.expand('%:p') then
+            vim.cmd(action .. ' ' .. lines[i])
+        elseif action ~= 'edit' then
+            vim.cmd(action)
+        end
     end
 end
 
@@ -367,7 +371,7 @@ local function files(from_resume)
             '--prompt',
             shortpath(vim.uv.cwd()),
             '--expect',
-            get_expect(),
+            expect_keys(),
             '--preview',
             fzf_previewer .. ' {2}',
             '--bind',
@@ -394,7 +398,7 @@ local function old_files(from_resume)
             '--tiebreak',
             'index',
             '--expect',
-            get_expect(),
+            expect_keys(),
             '--preview',
             fzf_previewer .. ' {2}',
             '--bind',
@@ -438,7 +442,7 @@ local function dot_files(from_resume)
             '--prompt',
             '.dotfiles> ',
             '--expect',
-            get_expect(),
+            expect_keys(),
             '--preview',
             fzf_previewer .. ' ' .. git_root .. '/{2}',
             '--accept-nth',
@@ -465,7 +469,7 @@ local function home_files(from_resume)
             '--prompt',
             'Home Files> ',
             '--expect',
-            get_expect(),
+            expect_keys(),
             '--preview',
             fzf_previewer .. ' ' .. vim.env.HOME .. '/{2}',
             '--accept-nth',
@@ -518,7 +522,7 @@ local function buffers(from_resume)
             '--header',
             ':: ALT-BS (delete buffers)',
             '--expect',
-            get_expect({'alt-bs'}),
+            expect_keys({'alt-bs'}),
             '--preview',
             '[[ {1} == "No_Name" ]] && echo "" || ' .. bat_prefix .. ' --highlight-line {2} -- {1}',
             '--preview-window',
@@ -738,7 +742,7 @@ local function marks(from_resume)
             '--header',
             ':: ALT-BS (delete marks)',
             '--expect',
-            get_expect({ 'alt-bs' }),
+            expect_keys({ 'alt-bs' }),
             '--preview',
             ' [[ -f {-1} ]] && ' .. bat_prefix .. ' --highlight-line {2} -- {-1} || echo File does not exist, no preview!',
             '--preview-window',
@@ -929,7 +933,7 @@ local function args(from_resume)
             '--header',
             ':: ALT-BS (delete from arglist)',
             '--expect',
-            get_expect({ 'alt-bs' }),
+            expect_keys({ 'alt-bs' }),
             '--preview',
             bat_prefix .. ' -- {3}',
             '--bind',
@@ -994,7 +998,7 @@ local function helptags(from_resume)
             '--prompt',
             'Helptags> ',
             '--expect',
-            get_expect(),
+            expect_keys(),
             '--header',
             ':: CTRL-V (open in vertical split), CTRL-T (open in new tab)',
             '--preview',
@@ -1429,7 +1433,7 @@ local function qf_items_fzf(win_local, from_resume)
             '--with-nth',
             '4..',
             '--expect',
-            get_expect({ 'ctrl-q', 'ctrl-l', 'ctrl-r' }),
+            expect_keys({ 'ctrl-q', 'ctrl-l', 'ctrl-r' }),
             '--preview',
             bat_prefix .. ' --highlight-line {3} -- {2}',
             '--preview-window',
@@ -2060,7 +2064,7 @@ local function lsp_symbols(method, params, title, symbol_query, from_resume)
             '--header',
             fzf_header,
             '--expect',
-            get_expect({ 'ctrl-q', 'ctrl-l' }),
+            expect_keys({ 'ctrl-q', 'ctrl-l' }),
             '--preview',
             bat_prefix .. ' --highlight-line {4} -- {3}',
             '--preview-window',
@@ -2198,7 +2202,7 @@ local function lsp_locations(method, title, from_resume)
             '--header',
             ':: CTRL-Q (send to quickfix), CTRL-L (send to loclist)',
             '--expect',
-            get_expect({ 'ctrl-q', 'ctrl-l' }),
+            expect_keys({ 'ctrl-q', 'ctrl-l' }),
             '--preview',
             bat_prefix .. ' --highlight-line {4} -- {3}',
             '--preview-window',
@@ -2329,7 +2333,7 @@ local function diagnostics(from_resume, opts)
             '--header',
             ':: CTRL-Q (send to quickfix), CTRL-L (send to loclist)',
             '--expect',
-            get_expect({ 'ctrl-q', 'ctrl-l' }),
+            expect_keys({ 'ctrl-q', 'ctrl-l' }),
             '--preview',
             bat_prefix .. ' --highlight-line {3} -- {2}',
             '--preview-window',
@@ -2437,7 +2441,7 @@ local function git_files(from_resume)
             '--prompt',
             'Git Files> ',
             '--expect',
-            get_expect(),
+            expect_keys(),
             '--preview',
             fzf_previewer .. ' ' .. git_root .. '/{2}',
             '--accept-nth',
@@ -2505,7 +2509,7 @@ local function git_status(from_resume)
             '--header',
             ':: CTRL-H (unstage), CTRL-L (stage)',
             '--expect',
-            get_expect({ 'ctrl-h', 'ctrl-l' }, false),
+            expect_keys({ 'ctrl-h', 'ctrl-l' }, true),
             '--preview',
             -- Each entry is [ M] original/path/for/a/file -> new/path/for/the/file
             -- We first extract the file path by removing the status indicators, the original
@@ -2727,7 +2731,7 @@ local function git_commits(from_resume)
             '--header',
             ':: ENTER (checkout commit), CTRL-Y (yank commits)',
             '--expect',
-            get_expect({ 'ctrl-y' }, false),
+            expect_keys({ 'ctrl-y' }, true),
             '--preview-window',
             'down,60%',
             '--preview',
@@ -2791,7 +2795,7 @@ local function git_buf_commit(from_resume)
             '--header',
             ':: ENTER (checkout commit), CTRL-Y (yank commits), ALT-BS (diff against commits)',
             '--expect',
-            get_expect({ 'alt-bs', 'ctrl-y' }, false),
+            expect_keys({ 'alt-bs', 'ctrl-y' }, true),
             '--preview-window',
             'down,60%',
             '--preview',
@@ -2867,7 +2871,7 @@ local function git_stash(from_resume)
             '--header',
             ':: ENTER (apply), ALT-ENTER (pop), ALT-BS (drop)',
             '--expect',
-            get_expect({ 'alt-bs', 'alt-enter' }, false),
+            expect_keys({ 'alt-bs', 'alt-enter' }, true),
             '--preview',
             'git --no-pager stash show --patch --color {1} ' .. diff_pager,
             '--preview-window',
@@ -2898,6 +2902,207 @@ end
 
 vim.keymap.set('n', ',fh', function()
     run(git_stash)
+end)
+
+-- Tags
+local function tags(from_resume)
+    local tagfiles = vim.fn.tagfiles()
+    if vim.tbl_isempty(tagfiles) then
+        notify.warn('Tags file does not exist. Create one with ctags -R')
+        return
+    end
+
+    local spec = {
+        ['sink*'] = function(lines)
+            local key = lines[1]
+            local action = vim.g.fzf_action[key] or (key == '' and 'edit' or 'silent keepjumps keepalt hide edit')
+            local items = {}
+
+            local magic, wrapscan, autochdir = vim.o.magic, vim.o.wrapscan, vim.o.autochdir
+            vim.o.magic, vim.o.wrapscan, vim.o.autochdir = false, true, false
+
+            for i = 2, #lines do
+                local filename, excmd = lines[i]:match('^(.+)' .. special_delimiter .. '(.*)' .. special_delimiter .. '.*' .. special_delimiter)
+                if filename ~= vim.fn.expand('%:p') then
+                    vim.cmd(action .. ' ' .. filename)
+                elseif key == 'ctrl-x' or key == 'ctrl-v' or key == 'ctrl-t' then
+                    vim.cmd(action)
+                end
+                if key == 'ctrl-q' or key == 'ctrl-l' then
+                    vim.cmd('silent keepjumps keepalt execute "' .. excmd .. '"')
+                    table.insert(items, {
+                        filename = vim.fn.expand('%'),
+                        lnum = vim.fn.line('.'),
+                        text = vim.fn.getline('.'),
+                    })
+                else
+                    vim.cmd('silent execute "' .. excmd .. '"')
+                end
+            end
+
+            vim.o.magic, vim.o.wrapscan, vim.o.autochdir = magic, wrapscan, autochdir
+
+            if #items > 0 then
+                if key == 'ctrl-q' then
+                    vim.fn.setqflist({}, ' ', { title = 'Tags', items = items })
+                    vim.cmd('botright copen')
+                elseif key == 'ctrl-l' then
+                    vim.fn.setloclist(0, {}, ' ', { title = 'Tags', items = items })
+                    vim.cmd('botright lopen')
+                end
+            end
+        end,
+        options = get_fzf_opts(from_resume, {
+            '--delimiter',
+            special_delimiter,
+            '--with-nth',
+            '4..',
+            '--prompt',
+            'Tags> ',
+            '--expect',
+            expect_keys({ 'ctrl-q', 'ctrl-l' }),
+            '--header',
+            ':: CTRL-Q (send to quickfix), CTRL-L (send to loclist)',
+            '--preview',
+            'center="$([[ {2} =~ ^[0-9]+$ ]] && echo {2} || nvim -n --headless -u NONE -i NONE -c "set nomagic" -c {2} -c "echo line(\'.\')" -c "q" {1} 2>&1)"; \
+            start_line="$(( center - FZF_PREVIEW_LINES / 2))"; \
+            (( start_line <= 0 )) && start_line=1; \
+            end_line="$(( start_line + FZF_PREVIEW_LINES - 1 ))";'
+            .. bat_prefix .. ' --line-range="$start_line:$end_line" --highlight-line="$center" -- {1}',
+            '--bind',
+            set_preview_label('{3} \\| {1}'), -- show "tagname | filename" on the preview label
+        }),
+    }
+
+    local function handle_contents()
+        local entries = {}
+        for _, tagfile in ipairs(tagfiles) do
+            tagfile = vim.fn.fnamemodify(tagfile, ':p')
+            for line in io_utils.read_file(tagfile):gmatch('[^\n]*\n') do
+                if not line:match('^!_TAG_') then
+                    local tagname, filename, excmd = line:match('([^\t]+)\t([^\t]+)\t(.*);"')
+                    local devicon = ansi_devicon(filename)
+                    local fzf_line = string.format(
+                        '%-30s %s %s%s',
+                        tagname,
+                        devicon,
+                        ansi_string(filename, 'FzfFilename'),
+                        excmd == '' and '' or (tonumber(excmd) == nil and ': ' .. ansi_string(excmd, 'FzfTagsPattern') or ': ' .. ansi_string(excmd, 'Number'))
+                    )
+                    entries[#entries + 1] = table.concat({
+                        -- Absolute file path relative to the tag file
+                        filename:match('^/') and filename or (vim.fn.fnamemodify(tagfile, ':h') .. '/' .. filename),
+                        excmd == '' and -1 or excmd,
+                        tagname,
+                        fzf_line,
+                    }, special_delimiter)
+                end
+            end
+        end
+        write(entries)
+    end
+
+    fzf(spec, handle_contents)
+end
+
+vim.keymap.set('n', '<Leader>fG', function()
+    run(tags)
+end)
+
+-- Buffer tags
+local function buffer_tags(from_resume)
+    local filename = vim.api.nvim_buf_get_name(0)
+    if #filename == 0 then
+        notify.warn('Buffer tags is not available for unnamed buffer.')
+        return
+    end
+    if vim.fn.filereadable(filename) == 0 then
+        notify.warn('Save the file first')
+        return
+    end
+    local bufnr = vim.api.nvim_get_current_buf()
+
+    local spec = {
+        ['sink*'] = function(lines)
+            local key = lines[1]
+            local items = {}
+            for i = 2, #lines do
+                local lnum = lines[i]:match('^.*' .. special_delimiter .. '(%d+)' .. special_delimiter)
+                lnum = tonumber(lnum)
+                if key == 'ctrl-q' or key == 'ctrl-l' then
+                    -- CTRL-Q, CTRL-L: send to quickfix or location list
+                    table.insert(items, {
+                        filename = filename,
+                        lnum = lnum,
+                        text = vim.api.nvim_buf_get_lines(bufnr, lnum - 1, lnum, false)[1],
+                    })
+                else
+                    -- ENTER/CTRL-X/CTRL-V/CTRL-T
+                    local action = vim.g.fzf_action[key]
+                    if action then
+                        vim.cmd(action)
+                    end
+                    vim.cmd("normal! m'") -- save position to jumplist
+                    vim.api.nvim_win_set_cursor(0, { lnum, 0 })
+                    vim.cmd('normal! zvzz')
+                end
+            end
+
+            if #items > 0 then
+                if key == 'ctrl-q' then
+                    vim.fn.setqflist({}, ' ', { title = 'Buffer Tags', items = items })
+                    vim.cmd('botright copen')
+                elseif key == 'ctrl-l' then
+                    vim.fn.setloclist(0, {}, ' ', { title = 'Buffer Tags', items = items })
+                    vim.cmd('botright lopen')
+                end
+            end
+        end,
+        options = get_fzf_opts(from_resume, {
+            '--delimiter',
+            special_delimiter,
+            '--with-nth',
+            '3..',
+            '--prompt',
+            'Buffer Tags> ',
+            '--expect',
+            expect_keys({ 'ctrl-q', 'ctrl-l' }),
+            '--header',
+            ':: CTRL-Q (send to quickfix), CTRL-L (send to loclist)',
+            '--preview',
+            bat_prefix .. ' --highlight-line {2} -- ' .. filename,
+            '--preview-window',
+            '+{2}-/2',
+            '--bind',
+            set_preview_label('$(echo ' .. filename .. ':{2} \\({1}\\) | sed "s|^$HOME|~|")'),
+        }),
+    }
+
+    local function handle_contents()
+        local entries = {}
+        system.async('ctags -f - --fields=+n ' .. filename, { text = true }, vim.schedule_wrap(function(output)
+            for line in output:gmatch('[^\n]+') do
+                local tagname, excmd, lnum = line:match('([^\t]+)\t[^\t]+\t(.*);"\t.*line:(%d+)')
+                local fzf_line = string.format(
+                    '%-30s%s',
+                    tagname,
+                    excmd == '' and '' or (tonumber(excmd) == nil and ' ' .. ansi_string(excmd, 'FzfTagsPattern') or ' ' .. ansi_string(excmd, 'Number'))
+                )
+                entries[#entries + 1] = table.concat({
+                    tagname,
+                    lnum,
+                    fzf_line
+                }, special_delimiter)
+            end
+            write(entries)
+        end))
+    end
+
+    fzf(spec, handle_contents)
+end
+
+vim.keymap.set('n', '<Leader>fg', function()
+    run(buffer_tags)
 end)
 
 --

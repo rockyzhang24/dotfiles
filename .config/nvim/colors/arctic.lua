@@ -996,6 +996,7 @@ local groups = {
     FzfCol = { fg = col },
     FzfDesc = { fg = util.lighten(norm_bg, 0.4) },
     FzfRgQuery = { fg = red },
+    FzfTagsPattern = { fg = dark_blue },
 
     GitStatusStaged = { fg = green },
     GitStatusUnstaged = { fg = red },

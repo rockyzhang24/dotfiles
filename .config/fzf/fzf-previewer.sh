@@ -68,7 +68,7 @@ if [[ $mime =~ video/|audio/ ]]; then
   exit
 fi
 
-(bat --color=always --style=numbers --terminal-width="${FZF_PREVIEW_COLUMNS}" "$file" \
+(bat --color=always --style=numbers --terminal-width="\${FZF_PREVIEW_COLUMNS}" "$file" \
   || highlight --out-format truecolor --style darkplus --force --line-numbers "$file" \
   || cat "$file") | head -200 \
   || echo -e " No preview supported for the current selection:\n\n $file"

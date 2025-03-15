@@ -210,6 +210,22 @@ local function shortpath(path)
     return short == '' and '~/' or (short:match('/$') and short or short .. '/')
 end
 
+---Set quickfix or location list and open its window without focus
+---@param what table The "what" parameter for vim.fn.setqflist
+---@param is_local boolean? Location list or not
+---@param action string? The "action" parameter for vim.fn.setqflist
+local function setqflist(what, is_local, action)
+    action = action or ' '
+    if is_local then
+        vim.fn.setloclist(0, {}, action, what)
+        vim.cmd('botright lopen')
+    else
+        vim.fn.setqflist({}, action, what)
+        vim.cmd('botright copen')
+    end
+    vim.cmd('silent wincmd p')
+end
+
 local cached_fzf_query -- cached the last fzf query
 local cached_rg_query -- cached the last rg query (for live greps)
 local cached_finder -- cached the last executed fzf finder
@@ -1389,14 +1405,14 @@ local function qf_items_fzf(win_local, from_resume)
                 end
                 local new_what = { title = list.title, items = new_qf_items }
                 if key == 'ctrl-q' then
-                    vim.fn.setqflist({}, ' ', new_what)
+                    setqflist(new_what)
                 elseif key == 'ctrl-l' then
-                    vim.fn.setloclist(0, {}, ' ', new_what)
+                    setqflist(new_what, true)
                 else
                     if win_local then
-                        vim.fn.setloclist(0, {}, 'u', new_what)
+                        setqflist(new_what, true, 'u')
                     else
-                        vim.fn.setqflist({}, 'u', new_what)
+                        setqflist(new_what, false, 'u')
                     end
                 end
             elseif key == '' and #lines == 2 then
@@ -1711,13 +1727,11 @@ local function grep_sel_to_qf(lines, is_loclist)
         end
     end)
     local title = lines[2]
+    local what = { nr = '$', title = title, items = qf_items }
     if is_loclist then
-        vim.fn.setloclist(0, {}, ' ', { nr = '$', title = title, items = qf_items })
-        vim.cmd('botright lopen')
+        setqflist(what, true)
     else
-        ---@diagnostic disable-next-line: assign-type-mismatch
-        vim.fn.setqflist({}, ' ', { nr = '$', title = title, items = qf_items })
-        vim.cmd('botright copen')
+        setqflist(what, false)
     end
 end
 
@@ -2025,12 +2039,11 @@ local function lsp_symbols(method, params, title, symbol_query, from_resume)
                     local idx = tonumber(lines[i]:match('^(%d+)' .. special_delimiter))
                     table.insert(qf_items, all_items[idx])
                 end
+                local what = { title = title, items = qf_items }
                 if loclist then
-                    vim.fn.setloclist(0, {}, ' ', { title = title, items = qf_items })
-                    vim.cmd('botright lopen')
+                    setqflist(what, true)
                 else
-                    vim.fn.setqflist({}, ' ', { title = title, items = qf_items })
-                    vim.cmd('botright copen')
+                    setqflist(what)
                 end
             else
                 -- ENTER/CTRL-X/CTRL-V/CTRL-T with multiple selections
@@ -2173,12 +2186,11 @@ local function lsp_locations(method, title, from_resume)
                     local idx = tonumber(lines[i]:match('^%S+'))
                     table.insert(qf_items, all_items[idx])
                 end
+                local what = { title = title, items = qf_items }
                 if loclist then
-                    vim.fn.setloclist(0, {}, ' ', { title = title, items = qf_items })
-                    vim.cmd('botright lopen')
+                    setqflist(what, true)
                 else
-                    vim.fn.setqflist({}, ' ', { title = title, items = qf_items })
-                    vim.cmd('botright copen')
+                    setqflist(what)
                 end
             else
                 -- ENTER/CTRL-X/CTRL-V/CTRL-T with multiple selections
@@ -2295,12 +2307,11 @@ local function diagnostics(from_resume, opts)
                     end
                 end
                 local items = vim.diagnostic.toqflist(selected_diags)
+                local what = { title = title, items = items }
                 if loclist then
-                    vim.fn.setloclist(0, {}, ' ', { title = title, items = items })
-                    vim.cmd('botright lopen')
+                    setqflist(what, true)
                 else
-                    vim.fn.setqflist({}, ' ', { title = title, items = items })
-                    vim.cmd('botright copen')
+                    setqflist(what)
                 end
             else
                 -- ENTER/CTRL-X/CTRL-V/CTRL-T
@@ -2943,12 +2954,11 @@ local function tags(from_resume)
             vim.o.magic, vim.o.wrapscan, vim.o.autochdir = magic, wrapscan, autochdir
 
             if #items > 0 then
+                local what = { title = 'Tags', items = items }
                 if key == 'ctrl-q' then
-                    vim.fn.setqflist({}, ' ', { title = 'Tags', items = items })
-                    vim.cmd('botright copen')
+                    setqflist(what)
                 elseif key == 'ctrl-l' then
-                    vim.fn.setloclist(0, {}, ' ', { title = 'Tags', items = items })
-                    vim.cmd('botright lopen')
+                    setqflist(what, true)
                 end
             end
         end,
@@ -3049,12 +3059,11 @@ local function buffer_tags(from_resume)
             end
 
             if #items > 0 then
+                local what = { title = 'Buffer Tags', items = items }
                 if key == 'ctrl-q' then
-                    vim.fn.setqflist({}, ' ', { title = 'Buffer Tags', items = items })
-                    vim.cmd('botright copen')
+                    setqflist(what)
                 elseif key == 'ctrl-l' then
-                    vim.fn.setloclist(0, {}, ' ', { title = 'Buffer Tags', items = items })
-                    vim.cmd('botright lopen')
+                    setqflist(what, true)
                 end
             end
         end,

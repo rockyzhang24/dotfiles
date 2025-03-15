@@ -1471,7 +1471,7 @@ local function qf_items_fzf(win_local, from_resume)
             -- The first three parts are used for fzf itself and won't be presented in fzf window.
             -- * index: display the error by :[nr]cc!
             -- * bufname and lnum: fzf preview
-            entries[#entries+1] = table.concat({
+            entries[#entries + 1] = table.concat({
                 #entries + 1,
                 bufname,
                 item.lnum,
@@ -1974,7 +1974,7 @@ local function symbol_conversion(symbols, ctx, guide_prev, all_entries, all_item
 
                 local qf_text = '[' .. icon .. ' ' .. kind .. '] ' .. symbol.name .. ' (' .. client_name .. ')'
 
-                all_entries[#all_entries+1] = table.concat({
+                all_entries[#all_entries + 1] = table.concat({
                     #all_entries + 1,
                     offset_encoding,
                     filename,
@@ -1983,7 +1983,7 @@ local function symbol_conversion(symbols, ctx, guide_prev, all_entries, all_item
                     fzf_line,
                 }, special_delimiter)
 
-                all_items[#all_items+1] = {
+                all_items[#all_items + 1] = {
                     filename = filename,
                     lnum = lnum,
                     end_lnum = end_lnum,
@@ -3192,15 +3192,23 @@ local function select(items, opts, on_choice)
 
     local function handle_contents()
         local num_hl = 'Number'
-        local num_width = math.floor(math.log10(#items)) + 1
+        local num_width = math.floor(math.log10(#items)) + 1 -- number of digits #items has
         local num_ansi_width = #ansi_string('', num_hl)
         local format_item = opts.format_item or tostring
+        local kind = opts.kind
         local entries = {}
-        for i, e in ipairs(items) do
+        for i, item in ipairs(items) do
+            local formatted_item = format_item(item)
+            if kind == 'codeaction' then
+                local client = vim.lsp.get_client_by_id(item.ctx.client_id)
+                if client then
+                    formatted_item = formatted_item .. ' ' .. ansi_string('[' .. client.name .. ']', 'FzfDesc')
+                end
+            end
             entries[#entries + 1] = string.format(
                 '%' .. num_width + num_ansi_width .. 's. %s',
                 ansi_string(tostring(i), num_hl),
-                format_item(e)
+                formatted_item
             )
         end
         write(entries)

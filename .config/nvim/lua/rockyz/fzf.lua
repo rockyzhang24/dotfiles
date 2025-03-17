@@ -2980,7 +2980,7 @@ local function tags(from_resume)
             end_line="$(( start_line + FZF_PREVIEW_LINES - 1 ))";'
             .. bat_prefix .. ' --line-range="$start_line:$end_line" --highlight-line="$center" -- {1}',
             '--bind',
-            set_preview_label('{3} \\| {1}'), -- show "tagname | filename" on the preview label
+            set_preview_label('{3} \\| $(echo {1} | sed "s|^$HOME|~|")'), -- show "tagname | filename" on the preview label
         }),
     }
 
@@ -2996,7 +2996,7 @@ local function tags(from_resume)
                         '%-30s %s %s%s',
                         tagname,
                         devicon,
-                        ansi_string(filename, 'FzfFilename'),
+                        ansi_string(vim.fn.fnamemodify(filename, ':~:.'), 'FzfFilename'),
                         excmd == '' and '' or (tonumber(excmd) == nil and ': ' .. ansi_string(excmd, 'FzfTagsPattern') or ': ' .. ansi_string(excmd, 'Number'))
                     )
                     entries[#entries + 1] = table.concat({

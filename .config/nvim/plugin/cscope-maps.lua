@@ -26,7 +26,7 @@ require('cscope_maps').setup({
     cscope = {
         exec = 'gtags-cscope',
         qf_window_size = 10,
-        statusline_indicator = 'cscope db building' .. icons.misc.ellipsis,
+        statusline_indicator = 'cscope db building' .. icons.misc.ellipsis .. ' ',
         project_rooter = {
             enable = true,
         },

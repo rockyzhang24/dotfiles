@@ -9,6 +9,8 @@ vim.keymap.set('n', '<Leader>q', 'q')
 vim.keymap.set({ 'n', 'x' }, '_', '"_')
 vim.keymap.set('x', '<', '<gv')
 vim.keymap.set('x', '>', '>gv')
+vim.keymap.set({ 'n', 'x' }, 'gh', '^')
+vim.keymap.set({ 'n', 'x' }, 'gl', 'g_')
 -- Move the current line or selections up and down with corresponding indentation
 -- vim.keymap.set('n', '<M-j>', ':m .+1<CR>==', { silent = true })
 -- vim.keymap.set('n', '<M-k>', ':m .-2<CR>==', { silent = true })

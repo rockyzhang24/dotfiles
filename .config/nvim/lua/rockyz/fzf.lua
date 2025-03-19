@@ -1956,15 +1956,21 @@ local function symbol_conversion(symbols, ctx, guide_prev, all_entries, all_item
 
                 local fzf_line
                 if symbol.location then
+                    -- Workspace symbols
                     local devicon = ansi_devicon(filename)
-                    fzf_line = '[' .. colored_icon_kind .. '] ' .. symbol.name .. ' '
-                    .. colored_client_name
-                    .. string.rep(' ', 6)
-                    .. (devicon == '' and devicon or devicon .. ' ')
-                    .. ansi_string(vim.fn.fnamemodify(filename, ':~:.'), 'FzfFilename') .. ':'
-                    .. ansi_string(tostring(lnum), 'FzfLnum').. ':'
-                    .. ansi_string(tostring(col), 'FzfCol')
+                    local part1 = '[' .. colored_icon_kind .. '] ' .. symbol.name .. ' ' .. colored_client_name
+                    local part1_no_color = '[' .. icon .. ' ' .. kind .. '] ' .. symbol.name .. client_name
+                    fzf_line = string.format(
+                        '%s %s%s%s:%s:%s',
+                        part1,
+                        string.rep(' ', 70 - #part1_no_color), -- add spaces for alignment
+                        devicon == '' and devicon or (devicon .. ' '),
+                        ansi_string(vim.fn.fnamemodify(filename, ':~:.'), 'FzfFilename'),
+                        ansi_string(tostring(lnum), 'FzfLnum'),
+                        ansi_string(tostring(col), 'FzfCol')
+                    )
                 else
+                    -- Document symbols
                     local guide = ''
                     if _guide_prev ~= '' then
                         guide = _guide_prev .. (i == #_symbols and guide_last or guide_mid)

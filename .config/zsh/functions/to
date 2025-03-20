@@ -1,0 +1,4 @@
+# vim: filetype=zsh
+
+# Touch and open
+[[ -n ${1} ]] && touch "${1}" && $EDITOR "${1}"

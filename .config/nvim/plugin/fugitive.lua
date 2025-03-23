@@ -5,12 +5,7 @@ vim.api.nvim_create_autocmd({ 'User' }, {
     group = group,
     pattern = 'FugitiveIndex,FugitiveCommit',
     callback = function()
-        vim.keymap.set(
-            'n',
-            'dt',
-            ':Gtabedit <Plug><cfile><Bar>Gdiffsplit! @<CR>',
-            { buffer = 0, remap = true, silent = true }
-        )
+        vim.keymap.set('n', 'dt', ':Gtabedit <Plug><cfile><Bar>Gdiffsplit! @<CR>', { buffer = 0, remap = true, silent = true })
     end,
 })
 

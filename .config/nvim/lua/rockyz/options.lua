@@ -39,7 +39,6 @@ vim.o.softtabstop = -1 -- fall back to shiftwidth
 vim.o.shiftround = true
 vim.o.ignorecase = true
 vim.o.smartcase = true
-vim.o.inccommand = 'split'
 vim.opt.diffopt:append('vertical,algorithm:patience,linematch:60')
 vim.o.signcolumn = 'yes'
 vim.o.spelllang = 'en_us'

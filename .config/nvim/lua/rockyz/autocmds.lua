@@ -168,3 +168,11 @@ vim.api.nvim_create_autocmd('VimEnter', {
         end
     end,
 })
+
+-- MRU windows
+vim.api.nvim_create_autocmd('WinLeave', {
+    group = vim.api.nvim_create_augroup('rockyz.mru_win', { clear = true }),
+    callback = function()
+        require('rockyz.utils.mru_win').record()
+    end,
+})

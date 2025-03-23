@@ -440,7 +440,10 @@ for i = 1, 9, 1 do
     vim.keymap.set('n', '<Leader>' .. i, '<Cmd>' .. i .. 'wincmd w<CR>')
 end
 -- Go to the previous window
-vim.keymap.set('n', '<Leader>wp', '<C-w>p')
+-- (The builtin ctrl-w p has a bug. It considers the window that is currently invalid)
+vim.keymap.set('n', '<Leader>wp', function()
+    require('rockyz.utils.mru_win').goto_recent()
+end)
 -- Split
 vim.keymap.set('n', '<Leader>-', ':split<CR>', { silent = true })
 vim.keymap.set('n', '<Leader><BSlash>', ':vsplit<CR>', { silent = true })

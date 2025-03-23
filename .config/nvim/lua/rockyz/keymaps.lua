@@ -1,16 +1,20 @@
-local M = {}
+local notify = require('rockyz.utils.notify_utils')
 
 vim.g.mapleader = ' '
 
 vim.keymap.set({ 'n', 'x' }, '<Leader>', '<Nop>')
 vim.keymap.set('n', '<Leader>,', ',')
-vim.keymap.set('n', 'q', '<Nop>')
-vim.keymap.set('n', '<Leader>q', 'q')
-vim.keymap.set({ 'n', 'x' }, '_', '"_')
+vim.keymap.set({ 'n', 'x' }, 'q', '<Nop>')
+vim.keymap.set({ 'n', 'x' }, '<Leader>q', 'q')
+vim.keymap.set({ 'n', 'x' }, '-', '"_')
 vim.keymap.set('x', '<', '<gv')
 vim.keymap.set('x', '>', '>gv')
 vim.keymap.set({ 'n', 'x' }, 'gh', '^')
 vim.keymap.set({ 'n', 'x' }, 'gl', 'g_')
+vim.keymap.set('n', '<BS>', '<C-^>')
+vim.keymap.set('n', '<Leader>i', '`^')
+vim.keymap.set({ 'n', 'x', 'o' }, [[']], [[`]])
+vim.keymap.set({ 'n', 'x', 'o' }, [[`]], [[']])
 -- Move the current line or selections up and down with corresponding indentation
 -- vim.keymap.set('n', '<M-j>', ':m .+1<CR>==', { silent = true })
 -- vim.keymap.set('n', '<M-k>', ':m .-2<CR>==', { silent = true })
@@ -45,13 +49,20 @@ end, { expr = true })
 vim.keymap.set('n', 'k', function()
     return smart_jk('k')
 end, { expr = true })
--- Smart dd: use blackhole register if we delete empty line by dd
-vim.keymap.set('n', 'dd', function()
+-- Smart dd and cc: use blackhole register if we delete empty line
+local function smart_del(key)
+    local cmd = key .. key
     if vim.api.nvim_get_current_line():match('^%s*$') then
-        return '"_dd'
+        return '"_' .. cmd
     else
-        return 'dd'
+        return cmd
     end
+end
+vim.keymap.set('n', 'dd', function()
+    return smart_del('d')
+end, { expr = true })
+vim.keymap.set('n', 'cc', function()
+    return smart_del('c')
 end, { expr = true })
 -- Smart i: make i indent properly on empty line
 vim.keymap.set('n', 'i', function()
@@ -147,8 +158,6 @@ vim.keymap.set('n', 'qw', '<Cmd>q<CR>')
 -- Search
 --
 
--- Search within selected range
-vim.keymap.set('x', '/', '<Esc>/\\%V')
 -- Clean search highlighting and update diff if needed
 vim.keymap.set('n', '<Esc>', function()
     if vim.v.hlsearch then
@@ -158,12 +167,29 @@ vim.keymap.set('n', '<Esc>', function()
     end
 end, { expr = true, silent = true })
 
+-- Search inside VISUAL area
+vim.keymap.set('x', '/', '<Esc>/\\%V')
+
 --
 -- Substitute
 --
--- Substitute the visually selected text, or the word under cursor
-vim.keymap.set('x', '<Leader>sw', '"hy:%s/<C-r>h/<C-r>h/gc<Left><Left><Left>')
-vim.keymap.set('n', '<Leader>sw', ':%s/\\<<C-r><C-w>\\>//gI<Left><Left><Left>')
+
+-- Replace the visually selected text, or the word under cursor
+vim.keymap.set('x', '<Leader>rw', '"hy:%s/<C-r>h/<C-r>h/gc<Left><Left><Left>')
+vim.keymap.set('n', '<Leader>rw', ':%s/\\<<C-r><C-w>\\>//gI<Left><Left><Left>')
+
+-- Run :substitute inside VISUAL aera with [g] flag on
+vim.keymap.set('x', '<Leader>rr', function()
+    vim.o.gdefault = true
+    vim.api.nvim_create_autocmd('CmdlineLeave', {
+        group = vim.api.nvim_create_augroup('rockyz.reset_gdefault', { clear = true }),
+        once = true,
+        callback = vim.schedule_wrap(function()
+            vim.o.gdefault = false
+        end),
+    })
+    return '<Esc>gv:s/\\%V'
+end, { silent = false, expr = true })
 
 --
 -- Buffer
@@ -186,7 +212,6 @@ vim.keymap.set('n', 'p', 'p=`]')
 vim.keymap.set('n', 'P', 'P=`]')
 -- Paste over the selected text
 vim.keymap.set('x', 'p', '"_c<ESC>p')
--- Paste below or above the current cursor
 vim.keymap.set('n', '<Leader>p', function()
     require('rockyz.utils.misc_utils').putline(vim.v.count1 .. ']p')
 end)
@@ -200,6 +225,21 @@ end, { expr = true })
 -- Copy unnamed(") register to system(*) register
 vim.keymap.set('n', 'yc', function()
     vim.fn.setreg('+', vim.fn.getreg('"'))
+end)
+
+local function yank_reg(reg, text)
+    vim.fn.setreg(reg, text)
+    notify.info(string.format('%s is yanked to %s', text, reg))
+end
+
+vim.keymap.set('n', 'yd', function()
+    yank_reg(vim.v.register, vim.fn.expand('%:p:h'))
+end)
+vim.keymap.set('n', 'yn', function()
+    yank_reg(vim.v.register, vim.fn.expand('%:p:t'))
+end)
+vim.keymap.set('n', 'yp', function()
+    yank_reg(vim.v.register, vim.fn.expand('%:p'))
 end)
 
 --
@@ -383,6 +423,8 @@ vim.keymap.set('n', '<Leader>to', '<Cmd>tabonly<CR>')
 -- Move the current tab to the left or right
 vim.keymap.set('n', '<Leader>t,', '<Cmd>-tabmove<CR>')
 vim.keymap.set('n', '<Leader>t.', '<Cmd>+tabmove<CR>')
+-- Open current buffer in new tab
+vim.keymap.set('n', '<C-w><C-t>', '<Cmd>tab split<CR>')
 
 --
 -- Window
@@ -395,7 +437,7 @@ vim.keymap.set('n', '<C-k>', '<C-w>k')
 vim.keymap.set('n', '<C-l>', '<C-w>l')
 -- Move cursor to the window 1 to 9
 for i = 1, 9, 1 do
-    vim.keymap.set('n', '<Leader>' .. i, ':' .. i .. 'wincmd w<CR>')
+    vim.keymap.set('n', '<Leader>' .. i, '<Cmd>' .. i .. 'wincmd w<CR>')
 end
 -- Go to the previous window
 vim.keymap.set('n', '<Leader>wp', '<C-w>p')
@@ -443,11 +485,9 @@ vim.keymap.set('n', '\\z', require('rockyz.utils.win_utils').win_maximize_toggle
 -- Terminal
 --
 
-vim.keymap.set('t', '<Leader><Esc>', '<C-\\><C-n>')
+vim.keymap.set('t', '<M-\\>', '<C-\\><C-n>')
 -- Simulate <C-r> in insert mode for inserting the content of a register.
 -- Reference: http://vimcasts.org/episodes/neovim-terminal-paste/
 vim.keymap.set('t', '<M-r>', function()
     return '<C-\\><C-n>"' .. vim.fn.nr2char(vim.fn.getchar()) .. 'pi'
 end, { expr = true })
-
-return M

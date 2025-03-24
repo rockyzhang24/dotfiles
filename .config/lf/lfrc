@@ -23,6 +23,7 @@ set cleaner ~/.config/lf/cleaner
 set dircounts
 setlocal ~/Downloads sortby "atime"
 setlocal ~/Downloads reverse
+set hidden
 
 # ========== Commands ==========
 
@@ -162,7 +163,21 @@ cmd fzf-select ${{
 
 # cd into the selected directory in fzf
 cmd fzf-cd ${{
-  select=$(eval "fd --type d --hidden --follow $FD_EXCLUDE" | fzf --no-multi --header ':: ENTER (cd into the selected directory)' --prompt 'Dirs> ') || true
+  is_home="/tmp/lf-fzf-cd-is-home"
+  rm -f "$is_home"
+  fd_cmd="fd --type d --hidden --follow $FD_EXCLUDE"
+  select=$(eval "$fd_cmd" | fzf \
+      --no-multi \
+      --header ':: CTRL-T (switch to HOME/CURRENT)' \
+      --prompt 'Dirs [Current]> ' \
+      --bind "ctrl-t:transform: \
+      [[ ! -e $is_home ]] && { \
+        touch $is_home; \
+        echo \"reload($fd_cmd . $HOME | sed 's|^$HOME|~|')+change-prompt(Dirs [HOME]> )\"; \
+      } || { \
+        rm $is_home; \
+        echo \"reload($fd_cmd)+change-prompt(Dirs [Current]> )\"; \
+      }") || true
   if [[ -n $select ]]; then
     lf -remote "send $id cd $select"
   fi

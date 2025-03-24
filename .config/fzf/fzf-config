@@ -87,11 +87,11 @@ _fzf_compgen_dir() {
 # CTRL-T to paste the selected files and directories onto the command-line
 export FZF_CTRL_T_COMMAND="$FD"
 export FZF_CTRL_T_OPTS=" \
-  --prompt 'Fzf [current]> ' \
-  --header ':: CTRL-H (home), CTRL-R (root), CTRL-C (current)' \
-  --bind 'ctrl-h:reload($FD . $HOME)+change-prompt(Fzf [home]> )' \
-  --bind 'ctrl-r:reload($FD . /)+change-prompt(Fzf [root]> )' \
-  --bind 'ctrl-c:reload($FD)+change-prompt(Fzf [current]> )' \
+  --prompt 'Fzf [Current]> ' \
+  --header ':: CTRL-H (HOME), CTRL-R (Root), CTRL-C (Current)' \
+  --bind 'ctrl-h:reload($FD . $HOME)+change-prompt(Fzf [HOME]> )' \
+  --bind 'ctrl-r:reload($FD . /)+change-prompt(Fzf [Root]> )' \
+  --bind 'ctrl-c:reload($FD)+change-prompt(Fzf [Current]> )' \
 "
 
 # CTRL-R to search the command history

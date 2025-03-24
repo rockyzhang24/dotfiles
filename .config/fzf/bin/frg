@@ -13,7 +13,7 @@
 #   1) ENTER: open the selections via neovim: if only one entry is selected,
 #      open it directly; if multiple entrys are selected, open the first one and
 #      dump all into the quickfix.
-#   3) ALT-F: toggle between fzf mode and riggrep mode
+#   3) ALT-M: toggle between fzf mode and riggrep mode
 # NOTE:
 #   -e/--regex is not supported
 # EXAMPLES:
@@ -54,7 +54,7 @@ selections="$(fzf \
   --query "$initial_query" \
   --bind "start:reload($rg_prefix {q})" \
   --bind "change:reload:sleep 0.1; $rg_prefix {q} || true" \
-  --bind "alt-f:transform: \
+  --bind "alt-m:transform: \
     [[ ! -e $fzf_mode_enabled ]] && { \
       touch $fzf_mode_enabled; \
       echo \"unbind(change)+change-prompt(2. FZF> )+enable-search+transform-query({ echo {q} > $rg_query; cat $fzf_query })\"; \
@@ -64,7 +64,7 @@ selections="$(fzf \
   --bind 'focus:transform-preview-label:echo [ {1}:{2}:{3} ]' \
   --prompt '1. RG> ' \
   --delimiter : \
-  --header ':: ENTER (open selections in vim), ALT-F (toggle FZF mode and RG mode)' \
+  --header ':: ENTER (open selections in vim), ALT-M (toggle FZF mode and RG mode)' \
   --preview 'bat --color=always --style=numbers,changes --highlight-line {2} -- {1}' \
   --preview-window 'down,45%,+{2}-/2,nowrap' \
 )"

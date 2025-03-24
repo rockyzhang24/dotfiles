@@ -1607,7 +1607,7 @@ end)
 -- Grep
 --
 -- Live grep
--- It has two modes (ALT-F for switching between each other)
+-- It has two modes (ALT-M for switching between each other)
 -- * RG mode (fzf will be just an interactive interface for RG)
 -- * FZF mode (fzf will be the fuzzy finder for the current results of RG)
 --
@@ -1666,7 +1666,7 @@ local function get_fzf_opts_for_live_grep(rg, rg_query, path, prompt, extra_opts
         -- Cache the query into the specific tempfile based on the current mode
         'result:execute-silent([[ ! -e ' .. fzf_mode_enabled .. ' ]] && echo {q} > ' .. cached_rg_query .. ' || echo {q} > ' .. cached_fzf_query .. ')',
         '--bind',
-        'alt-f:transform:\
+        'alt-m:transform:\
         [[ ! -e ' .. fzf_mode_enabled .. ' ]] && { \
             touch ' .. fzf_mode_enabled .. '; \
             echo "unbind(change)+change-prompt(' .. prompt .. ' [FZF]> )+enable-search+transform-query(cat ' .. cached_fzf_query .. ')"; \
@@ -1679,7 +1679,7 @@ local function get_fzf_opts_for_live_grep(rg, rg_query, path, prompt, extra_opts
         '--delimiter',
         ':',
         '--header',
-        ':: ALT-F (toggle FZF mode and RG mode), CTRL-Q (send to quickfix), CTRL-L (send to loclist)',
+        ':: ALT-M (toggle FZF mode and RG mode), CTRL-Q (send to quickfix), CTRL-L (send to loclist)',
         '--bind',
         'enter:print()+accept,ctrl-x:print(ctrl-x)+accept,ctrl-v:print(ctrl-v)+accept,ctrl-t:print(ctrl-t)+accept',
         '--bind',

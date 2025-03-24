@@ -39,7 +39,7 @@ fi
 # - alt-d: move preview half page down
 # - alt-u: move preview half page up
 # - ctrl-a: toggle all
-# - ctrl-s: toggle single
+# - ctrl-s: toggle single selection
 # - ctrl-/: toggle preview window
 # - ctrl-w: toggle wrap
 # - alt-w: toggle preview wrap

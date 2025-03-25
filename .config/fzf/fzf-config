@@ -2,7 +2,7 @@
 
 # Set PATH
 if [[ ! "$PATH" == */Users/rockyzhang/gitrepos/fzf/bin* ]]; then
-  PATH="${PATH:+${PATH}:}/Users/rockyzhang/gitrepos/fzf/bin"
+    PATH="${PATH:+${PATH}:}/Users/rockyzhang/gitrepos/fzf/bin"
 fi
 
 # Enable auto-completion and keybindings
@@ -17,19 +17,19 @@ export FZF_DEFAULT_COMMAND="$FD --type f --type l"
 # Define color themes
 # Default colors are defined in https://github.com/junegunn/fzf/blob/master/src/tui/tui.go
 if $TRANSPARENT; then
-  bg=-1
+    bg=-1
 fi
 # arctic theme
 if [[ $COLOR_THEME == 'arctic' ]]; then
-  [[ $bg != -1 ]] && bg='#1f1f1f'
-  fg='#cccccc'
-  colors="dark,fg:$fg,bg:$bg,hl:#ffdd33,fg+:#ffffff,bg+:#04395e,gutter:$bg,hl+:#ffdd33,query:$fg,disabled:#808080,border:$fg,separator:#454545,label:#4ec9b0,header:#f9ae28:underline"
+    [[ $bg != -1 ]] && bg='#1f1f1f'
+    fg='#cccccc'
+    colors="dark,fg:$fg,bg:$bg,hl:#ffdd33,fg+:#ffffff,bg+:#04395e,gutter:$bg,hl+:#ffdd33,query:$fg,disabled:#808080,border:$fg,separator:#454545,label:#4ec9b0,header:#f9ae28:underline"
 fi
 # monokai theme
 if [[ $COLOR_THEME == 'monokai' ]]; then
-  [[ $bg != -1 ]] && bg='#272822'
-  fg='#f8f8f2'
-  colors="dark,fg:$fg,bg:$bg,hl:#ffdd33:bold,fg+:#ffffff,bg+:#414339,gutter:$bg,hl+:#ffdd33:bold,query:$fg,disabled:#7a7a77,border:$fg,separator:#454545,label:$fg,header:#fd9621:underline:bold"
+    [[ $bg != -1 ]] && bg='#272822'
+    fg='#f8f8f2'
+    colors="dark,fg:$fg,bg:$bg,hl:#ffdd33:bold,fg+:#ffffff,bg+:#414339,gutter:$bg,hl+:#ffdd33:bold,query:$fg,disabled:#7a7a77,border:$fg,separator:#454545,label:$fg,header:#fd9621:underline:bold"
 fi
 
 # Config the default options when running fzf
@@ -48,58 +48,65 @@ fi
 # - ctrl-e: edit the selections via $EDITOR
 # - alt-x: exclude selected items
 export FZF_DEFAULT_OPTS=" \
-  --reverse \
-  --height 85% \
-  --multi \
-  --scrollbar '█' \
-  --history /tmp/fzfhistory \
-  --prompt 'FZF> ' \
-  --border rounded \
-  --tabstop=4 \
-  --highlight-line \
-  --tmux 80%,85% \
-  --bind 'ctrl-d:half-page-down,ctrl-u:half-page-up,alt-d:preview-half-page-down,`
-    `alt-u:preview-half-page-up,ctrl-a:toggle-all,`
-    `ctrl-/:toggle-preview,`
-    `ctrl-w:toggle-wrap,`
-    `alt-w:toggle-preview-wrap,`
-    `ctrl-s:toggle,`
-    `ctrl-o:execute(open {+}),`
-    `ctrl-y:execute-silent(echo -n {+} | pbcopy),`
-    `ctrl-e:execute(\$EDITOR {+} < /dev/tty > /dev/tty 2>&1),`
-    `alt-x:exclude-multi,`
-    `change:first' \
-  --bind 'focus:transform-preview-label:echo [ {} ]' \
-  --preview '~/.config/fzf/fzf-previewer.sh {}' \
-  --preview-window 'right,60%,nowrap' \
-  --color=$colors"
+    --reverse \
+    --height 85% \
+    --multi \
+    --scrollbar '█' \
+    --history /tmp/fzfhistory \
+    --prompt 'FZF> ' \
+    --border rounded \
+    --tabstop=4 \
+    --highlight-line \
+    --tmux 80%,85% \
+    --bind 'ctrl-d:half-page-down,ctrl-u:half-page-up,alt-d:preview-half-page-down,`
+        `alt-u:preview-half-page-up,ctrl-a:toggle-all,`
+        `ctrl-/:toggle-preview,`
+        `ctrl-w:toggle-wrap,`
+        `alt-w:toggle-preview-wrap,`
+        `ctrl-s:toggle,`
+        `ctrl-o:execute(open {+}),`
+        `ctrl-y:execute-silent(echo -n {+} | pbcopy),`
+        `ctrl-e:execute(\$EDITOR {+} < /dev/tty > /dev/tty 2>&1),`
+        `alt-x:exclude-multi,`
+        `change:first' \
+    --bind 'focus:transform-preview-label:echo [ {} ]' \
+    --preview '~/.config/fzf/fzf-previewer.sh {}' \
+    --preview-window 'right,60%,nowrap' \
+    --color=$colors"
 
 # Use fd for FZF completion
 # 1). listing files and dirs ($1 is the base path to start search) such as "vim ~/.config/**<TAB>"
 _fzf_compgen_path() {
-  fd --hidden --follow ${(z)FD_EXCLUDE} . "$1"
+    fd --hidden --follow ${(z)FD_EXCLUDE} . "$1"
 }
 # 2). listing dirs such as "cd **<TAB>"
 _fzf_compgen_dir() {
-  fd --type d --hidden --follow ${(z)FD_EXCLUDE} . "$1"
+    fd --type d --hidden --follow ${(z)FD_EXCLUDE} . "$1"
 }
 
 # CTRL-T to paste the selected files and directories onto the command-line
+ctrl_t_is_home="/tmp/fzf-ctrl-t-is-home"
 export FZF_CTRL_T_COMMAND="$FD"
 export FZF_CTRL_T_OPTS=" \
-  --prompt 'Fzf [Current]> ' \
-  --header ':: CTRL-H (HOME), CTRL-R (Root), CTRL-C (Current)' \
-  --bind 'ctrl-h:reload($FD . $HOME)+change-prompt(Fzf [HOME]> )' \
-  --bind 'ctrl-r:reload($FD . /)+change-prompt(Fzf [Root]> )' \
-  --bind 'ctrl-c:reload($FD)+change-prompt(Fzf [Current]> )' \
-"
+    --prompt 'Fzf [Current]> ' \
+    --header ':: CTRL-T (toggle HOME/Current), CTRL-R (Root)' \
+    --bind 'start:execute:rm -f $ctrl_t_is_home' \
+    --bind 'ctrl-r:reload($FD . /)+change-prompt(Fzf [Root]> )' \
+    --bind 'ctrl-t:transform: \
+        [[ ! -e $ctrl_t_is_home ]] && { \
+            echo \"reload($FD . $HOME)+change-prompt(Fzf [HOME]> )\"; \
+            touch $ctrl_t_is_home; \
+        } || { \
+            echo \"reload($FD)+change-prompt(Fzf [Current]> )\"; \
+            rm $ctrl_t_is_home; \
+        }'"
 
 # CTRL-R to search the command history
 export FZF_CTRL_R_OPTS=" \
-  --prompt 'Command History> ' \
-  --preview 'echo {}' \
-  --bind 'ctrl-y:execute-silent(echo -n {2..} | pbcopy)' \
-  --header ':: CTRL-Y (copy to clipboard)'"
+    --prompt 'Command History> ' \
+    --preview 'echo {}' \
+    --bind 'ctrl-y:execute-silent(echo -n {2..} | pbcopy)' \
+    --header ':: CTRL-Y (copy to clipboard)'"
 
 # CTRL-J to cd into the selected dir
 # - ALT-P: show parent dirs
@@ -107,11 +114,11 @@ export FZF_CTRL_R_OPTS=" \
 bindkey '^j' fzf-cd-widget
 export FZF_ALT_C_COMMAND="$FD --type d"
 export FZF_ALT_C_OPTS=" \
-  --preview '[[ \$(command -v eza) ]] && eza -la --color=always --icons -g --group-directories-first {} || tree -C {} | head -200' \
-  --header ':: ALT-P (show parent dirs)' \
-  --prompt 'SubDirs> ' \
-  --bind 'alt-p:reload(print-parent-dirs)+change-header(:: ALT-S (show subdirs))+change-prompt(ParentDirs> )' \
-  --bind 'alt-s:reload($FZF_ALT_C_COMMAND)+change-header(:: ALT-P (show parent dirs))+change-prompt(SubDirs> )'"
+    --preview '[[ \$(command -v eza) ]] && eza -la --color=always --icons -g --group-directories-first {} || tree -C {} | head -200' \
+    --header ':: ALT-P (show parent dirs)' \
+    --prompt 'SubDirs> ' \
+    --bind 'alt-p:reload(print-parent-dirs)+change-header(:: ALT-S (show subdirs))+change-prompt(ParentDirs> )' \
+    --bind 'alt-s:reload($FZF_ALT_C_COMMAND)+change-header(:: ALT-P (show parent dirs))+change-prompt(SubDirs> )'"
 
 # fzf + git
 # Reference: https://github.com/junegunn/fzf-git.sh

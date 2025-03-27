@@ -7,7 +7,6 @@
 -- <Leader>ff : Files
 -- <Leader>fo : Old files
 -- <Leader>f. : Files for my dotfiles
--- <Leader>f` : Files under $HOME
 -- <Leader>fb : Buffers
 -- <C-\>      : Buffers
 
@@ -154,9 +153,9 @@ local diff_pager = '| delta --width $FZF_PREVIEW_COLUMNS'
 
 ---Get the command to decorate input lines, e.g., prepend a devicon to the filename. This command
 ---gets input through a pipe.
----For example, fd --type f | cmd_dressup('fd')
+---For example, fd --type f | dressup_cmd('fd')
 ---@param source string Different types of input such as 'fd', 'git_status', etc
-local function cmd_dressup(source)
+local function dressup_cmd(source)
     return string.format(
         'nvim -n --headless -u NONE -i NONE --cmd "colorscheme "' .. vim.g.colorscheme .. ' --cmd "let g:source = \'%s\'" --cmd "lua require(\'rockyz.headless.fzf_dressup\')" +q',
         source
@@ -379,25 +378,42 @@ end
 
 -- Files
 local function files(from_resume)
-    local fd_cmd = fd_prefix .. ' | ' .. cmd_dressup('fd')
+    local fd_cwd = fd_prefix .. ' | ' .. dressup_cmd('fd')
+    local fd_home = 'cd $HOME; ' .. fd_prefix .. ' | ' .. dressup_cmd('fd')
+    local prompt_cwd = shortpath(vim.uv.cwd())
+    local under_home = vim.fn.tempname()
 
     local spec = {
         ['sink*'] = sink_file,
         options = get_fzf_opts(from_resume, {
+            '--delimiter',
+            '\t',
+            '--with-nth',
+            '1',
             '--prompt',
-            shortpath(vim.uv.cwd()),
+            prompt_cwd,
             '--expect',
             expect_keys(),
             '--preview',
             fzf_previewer .. ' {2}',
-            '--bind',
-            set_preview_label('{2}'),
             '--accept-nth',
-            '2',
+            '{2}',
+            '--header',
+            ':: CTRL-F (toggle HOME/Current)',
+            '--bind',
+            set_preview_label('$(echo {2} | sed "s|^$HOME|~|")'),
+            '--bind',
+            'ctrl-f:transform:[[ ! -e ' .. under_home .. ' ]] && {' ..
+                'echo "reload(' .. vim.fn.escape(fd_home, '"') .. ')+change-prompt(~/)";' ..
+                'touch ' .. under_home .. ';' ..
+            '} || {' ..
+                'echo "reload(' .. vim.fn.escape(fd_cwd, '"') .. ')+change-prompt(' .. prompt_cwd .. ')";' ..
+                'rm ' .. under_home .. ';' ..
+            '}',
         }),
     }
 
-    fzf(spec, nil, fd_cmd)
+    fzf(spec, nil, fd_cwd)
 end
 
 vim.keymap.set('n', '<Leader>ff', function()
@@ -450,7 +466,7 @@ local function dot_files(from_resume)
     local git_cmd = 'git -C '
         .. git_root
         .. ' --git-dir "$HOME/dotfiles" --work-tree "$HOME" ls-files --exclude-standard | '
-        .. cmd_dressup('git_ls_files')
+        .. dressup_cmd('git_ls_files')
 
     local spec = {
         ['sink*'] = sink_file,
@@ -473,33 +489,6 @@ end
 
 vim.keymap.set('n', '<Leader>f.', function()
     run(dot_files)
-end)
-
--- Find files under $HOME
-local function home_files(from_resume)
-    local fd_cmd = 'cd ' .. vim.env.HOME .. ' && ' .. fd_prefix .. ' | ' .. cmd_dressup('fd')
-
-    local spec = {
-        ['sink*'] = sink_file,
-        options = get_fzf_opts(from_resume, {
-            '--prompt',
-            'Home Files> ',
-            '--expect',
-            expect_keys(),
-            '--preview',
-            fzf_previewer .. ' ' .. vim.env.HOME .. '/{2}',
-            '--accept-nth',
-            vim.env.HOME .. '/{2}',
-            '--bind',
-            set_preview_label('"~/"{2}')
-        }),
-    }
-
-    fzf(spec, nil, fd_cmd)
-end
-
-vim.keymap.set('n', '<Leader>f`', function()
-    run(home_files)
 end)
 
 -- Buffers
@@ -2450,7 +2439,7 @@ local function git_files(from_resume)
         return
     end
 
-    local git_cmd = 'git -C ' .. git_root .. ' ls-files --exclude-standard | ' .. cmd_dressup('git_ls_files')
+    local git_cmd = 'git -C ' .. git_root .. ' ls-files --exclude-standard | ' .. dressup_cmd('git_ls_files')
 
     local spec = {
         ['sink*'] = sink_file,
@@ -2551,7 +2540,7 @@ local function git_status(from_resume)
     if vim.env.GIT_DIR == vim.env.HOME .. '/dotfiles' then
         git_cmd = git_cmd .. ' -uall ' .. vim.env.XDG_CONFIG_HOME
     end
-    git_cmd = git_cmd .. ' | ' .. cmd_dressup('git_status')
+    git_cmd = git_cmd .. ' | ' .. dressup_cmd('git_status')
 
     fzf(spec, nil, git_cmd)
 end

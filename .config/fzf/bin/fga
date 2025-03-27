@@ -41,11 +41,17 @@ changed=$(eval "$git_cmd config --get-color color.status.changed red")
 unmerged=$(eval "$git_cmd config --get-color color.status.unmerged red")
 untracked=$(eval "$git_cmd config --get-color color.status.untracked red")
 
+status_cmd="$git_cmd -c color.status=always -c status.relativePaths=true -c core.quotePath=false status -s"
+if [[ $PWD == $HOME/.config || $PWD == $HOME/.config/* && $PWD != $HOME/.config/nvim/pack* ]]; then
+  # For my dotfile bare repo with set "showUntrackedFiles = no", show untracked files in ~/.config
+  status_cmd+=" -uall $XDG_CONFIG_HOME"
+fi
+
 # Create an array to store the selections
 while IFS= read -r file; do
   files+=("$file")
 done < <(
-  $git_cmd -c color.status=always -c status.relativePaths=true -c core.quotePath=false status -s -uall "$XDG_CONFIG_HOME" |
+  $status_cmd |
     grep -F -e "$changed" -e "$unmerged" -e "$untracked" |
     sed -E 's/^(..[^[:space:]]*)[[:space:]]+(.*)$/[\1]  \2/' |
     fzf --ansi --exit-0 --preview "$__fda {}" --preview-window down,60% --prompt="Git Add (dotfiles)> " --header ":: ENTER (git add files)" |

@@ -36,11 +36,12 @@ for line in io.lines() do
         if f1:match('%s%->%s') then
             f1, f2 = f1:match('(.*)%s%->%s(.*)')
         end
-        f1 = f1 and (ansi_icon(f1) .. ' ' .. f1)
-        f2 = f2 and (ansi_icon(f2) .. ' ' .. f2)
+        local icon_f1 = f1 and (ansi_icon(f1) .. ' ' .. f1)
+        local icon_f2 = f2 and (ansi_icon(f2) .. ' ' .. f2)
         local staged = ansi_string(line:sub(1, 1), 'GitStatusStaged')
         local unstaged = ansi_string(line:sub(2, 2), 'GitStatusUnstaged')
-        output_line = string.format('[%s%s]  %s', staged, unstaged, (f2 and ('%s -> %s'):format(f1, f2) or f1))
+        -- \t as the delimiter for the finder "git status"
+        output_line = string.format('[%s%s]  %s\t%s', staged, unstaged, (f2 and ('%s -> %s'):format(icon_f1, icon_f2) or icon_f1), f2 or f1)
     end
 
     io.stdout:write(output_line .. '\n')

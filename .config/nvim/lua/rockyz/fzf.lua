@@ -2490,13 +2490,9 @@ local function git_status(from_resume)
         ['sink*'] = function(lines)
             local key = lines[1]
             local filenames = {}
-            -- Extract filename in each entry
+            -- Extract filename in each selected entry
             for i = 2, #lines do
-                local file = lines[i]:sub(7) -- get filename
-                file = file:match('.*%s(.*)') -- remove devicon
-                if file:match('%s%->') then
-                    file = file:match('.*%s%->.*%s(.*)') -- get new filename for rename
-                end
+                local file = lines[i]:match('\t(.*)')
                 if file and file ~= '' then
                     table.insert(filenames, file)
                 end
@@ -2521,6 +2517,10 @@ local function git_status(from_resume)
             end
         end,
         options = get_fzf_opts(from_resume, {
+            '--delimiter',
+            '\t',
+            '--with-nth',
+            1,
             '--prompt',
             'Git Status> ',
             '--header',
@@ -2528,14 +2528,30 @@ local function git_status(from_resume)
             '--expect',
             expect_keys({ 'ctrl-h', 'ctrl-l' }, true),
             '--preview',
-            -- Each entry is [ M] original/path/for/a/file -> new/path/for/the/file
-            -- We first extract the file path by removing the status indicators, the original
-            -- file path for rename and the devicon.
-            'file=$(echo {} | sed "s/^.*]  //" | sed "s/.* -> //" | sed "s/^[^ ]* //"); (git status $file | grep "^??") &>/dev/null && ' .. git .. ' diff --no-index /dev/null $file ' .. diff_pager .. ' || ' .. git .. ' diff HEAD -- $file ' .. diff_pager,
+            -- Three cases:
+            -- 1) Untracked: git diff --no-index /dev/null <file>
+            -- 2) Unstaged: git diff <file>
+            -- 3) Staged: git diff --staged <file>
+            'git_status=$(' .. git .. ' status -s -uall -- {2}); \
+            echo $git_status | grep "^??" &>/dev/null && ' .. git .. ' diff --no-index -- /dev/null {2} ' .. diff_pager .. ' || \
+            (diff_output=$(' .. git .. ' diff {2}) && \
+                [[ -n $diff_output ]] && \
+                echo $diff_output ' .. diff_pager .. ' || \
+                ' .. git .. ' diff --staged {2} ' .. diff_pager .. ')'
         }),
     }
 
-    local git_cmd = 'git -c colors.status=false --no-optional-locks status --porcelain=v1 | ' .. cmd_dressup('git_status')
+    -- Each fzf entry could be one of
+    -- 1. [ M] file1
+    -- 2. [MM] file2
+    -- 3. [R ] oldfile -> newfile
+    -- 4. [??] newfile
+
+    local git_cmd = 'git -c colors.status=false --no-optional-locks status --porcelain=v1'
+    if vim.env.GIT_DIR == vim.env.HOME .. '/dotfiles' then
+        git_cmd = git_cmd .. ' -uall ' .. vim.env.XDG_CONFIG_HOME
+    end
+    git_cmd = git_cmd .. ' | ' .. cmd_dressup('git_status')
 
     fzf(spec, nil, git_cmd)
 end

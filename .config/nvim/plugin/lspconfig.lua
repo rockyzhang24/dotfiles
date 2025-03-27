@@ -2,9 +2,6 @@ local lspconfig = require('lspconfig')
 local util = require('lspconfig/util')
 local capabilities = require('rockyz.lsp').client_capabilities
 
--- Set border for LspInfo window
-require('lspconfig.ui.windows').default_options.border = vim.g.border_style
-
 -- Bash
 lspconfig.bashls.setup({
     capabilities = capabilities(),

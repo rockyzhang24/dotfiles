@@ -176,3 +176,18 @@ vim.api.nvim_create_autocmd('WinLeave', {
         require('rockyz.utils.mru_win').record()
     end,
 })
+
+-- Reset maximize status
+-- Close window by :quit will resize all windows so the maximization status should be reset
+vim.api.nvim_create_autocmd('QuitPre', {
+    group = vim.api.nvim_create_augroup('rockyz.reset_win_maximize', { clear = true }),
+    callback = function(args)
+        local tab = vim.api.nvim_get_current_tabpage()
+        vim.t[tab].maximized_win = nil
+        for _, win in ipairs(vim.api.nvim_tabpage_list_wins(tab)) do
+            if vim.w[win].maximized then
+                vim.w[win].maximized = nil
+            end
+        end
+    end,
+})

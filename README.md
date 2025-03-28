@@ -7,8 +7,9 @@ My dotfiles for `macOS` and `Linux`. Just cherry pick the piece of code you tota
 ![platform](https://img.shields.io/badge/platform-macOS%2FLinux-blue)
 ![last commit](https://img.shields.io/github/last-commit/rockyzhang24/dotfiles)
 
-![config-demo](https://user-images.githubusercontent.com/11582667/220463312-8559aba9-e0d8-4bdc-8d02-3dc322204df4.png)
-  <sub>For the color theme, check [arctic](https://github.com/rockyzhang24/arctic.nvim)</sub>
+<img width="1774" alt="image" src="https://github.com/user-attachments/assets/659b3854-b876-4506-92cc-8f340e4ad32e" />
+
+  <sub>Like the color theme? Please check [arctic](https://github.com/rockyzhang24/arctic.nvim)</sub>
 
 </div>
 

@@ -10,6 +10,8 @@ Always a WIP 🏗️
 
 <img width="1774" alt="nvim-demo" src="https://github.com/user-attachments/assets/9bfbfa4f-a108-4479-b0ff-2113e74bbddf">
 
+<sub>For more pics, please check [Showcases](#-showcases) below</sub>
+
 </div>
 
 # ✨ Features
@@ -27,7 +29,7 @@ Functionalities I implemented:
 * Elegant tabline: [Tabline](./lua/rockyz/tabline.lua)
 * Simple yet efficient statuscolumn: [Statuscolumn](./lua/rockyz/statuscolumn.lua)
 * Clean and visually pleasing quickfix window: [Quickfix window](./lua/rockyz/quickfix.lua)
-* Comprehensive set of lightning-fast fuzzy finders built on fzf.vim: [Fuzzy finders](./plugin/fzf.lua)
+* Comprehensive set of lightning-fast fuzzy finders: [Fuzzy finders](./plugin/fzf.lua)
 
 Plugins essential to my setup:
 
@@ -41,7 +43,7 @@ Plugins essential to my setup:
 * Undo history visualizer with [undotree](https://github.com/mbbill/undotree)
 * Improved code search via [vim-grepper](https://github.com/mhinz/vim-grepper), [vim-asterisk](https://github.com/haya14busa/vim-asterisk), etc
 * Enhanced text objects with [targets.vim](https://github.com/wellle/targets.vim), etc
-* Symbol outline and tags with [aerial.nvim](https://github.com/stevearc/aerial.nvim) and [tagbar](https://github.com/preservim/tagbar)
+* Symbol outline and tags with [outline.nvim](https://github.com/hedyhli/outline.nvim) and [tagbar](https://github.com/preservim/tagbar)
 
 To see all the plugins I am using 👉 [my plugins](./lua/rockyz/minpac.lua) and their configs 👉 [plugin configs](./plugin/)
 
@@ -72,6 +74,10 @@ I implemented a series of fuzzy finders based on fzf.vim instead of using ready-
 ### LSP progress message
 
 ![lsp-progress](https://github.com/user-attachments/assets/63f5fa48-cefe-4d32-9d8d-806418c066a2)
+
+### Indent scope and indent guide
+
+![indent-scope-guide](https://github.com/user-attachments/assets/521e605e-7dae-4ce6-8c90-cf0f737148a8)
 
 ### Lightbulb
 

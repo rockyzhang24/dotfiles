@@ -23,7 +23,7 @@ set cleaner ~/.config/lf/cleaner
 set dircounts
 setlocal ~/Downloads sortby "atime"
 setlocal ~/Downloads reverse
-set hidden
+set hiddenfiles ".DS_Store:.git"
 
 # ========== Commands ==========
 

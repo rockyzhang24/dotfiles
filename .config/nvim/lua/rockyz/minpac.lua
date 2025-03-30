@@ -3,6 +3,10 @@ local plugins = {
         'k-takata/minpac',
         { type = 'opt' },
     },
+
+    -- Temp
+
+    -- General
     'nvim-lua/plenary.nvim',
     'kyazdani42/nvim-web-devicons',
     'dstein64/vim-startuptime',

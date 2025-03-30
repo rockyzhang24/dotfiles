@@ -303,7 +303,7 @@ local tail_pid = vim.fn.tempname()
 ---@param fzf_cmd string? External bash command
 local function fzf(spec, handle_contents, fzf_cmd)
     local old_fzf_cmd = vim.env.FZF_DEFAULT_COMMAND
-     vim.env.FZF_DEFAULT_COMMAND = fzf_cmd
+    vim.env.FZF_DEFAULT_COMMAND = fzf_cmd
 
     if handle_contents and not fzf_cmd then
         fifopipe = vim.fn.tempname()

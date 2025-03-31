@@ -5,6 +5,7 @@ vim.g.mapleader = ' '
 vim.keymap.set({ 'n', 'x' }, '<Leader>', '<Nop>')
 vim.keymap.set('n', '<Leader>,', ',')
 vim.keymap.set({ 'n', 'x' }, 'q', '<Nop>')
+vim.keymap.set('n', 'q;', 'q:')
 vim.keymap.set({ 'n', 'x' }, '<Leader>q', 'q')
 vim.keymap.set({ 'n', 'x' }, '-', '"_')
 vim.keymap.set('x', '<', '<gv')

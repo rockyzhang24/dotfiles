@@ -7,7 +7,6 @@ local plugins = {
     -- Temp
 
     -- General
-    'nvim-lua/plenary.nvim',
     'kyazdani42/nvim-web-devicons',
     'dstein64/vim-startuptime',
     'tpope/vim-surround',
@@ -32,7 +31,6 @@ local plugins = {
     'dhananjaylatkar/cscope_maps.nvim',
 
     -- LSP
-    'neovim/nvim-lspconfig',
     'SmiteshP/nvim-navic',
     'smjonas/inc-rename.nvim',
     'b0o/SchemaStore.nvim',

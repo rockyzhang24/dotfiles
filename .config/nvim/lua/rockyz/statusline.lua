@@ -117,26 +117,20 @@ function M.git_diff(trunc_width)
     end
 end
 
--- LSP clients of all buffers
--- Mark (e.g., using green color) the clients attaching to the current buffer
+-- LSP clients in the current buffer
 function M.lsp_clients(trunc_width)
     if is_truncated(trunc_width) then
         return ''
     end
-    local clients = vim.lsp.get_clients()
+    local clients = vim.lsp.get_clients({ bufnr = vim.api.nvim_get_current_buf() })
+    if next(clients) == nil then
+        return '%#StlComponentInactive#[LS Inactive]%*'
+    end
     local client_names = {}
     for _, client in ipairs(clients) do
         if client and client.name ~= '' then
-            local attached_buffers = client.attached_buffers
-            if attached_buffers[vim.api.nvim_get_current_buf()] then
-                table.insert(client_names, string.format('%%#StlComponentOn#%s%%*', client.name))
-            else
-                table.insert(client_names, client.name)
-            end
+            table.insert(client_names, string.format('%%#StlComponentOn#%s%%*', client.name))
         end
-    end
-    if next(client_names) == nil then
-        return '%#StlComponentInactive#[LS Inactive]%*'
     end
     return string.format('[%s]', table.concat(client_names, ', '))
 end
@@ -297,7 +291,7 @@ function M.encoding(trunc_width)
     return '[' .. encoding .. ']'
 end
 
--- Icon, filetype and filesize
+-- Filetype
 function M.filetype()
     local filetype = vim.bo.filetype
     -- No file

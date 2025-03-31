@@ -1,6 +1,3 @@
-local diagnostic_icons = require('rockyz.icons').diagnostics
-local methods = vim.lsp.protocol.Methods
-
 local M = {}
 
 -- Diagnostic config
@@ -52,17 +49,6 @@ vim.diagnostic.config({
     signs = false,
     severity_sort = true,
 })
-
--- Capabilities
-
-M.client_capabilities = function()
-    local capabilities = vim.tbl_deep_extend(
-        'force',
-        vim.lsp.protocol.make_client_capabilities(),
-        require('blink.cmp').get_lsp_capabilities()
-    )
-    return capabilities
-end
 
 local hover = vim.lsp.buf.hover
 ---@diagnostic disable-next-line: duplicate-set-field
@@ -230,5 +216,15 @@ vim.api.nvim_create_autocmd('LspAttach', {
         on_attach(client, bufnr)
     end,
 })
+
+
+-- Enable LSP servers
+local lsp_configs = {}
+for _, v in ipairs(vim.api.nvim_get_runtime_file('lsp/*', true)) do
+    local name = vim.fn.fnamemodify(v, ':t:r')
+    lsp_configs[name] = true
+end
+
+vim.lsp.enable(vim.tbl_keys(lsp_configs))
 
 return M

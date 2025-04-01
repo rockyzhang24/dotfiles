@@ -10,9 +10,12 @@
 __fda=${BASH_SOURCE[0]}
 
 git_cmd="git"
+status="status -s"
 # Handle my dotfile bare repo
 if [[ $PWD == $HOME/.config || $PWD == $HOME/.config/* && $PWD != $HOME/.config/nvim/pack* ]]; then
   git_cmd="git --git-dir=$HOME/dotfiles/ --work-tree=$HOME"
+  # For my dotfile bare repo with set "showUntrackedFiles = no", show untracked files in ~/.config
+  status+=" -uall $XDG_CONFIG_HOME"
 fi
 
 # Entries listed by 'git status -s' look like this:
@@ -41,17 +44,13 @@ changed=$(eval "$git_cmd config --get-color color.status.changed red")
 unmerged=$(eval "$git_cmd config --get-color color.status.unmerged red")
 untracked=$(eval "$git_cmd config --get-color color.status.untracked red")
 
-status_cmd="$git_cmd -c color.status=always -c status.relativePaths=true -c core.quotePath=false status -s"
-if [[ $PWD == $HOME/.config || $PWD == $HOME/.config/* && $PWD != $HOME/.config/nvim/pack* ]]; then
-  # For my dotfile bare repo with set "showUntrackedFiles = no", show untracked files in ~/.config
-  status_cmd+=" -uall $XDG_CONFIG_HOME"
-fi
+git_status_cmd="$git_cmd -c color.status=always -c status.relativePaths=true -c core.quotePath=false $status"
 
 # Create an array to store the selections
 while IFS= read -r file; do
   files+=("$file")
 done < <(
-  $status_cmd |
+  $git_status_cmd |
     grep -F -e "$changed" -e "$unmerged" -e "$untracked" |
     sed -E 's/^(..[^[:space:]]*)[[:space:]]+(.*)$/[\1]  \2/' |
     fzf --ansi --exit-0 --preview "$__fda {}" --preview-window down,60% --prompt="Git Add (dotfiles)> " --header ":: ENTER (git add files)" |
@@ -59,5 +58,5 @@ done < <(
 )
 
 if [[ ${#files[@]} -gt 0 ]]; then
-  $git_cmd add "${files[@]}" && $git_cmd status -s
+  $git_cmd add "${files[@]}" && eval "$git_cmd $status"
 fi

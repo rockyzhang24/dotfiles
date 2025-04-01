@@ -181,9 +181,9 @@ cmd fzf-file ${{
     fd_cmd="fd --type f --type l --hidden --follow $FD_EXCLUDE"
     select=$(eval "$fd_cmd" | fzf \
         --no-multi \
-        --header ':: CTRL-T (toggle HOME/Current dir)' \
+        --header ':: CTRL-L (toggle HOME/Current dir)' \
         --prompt 'Files [Current]> ' \
-        --bind "ctrl-t:transform: \
+        --bind "ctrl-l:transform: \
         [[ ! -e $is_home ]] && { \
             touch $is_home; \
             echo \"reload($fd_cmd . $HOME | sed 's|^$HOME|~|')+change-prompt(Files [HOME]> )\"; \
@@ -204,9 +204,9 @@ cmd fzf-cd ${{
     fd_cmd="fd --type d --hidden --follow $FD_EXCLUDE"
     select=$(eval "$fd_cmd" | fzf \
         --no-multi \
-        --header ':: CTRL-T (toggle HOME/Current dir)' \
+        --header ':: CTRL-L (toggle HOME/Current dir)' \
         --prompt 'Dirs [Current]> ' \
-        --bind "ctrl-t:transform: \
+        --bind "ctrl-l:transform: \
         [[ ! -e $is_home ]] && { \
             touch $is_home; \
             echo \"reload($fd_cmd . $HOME | sed 's|^$HOME|~|')+change-prompt(Dirs [HOME]> )\"; \

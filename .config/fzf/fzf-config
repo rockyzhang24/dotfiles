@@ -89,24 +89,26 @@ ctrl_t_is_home="/tmp/fzf-ctrl-t-is-home"
 export FZF_CTRL_T_COMMAND="$FD"
 export FZF_CTRL_T_OPTS=" \
     --prompt 'Fzf [Current]> ' \
-    --header ':: CTRL-T (toggle HOME/Current), CTRL-R (Root)' \
+    --header ':: CTRL-L (toggle HOME/Current), CTRL-R (Root)' \
     --bind 'start:execute:rm -f $ctrl_t_is_home' \
     --bind 'ctrl-r:reload($FD . /)+change-prompt(Fzf [Root]> )' \
-    --bind 'ctrl-t:transform: \
+    --bind 'ctrl-l:transform: \
         [[ ! -e $ctrl_t_is_home ]] && { \
             echo \"reload($FD . $HOME)+change-prompt(Fzf [HOME]> )\"; \
             touch $ctrl_t_is_home; \
         } || { \
             echo \"reload($FD)+change-prompt(Fzf [Current]> )\"; \
             rm $ctrl_t_is_home; \
-        }'"
+        }' \
+"
 
 # CTRL-R to search the command history
 export FZF_CTRL_R_OPTS=" \
     --prompt 'Command History> ' \
     --preview 'echo {}' \
     --bind 'ctrl-y:execute-silent(echo -n {2..} | pbcopy)' \
-    --header ':: CTRL-Y (copy to clipboard)'"
+    --header ':: CTRL-Y (copy to clipboard)' \
+"
 
 # CTRL-J to cd into the selected dir
 # - ALT-P: show parent dirs
@@ -118,7 +120,8 @@ export FZF_ALT_C_OPTS=" \
     --header ':: ALT-P (show parent dirs)' \
     --prompt 'SubDirs> ' \
     --bind 'alt-p:reload(print-parent-dirs)+change-header(:: ALT-S (show subdirs))+change-prompt(ParentDirs> )' \
-    --bind 'alt-s:reload($FZF_ALT_C_COMMAND)+change-header(:: ALT-P (show parent dirs))+change-prompt(SubDirs> )'"
+    --bind 'alt-s:reload($FZF_ALT_C_COMMAND)+change-header(:: ALT-P (show parent dirs))+change-prompt(SubDirs> )' \
+"
 
 # fzf + git
 # Reference: https://github.com/junegunn/fzf-git.sh

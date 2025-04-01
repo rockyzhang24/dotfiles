@@ -399,11 +399,11 @@ local function files(from_resume)
             '--accept-nth',
             '{2}',
             '--header',
-            ':: CTRL-F (toggle HOME/Current)',
+            ':: CTRL-L (toggle HOME/Current)',
             '--bind',
             set_preview_label('$(echo {2} | sed "s|^$HOME|~|")'),
             '--bind',
-            'ctrl-f:transform:[[ ! -e ' .. under_home .. ' ]] && {' ..
+            'ctrl-l:transform:[[ ! -e ' .. under_home .. ' ]] && {' ..
                 'echo "reload(' .. vim.fn.escape(fd_home, '"') .. ')+change-prompt(~/)";' ..
                 'touch ' .. under_home .. ';' ..
             '} || {' ..

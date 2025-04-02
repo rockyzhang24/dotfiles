@@ -31,7 +31,7 @@ font-thicken = true
 keybind = cmd+ctrl+,=reload_config
 keybind = ctrl+;>s=write_screen_file:paste
 keybind = ctrl+;>i=inspector:toggle
-keybind = global:opt+grave_accent=toggle_quick_terminal
+keybind = global:cmd+opt+ctrl+shift+grave_accent=toggle_quick_terminal
 
 # Scroll
 keybind = ctrl+shift+d=scroll_page_fractional:0.5

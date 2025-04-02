@@ -113,14 +113,24 @@ export FZF_CTRL_R_OPTS=" \
 # CTRL-J to cd into the selected dir
 # - ALT-P: show parent dirs
 # - ALT-S: show sub dirs
+alt_c_is_home="/tmp/fzf-alt-c-is-home"
 bindkey '^j' fzf-cd-widget
 export FZF_ALT_C_COMMAND="$FD --type d"
 export FZF_ALT_C_OPTS=" \
     --preview '[[ \$(command -v eza) ]] && eza -la --color=always --icons -g --group-directories-first {} || tree -C {} | head -200' \
-    --header ':: ALT-P (show parent dirs)' \
-    --prompt 'SubDirs> ' \
-    --bind 'alt-p:reload(print-parent-dirs)+change-header(:: ALT-S (show subdirs))+change-prompt(ParentDirs> )' \
-    --bind 'alt-s:reload($FZF_ALT_C_COMMAND)+change-header(:: ALT-P (show parent dirs))+change-prompt(SubDirs> )' \
+    --header ':: CTRL-L (toggle HOME/Current), CTRL-R (Root), CTRL-H (Parent)' \
+    --prompt 'SubDirs [Current]> ' \
+    --bind 'start:execute:rm -f $alt_c_is_home' \
+    --bind 'ctrl-r:reload($FD --type d . /)+change-prompt(SubDirs [Root]> )' \
+    --bind 'ctrl-h:reload(print-parent-dirs)+change-prompt(SubDirs [Parent]> )' \
+    --bind 'ctrl-l:transform: \
+        [[ ! -e $alt_c_is_home ]] && { \
+            echo \"reload($FD --type d . $HOME)+change-prompt(SubDirs [HOME]> )\"; \
+            touch $alt_c_is_home; \
+        } || { \
+            echo \"reload($FD --type d)+change-prompt(SubDirs [Current]> )\"; \
+            rm $alt_c_is_home; \
+        }' \
 "
 
 # fzf + git

@@ -21,7 +21,6 @@ local plugins = {
     -- cx{motion}, cxx (line), X (visual), cxc (clear), and `.` is supported
     'othree/eregex.vim',
     'wellle/targets.vim',
-    'unblevable/quick-scope',
     'danymat/neogen',
     'stevearc/conform.nvim',
     'Wansmer/treesj',
@@ -29,6 +28,7 @@ local plugins = {
     'junegunn/vim-after-object',
     'preservim/tagbar',
     'dhananjaylatkar/cscope_maps.nvim',
+    'justinmk/vim-sneak',
 
     -- LSP
     'SmiteshP/nvim-navic',

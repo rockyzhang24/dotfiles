@@ -5,8 +5,15 @@
 
 dot="git --git-dir=$HOME/dotfiles/ --work-tree=$HOME"
 
+git_status=$($dot status -uall "$XDG_CONFIG_HOME" --porcelain=v1)
+
+if [[ -z $git_status ]]; then
+    $dot ls-files "$HOME" --full-name | sed -E 's|^(.*)|~/\1\t~/\1|'
+    exit 0
+fi
+
 # (1) Get files listed by git status
-$dot status -uall "$HOME/.config" --porcelain=v1 | awk '{
+echo "$git_status" | awk '{
     if ($1 ~ /R/) {
         # (1)
         # Handle the special case rename, i.e., [R ] ~/oldfile -> ~/newfile
@@ -27,7 +34,7 @@ $dot status -uall "$HOME/.config" --porcelain=v1 | awk '{
         substr($0,4)
     }
 }' && $dot ls-files "$HOME" --full-name | grep -v -F -f <(  # (2) Get all files and filter out files from git status
-    $dot status -uall "$HOME/.config" --porcelain=v1 | awk '{
+    echo "$git_status" | awk '{
         if ($1 ~ /R/) {
             split(substr($0,4), a,  " -> ")
             print a[2]

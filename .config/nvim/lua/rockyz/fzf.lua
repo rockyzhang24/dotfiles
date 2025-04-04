@@ -462,23 +462,23 @@ end)
 
 -- Find files for my dotfiles
 local function dot_files(from_resume)
-    local git_root = vim.env.HOME
-    local git_cmd = 'git -C '
-        .. git_root
-        .. ' --git-dir "$HOME/dotfiles" --work-tree "$HOME" ls-files --exclude-standard | '
-        .. dressup_cmd('git_ls_files')
+    local git_cmd = 'ls-dotfiles | ' .. dressup_cmd('dotfiles')
 
     local spec = {
         ['sink*'] = sink_file,
         options = get_fzf_opts(from_resume, {
+            '--delimiter',
+            '\t',
+            '--with-nth',
+            '1',
             '--prompt',
             '.dotfiles> ',
             '--expect',
             expect_keys(),
             '--preview',
-            fzf_previewer .. ' ' .. git_root .. '/{2}',
+            fzf_previewer .. ' {2}',
             '--accept-nth',
-            git_root .. '/{2}',
+            '{2}',
             '--bind',
             set_preview_label('{2}'),
         }),

@@ -1,4 +1,37 @@
 #!/usr/bin/env bash
 
-# List the dotfiles (absolute path) that are managed by git bare repository
-git --git-dir="$HOME"/dotfiles/ --work-tree="$HOME" ls-files "$HOME" --full-name | sed "s#^#~/#"
+# List all the dot files managed by the bare repo including untracked files.
+# Support displaying the two-letter status code.
+
+dot="git --git-dir=$HOME/dotfiles/ --work-tree=$HOME"
+
+# (1) Get files listed by git status
+$dot status -uall "$HOME/.config" --porcelain=v1 | awk '{
+    if ($1 ~ /R/) {
+        # (1)
+        # Handle the special case rename, i.e., [R ] ~/oldfile -> ~/newfile
+        split(substr($0,4), a, " -> ")
+        printf "[\x1b[32m%s\x1b[m\x1b[31m%s\x1b[m] ~/%s -> ~/%s\t~/%s\n",
+        substr($1,1,1),
+        substr($1,2,1) ? substr($1,2,1) : " ",
+        a[1],
+        a[2],
+        a[2]
+    } else {
+        # (2)
+        # Deal with the other cases, e.g., [M ] ~/file
+        printf "[\x1b[32m%s\x1b[m\x1b[31m%s\x1b[m] ~/%s\t~/%s\n",
+        substr($1,1,1),
+        substr($1,2,1) ? substr($1,2,1) : " ",
+        substr($0,4),
+        substr($0,4)
+    }
+}' && $dot ls-files "$HOME" --full-name | grep -v -F -f <(  # (2) Get all files and filter out files from git status
+    $dot status -uall "$HOME/.config" --porcelain=v1 | awk '{
+        if ($1 ~ /R/) {
+            split(substr($0,4), a,  " -> ")
+            print a[2]
+        } else {
+            print $2
+        }
+}') | sed -E 's|^(.*)|     ~/\1\t~/\1|'

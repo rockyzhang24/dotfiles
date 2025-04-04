@@ -78,14 +78,14 @@ export EZA_ICON_SPACING=2
 
 # Build options for fd and rg to exclude files and directories
 
-export EXCLUDE=".git,.Trash,.vscode,.cache,.local,.DS_Store,Library,Music,Movies,Pictures"
+export EXCLUDE=".git,.Trash,.vscode,.cache,.local,.DS_Store,Library,Music,Movies,Pictures,karabiner/automatic_backups,.zsh_sessions,Downloads/z"
 FD_EXCLUDE=""
 RG_EXCLUDE=""
 while IFS=',' read -d ',' item; do
   # Build --exclude options for fd (i.e., --exclude .git --exclude .Trash --exclude ...)
-  FD_EXCLUDE+="--exclude $item "
+  FD_EXCLUDE+="--exclude '$item' "
   # Build -g options for rg (i.e., -g !.git -g !.Trash -g ...)
-  RG_EXCLUDE+="-g !$item "
+  RG_EXCLUDE+="-g '!$item' "
 done <<< "$EXCLUDE,"
 export FD_EXCLUDE=${FD_EXCLUDE% } # trim trailing space
 export RG_EXCLUDE=${RG_EXCLUDE% }

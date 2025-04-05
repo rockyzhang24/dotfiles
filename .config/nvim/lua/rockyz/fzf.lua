@@ -269,6 +269,12 @@ local function set_preview_label(label)
     return string.format('focus:transform-preview-label:echo [ %s ]', label)
 end
 
+---Bash command to replace $HOME with tilde
+---@param path string
+local function tildefy_home(path)
+    return '$(echo ' .. path .. ' | sed "s|^$HOME|~|")'
+end
+
 ---@param extra_keys table? Extra keys for --expect
 ---@param exclude_defaults boolean? Whether to exclude the default keys, i.e., ctrl-x, ctrl-v and
 ---ctrl-t
@@ -401,7 +407,7 @@ local function files(from_resume)
             '--header',
             ':: CTRL-L (toggle HOME/Current)',
             '--bind',
-            set_preview_label('$(echo {2} | sed "s|^$HOME|~|")'),
+            set_preview_label(tildefy_home('{2}')),
             '--bind',
             'ctrl-l:transform:[[ ! -e ' .. under_home .. ' ]] && {' ..
                 'echo "reload(' .. vim.fn.escape(fd_home, '"') .. ')+change-prompt(~/)";' ..
@@ -462,7 +468,7 @@ end)
 
 -- Find files for my dotfiles
 local function dot_files(from_resume)
-    local git_cmd = 'ls-dotfiles | ' .. dressup_cmd('dotfiles')
+    local git_cmd = 'ls-gitfiles dot | ' .. dressup_cmd('ls_gitfiles')
 
     local spec = {
         ['sink*'] = sink_file,
@@ -476,9 +482,19 @@ local function dot_files(from_resume)
             '--expect',
             expect_keys(),
             '--preview',
-            fzf_previewer .. ' {2}',
+            'line={} \
+            if [[ "${line:1:2}" =~ D ]]; then \
+                if git --git-dir=$HOME/dotfiles --work-tree=$HOME show HEAD:{2} | file - | grep -q text; then \
+                    git --git-dir=$HOME/dotfiles --work-tree=$HOME show HEAD:{2} | bat --color=always --style=numbers \
+                else \
+                    echo "No preview for this deleted file" \
+                fi \
+            else \
+                ' .. fzf_previewer .. ' ~/{2} \
+            fi \
+            ',
             '--accept-nth',
-            '{2}',
+            '~/{2}',
             '--bind',
             set_preview_label('{2}'),
         }),
@@ -1444,7 +1460,7 @@ local function qf_items_fzf(win_local, from_resume)
             '--preview-window',
             'down,45%,+{3}-/2',
             '--bind',
-            set_preview_label('$(echo {2} | sed "s|^$HOME|~|")'),
+            set_preview_label(tildefy_home('{2}')),
         }),
     }
 
@@ -1664,7 +1680,7 @@ local function get_fzf_opts_for_live_grep(rg, rg_query, path, prompt, extra_opts
             echo "change-prompt(' .. prompt .. ' [RG]> )+disable-search+reload(' .. rg .. ' {q} || true)+rebind(change)+transform-query(cat ' .. cached_rg_query .. ')"\
         }',
         '--bind',
-        set_preview_label('$(echo {1} | sed "s|$HOME|~|"):{2}:{3}'),
+        set_preview_label(tildefy_home('{1}') .. ':{2}:{3}'),
         '--delimiter',
         ':',
         '--header',
@@ -2078,7 +2094,7 @@ local function lsp_symbols(method, params, title, symbol_query, from_resume)
             '--preview-window',
             fzf_preview_window,
             '--bind',
-            set_preview_label('$(echo {3}:{4}:{5} | sed "s|^$HOME|~|")'),
+            set_preview_label(tildefy_home('{3}:{4}:{5}')),
         }),
     }
 
@@ -2215,7 +2231,7 @@ local function lsp_locations(method, title, from_resume)
             '--preview-window',
             'down,45%,+{4}-/2',
             '--bind',
-            set_preview_label('$(echo {3}:{4}:{5} | sed "s|^$HOME|~|")'),
+            set_preview_label(tildefy_home('{3}:{4}:{5}')),
         }),
     }
 
@@ -2345,7 +2361,7 @@ local function diagnostics(from_resume, opts)
             '--preview-window',
             '+{3}-/2',
             '--bind',
-            set_preview_label('$(echo {2}:{3}:{4} | sed "s|^$HOME|~|")'),
+            set_preview_label(tildefy_home('{2}:{3}:{4}')),
         }),
     }
 
@@ -2439,17 +2455,32 @@ local function git_files(from_resume)
         return
     end
 
-    local git_cmd = 'git -C ' .. git_root .. ' ls-files --exclude-standard | ' .. dressup_cmd('git_ls_files')
+    local arg = (vim.env.GIT_DIR == vim.env.HOME .. '/dotfiles') and 'dot' or ''
+    local git_cmd = 'ls-gitfiles ' .. arg .. ' | ' .. dressup_cmd('ls_gitfiles')
 
     local spec = {
         ['sink*'] = sink_file,
         options = get_fzf_opts(from_resume, {
+            '--delimiter',
+            '\t',
+            '--with-nth',
+            '1',
             '--prompt',
             'Git Files> ',
             '--expect',
             expect_keys(),
             '--preview',
-            fzf_previewer .. ' ' .. git_root .. '/{2}',
+            'line={} \
+            if [[ "${line:1:2}" =~ D ]]; then \
+                if git show HEAD:{2} | file - | grep -q text; then \
+                    git show HEAD:{2} | bat --color=always --style=numbers \
+                else \
+                    echo "No preview for this deleted file" \
+                fi \
+            else \
+                ' .. fzf_previewer .. ' ' .. git_root .. '/{2} \
+            fi \
+            ',
             '--accept-nth',
             git_root .. '/{2}',
             '--header',
@@ -2991,7 +3022,7 @@ local function tags(from_resume)
             end_line="$(( start_line + FZF_PREVIEW_LINES - 1 ))";'
             .. bat_prefix .. ' --line-range="$start_line:$end_line" --highlight-line="$center" -- {1}',
             '--bind',
-            set_preview_label('{3} \\| $(echo {1} | sed "s|^$HOME|~|")'), -- show "tagname | filename" on the preview label
+            set_preview_label('{3} \\| ' .. tildefy_home('{1}')), -- show "tagname | filename" on the preview label
         }),
     }
 
@@ -3094,7 +3125,7 @@ local function buffer_tags(from_resume)
             '--preview-window',
             '+{2}-/2',
             '--bind',
-            set_preview_label('$(echo ' .. filename .. ':{2} \\({1}\\) | sed "s|^$HOME|~|")'),
+            set_preview_label(tildefy_home(filename .. ':{2} \\({1}\\)')),
         }),
     }
 

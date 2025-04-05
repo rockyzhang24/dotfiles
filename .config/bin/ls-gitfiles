@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+
+# List all files managed by git including untracked files.
+# Support displaying the two-letter status code.
+
+if [[ $# -eq 0 ]]; then
+    # Normal git repository
+    git_cmd="git"
+    git_status="$git_cmd status --porcelain=v1"
+elif [[ $1 == 'dot' ]]; then
+    # The bare repository managing my dotfiles
+    git_cmd="git --git-dir=$HOME/dotfiles/ --work-tree=$HOME"
+    git_status="$git_cmd status -uall $XDG_CONFIG_HOME --porcelain=v1"
+else
+    exit 0
+fi
+
+root_dir="$($git_cmd rev-parse --show-toplevel)"
+
+if [[ -z $git_status ]]; then
+    $git_cmd -C "$root_dir" ls-files --exclude-standard --full-name | sed -E "s|^(.*)|\1\t\1|"
+    exit 0
+fi
+
+# (1) Get files listed by git status
+$git_status | awk '{
+    if ($1 ~ /R/) {
+        # (1)
+        # Handle the special case rename, i.e., [R ] oldfile -> newfile
+        split(substr($0,4), a, " -> ")
+        printf "[\x1b[32m%s\x1b[m\x1b[31m%s\x1b[m] %s -> %s\t%s\n",
+        substr($0,1,1),
+        substr($0,2,1),
+        a[1],
+        a[2],
+        a[2]
+    } else {
+        # (2)
+        # Deal with the other cases, e.g., [M ] file
+        printf "[\x1b[32m%s\x1b[m\x1b[31m%s\x1b[m] %s\t%s\n",
+        substr($0,1,1),
+        substr($0,2,1),
+        substr($0,4),
+        substr($0,4)
+    }
+}' && $git_cmd -C "$root_dir" ls-files --exclude-standard --full-name | grep -v -F -f <(  # (2) Get all files and filter out files from git status
+    $git_status | awk '{
+        if ($1 ~ /R/) {
+            split(substr($0,4), a,  " -> ")
+            print a[2]
+        } else {
+            print $2
+        }
+}') | sed -E "s|^(.*)|     \1\t\1|"

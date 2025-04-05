@@ -32,36 +32,33 @@ for line in io.lines() do
         -- output: <icon> <filename>\t<absolute_path>
         local icon = ansi_icon(line)
         output_line = icon .. ' ' .. line .. '\t' .. cwd .. '/' .. line
-    elseif source == 'git_ls_files' then
-        -- line is a filename
-        -- output: <icon> <filename>
-        local icon = ansi_icon(line)
-        output_line = icon .. ' ' .. line
-    elseif source == 'dotfiles' then
-        -- lines are output of ls-dotfiles
+    elseif source == 'ls_gitfiles' then
+        -- lines are output of ls-gitfiles
         -- (1) Some file changed, i.e., git status has output
-        -- <status_code> <status_text>\t<filename> ---> <status_code> <icon> <status_text>\t<filename>
+        -- <status_code> <status_text>\t<filename> ---> <status_code> <icon>
+        -- <status_text>\t<filename>
         -- (2) No file changed, i.e., git status has no output
         -- <filename>\t<filename> ---> <icon> <filename>\t<filename>
-        local filename = line:match('\t(.*)$')
-        local status_code = line:match('^(%[.*%])')
-        local status_text = filename
+        local filename, filepath = unpack(vim.split(line, '\t'))
+        local status_code = filename:match('^(%[.*%])')
         if status_code then
-            status_text = line:match('^%[.*%]%s(.*)\t')
+            filename = line:match('^%[.*%]%s(.*)\t')
             dotfile_changed = true
+        else
+            filename = vim.trim(filename)
         end
-        local icon = ansi_icon(filename)
+        local icon = ansi_icon(filepath)
         if not dotfile_changed then
             -- For (2)
-            output_line = icon .. ' ' .. filename .. '\t' .. filename
+            output_line = icon .. ' ' .. filename .. '\t' .. filepath
         else
             -- For (1)
             output_line = string.format(
                 '%s %s %s\t%s',
                 status_code and status_code or string.rep(' ', 4),
                 icon,
-                status_text,
-                filename
+                filename,
+                filepath
             )
         end
     elseif source == 'git_status' then

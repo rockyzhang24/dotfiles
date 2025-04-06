@@ -2534,6 +2534,21 @@ local function git_status(from_resume)
                         notify.info(output)
                     end, system_on_error)
                 end)
+            elseif key == 'ctrl-r' then
+                -- CTRL-R to reset, i.e., discard all changes including both staged changes and
+                -- unstaged changes
+                ui.input_yes(string.format('%s\nReset %s above (y/N)', files_newline, file_or_files), function()
+                    for i = 2, #lines do
+                        local is_untracked = lines[i]:match('^%[%?%?%]')
+                        local cmd = is_untracked and
+                            (git .. ' clean -f ' .. filenames[i - 1]) or
+                            (git .. ' checkout HEAD -- ' .. filenames[i - 1])
+                        system.async(cmd, {}, vim.schedule_wrap(function(output)
+                            vim.cmd('checktime')
+                            notify.info(output)
+                        end), system_on_error)
+                    end
+                end)
             end
         end,
         options = get_fzf_opts(from_resume, {
@@ -2544,9 +2559,9 @@ local function git_status(from_resume)
             '--prompt',
             'Git Status> ',
             '--header',
-            ':: CTRL-H (unstage), CTRL-L (stage)',
+            ':: CTRL-H (unstage), CTRL-L (stage), CTRL-R (reset)',
             '--expect',
-            expect_keys({ 'ctrl-h', 'ctrl-l' }, true),
+            expect_keys({ 'ctrl-h', 'ctrl-l', 'ctrl-r' }, true),
             '--preview',
             -- Three cases:
             -- 1) Untracked: git diff --no-index /dev/null <file>
@@ -2557,11 +2572,14 @@ local function git_status(from_resume)
             (diff_output=$(' .. git .. ' diff {2}) && \
                 [[ -n $diff_output ]] && \
                 echo $diff_output ' .. diff_pager .. ' || \
-                ' .. git .. ' diff --staged {2} ' .. diff_pager .. ')'
+                ' .. git .. ' diff --staged {2} ' .. diff_pager .. ')',
+            '--bind',
+            set_preview_label('{1}'),
         }),
     }
 
-    -- Each fzf entry could be one of
+    -- Fzf entry is [<staged><unstaged>] <git status text>\t<filename> with \t as delimiter.
+    -- {1} is displayed in fzf and it could be one of
     -- 1. [ M] file1
     -- 2. [MM] file2
     -- 3. [R ] oldfile -> newfile
@@ -2590,7 +2608,11 @@ local function git_branches(from_resume)
     --   remotes/origin/branch            |    remotes/origin/branch
     -- * (HEAD detached at origin/branch) |    origin/branch
     --
-    local extract_branch_cmd = '[[ {1} == "*" ]] && branch={2} || branch={1}; [[ $branch == "(HEAD" ]] && entry={} && branch=${entry#*\\(HEAD detached at } && branch=${branch%%\\)*}; echo $branch'
+    local extract_branch_cmd = ' \
+        [[ {1} == "*" ]] && branch={2} || branch={1}; \
+        [[ $branch == "(HEAD" ]] && entry={} && branch=${entry#*\\(HEAD detached at } && branch=${branch%%\\)*}; \
+        echo $branch \
+    '
     local root_dir = get_git_root()
     if root_dir == nil then
         return
@@ -2612,12 +2634,10 @@ local function git_branches(from_resume)
                 end
                 table.insert(cmd, branch)
                 notify.info('[Git] switching to ' .. branch .. ' branch...')
-                system.async(cmd, {}, function(_)
-                    vim.schedule(function()
-                        notify.info('[Git] switched to ' .. branch .. ' branch.')
-                        vim.cmd('checktime')
-                    end)
-                end, system_on_error)
+                system.async(cmd, {}, vim.schedule_wrap(function(_)
+                    vim.cmd('checktime')
+                    notify.info('[Git] switched to ' .. branch .. ' branch.')
+                end), system_on_error)
             elseif key == 'alt-bs' then
                 -- ALT-BS to delete branches
                 local cmd_del_branch = { 'git', '-C', root_dir, 'branch', '--delete' }

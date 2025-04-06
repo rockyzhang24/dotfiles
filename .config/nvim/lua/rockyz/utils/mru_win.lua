@@ -30,6 +30,7 @@ function M.goto_recent()
             local wintype = vim.fn.win_gettype(winid)
             if wintype ~= 'popup' then
                 vim.fn.win_gotoid(winid)
+                break
             end
         end
     end

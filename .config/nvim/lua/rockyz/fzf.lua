@@ -238,10 +238,6 @@ end
 -- Record whether Rg is in fzf mode or not
 local fzf_mode_enabled = ''
 
--- A special string as delimiter instead of whitepace as some rare filenames may contain
--- whitespaces, e.g., some files under ~/.cache.
-local special_delimiter = '@@@@'
-
 ---Get fzf options
 ---@param from_resume boolean? Whether the finder is called by fzf resume
 ---@param extra_opts table? Extra options
@@ -838,7 +834,7 @@ local function tabs(from_resume)
             if key == 'alt-bs' and #vim.api.nvim_list_tabpages() > 1 then
                 -- ALT-BS: delete tabs
                 for i = 2, #lines do
-                    for winid in lines[i]:match('%S+%s%S+%s%S+%s(%S+)'):gmatch('[^,]+') do
+                    for winid in lines[i]:match('^[^\t]+\t%S+\t%S+\t(%S+)\t'):gmatch('[^,]+') do
                         winid = tonumber(winid)
                         if winid then
                             vim.api.nvim_win_close(winid, false)
@@ -847,15 +843,17 @@ local function tabs(from_resume)
                 end
             elseif #lines == 2 then
                 -- ENTER with single selection: select tab
-                local tid = tonumber(string.match(lines[2], '%S+%s%S+%s(%S+)'))
+                local tid = tonumber(string.match(lines[2], '^[^\t]+\t%S+\t(%S+)'))
                 if tid then
                     vim.api.nvim_set_current_tabpage(tid)
                 end
             end
         end,
         options = get_fzf_opts(from_resume, {
+            '--delimiter',
+            '\t',
             '--with-nth',
-            '5..',
+            '5',
             '--prompt',
             'Tabs> ',
             '--header',
@@ -863,9 +861,9 @@ local function tabs(from_resume)
             '--expect',
             'alt-bs',
             '--preview',
-            'file=$(echo {1} | sed "s/@@@@/ /g"); [[ -f $file ]] && ' .. bat_prefix .. ' --highlight-line {2} -- $file || echo "No preview support!"',
+            'file={1}; [[ -f $file ]] && ' .. bat_prefix .. ' --highlight-line {2} -- $file || echo "No preview support!"',
             '--bind',
-            set_preview_label('$(echo {1} | sed "s/@@@@/ /g; s|^$HOME|~|")'),
+            set_preview_label(tildefy_home('{1}')),
         }),
     }
 
@@ -892,10 +890,7 @@ local function tabs(from_resume)
                         local filename = vim.fn.fnamemodify(bufname, ':t')
                         -- Handle current window in each tab
                         if winid == cur_winid then
-                            -- Space is the default delimiter in fzf, so temporarily replacing it with a
-                            -- special string such as "@@@@". When the bufname is needed in the preview
-                            -- later on, replace it back.
-                            cur_bufname = bufname:gsub(" ", "@@@@")
+                            cur_bufname = bufname
                             cur_lnum = vim.api.nvim_win_get_cursor(winid)[1]
                             -- Mark the current window in a tab by a distinct color
                             filename = ansi_string(filename, 'DiagnosticOk')
@@ -905,8 +900,8 @@ local function tabs(from_resume)
                 end
                 -- prefix is used by fzf itself for preview and sink, and it won't be presented in each
                 -- entry
-                local prefix = cur_bufname .. ' ' .. cur_lnum .. ' ' .. tid .. ' ' .. table.concat(winids, ',')
-                local entry = prefix .. ' ' .. idx .. ': ' .. table.concat(filenames, ', ')
+                local prefix = cur_bufname .. '\t' .. cur_lnum .. '\t' .. tid .. '\t' .. table.concat(winids, ',')
+                local entry = prefix .. '\t' .. idx .. ': ' .. table.concat(filenames, ', ')
                 -- Indicator for current tab
                 if tid == cur_tab then
                     entry = entry .. ' ' .. icons.caret.left
@@ -1446,7 +1441,7 @@ local function qf_items_fzf(win_local, from_resume)
         end,
         options = get_fzf_opts(from_resume, {
             '--delimiter',
-            special_delimiter,
+            '\t',
             '--prompt',
             win_local and 'Location List' or 'Quickfix List' .. '> ',
             '--header',
@@ -1481,7 +1476,7 @@ local function qf_items_fzf(win_local, from_resume)
                 bufname,
                 item.lnum,
                 fzf_line,
-            }, special_delimiter)
+            }, '\t')
         end
         write(entries)
     end
@@ -1992,7 +1987,7 @@ local function symbol_conversion(symbols, ctx, guide_prev, all_entries, all_item
                     lnum,
                     col,
                     fzf_line,
-                }, special_delimiter)
+                }, '\t')
 
                 all_items[#all_items + 1] = {
                     filename = filename,
@@ -2047,7 +2042,7 @@ local function lsp_symbols(method, params, title, symbol_query, from_resume)
                 local loclist = key == 'ctrl-l'
                 local qf_items = {}
                 for i = 2, #lines do
-                    local idx = tonumber(lines[i]:match('^(%d+)' .. special_delimiter))
+                    local idx = tonumber(lines[i]:match('^(%d+)\t'))
                     table.insert(qf_items, all_items[idx])
                 end
                 local what = { title = title, items = qf_items }
@@ -2063,9 +2058,9 @@ local function lsp_symbols(method, params, title, symbol_query, from_resume)
                     if action then
                         vim.cmd(action)
                     end
-                    local idx = tonumber(lines[i]:match('^(%d+)' .. special_delimiter))
+                    local idx = tonumber(lines[i]:match('^(%d+)\t'))
                     local item = all_items[idx]
-                    local offset_encoding = lines[i]:match('^%d+' .. special_delimiter .. '([^@]+)' .. special_delimiter)
+                    local offset_encoding = lines[i]:match('^%d+\t([^\t]+)\t')
                     if symbol_query then
                         -- For workspace symbol
                         vim.lsp.util.show_document(item.user_data, offset_encoding)
@@ -2080,7 +2075,7 @@ local function lsp_symbols(method, params, title, symbol_query, from_resume)
         end,
         options = get_fzf_opts(from_resume, {
             '--delimiter',
-            special_delimiter,
+            '\t',
             '--with-nth',
             '6..',
             '--prompt',
@@ -2976,6 +2971,11 @@ end
 vim.keymap.set('n', ',fh', function()
     run(git_stash)
 end)
+
+-- In each line of a tag file, the tagname may contain whitespaces and \t is the delimiter to
+-- separate fields. So we need a special string (different from whitespace and \t) as fzf's
+-- delimiter.
+local special_delimiter = '@@@@'
 
 -- Tags
 local function tags(from_resume)

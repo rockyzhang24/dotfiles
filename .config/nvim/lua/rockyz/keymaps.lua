@@ -159,6 +159,9 @@ vim.keymap.set('n', 'qw', '<Cmd>q<CR>')
 -- Search
 --
 
+vim.keymap.set('n', '/', 'ms/')
+vim.keymap.set('n', '?', 'ms?')
+
 -- Clean search highlighting and update diff if needed
 vim.keymap.set('n', '<Esc>', function()
     if vim.v.hlsearch then
@@ -168,8 +171,15 @@ vim.keymap.set('n', '<Esc>', function()
     end
 end, { expr = true, silent = true })
 
--- Search inside VISUAL area
-vim.keymap.set('x', '/', '<Esc>/\\%V')
+-- Search in VISUAL selection with //
+vim.keymap.set('c', '/', function()
+    local cmdtype = vim.fn.getcmdtype()
+    if (cmdtype == '/' or cmdtype == '?') and vim.fn.getcmdline() == '' then
+        return '<C-c><Esc>/\\%V'
+    else
+        return '/'
+    end
+end, { expr = true })
 
 --
 -- Substitute

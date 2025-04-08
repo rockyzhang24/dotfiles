@@ -78,7 +78,7 @@ local config = {
     indent_at_cursor_col = true,
 }
 
-local symbol = require('rockyz.icons').lines.indentscope
+local symbol = require('rockyz.icons').lines.indentscope or '|'
 
 local ns_id = vim.api.nvim_create_namespace('rockyz.indentscope.symbols')
 
@@ -158,7 +158,7 @@ local function scope_from_body(body)
         border = {
             -- border's top can be 0 if body's top line is line 1 and border's bottom can
             -- be vim.fn.line('$') + 1 if body's bottom line is the last line. If both
-            -- case are met, border's idnent will be -1.
+            -- case are met, border's indent will be -1.
             top = body.top - 1,
             bottom = body.bottom + 1,
             indent = math.max(get_line_indent(body.top - 1), get_line_indent(body.bottom + 1))
@@ -463,6 +463,17 @@ end)
 ---Top refers to the scope that is currently selected
 local stack = {}
 
+-- Reset the stack when incremental selection finishes
+local group = vim.api.nvim_create_augroup('rockyz.indentscope.reset_stack', { clear = true })
+vim.api.nvim_create_autocmd('ModeChanged', {
+    group = group,
+    pattern = '[vV\x22]*:[ni]',
+    callback = function()
+        stack = {}
+        vim.api.nvim_del_augroup_by_name('rockyz.indentscope.reset_stack')
+    end,
+})
+
 ---Get the line with minimal indent within the given line range
 ---@param s_line number Start line
 ---@param e_line number End line
@@ -490,26 +501,16 @@ local function incremental_selection()
         indent_at_cursor_col = false
     })
     local select_border = false
-    -- Select the whole scope if the current selection is the scope's body
+    -- Select the whole scope (i.e., body + borders) if the current selection is just the scope's body
     if mode == 'V' and s_line == scope.body.top and e_line == scope.body.bottom then
         select_border = true
     end
     visual_select_scope(scope, select_border)
-    stack[#stack + 1] = { scope, select_border } -- push
+    stack[#stack + 1] = { scope = scope, select_border = select_border } -- push
 end
 
 -- Expand
 vim.keymap.set({ 'n', 'x' }, '<C-n>', function()
-    -- Reset the stack when incremental selection finishes
-    local group = vim.api.nvim_create_augroup('rockyz.indentscope.reset_stack', { clear = true })
-    vim.api.nvim_create_autocmd('ModeChanged', {
-        group = group,
-        pattern = '[vV\x22]*:[ni]',
-        callback = function()
-            stack = {}
-            vim.api.nvim_del_augroup_by_name('rockyz.indentscope.reset_stack')
-        end,
-    })
     incremental_selection()
 end)
 
@@ -520,7 +521,7 @@ vim.keymap.set('x', '<C-m>', function()
     end
     stack[#stack] = nil -- pop
     local top = stack[#stack] -- peek
-    visual_select_scope(unpack(top))
+    visual_select_scope(top.scope, top.select_border)
 end)
 
 -- Exclude filetypes

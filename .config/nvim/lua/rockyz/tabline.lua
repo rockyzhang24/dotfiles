@@ -111,28 +111,30 @@ function M.render()
         local tab_title = get_icon_and_title(winid, is_cur, title_hl)
         table.insert(items, tab_title)
 
-        -- Diagnostic info
+        -- Status
+        local status = {}
+        -- (1). Diagnostic info
         -- Display the diagnostic count for the current window in this tabpage and the total diagnostic
         -- count across all windows
         if total_diag > 0 then
             table.insert(
-                items,
+                status,
                 string.format('%%#%s#[%s/%s]%%#%s#', diag_hl, cur_diag, total_diag, tab_hl)
             )
         end
-
-        -- "Modified" indicator
+        -- (2). "Modified" indicator
         local bufmodified = vim.fn.getbufvar(bufnr, '&mod')
         if bufmodified ~= 0 then
             if total_diag > 0 then
                 table.insert(
-                    items,
-                    string.format('%%#%s#%s%%#%s#', diag_hl, icons.misc.circle_filled, tab_hl)
+                    status,
+                    string.format('%%#%s#[+]%%#%s#', diag_hl, tab_hl)
                 )
             else
-                table.insert(items, icons.misc.circle_filled)
+                table.insert(items, '[+]')
             end
         end
+        table.insert(items, table.concat(status, ''))
 
         -- Assemble tabline for this one tab
         local tab = string.format('%%#%s#%s ', tab_hl, table.concat(items, ' '))

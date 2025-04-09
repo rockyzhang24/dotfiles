@@ -143,19 +143,21 @@ M.render = function()
     local name = name_component()
     table.insert(items, string.format('%%#%s#%s%%*', hl, name))
 
-    -- Diagnostic count
+    -- Status
+    local status = {}
+    -- (1). Diagnostic count
     local diag_total = error_cnt + warn_cnt
     if diag_total ~= 0 then
-        table.insert(items, string.format('%%#%s#[%s]%%*', hl, diag_total))
+        table.insert(status, string.format('%%#%s#[%s]%%*', hl, diag_total))
     end
-
-    -- "Modified" indicator
+    -- (2). "Modified" indicator
     local bufnr = vim.api.nvim_get_current_buf()
     local mod = vim.fn.getbufvar(bufnr, '&mod')
     if mod ~= 0 then
         local hl_mod = diag_total == 0 and 'WinbarModified' or hl
-        table.insert(items, string.format('%%#%s#%s%%*', hl_mod, icons.misc.circle_filled))
+        table.insert(status, '%#' .. hl_mod .. '#[+]%*')
     end
+    table.insert(items, table.concat(status, ''))
 
     -- Truncate if too long
     items[#items] = items[#items] .. '%<'

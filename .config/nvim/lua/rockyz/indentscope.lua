@@ -156,9 +156,12 @@ local function scope_from_body(body)
     return {
         body = body,
         border = {
-            -- border's top can be 0 if body's top line is line 1 and border's bottom can
-            -- be vim.fn.line('$') + 1 if body's bottom line is the last line. If both
-            -- case are met, border's indent will be -1.
+            -- border's top can be line 0 (i.e., the line above the first line in the buffer)
+            -- if body's top line is line 1 and border's bottom can be line vim.fn.line('$') +
+            -- 1 (i.e., the line below the last line in the buffer) if body's bottom line is
+            -- the last line. If both case are met, border's indent will be -1.
+            -- In this special case, the body of this scope is the whole buffer (body.indent
+            -- is 0).
             top = body.top - 1,
             bottom = body.bottom + 1,
             indent = math.max(get_line_indent(body.top - 1), get_line_indent(body.bottom + 1))
@@ -500,6 +503,10 @@ local function incremental_selection()
         show_body_at_border = false,
         indent_at_cursor_col = false
     })
+    -- Skip the special case where the entire buffer is the body of the scope
+    if stack[#stack] and scope.border.indent < 0 then
+        return
+    end
     local select_border = false
     -- Select the whole scope (i.e., body + borders) if the current selection is just the scope's body
     if mode == 'V' and s_line == scope.body.top and e_line == scope.body.bottom then

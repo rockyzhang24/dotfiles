@@ -520,13 +520,16 @@ local function incremental_selection()
         indent_at_cursor_col = false
     }
     local select_border = false
-    -- Empty stack means incremental selection hasn't started yet
     if not curr_select then
+        -- Empty stack means incremental selection hasn't started yet
         next_scope = get_scope(vim.fn.line('.'), nil, opts)
     elseif not curr_select.select_border then
+        -- If current selection is the body of a scope, we select this entire scope including its
+        -- borders
         next_scope = vim.deepcopy(curr_select.scope)
         select_border = true
     else
+        -- If current selection is already an entire scope, we select its outer scope
         local top, bottom = curr_select.scope.border.top, curr_select.scope.border.bottom
         local line = vim.fn.indent(top) < vim.fn.indent(bottom) and top or bottom
         next_scope = get_scope(line, nil, opts)
@@ -546,7 +549,7 @@ end)
 
 -- Shrink
 vim.keymap.set('x', '<C-m>', function()
-    if #stack == 1 then
+    if #stack < 2 then
         return
     end
     stack[#stack] = nil -- pop

@@ -8,8 +8,8 @@ require('nvim-treesitter.configs').setup({
                 ['if'] = '@function.inner',
                 ['aa'] = '@parameter.outer',
                 ['ia'] = '@parameter.inner',
-                ['av'] = '@call.outer', -- v for invoke
-                ['iv'] = '@call.inner',
+                ['ax'] = '@call.outer', -- x for execute
+                ['ix'] = '@call.inner',
             },
         },
         move = {
@@ -18,13 +18,13 @@ require('nvim-treesitter.configs').setup({
             goto_next_start = {
                 [']f'] = '@function.outer',
                 [']a'] = '@parameter.inner',
-                [']v'] = '@call.outer',
+                [']x'] = '@call.outer',
             },
             goto_next_end = {},
             goto_previous_start = {
                 ['[f'] = '@function.outer',
                 ['[a'] = '@parameter.inner',
-                ['[v'] = '@call.outer',
+                ['[x'] = '@call.outer',
             },
             goto_previous_end = {},
         },

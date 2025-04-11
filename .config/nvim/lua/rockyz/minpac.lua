@@ -70,6 +70,7 @@ local plugins = {
     'nvim-treesitter/nvim-treesitter-textobjects',
     'mizlan/iswap.nvim',
     'm-demare/hlargs.nvim',
+    'mfussenegger/nvim-treehopper',
 
     -- Git
     'lewis6991/gitsigns.nvim',

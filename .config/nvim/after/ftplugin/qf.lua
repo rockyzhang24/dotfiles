@@ -29,3 +29,5 @@ end, { range = true })
 
 vim.keymap.set('n', 'dd', '<Cmd>RemoveQfItems<CR>', { buffer = true })
 vim.keymap.set('x', 'd', ':RemoveQfItems<CR>', { buffer = true, silent = true })
+
+vim.keymap.set('n', 'q', ':q<CR>', { buffer = true, silent = true, nowait = true })

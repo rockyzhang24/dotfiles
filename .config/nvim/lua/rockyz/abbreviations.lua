@@ -12,3 +12,4 @@ abbreviate('dot', '!git --git-dir=/Users/rockyzhang/dotfiles/ --work-tree=/Users
 abbreviate('ts', 'silent !tmux neww tmux-sessionizer')
 abbreviate('man', 'Man')
 abbreviate('H', 'h')
+abbreviate('git', 'Git')

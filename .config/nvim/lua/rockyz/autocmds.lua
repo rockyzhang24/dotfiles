@@ -141,11 +141,9 @@ vim.api.nvim_create_autocmd({ 'BufLeave', 'FocusLost', 'InsertEnter', 'CmdlineEn
 vim.api.nvim_create_autocmd('CmdWinEnter', {
     group = vim.api.nvim_create_augroup('rockyz.cmdwin', {}),
     callback = function(args)
-        -- Delete <CR> mapping (defined in treesitter for incremental selection and not work in
-        -- command-line window)
-        vim.keymap.del('n', '<CR>', { buffer = args.buf })
-        -- Create a keymap to execute command and stay in the command-line window
+        -- Execute command and stay in the command-line window
         vim.keymap.set({ 'n', 'i' }, '<S-CR>', '<CR>q:', { buffer = args.buf })
+        vim.keymap.set('n', 'q', ':q<CR>', { buffer = args.buf, nowait = true, silent = true })
     end,
 })
 

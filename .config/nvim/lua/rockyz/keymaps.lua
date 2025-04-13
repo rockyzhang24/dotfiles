@@ -459,8 +459,8 @@ vim.keymap.set('n', '<Leader>wp', function()
     require('rockyz.utils.mru_win').goto_recent()
 end)
 -- Split
-vim.keymap.set('n', '<Leader>-', ':split<CR>', { silent = true })
-vim.keymap.set('n', '<Leader><BSlash>', ':vsplit<CR>', { silent = true })
+vim.keymap.set('n', '<Leader>-', require('rockyz.utils.win_utils').split)
+vim.keymap.set('n', '<Leader><BSlash>', require('rockyz.utils.win_utils').vsplit)
 -- Move current window to new tab
 vim.keymap.set('n', '<Leader>wt', '<C-w>T')
 -- Duplicate the current window in a new tab

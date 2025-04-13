@@ -134,4 +134,22 @@ function M.win_maximize_toggle()
     end
 end
 
+-- New a window and close the current window if it's a floating one
+local function close_float_and_new(cmd)
+    local winnr = vim.api.nvim_get_current_win()
+    local config = vim.api.nvim_win_get_config(winnr)
+    vim.cmd(cmd)
+    if config.relative and config.relative ~= '' then
+        vim.api.nvim_win_close(winnr, true)
+    end
+end
+
+function M.split()
+    close_float_and_new('split')
+end
+
+function M.vsplit()
+    close_float_and_new('vsplit')
+end
+
 return M

@@ -125,7 +125,7 @@ local function lightbulb()
                     has_action = true
                 end
             end
-            if has_action then
+            if has_action and bulb_linenr < vim.fn.line('$') then
                 lightbulb_update(winid, bufnr, bulb_linenr)
             else
                 lightbulb_remove(winid, bufnr)

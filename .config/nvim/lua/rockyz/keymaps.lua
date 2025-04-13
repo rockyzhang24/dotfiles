@@ -10,8 +10,8 @@ vim.keymap.set({ 'n', 'x' }, '<Leader>q', 'q')
 vim.keymap.set({ 'n', 'x' }, '-', '"_')
 vim.keymap.set('x', '<', '<gv')
 vim.keymap.set('x', '>', '>gv')
-vim.keymap.set({ 'n', 'x' }, 'gh', '^')
-vim.keymap.set({ 'n', 'x' }, 'gl', 'g_')
+vim.keymap.set({ 'n', 'x', 'o' }, 'gh', '^')
+vim.keymap.set({ 'n', 'x', 'o' }, 'gl', 'g_')
 vim.keymap.set('n', '<BS>', '<C-^>')
 vim.keymap.set('n', '<Leader>i', '`^')
 vim.keymap.set({ 'n', 'x', 'o' }, [[']], [[`]])
@@ -25,8 +25,8 @@ vim.keymap.set('i', '<M-j>', '<Esc>:m .+1<CR>==a', { silent = true })
 vim.keymap.set('i', '<M-k>', '<Esc>:m .-2<CR>==a', { silent = true })
 -- Join lines but retain the cursor position
 vim.keymap.set('n', 'J', 'mzJ`z')
--- Make dot work over visual line selections
-vim.keymap.set('n', '.', ':normal.<CR>', { silent = true })
+-- Make dot work over every line in visual line selections
+vim.keymap.set('x', '.', ':normal.<CR>', { silent = true })
 -- Clone current paragraph
 vim.keymap.set('n', 'cp', 'yap<S-}>p')
 -- Move the view horizontally when nowrap is set
@@ -185,12 +185,15 @@ end, { expr = true })
 -- Substitute
 --
 
+vim.keymap.set('n', 'gs', [[:let @/='\<'.expand('<cword>').'\>'<CR>cgn]])
+vim.keymap.set('x', 'gs', [["sy:let @/=@s<CR>cgn]])
+
 -- Replace the visually selected text, or the word under cursor
-vim.keymap.set('x', '<Leader>rw', '"hy:%s/<C-r>h/<C-r>h/gc<Left><Left><Left>')
-vim.keymap.set('n', '<Leader>rw', ':%s/\\<<C-r><C-w>\\>//gI<Left><Left><Left>')
+vim.keymap.set('x', '<Leader>sw', '"hy:%s/<C-r>h/<C-r>h/gc<Left><Left><Left>')
+vim.keymap.set('n', '<Leader>sw', ':%s/\\<<C-r><C-w>\\>//gI<Left><Left><Left>')
 
 -- Run :substitute inside VISUAL aera with [g] flag on
-vim.keymap.set('x', '<Leader>rr', function()
+vim.keymap.set('x', '<Leader>sr', function()
     vim.o.gdefault = true
     vim.api.nvim_create_autocmd('CmdlineLeave', {
         group = vim.api.nvim_create_augroup('rockyz.reset_gdefault', { clear = true }),

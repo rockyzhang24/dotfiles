@@ -5,11 +5,12 @@ local notify = require('rockyz.utils.notify_utils')
 
 local function switch_source_header(bufnr)
     bufnr = bufnr == 0 and vim.api.nvim_get_current_buf() or bufnr
+    local method_name = 'textDocument/switchSourceHeader'
     local clients = vim.lsp.get_clients({ bufnr = bufnr, name = 'clangd' })
     local uri = vim.uri_from_bufnr(bufnr)
     if #clients > 0 then
         local client = clients[1]
-        client:request('textDocument/switchSourceHeader', { uri = uri }, function(err, res)
+        client:request(method_name, { uri = uri }, function(err, res)
             if err then
                 notify.warn(err.message or tostring(err))
             elseif res then
@@ -18,6 +19,8 @@ local function switch_source_header(bufnr)
                 notify.warn('Header file not found')
             end
         end, bufnr)
+    else
+        notify.warn(('method %s is not supported by any servers active on the current buffer'):format(method_name))
     end
 end
 
@@ -30,12 +33,14 @@ return {
         '--function-arg-placeholders',
         '--fallback-style=none',
     },
-    filetypes = { 'c', 'cpp' },
+    filetypes = { 'c', 'cpp', 'objc', 'objcpp', 'cuda', 'proto' },
     root_markers = {
         '.clangd',
+        '.clang-tidy',
         '.clang-format',
         'compile_commands.json',
         'compile_flags.txt',
+        'configure.ac', -- AutoTools
         '.git',
     },
     capabilities = {

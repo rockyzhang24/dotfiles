@@ -2,8 +2,10 @@ if !exists(':Tabularize')
     finish
 endif
 
-" Some predefined pattern for "the first comma", "the first colon", "the first equal"
-" E.g., `:Tabularize f:`
+" Predefined patterns, e.g., `:Tabularize f:`
+" f, first comma
+" f: first colon
+" f= first equal sign
 AddTabularPattern! f, /^[^,]*\zs,/
 AddTabularPattern! f: /^[^:]*\zs:/
 AddTabularPattern! f= /^[^=]*\zs=/

@@ -15,7 +15,6 @@ local plugins = {
     'brenoprata10/nvim-highlight-colors',
     'godlygeek/tabular',
     'mbbill/undotree',
-    'mhinz/vim-grepper',
     'haya14busa/vim-asterisk',
     'tommcdo/vim-exchange',
     -- cx{motion}, cxx (line), X (visual), cxc (clear), and `.` is supported

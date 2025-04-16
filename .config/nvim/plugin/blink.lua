@@ -8,7 +8,16 @@ require('blink.cmp').setup({
         ['<C-Enter>'] = { 'show', 'show_documentation', 'hide_documentation' },
         ['<C-e>'] = { 'cancel', 'fallback' },
         ['<C-\\>'] = { 'hide', 'fallback' },
-        ['<C-y>'] = { 'select_and_accept' },
+        ['<C-y>'] = {
+            function(cmp)
+                if vim.fn.pumvisible() == 1 then
+                    -- For vim's builtin ins-completion
+                    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<C-y>', true, false, true), 'n', false)
+                elseif cmp.is_menu_visible() then
+                    cmp.select_and_accept()
+                end
+            end,
+        },
 
         ['<C-p>'] = {
             function(cmp)

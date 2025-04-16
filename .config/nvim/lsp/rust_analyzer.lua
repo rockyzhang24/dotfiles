@@ -2,17 +2,25 @@ return {
     cmd = { 'rust-analyzer' },
     filetypes = { 'rust' },
     root_dir = function(bufnr, cb)
-        local root = vim.fs.root(bufnr, { 'Cargo.toml' })
-        if root then
-            vim.system({ 'cargo', 'metadata', '--no-depts', '--format-version', '1' }, { cwd = root }, function(obj)
+        local cargo_crate_dir = vim.fs.root(bufnr, { 'Cargo.toml' })
+        if cargo_crate_dir then
+            vim.system({
+                'cargo',
+                'metadata',
+                '--no-depts',
+                '--format-version',
+                '1',
+                '--manifest-path',
+                cargo_crate_dir .. '/Cargo.toml',
+            }, { cwd = cargo_crate_dir }, function(obj)
                 if obj.code ~= 0 then
-                    cb(root)
+                    cb(cargo_crate_dir)
                 else
                     local success, result = pcall(vim.json.decode, obj.stdout)
-                    if success and result.workspace_root then
-                        cb(result.workspace_root)
+                    if success and result['workspace_root'] then
+                        cb(vim.fs.normalize(result['workspace_root']))
                     else
-                        cb(root)
+                        cb(cargo_crate_dir)
                     end
                 end
             end)

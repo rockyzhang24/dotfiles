@@ -176,6 +176,35 @@ vim.keymap.set('n', '\\z', function()
     end
 end)
 
+-- Enhanced Ctrl-G (borrowed from justinmk/config)
+local function ctrl_g()
+    local msg = {}
+    local isfile = vim.fn.empty(vim.fn.expand('%:p')) == 0
+    -- Show file info
+    local oldmsg = vim.trim(vim.fn.execute('norm! 2' .. vim.keycode('<C-g>')))
+    local mtime = isfile and vim.fn.strftime('%Y-%m-%d %H:%M', vim.fn.getftime(vim.fn.expand('%:p'))) or ''
+    table.insert(msg, { ('%s  %s\n'):format(oldmsg:sub(1), mtime) })
+    -- Show git branch
+    local gitref = vim.fn.exists('*FugitiveHead') and vim.fn['FugitiveHead'](7) or nil
+    if gitref then
+        table.insert(msg, { ('branch: %s\n'):format(gitref) })
+    end
+    -- Show current directory
+    table.insert(msg, { ('cwd: %s\n'):format(vim.fn.fnamemodify(vim.fn.getcwd(), ':~')) })
+    -- Show current session
+    table.insert(msg, { ('session: %s\n'):format(#vim.v.this_session > 0 and vim.fn.fnamemodify(vim.v.this_session, ':~') or '?') })
+    -- Show process id
+    table.insert(msg, { ('PID: %s\n'):format(vim.fn.getpid()) })
+    -- Show current context
+    table.insert(msg, {
+        vim.fn.getline(vim.fn.search('\\v^[[:alpha:]$_]', 'bn', 1, 100)),
+        'Identifier',
+    })
+    vim.api.nvim_echo(msg, false, {})
+end
+
+vim.keymap.set('n', '<Leader><C-g>', ctrl_g)
+
 -- Insert on-the-fly snippet (expand snippet stored in register s)
 -- Uncomment this after discarding LuaSnip
 -- vim.keymap.set('i', '<C-r>s', function()

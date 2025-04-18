@@ -2,7 +2,7 @@
 -- DiffSplit file1 file2
 -- ProfileStart, ProfileStop
 -- Scratch
--- Redir
+-- RedirMsg
 -- CopyCodeBlock
 -- ReorderList
 -- Reindent 4 8
@@ -56,7 +56,7 @@ vim.api.nvim_create_user_command('Scratch', function()
 end, { nargs = 0 })
 
 -- Redirect message output to a split window
-vim.api.nvim_create_user_command('Redir', function()
+vim.api.nvim_create_user_command('RedirMsg', function()
     vim.cmd('vertical new')
     scratch_buf_init()
     vim.cmd('redir => msg_output | silent messages | redir END')
@@ -156,3 +156,9 @@ end, {
         return { 'nameonly', 'relative', 'absolute' }
     end,
 })
+
+-- Diff for the current buffer and the file it was loaded from
+-- :help :DiffOrig
+vim.cmd([[
+command! DiffOrig leftabove vnew | set bt=nofile | r ++edit # | 0d_ | diffthis | wincmd p | diffthis
+]])

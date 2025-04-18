@@ -12,10 +12,14 @@ vim.keymap.set('x', '<', '<gv')
 vim.keymap.set('x', '>', '>gv')
 vim.keymap.set({ 'n', 'x', 'o' }, 'gh', '^')
 vim.keymap.set({ 'n', 'x', 'o' }, 'gl', 'g_')
-vim.keymap.set('n', '<BS>', '<C-^>')
+vim.keymap.set('n', '<M-Tab>', '<C-^>')
 vim.keymap.set('n', '<Leader>i', '`^')
 vim.keymap.set({ 'n', 'x', 'o' }, [[']], [[`]])
 vim.keymap.set({ 'n', 'x', 'o' }, [[`]], [[']])
+vim.keymap.set('n', 'g:', ':lua =')
+vim.keymap.set('n', 'z=', '<Cmd>setlocal spell<CR>z=')
+vim.keymap.set('x', 'x', '"_d') -- for copy and delete use v_d
+vim.keymap.set('n', 'z.', ':silent lockmarks update ++p<CR>') -- Preserve '[ '] on :write
 -- Move the current line or selections up and down with corresponding indentation
 -- vim.keymap.set('n', '<M-j>', ':m .+1<CR>==', { silent = true })
 -- vim.keymap.set('n', '<M-k>', ':m .-2<CR>==', { silent = true })
@@ -25,8 +29,10 @@ vim.keymap.set('i', '<M-j>', '<Esc>:m .+1<CR>==a', { silent = true })
 vim.keymap.set('i', '<M-k>', '<Esc>:m .-2<CR>==a', { silent = true })
 -- Join lines but retain the cursor position
 vim.keymap.set('n', 'J', 'mzJ`z')
--- Make dot work over every line in visual line selections
-vim.keymap.set('x', '.', ':normal.<CR>', { silent = true })
+-- Un-join (split) the current line at the cursor position
+vim.keymap.set('n', 'gj', 'i<c-j><esc>k$')
+-- Make dot work over each line of a visual selection
+vim.keymap.set('x', '.', ':normal .<CR>', { silent = true })
 -- Clone current paragraph
 vim.keymap.set('n', 'cp', 'yap<S-}>p')
 -- Move the view horizontally when nowrap is set
@@ -34,6 +40,7 @@ vim.keymap.set('n', 'zh', '10zh')
 vim.keymap.set('n', 'zl', '10zl')
 -- Visual select all
 vim.keymap.set('n', '<M-a>', 'VggoG')
+
 -- Smart jk
 local function smart_jk(jk)
     if vim.v.count ~= 0 then
@@ -50,6 +57,7 @@ end, { expr = true })
 vim.keymap.set('n', 'k', function()
     return smart_jk('k')
 end, { expr = true })
+
 -- Smart dd and cc: use blackhole register if we delete empty line
 local function smart_del(key)
     local cmd = key .. key
@@ -65,6 +73,7 @@ end, { expr = true })
 vim.keymap.set('n', 'cc', function()
     return smart_del('c')
 end, { expr = true })
+
 -- Smart i: make i indent properly on empty line
 vim.keymap.set('n', 'i', function()
     if #vim.fn.getline('.') == 0 then
@@ -73,6 +82,7 @@ vim.keymap.set('n', 'i', function()
         return 'i'
     end
 end, { expr = true })
+
 -- Remove the trailing whitespaces in the selected lines or the whole buffer
 vim.keymap.set(
     'n',
@@ -86,6 +96,7 @@ vim.keymap.set(
     ":<C-u>call utils#Preserve('s/\\s\\+$//e', visualmode())<CR>;",
     { silent = true }
 )
+
 -- Insert blank lines above or below the current line and preserve the cursor position
 vim.keymap.set('n', '[<Space>', 'm`' .. vim.v.count .. 'O<Esc>``')
 vim.keymap.set('n', ']<Space>', 'm`' .. vim.v.count .. 'o<Esc>``')
@@ -127,13 +138,43 @@ end)
 -- Toggle autoformat (format-on-save)
 vim.keymap.set('n', '\\f', ':ToggleAutoFormat<CR>') -- buffer-local
 vim.keymap.set('n', '\\F', ':ToggleAutoFormat!<CR>') -- global
-
 vim.keymap.set('n', '<C-c>', 'ciw')
 
 -- From TJ
 vim.keymap.set('n', '<Leader><Leader>x', '<Cmd>source %<CR>') -- execute the current file
 vim.keymap.set('n', '<Leader>x', ':.lua<CR>') -- execute the current line
 vim.keymap.set('v', '<Leader>x', ':lua<CR>') -- execute the selected lines
+
+-- Make I and A in character-wise and linewise VISUAL be v_b_I
+vim.keymap.set('x', 'I', function()
+    local mode = vim.fn.mode()
+    if mode == 'v' or mode == 'V' then
+        return '<C-v>^o^I'
+    else
+        return 'I'
+    end
+end, { expr = true })
+vim.keymap.set('x', 'A', function()
+    local mode = vim.fn.mode()
+    if mode == 'v' or mode == 'V' then
+        return '<C-v>0o$A'
+    else
+        return 'A'
+    end
+end, { expr = true })
+
+-- Toggle a shallow fold view for quick code overview
+vim.keymap.set('n', '\\z', function()
+    if vim.w.shallow_outline_enabled then
+        vim.wo.foldmethod, vim.wo.foldnestmax, vim.wo.foldlevel = vim.w.prev_foldmethod, vim.w.prev_foldnestmax, vim.w.prev_foldlevel
+        vim.cmd('1,$foldopen!')
+        vim.w.shallow_outline_enabled = false
+    else
+        vim.w.prev_foldmethod, vim.w.prev_foldnestmax, vim.w.prev_foldlevel = vim.wo.foldmethod, vim.wo.foldnestmax, vim.wo.foldlevel
+        vim.wo.foldmethod, vim.wo.foldnestmax, vim.wo.foldlevel = 'indent', 2, 0
+        vim.w.shallow_outline_enabled = true
+    end
+end)
 
 -- Insert on-the-fly snippet (expand snippet stored in register s)
 -- Uncomment this after discarding LuaSnip
@@ -159,6 +200,11 @@ vim.keymap.set('n', 'qw', '<Cmd>q<CR>')
 -- Search
 --
 
+local function is_search_cmd()
+    local cmdtype = vim.fn.getcmdtype()
+    return cmdtype == '/' or cmdtype == '?'
+end
+
 vim.keymap.set('n', '/', 'ms/')
 vim.keymap.set('n', '?', 'ms?')
 
@@ -173,11 +219,19 @@ end, { expr = true, silent = true })
 
 -- Search in VISUAL selection with //
 vim.keymap.set('c', '/', function()
-    local cmdtype = vim.fn.getcmdtype()
-    if (cmdtype == '/' or cmdtype == '?') and vim.fn.getcmdline() == '' then
+    if is_search_cmd() and vim.fn.getcmdline() == '' then
         return '<C-c><Esc>/\\%V'
     else
         return '/'
+    end
+end, { expr = true })
+
+-- /<BS>: Inverse search (lines NOT containing pattern)
+vim.keymap.set('c', '<BS>', function()
+    if is_search_cmd() and vim.fn.getcmdline() == '' then
+        return '\\v^(()@!.)*$<Left><Left><Left><Left><Left><Left><Left>'
+    else
+        return '<BS>'
     end
 end, { expr = true })
 
@@ -221,6 +275,8 @@ vim.keymap.set('n', '<Leader>bo', require('rockyz.utils.buf_utils').bufdelete_ot
 vim.keymap.set({ 'n', 'x' }, '<Leader>y', '"+y')
 vim.keymap.set('n', '<Leader>Y', '"+y$')
 vim.keymap.set('n', '<Leader>Y', '"+y$')
+-- Copy the entire buffer to system clipboard
+vim.keymap.set('n', 'yY', ':let b:winview=winsaveview()<bar>exe \'keepjumps keepmarks norm ggVG"+y\'<bar>call winrestview(b:winview)<cr>')
 -- Paste and format
 vim.keymap.set('n', 'p', 'p=`]')
 vim.keymap.set('n', 'P', 'P=`]')
@@ -236,24 +292,27 @@ end)
 vim.keymap.set('n', 'gp', function()
     return '`[' .. vim.fn.strpart(vim.fn.getregtype(vim.v.register), 0, 1) .. '`]'
 end, { expr = true })
--- Copy unnamed(") register to system(*) register
+-- Copy unnamed(") register to system(+) register
 vim.keymap.set('n', 'yc', function()
     vim.fn.setreg('+', vim.fn.getreg('"'))
 end)
 
+-- Copy current file's name, dir and path
 local function yank_reg(reg, text)
     vim.fn.setreg(reg, text)
     notify.info(string.format('%s is yanked to %s', text, reg))
 end
-
-vim.keymap.set('n', 'yd', function()
-    yank_reg(vim.v.register, vim.fn.expand('%:p:h'))
-end)
+-- (1). Name
 vim.keymap.set('n', 'yn', function()
     yank_reg(vim.v.register, vim.fn.expand('%:p:t'))
 end)
-vim.keymap.set('n', 'yp', function()
-    yank_reg(vim.v.register, vim.fn.expand('%:p'))
+-- (2). Dir
+vim.keymap.set('n', 'y/', function()
+    yank_reg(vim.v.register, vim.fn.expand('%:.:h'))
+end)
+-- (3). Path (relative)
+vim.keymap.set('n', 'y5', function()
+    yank_reg(vim.v.register, vim.fn.expand('%:.'))
 end)
 
 --
@@ -275,11 +334,14 @@ vim.keymap.set('c', '<C-k>', '<C-\\>egetcmdline()[:getcmdpos() - 2]<CR>')
 -- Delete the previous word
 vim.keymap.set('c', '<M-BS>', '<C-w>')
 vim.o.cedit = '<C-o>'
--- Use %% to get the absolute filepath of the current buffer in command-line
--- mode
-vim.keymap.set('c', '%%', function()
-    vim.api.nvim_feedkeys(vim.fn.expand('%:p:h') .. '/', 'c', false)
-end)
+
+-- Put the current file's directory
+vim.keymap.set({ 'c', 'i' }, '<M-/>', '<C-r>=expand("%:.:h", 1)<CR>')
+-- Put filename tail
+vim.keymap.set({ 'c', 'i' }, '<M-5>', '<C-r>=fnamemodify(@%, ":t")<CR>')
+
+-- Put the last search pattern
+vim.keymap.set({ 'c', 'i' }, '<C-r>?', '<C-r>=substitute(getreg("/"), "[<>\\]", "", "g")<CR>')
 
 --
 -- Navigation (vim-unimpaired style)
@@ -434,11 +496,17 @@ vim.keymap.set('n', '<Leader>tn', '<Cmd>$tabnew<CR>')
 vim.keymap.set('n', '<Leader>tq', '<Cmd>tabclose<CR>')
 -- Close all other tabs
 vim.keymap.set('n', '<Leader>to', '<Cmd>tabonly<CR>')
--- Move the current tab to the left or right
-vim.keymap.set('n', '<Leader>t,', '<Cmd>-tabmove<CR>')
-vim.keymap.set('n', '<Leader>t.', '<Cmd>+tabmove<CR>')
+
+-- Move tab to Nth position
+vim.keymap.set('n', '<M-,>', function()
+    return '<Cmd>tabmove ' .. (vim.v.count ~= 0 and vim.v.count or '-1') .. '<CR>'
+end, { expr = true })
+vim.keymap.set('n', '<M-.>', function()
+    return '<Cmd>tabmove ' .. (vim.v.count ~= 0 and vim.v.count or '+1') .. '<CR>'
+end, { expr = true })
+
 -- Open current buffer in new tab
-vim.keymap.set('n', '<C-w><C-t>', '<Cmd>tab split<CR>')
+vim.keymap.set('n', '<M-t>', '<Cmd>tab split<CR>')
 
 --
 -- Window
@@ -455,7 +523,7 @@ for i = 1, 9, 1 do
 end
 -- Go to the previous window
 -- (The builtin ctrl-w p has a bug. It considers the window that is currently invalid)
-vim.keymap.set('n', '<Leader>wp', function()
+vim.keymap.set('n', '<Tab>', function()
     require('rockyz.utils.mru_win').goto_recent()
 end)
 -- Split
@@ -496,7 +564,7 @@ vim.keymap.set({ 'n', 'i' }, '<M-d>', function()
     scroll_other_win('d')
 end)
 -- Maximize and restore the current window
-vim.keymap.set('n', '\\z', require('rockyz.utils.win_utils').win_maximize_toggle)
+vim.keymap.set('n', '\\m', require('rockyz.utils.win_utils').win_maximize_toggle)
 
 --
 -- Terminal
@@ -508,3 +576,13 @@ vim.keymap.set('t', '<M-\\>', '<C-\\><C-n>')
 vim.keymap.set('t', '<M-r>', function()
     return '<C-\\><C-n>"' .. vim.fn.nr2char(vim.fn.getchar()) .. 'pi'
 end, { expr = true })
+
+--
+-- Vimscript goes here
+--
+vim.cmd([[
+
+" Insert formatted datetime (from @tpope vimrc)
+inoremap <silent> <C-G><C-T> <C-R>=repeat(complete(col('.'),map(["%Y-%m-%d %H:%M:%S","%a, %d %b %Y %H:%M:%S %z","%Y %b %d","%d-%b-%y","%a %b %d %T %Z %Y","%Y%m%d"],'strftime(v:val)')+[localtime()]),0)<CR>
+
+]])

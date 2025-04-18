@@ -3,6 +3,7 @@ local icons = require('rockyz.icons')
 vim.o.number = true
 vim.o.relativenumber = true
 vim.o.laststatus = 3
+vim.o.cmdheight = 1
 vim.o.cursorline = true
 vim.o.showmode = false
 vim.o.textwidth = 100
@@ -22,10 +23,12 @@ vim.opt.fillchars = {
     eob = ' ',
     msgsep = '‾',
 }
+vim.opt.jumpoptions:append('view')
+vim.o.tabclose = 'uselast'
 vim.o.foldcolumn = '1'
 vim.o.foldlevel = 99
 vim.o.foldlevelstart = 99
-vim.o.completeopt = 'menu,menuone,noselect,popup'
+vim.o.completeopt = 'menuone,noselect,noinsert,fuzzy,popup'
 vim.o.timeoutlen = 500
 vim.o.updatetime = 250
 vim.opt.shortmess:append('acS')
@@ -58,6 +61,8 @@ vim.opt.cinoptions:append('g-1')
 vim.o.scrolloff = 3
 vim.o.mouse = 'a'
 vim.o.mousemodel = 'extend'
+vim.o.synmaxcol = 500
+vim.o.linebreak = true
 
 -- Avoid highlighting the last search when sourcing vimrc
 vim.cmd('nohlsearch')

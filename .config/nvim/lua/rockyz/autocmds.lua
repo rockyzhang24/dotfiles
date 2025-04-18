@@ -24,9 +24,7 @@ vim.api.nvim_create_autocmd('FileType', {
     group = vim.api.nvim_create_augroup('rockyz.overwrite_defaults', {}),
     pattern = '*',
     callback = function()
-        vim.opt.formatoptions:remove('t')
-        vim.opt.formatoptions:remove('o')
-        vim.opt.formatoptions:append('rn')
+        vim.opt.formatoptions:append('ron1l')
     end,
 })
 
@@ -44,6 +42,7 @@ vim.api.nvim_create_autocmd('BufRead', {
                     and line <= vim.fn.line('$')
                     and string.find(vim.bo.filetype, 'commit') == nil
                     and vim.fn.index({ 'xxd', 'gitrebase' }, vim.bo.filetype) == -1
+                    and vim.o.diff == false
                 then
                     vim.cmd([[normal! g`"]])
                 end
@@ -57,8 +56,7 @@ vim.api.nvim_create_autocmd({ 'BufWritePre' }, {
     pattern = '*',
     group = vim.api.nvim_create_augroup('rockyz.auto_create_dir', {}),
     callback = function(ctx)
-        -- Prevent oil.nivm from creating an extra oil:/ dir when we create a
-        -- file/dir
+        -- Prevent oil.nivm from creating an extra oil:/ dir when we create a file/dir
         if vim.bo.ft == 'oil' then
             return
         end
@@ -202,5 +200,20 @@ vim.api.nvim_create_autocmd('InsertLeave', {
     group = 'rockyz.colorcol',
     callback = function()
         vim.o.colorcolumn = ''
+    end,
+})
+
+-- Set CursorLine of not-current windows
+vim.api.nvim_create_augroup('rockyz.cursorlinenc', {})
+vim.api.nvim_create_autocmd({ 'VimEnter', 'WinEnter', 'TabEnter', 'BufEnter' }, {
+    group = 'rockyz.cursorlinenc',
+    callback = function()
+        vim.opt_local.winhighlight:remove('CursorLine')
+    end,
+})
+vim.api.nvim_create_autocmd('WinLeave', {
+    group = 'rockyz.cursorlinenc',
+    callback = function()
+        vim.opt_local.winhighlight:append({ CursorLine = 'CursorLineNC' })
     end,
 })

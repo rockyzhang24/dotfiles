@@ -424,7 +424,7 @@ local function jump(side, update_jumplist)
 end
 
 local function exit_visual_mode()
-    local ctrl_v = vim.api.nvim_replace_termcodes('<C-v>', true, true, true)
+    local ctrl_v = vim.api.nvim_replace_termcodes('<C-v>', true, false, true)
     local cur_mode = vim.fn.mode()
     if cur_mode == 'v' or cur_mode == 'V' or cur_mode == ctrl_v then vim.cmd('noautocmd normal! ' .. cur_mode) end
 end

@@ -164,6 +164,8 @@ local groups = {
     TabIndicatorInactive = { fg = tab_indicator_inactive_fg, bg = tab_inactive_bg },
     -- Indent scope
     IndentScopeSymbol = 'Delimiter',
+    -- CursorLine of not-current windows
+    CursorLineNC = { underdashed = true, sp = '#9b9ea4' },
 
     --
     -- diff

@@ -16,8 +16,10 @@ local plugins = {
     'godlygeek/tabular',
     'mbbill/undotree',
     'haya14busa/vim-asterisk',
-    'tommcdo/vim-exchange',
-    -- cx{motion}, cxx (line), X (visual), cxc (clear), and `.` is supported
+    {
+        'tommcdo/vim-exchange',
+        -- cx{motion}, cxx (line), X (visual), cxc (clear), and `.` is supported
+    },
     'othree/eregex.vim',
     'wellle/targets.vim',
     'danymat/neogen',
@@ -27,6 +29,19 @@ local plugins = {
     'junegunn/vim-after-object',
     'preservim/tagbar',
     'dhananjaylatkar/cscope_maps.nvim',
+    {
+        'tpope/vim-eunuch',
+        -- 1. Provides handy commands:
+        -- :Remove, :Delete, :Move, :Rename, :Copy, :Duplicate, :Chmod, :Mkdir, :Cfind, :Lfind,
+        -- :Clocate, :Llocate, :Wall, :SudoWrite, :SudoEdit
+        -- 2. Shebang line auto detection
+    },
+    {
+        'AndrewRadev/linediff.vim',
+        -- Run command :Linediff on two separate selections to diff them
+    },
+    'inkarkat/vim-ingo-library',
+    'inkarkat/vim-mark',
 
     -- LSP
     'SmiteshP/nvim-navic',

@@ -621,8 +621,20 @@ vim.keymap.set('t', '<M-r>', function()
 end, { expr = true })
 
 --
+-- Insert
+--
+
+vim.keymap.set('i', '{<CR>', '{<CR>}<Esc>O')
+vim.keymap.set('i', '{;', '{<CR>};<Esc>O')
+vim.keymap.set('i', '{,', '{<CR>},<Esc>O')
+vim.keymap.set('i', '[<CR>', '[<CR>]<Esc>O')
+vim.keymap.set('i', '[;', '[<CR>];<Esc>O')
+vim.keymap.set('i', '[,', '[<CR>],<Esc>O')
+
+--
 -- Vimscript goes here
 --
+
 vim.cmd([[
 
 " Insert formatted datetime (from @tpope vimrc)

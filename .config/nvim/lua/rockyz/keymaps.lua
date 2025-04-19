@@ -286,11 +286,11 @@ vim.keymap.set('n', 'gs', [[:let @/='\<'.expand('<cword>').'\>'<CR>cgn]])
 vim.keymap.set('x', 'gs', [["sy:let @/=@s<CR>cgn]])
 
 -- Replace the visually selected text, or the word under cursor
-vim.keymap.set('x', '<Leader>sw', '"hy:%s/<C-r>h/<C-r>h/gc<Left><Left><Left>')
-vim.keymap.set('n', '<Leader>sw', ':%s/\\<<C-r><C-w>\\>//gI<Left><Left><Left>')
+vim.keymap.set('x', '<Leader>s*', '"hy:%s/<C-r>h/<C-r>h/gc<Left><Left><Left>')
+vim.keymap.set('n', '<Leader>s*', ':%s/\\<<C-r><C-w>\\>//gI<Left><Left><Left>')
 
 -- Run :substitute inside VISUAL aera with [g] flag on
-vim.keymap.set('x', '<Leader>sr', function()
+vim.keymap.set('x', '<Leader>s/', function()
     vim.o.gdefault = true
     vim.api.nvim_create_autocmd('CmdlineLeave', {
         group = vim.api.nvim_create_augroup('rockyz.reset_gdefault', { clear = true }),

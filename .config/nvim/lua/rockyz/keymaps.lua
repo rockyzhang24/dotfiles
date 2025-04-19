@@ -205,6 +205,20 @@ end
 
 vim.keymap.set('n', '<Leader><C-g>', ctrl_g)
 
+-- g?: Web search
+vim.keymap.set('n', 'g?', function()
+    vim.ui.open(('https://google.com/search?q=%s'):format(vim.fn.expand('<cword>')))
+end)
+vim.keymap.set('x', 'g?', function()
+    local region = vim.fn.getregion(
+        vim.fn.getpos('.'),
+        vim.fn.getpos('v'),
+        { type = vim.fn.mode() }
+    )
+    vim.ui.open(('https://google.com/search?q=%s'):format(vim.trim(table.concat(region, ' '))))
+    vim.api.nvim_input('<esc>')
+end)
+
 -- Insert on-the-fly snippet (expand snippet stored in register s)
 -- Uncomment this after discarding LuaSnip
 -- vim.keymap.set('i', '<C-r>s', function()
@@ -246,7 +260,7 @@ vim.keymap.set('n', '<Esc>', function()
     end
 end, { expr = true, silent = true })
 
--- Search in VISUAL selection with //
+-- //: Search within VISUAL selection
 vim.keymap.set('c', '/', function()
     if is_search_cmd() and vim.fn.getcmdline() == '' then
         return '<C-c><Esc>/\\%V'

@@ -157,7 +157,10 @@ M.render = function()
         local hl_mod = diag_total == 0 and 'WinbarModified' or hl
         table.insert(status, '%#' .. hl_mod .. '#[+]%*')
     end
-    table.insert(items, table.concat(status, ''))
+    local status_str = table.concat(status, '')
+    if status_str ~= '' then
+        table.insert(items, status_str)
+    end
 
     -- Truncate if too long
     items[#items] = items[#items] .. '%<'

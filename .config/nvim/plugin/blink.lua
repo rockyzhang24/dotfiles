@@ -5,38 +5,13 @@ require('blink.cmp').setup({
     -- keymaps for snippet jumping forward and backward are defined in luasnip config
     keymap = {
         preset = 'none',
-        ['<C-Enter>'] = { 'show', 'show_documentation', 'hide_documentation' },
+        ['<C-Enter>'] = { 'show', 'show_documentation', 'hide_documentation', 'fallback' },
         ['<C-e>'] = { 'cancel', 'fallback' },
         ['<C-\\>'] = { 'hide', 'fallback' },
-        ['<C-y>'] = {
-            function(cmp)
-                if vim.fn.pumvisible() == 1 then
-                    -- For vim's builtin ins-completion
-                    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<C-y>', true, false, true), 'n', false)
-                elseif cmp.is_menu_visible() then
-                    cmp.select_and_accept()
-                end
-            end,
-        },
+        ['<C-y>'] = { 'select_and_accept', 'fallback' },
 
-        ['<C-p>'] = {
-            function(cmp)
-                if cmp.is_visible() then
-                    cmp.select_prev()
-                else
-                    cmp.show()
-                end
-            end,
-        },
-        ['<C-n>'] = {
-            function(cmp)
-                if cmp.is_visible() then
-                    cmp.select_next()
-                else
-                    cmp.show()
-                end
-            end,
-        },
+        ['<C-p>'] = { 'select_prev', 'fallback' },
+        ['<C-n>'] = { 'select_next', 'show', 'fallback' },
 
         ['<C-b>'] = { 'scroll_documentation_up', 'fallback' },
         ['<C-f>'] = { 'scroll_documentation_down', 'fallback' },

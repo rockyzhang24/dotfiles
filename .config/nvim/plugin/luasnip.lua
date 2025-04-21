@@ -1,10 +1,10 @@
 -- An offcial example to demo the basic config and how to create snippets:
 -- https://github.com/L3MON4D3/LuaSnip/blob/master/Examples/snippets.lua
 
-local ls = require('luasnip')
+local luasnip = require('luasnip')
 local types = require('luasnip.util.types')
 
-ls.setup({
+luasnip.setup({
     history = true,
     delete_check_events = 'TextChanged',
     update_events = 'TextChanged, TextChangedI',
@@ -42,35 +42,51 @@ ls.setup({
 
 -- Expand the current item or jump to the next item within the snippet.
 vim.keymap.set({ 'i', 's' }, '<C-j>', function()
-    if ls.expand_or_jumpable() then
-        ls.expand_or_jump()
+    if luasnip.expand_or_jumpable() then
+        return '<Cmd>lua require("luasnip").expand_or_jump()<CR>'
+    elseif vim.snippet.active({ direction = 1 }) then
+        -- For builtin snippet
+        return '<Cmd>lua vim.snippet.jump(1)<CR>'
+    else
+        return '<C-j>'
     end
-end)
+end, { expr = true })
 
 -- Jump to the previous item within the snippet
 vim.keymap.set({ 'i', 's' }, '<C-k>', function()
-    if ls.jumpable(-1) then
-        ls.jump(-1)
+    if luasnip.jumpable(-1) then
+        return '<Cmd>lua require("luasnip").jump(-1)<CR>'
+    elseif vim.snippet.active({ direction = -1 }) then
+        -- For builtin snippet
+        return '<Cmd>lua vim.snippet.jump(-1)<CR>'
+    else
+        return '<C-k>'
     end
-end)
+end, { expr = true })
 
 -- Change the choice in current choiceNode
 vim.keymap.set({ 'i', 's' }, '<C-l>', function()
-    if ls.choice_active() then
-        ls.change_choice(1)
+    if luasnip.choice_active() then
+        return '<Cmd>lua require("luasnip").change_choice(1)<CR>'
+    else
+        return '<C-l>'
     end
-end)
+end, { expr = true })
 vim.keymap.set({ 'i', 's' }, '<C-h>', function()
-    if ls.choice_active() then
-        ls.change_choice(-1)
+    if luasnip.choice_active() then
+        return '<Cmd>lua require("luasnip").change_choice(-1)<CR>'
+    else
+        return '<C-h>'
     end
-end)
+end, { expr = true })
 -- Open a picker to select a choice in current choiceNode
 vim.keymap.set({ 'i', 's' }, '<C-c>', function()
-    if ls.choice_active() then
-        require('luasnip.extras.select_choice')()
+    if luasnip.choice_active() then
+        return '<Cmd>lua require("luasnip.extras.select_choice")()<CR>'
+    else
+        return '<C-c>'
     end
-end)
+end, { expr = true })
 
 -- Insert on-the-fly snippet previously stored in register s
 vim.keymap.set('i', '<C-r>s', function()
@@ -83,11 +99,11 @@ vim.api.nvim_create_autocmd('CursorMovedI', {
     group = vim.api.nvim_create_augroup('rockyz.luasnip.unlink_snippet', { clear = true }),
     pattern = '*',
     callback = function(ev)
-        if not ls.session or not ls.session.current_nodes[ev.buf] or ls.session.jump_active then
+        if not luasnip.session or not luasnip.session.current_nodes[ev.buf] or luasnip.session.jump_active then
             return
         end
 
-        local current_node = ls.session.current_nodes[ev.buf]
+        local current_node = luasnip.session.current_nodes[ev.buf]
         local current_start, current_end = current_node:get_buf_position()
         current_start[1] = current_start[1] + 1 -- (1, 0) indexed
         current_end[1] = current_end[1] + 1 -- (1, 0) indexed
@@ -99,7 +115,7 @@ vim.api.nvim_create_autocmd('CursorMovedI', {
             or cursor[2] < current_start[2]
             or cursor[2] > current_end[2]
         then
-            ls.unlink_current()
+            luasnip.unlink_current()
         end
     end,
 })

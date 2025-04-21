@@ -236,7 +236,7 @@ if not cached_rg_query then
 end
 
 -- Record whether Rg is in fzf mode or not
-local fzf_mode_enabled = ''
+local in_fzf_mode = ''
 
 ---Get fzf options
 ---@param from_resume boolean? Whether the finder is called by fzf resume
@@ -1625,9 +1625,9 @@ local function get_fzf_opts_for_live_grep(rg, rg_query, path, prompt, extra_opts
     if not from_resume then
         cached_rg_query = vim.fn.tempname()
         cached_fzf_query = vim.fn.tempname()
-        fzf_mode_enabled = vim.fn.tempname() -- tempfile to record whether it is currently in fzf mode
+        in_fzf_mode = vim.fn.tempname() -- tempfile to record whether it is currently in fzf mode
     end
-    local is_fzf_mode = vim.uv.fs_stat(fzf_mode_enabled)
+    local is_fzf_mode = vim.uv.fs_stat(in_fzf_mode)
     local mode = is_fzf_mode and 'FZF' or 'RG'
     local search_enabled = is_fzf_mode and true or false
     -- Initial rg query
@@ -1664,14 +1664,14 @@ local function get_fzf_opts_for_live_grep(rg, rg_query, path, prompt, extra_opts
         'change:reload:' .. rg .. ' {q} ' .. path .. ' || true',
         '--bind',
         -- Cache the query into the specific tempfile based on the current mode
-        'result:execute-silent([[ ! -e ' .. fzf_mode_enabled .. ' ]] && echo {q} > ' .. cached_rg_query .. ' || echo {q} > ' .. cached_fzf_query .. ')',
+        'result:execute-silent([[ ! $FZF_PROMPT =~ FZF ]] && echo {q} > ' .. cached_rg_query .. ' || echo {q} > ' .. cached_fzf_query .. ')',
         '--bind',
         'alt-m:transform:\
-        [[ ! -e ' .. fzf_mode_enabled .. ' ]] && { \
-            touch ' .. fzf_mode_enabled .. '; \
+        [[ ! $FZF_PROMPT =~ FZF ]] && { \
+            touch ' .. in_fzf_mode .. '; \
             echo "unbind(change)+change-prompt(' .. prompt .. ' [FZF]> )+enable-search+transform-query(cat ' .. cached_fzf_query .. ')"; \
         } || { \
-            rm ' .. fzf_mode_enabled .. '; \
+            rm ' .. in_fzf_mode .. '; \
             echo "change-prompt(' .. prompt .. ' [RG]> )+disable-search+reload(' .. rg .. ' {q} || true)+rebind(change)+transform-query(cat ' .. cached_rg_query .. ')"\
         }',
         '--bind',

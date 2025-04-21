@@ -5,31 +5,30 @@
 # MNEMONIC: [F]uzzy search [R]ip[G]rep
 # SYNOPSIS: frg [rg's OPTIONS] [PATTERN]
 # DESCRIPTION: Riggrep powered by FZF
-#   It has two modes:
-#   1) rg mode, fzf merely acts as the interactive interface, providing the live
+#
+# It has two modes:
+# 1) rg mode, fzf merely acts as the interactive interface, providing the live
 #      grep experience for rg.
-#   2) fzf mode, normal fzf, fuzzy finder for the current results of rg.
+# 2) fzf mode, normal fzf, fuzzy finder for the current results of rg.
+#
 # KEYBINDINGS:
-#   1) ENTER: open the selections via neovim: if only one entry is selected,
+# 1) ENTER: open the selections via neovim: if only one entry is selected,
 #      open it directly; if multiple entrys are selected, open the first one and
 #      dump all into the quickfix.
-#   3) ALT-M: toggle between fzf mode and riggrep mode
+# 2) ALT-M: toggle between fzf mode and riggrep mode
+#
 # NOTE:
-#   -e/--regex is not supported
+#       -e/--regex is not supported
 # EXAMPLES:
-#   frg -s "Foo", given some rg's options and the initial query
-#   frg "foo", just given the initial query
-#   frg, launch it directly
+#       frg -s "Foo", given some rg's options and the initial query
+#       frg "foo", just given the initial query
+#       frg, launch it directly
 
 # Temp file to store the query when switch to another mode so that the query can
 # be restored when switch back.
 rg_query="/tmp/frg-rg-mode-query"
 fzf_query="/tmp/frg-fzf-mode-query"
 rm -f $rg_query $fzf_query
-
-# Temp file to mark if the current mode is fzf mode
-fzf_mode_enabled="/tmp/frg-fzf-mode-enabled"
-rm -f $fzf_mode_enabled
 
 # Path for the file where all selected entries are saved and they will be fed to
 # the quickfix.
@@ -38,45 +37,44 @@ errorfile_path="$HOME/.local/share/rg"
 
 last_arg=${*: -1}
 if [[ $last_arg =~ "^-" ]]; then
-  initial_query=""
-  extra_opts=$*
+    initial_query=""
+    extra_opts=$*
 else
-  initial_query="$last_arg"
-  extra_opts="${*%%"$last_arg"}"
+    initial_query="$last_arg"
+    extra_opts="${*%%"$last_arg"}"
 fi
 
 rg_prefix="rg --line-number --column --color=always --smart-case --vimgrep $RG_EXCLUDE $extra_opts "
 
 selections="$(fzf \
-  --height 80% \
-  --ansi \
-  --disabled \
-  --query "$initial_query" \
-  --bind "start:reload($rg_prefix {q})" \
-  --bind "change:reload:sleep 0.1; $rg_prefix {q} || true" \
-  --bind "alt-m:transform: \
-    [[ ! -e $fzf_mode_enabled ]] && { \
-      touch $fzf_mode_enabled; \
-      echo \"unbind(change)+change-prompt(2. FZF> )+enable-search+transform-query({ echo {q} > $rg_query; cat $fzf_query })\"; \
-    } || { \
-      rm $fzf_mode_enabled; echo \"change-prompt(1. RG> )+disable-search+reload($rg_prefix {q} || true)+rebind(change)+transform-query({ echo {q} > $fzf_query; cat $rg_query })\" \
-    }" \
-  --bind 'focus:transform-preview-label:echo [ {1}:{2}:{3} ]' \
-  --prompt '1. RG> ' \
-  --delimiter : \
-  --header ':: ENTER (open selections in vim), ALT-M (toggle FZF mode and RG mode)' \
-  --preview 'bat --color=always --style=numbers,changes --highlight-line {2} -- {1}' \
-  --preview-window 'down,45%,+{2}-/2,nowrap' \
+    --height 80% \
+    --ansi \
+    --disabled \
+    --query "$initial_query" \
+    --bind "start:reload($rg_prefix {q})" \
+    --bind "change:reload:sleep 0.1; $rg_prefix {q} || true" \
+    --bind "alt-m:transform: \
+        [[ ! \$FZF_PROMPT =~ FZF ]] && { \
+            echo \"unbind(change)+change-prompt(2. FZF> )+enable-search+transform-query({ echo {q} > $rg_query; cat $fzf_query })\"; \
+        } || { \
+            echo \"change-prompt(1. RG> )+disable-search+reload($rg_prefix {q} || true)+rebind(change)+transform-query({ echo {q} > $fzf_query; cat $rg_query })\" \
+        }" \
+    --bind 'focus:transform-preview-label:echo [ {1}:{2}:{3} ]' \
+    --prompt '1. RG> ' \
+    --delimiter : \
+    --header ':: ENTER (open selections in vim), ALT-M (toggle FZF mode and RG mode)' \
+    --preview 'bat --color=always --style=numbers,changes --highlight-line {2} -- {1}' \
+    --preview-window 'down,45%,+{2}-/2,nowrap' \
 )"
 
 if [[ -n $selections ]]; then
-  cnt=$(echo "$selections" | wc -l)
-  if [[ $cnt -eq 1 ]]; then
-    read -r file line <<<"$(echo "$selections" | awk -F: '{print $1, $2}')"
-    nvim "$file" -c "$line"
-  else
-    echo "$selections" >| "$errorfile_path"/frg-errorfile && nvim -q "$errorfile_path"/frg-errorfile \
-      -c "copen" \
-      -c "bwipeout 1"
-  fi
+    cnt=$(echo "$selections" | wc -l)
+    if [[ $cnt -eq 1 ]]; then
+        read -r file line <<<"$(echo "$selections" | awk -F: '{print $1, $2}')"
+        nvim "$file" -c "$line"
+    else
+        echo "$selections" >| "$errorfile_path"/frg-errorfile && nvim -q "$errorfile_path"/frg-errorfile \
+            -c "copen" \
+            -c "bwipeout 1"
+    fi
 fi

@@ -217,3 +217,40 @@ vim.api.nvim_create_autocmd('WinLeave', {
         vim.opt_local.winhighlight:append({ CursorLine = 'CursorLineNC' })
     end,
 })
+
+-- Templates
+-- Source: https://zignar.net/2024/11/20/template-files-for-nvim/
+-- Examples: https://codeberg.org/mfussenegger/dotfiles/src/branch/master/vim/dot-config/nvim/templates
+--
+-- For example, we run :edit foo.lua to edit a new file. It tries to find the first existing
+-- template file in the following order and read it into the buffer.
+-- foo.lua.tpl      --> template exact matching the file name
+-- lua.tpl          --> template matching the file extension
+-- foo.lua.stpl     --> template with snippets matching the file name
+-- lua.stpl         --> template with snippets matching the file extension
+vim.api.nvim_create_autocmd('BufNewFile', {
+    group = vim.api.nvim_create_augroup('rockyz.templates', { clear = true }),
+    desc = 'Load template file',
+    callback = function(args)
+        local home = os.getenv('HOME')
+        local fname = vim.fn.fnamemodify(args.file, ':t')
+        local ext = vim.fn.fnamemodify(args.file, ':e')
+        local candidates = { fname, ext }
+        for _, candidate in ipairs(candidates) do
+            local tmpl = table.concat({ home, '/.config/nvim/templates/', candidate, '.tpl' })
+            if vim.uv.fs_stat(tmpl) then
+                vim.cmd('0r ' .. tmpl)
+                return
+            end
+        end
+        for _, candidate in ipairs(candidates) do
+            local tmpl = table.concat({ home, '/.config/nvim/templates/', candidate, '.stpl' })
+            local f = io.open(tmpl, 'r')
+            if f then
+                local content = f:read('*a')
+                vim.snippet.expand(content)
+                return
+            end
+        end
+    end,
+})

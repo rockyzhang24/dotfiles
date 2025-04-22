@@ -163,7 +163,7 @@ local groups = {
     -- Indent scope
     IndentScopeSymbol = 'Delimiter',
     -- CursorLine of not-current windows
-    CursorLineNC = { underdashed = true, sp = '#9b9ea4' },
+    CursorLineNC = { underdashed = true, sp = gray2 },
 
     --
     -- diff

@@ -43,6 +43,8 @@ require('rockyz.quickfix')
 require('rockyz.lsp')
 require('rockyz.statuscolumn')
 require('rockyz.fzf')
+require('rockyz.mru_win')
+require('rockyz.mru')
 
 -- Fzf
 vim.opt.runtimepath:append(vim.env.HOME .. '/gitrepos/fzf')

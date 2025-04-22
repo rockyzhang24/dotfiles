@@ -567,7 +567,7 @@ end
 -- Go to the previous window
 -- (The builtin ctrl-w p has a bug. It considers the window that is currently invalid)
 vim.keymap.set('n', '<Tab>', function()
-    require('rockyz.utils.mru_win').goto_recent()
+    require('rockyz.mru_win').goto_recent()
 end)
 -- Split
 vim.keymap.set('n', '<Leader>-', require('rockyz.utils.win_utils').split)

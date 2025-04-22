@@ -36,4 +36,11 @@ function M.goto_recent()
     end
 end
 
+vim.api.nvim_create_autocmd('WinLeave', {
+    group = vim.api.nvim_create_augroup('rockyz.mru_win', { clear = true }),
+    callback = function()
+        require('rockyz.mru_win').record()
+    end,
+})
+
 return M

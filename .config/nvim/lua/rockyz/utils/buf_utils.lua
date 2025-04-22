@@ -71,4 +71,23 @@ function M.bufdelete_other()
     end
 end
 
+-- Switch to the alternate buffer or the first available file in MRU list
+function M.switch_last_buf()
+    local alt_bufnr = vim.fn.bufnr('#')
+    local curr_bufnr = vim.api.nvim_get_current_buf()
+    if alt_bufnr ~= -1 and alt_bufnr ~= curr_bufnr then
+        vim.cmd('buffer #')
+    else
+        local mru_list = require('rockyz.mru').list()
+        local cur_bufname = vim.api.nvim_buf_get_name(curr_bufnr)
+        for _, f in ipairs(mru_list) do
+            if cur_bufname ~= f then
+                vim.cmd('edit ' .. vim.fn.fnameescape(f))
+                vim.cmd('silent! normal! `"')
+                break
+            end
+        end
+    end
+end
+
 return M

@@ -12,7 +12,6 @@ vim.keymap.set('x', '<', '<gv')
 vim.keymap.set('x', '>', '>gv')
 vim.keymap.set({ 'n', 'x', 'o' }, 'gh', '^')
 vim.keymap.set({ 'n', 'x', 'o' }, 'gl', 'g_')
-vim.keymap.set('n', '<M-Tab>', '<C-^>')
 vim.keymap.set('n', '<Leader>i', '`^')
 vim.keymap.set({ 'n', 'x', 'o' }, [[']], [[`]])
 vim.keymap.set({ 'n', 'x', 'o' }, [[`]], [[']])
@@ -306,6 +305,8 @@ end, { silent = false, expr = true })
 -- Buffer
 --
 
+-- Switch to the alternate buffer or the first available file in MRU list
+vim.keymap.set('n', '<Tab>', require('rockyz.utils.buf_utils').switch_last_buf)
 -- Delete the current buffer and switch back to the previous one
 vim.keymap.set('n', '<Leader>bd', require('rockyz.utils.buf_utils').bufdelete)
 -- Delete all the other unmodified buffers
@@ -566,7 +567,7 @@ for i = 1, 9, 1 do
 end
 -- Go to the previous window
 -- (The builtin ctrl-w p has a bug. It considers the window that is currently invalid)
-vim.keymap.set('n', '<Tab>', function()
+vim.keymap.set('n', '<M-Tab>', function()
     require('rockyz.mru_win').goto_recent()
 end)
 -- Split

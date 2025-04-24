@@ -8,7 +8,7 @@
 -- <Leader>fo : Old files
 -- <Leader>f. : Files for my dotfiles
 -- <Leader>fb : Buffers
--- <C-\>      : Buffers
+-- <C-Enter>  : Buffers and MRU
 
 -- <Leader>f/ : Search history
 -- <Leader>f: : Command history
@@ -27,7 +27,6 @@
 -- <Leader>fQ : Quickfix list history
 -- <Leader>fL : Location list history
 
--- <Leader>gg : Live grep
 -- <C-g>      : Live grep
 -- <Leader>gv : Live grep in my nvim config
 -- <Leader>g* : Grep for the current word/selection
@@ -120,6 +119,7 @@ local system = require('rockyz.utils.system_utils')
 local ui = require('rockyz.utils.ui_utils')
 local api = require('rockyz.utils.api_utils')
 local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
+local mru = require('rockyz.mru')
 
 vim.g.fzf_layout = {
     window = {
@@ -530,6 +530,8 @@ local function buffers(from_resume)
         end,
         options = get_fzf_opts(from_resume, {
             '--multi',
+            '--delimiter',
+            '\t',
             '--header-lines',
             '1',
             '--with-nth',
@@ -539,9 +541,9 @@ local function buffers(from_resume)
             '--header',
             ':: ALT-BS (delete buffers)',
             '--expect',
-            expect_keys({'alt-bs'}),
+            expect_keys({ 'alt-bs' }),
             '--preview',
-            '[[ {1} == "No_Name" ]] && echo "" || ' .. bat_prefix .. ' --highlight-line {2} -- {1}',
+            '[[ {1} == "[No Name]" ]] && echo "" || ' .. bat_prefix .. ' --highlight-line {2} -- {1}',
             '--preview-window',
             '+{2}-/2',
             '--bind',
@@ -586,11 +588,11 @@ local function buffers(from_resume)
                 vim.bo[bufnr].readonly and '=' or (vim.bo[bufnr].modifiable and '' or '-'),
                 bufinfo.changed == 1 and '+' or '',
             }
-            -- Entry: <fullname> <lnum> <[bufnr]> <flags> <bufname>:<lnum>
+            -- Entry: <fullname>\t<lnum>\t<[bufnr]> <flags> <icon> <bufname>:<lnum>
             -- {3..} will be presented.
             local entry = string.format(
-                '%s %s %-' .. max_bufnr_width .. 's %3s %s %s:%s',
-                #fullname == 0 and 'No_Name' or fullname,
+                '%s\t%s\t%-' .. max_bufnr_width .. 's %3s %s %s:%s',
+                #fullname == 0 and '[No Name]' or fullname,
                 lnum,
                 '[' .. ansi_string(bufnr, hls.bufnr) .. ']',
                 table.concat(flags, ''),
@@ -610,8 +612,130 @@ vim.keymap.set('n', '<Leader>fb', function()
     run(buffers)
 end)
 
-vim.keymap.set('n', '<C-\\>', function()
-    run(buffers)
+-- Buffers and MRU
+-- (Shout out to @kevinhwang91)
+local function bufs_and_mru(from_resume)
+    local cur_bufnr = vim.api.nvim_get_current_buf()
+    local alt_bufnr = vim.fn.bufnr('#')
+    local expr = [[{"bufnr": v:val.bufnr, "name": v:val.name, "lnum": v:val.lnum, ]] ..
+    [["lastused": v:val.lastused, "changed": v:val.changed}]]
+    local bufinfo_list = vim.api.nvim_eval(([[map(getbufinfo({'buflisted':1}), %q)]]):format(expr))
+    table.sort(bufinfo_list, function(a, b)
+        return a.lastused > b.lastused
+    end)
+    local header_lines = #bufinfo_list > 0 and bufinfo_list[1].bufnr == cur_bufnr and '1' or '0'
+
+    local spec = {
+        ['sink*'] = function(lines)
+            -- ALT-BS to delete the buffer from the buffer list
+            -- ENTER/CTRL-X/CTRL-V/CTRL-T to switch to the buffer or edit the file
+            local key = lines[1]
+            local action = vim.g.fzf_action[key]
+            for i = 2, #lines do
+                local filename = string.match(lines[i], '^(.-)\t')
+                local bufnr = string.match(lines[i], '%[(%d+)%]')
+                local cmd = bufnr and ('buffer ' .. bufnr) or ('edit ' .. filename)
+                if key == 'alt-bs' then
+                    if bufnr then
+                        require('rockyz.utils.buf_utils').bufdelete({ bufnr = tonumber(bufnr), wipe = true })
+                    end
+                else
+                    vim.cmd(action and (action .. ' | ' .. cmd) or cmd)
+                end
+            end
+        end,
+        options = get_fzf_opts(from_resume, {
+            '--multi',
+            '--delimiter',
+            '\t',
+            '--header',
+            ':: ALT-BS (delete buffers)',
+            '--header-lines',
+            header_lines,
+            '--with-nth',
+            '3..',
+            '--prompt',
+            'MRU> ',
+            '--tiebreak',
+            'index',
+            '--expect',
+            expect_keys({ 'alt-bs' }),
+            '--preview',
+            '[[ {1} == "[No Name]" ]] && echo "" || ' .. bat_prefix .. ' --highlight-line {2} -- {1}',
+            '--preview-window',
+            '+{2}-/2',
+            '--bind',
+            set_preview_label('{3..}'),
+        }),
+    }
+
+    local function handle_contents()
+        local max_bufnr = 0
+        local buf_names = {}
+        for _, b in ipairs(bufinfo_list) do
+            buf_names[b.name] = true
+            if b.bufnr > max_bufnr then
+                max_bufnr = b.bufnr
+            end
+        end
+        local max_digit = math.floor(math.log10(max_bufnr)) + 1
+        local mru_list = mru.list()
+        local entries = {}
+        local entry_fmt = '%s\t%s\t%s[%s] %s'
+        for _, b in ipairs(bufinfo_list) do
+            local bufnr = b.bufnr
+            local buftype = vim.bo[bufnr].buftype
+            if buftype ~= 'help' and buftype ~= 'quickfix' and buftype ~= 'terminal' and buftype ~= 'prompt' then
+                local name = b.name
+                local icon = ansi_devicon(name)
+                local lnum = b.lnum
+                local readonly = vim.bo[bufnr].readonly
+                local modified = b.changed == 1
+                local flag = ''
+                if modified then
+                    flag = ansi_string('+ ', 'DiagnosticError')
+                elseif readonly then
+                    flag = ansi_string('- ', 'DiagnosticWarn')
+                end
+
+                local sname = name == '' and '[No Name]' or vim.fn.fnamemodify(name, ':~:.')
+                if bufnr == cur_bufnr then
+                    sname = ansi_string(sname, 'Directory')
+                elseif bufnr == alt_bufnr then
+                    sname = ansi_string(sname, 'Conditional')
+                end
+
+                sname = flag .. icon .. ' ' .. sname
+                local bufnr_str = ansi_string(tostring(bufnr), 'Number')
+                local digit = math.floor(math.log10(bufnr)) + 1
+                local padding = (' '):rep(max_digit - digit)
+                -- Entry: <fullname>\t<lnum>\t<[bufnr]> <flag> <icon> <bufname>
+                -- {3..} will be presented
+                local entry = entry_fmt:format(name, lnum, padding, bufnr_str, sname)
+                table.insert(entries, entry)
+            end
+        end
+
+        entry_fmt = '%s\t0\t' .. (' '):rep(max_digit + 2) .. ' %s'
+        for _, f in ipairs(mru_list) do
+            if not buf_names[f] then
+                local icon = ansi_devicon(f)
+                local sname = vim.fn.fnamemodify(f, ':~:.')
+                -- Entry: <fullname>\t<0>\t<icon> <bufname>
+                -- {3..} will be presented
+                local entry = entry_fmt:format(f, icon .. ' ' .. sname)
+                table.insert(entries, entry)
+            end
+        end
+
+        write(entries)
+    end
+
+    fzf(spec, handle_contents)
+end
+
+vim.keymap.set('n', '<C-Enter>', function()
+    run(bufs_and_mru)
 end)
 
 ---Helper function to get history
@@ -1768,10 +1892,6 @@ local function live_grep(from_resume)
     }
     fzf(spec, nil, rg_cmd)
 end
-
-vim.keymap.set('n', '<Leader>gg', function()
-    run(live_grep)
-end)
 
 vim.keymap.set('n', '<C-g>', function()
     run(live_grep)

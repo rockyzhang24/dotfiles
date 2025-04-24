@@ -18,6 +18,10 @@ local function list(db_file)
     local fname_set = { [''] = true }
 
     local should_add_list = function(fname)
+        local fs_stat = vim.uv.fs_stat(fname)
+        if fs_stat and fs_stat.type == 'directory' then
+            return false
+        end
         if not fname_set[fname] then
             fname_set[fname] = true
             if vim.uv.fs_stat(fname) then

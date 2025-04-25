@@ -207,6 +207,11 @@ local function on_attach(client, bufnr)
             end,
         })
     end
+
+    -- Document colors
+    if client:supports_method('textDocument/documentColor') then
+        vim.lsp.document_color.enable(true, bufnr)
+    end
 end
 
 vim.api.nvim_create_autocmd('LspAttach', {
@@ -216,7 +221,6 @@ vim.api.nvim_create_autocmd('LspAttach', {
         on_attach(client, bufnr)
     end,
 })
-
 
 -- Enable LSP servers
 local lsp_configs = {}

@@ -13,15 +13,16 @@ local bufs = {}
 local tmp_prefix = vim.uv.os_tmpdir()
 local last_bufnr
 
+local ignored_filetypes = {
+    'gitcommit',
+    'netrw',
+}
+
 local function list(db_file)
     local mru_list = {}
     local fname_set = { [''] = true }
 
     local should_add_list = function(fname)
-        local fs_stat = vim.uv.fs_stat(fname)
-        if fs_stat and fs_stat.type == 'directory' then
-            return false
-        end
         if not fname_set[fname] then
             fname_set[fname] = true
             if vim.uv.fs_stat(fname) then
@@ -85,6 +86,10 @@ M.store_buf = (function()
         if buftype ~= '' and buftype ~= 'acwrite' or last_bufnr == bufnr then
             return
         end
+        local filetype = vim.bo[bufnr].filetype
+        if vim.list_contains(ignored_filetypes, filetype) then
+            return
+        end
         table.insert(bufs, bufnr)
         last_bufnr = bufnr
         count = (count + 1) % 10
@@ -94,11 +99,12 @@ M.store_buf = (function()
     end
 end)()
 
+
 vim.api.nvim_create_augroup('rockyz.mru', { clear = true })
 vim.api.nvim_create_autocmd({ 'BufEnter', 'FocusGained' }, {
     group = 'rockyz.mru',
-    callback = function()
-        require('rockyz.mru').store_buf()
+    callback = function(args)
+        require('rockyz.mru').store_buf(args.buf)
     end,
 })
 vim.api.nvim_create_autocmd('VimLeavePre', {

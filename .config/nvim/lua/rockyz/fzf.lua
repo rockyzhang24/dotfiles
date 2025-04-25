@@ -383,7 +383,6 @@ local function files(from_resume)
     local fd_cwd = fd_prefix .. ' | ' .. dressup_cmd('fd')
     local fd_home = 'cd $HOME; ' .. fd_prefix .. ' | ' .. dressup_cmd('fd')
     local prompt_cwd = shortpath(vim.uv.cwd())
-    local under_home = vim.fn.tempname()
 
     local spec = {
         ['sink*'] = sink_file,
@@ -401,16 +400,14 @@ local function files(from_resume)
             '--accept-nth',
             '{2}',
             '--header',
-            ':: CTRL-L (toggle HOME/Current)',
+            ':: ALT-/ (toggle HOME/CWD)',
             '--bind',
             set_preview_label(tildefy_home('{2}')),
             '--bind',
-            'ctrl-l:transform:[[ ! -e ' .. under_home .. ' ]] && {' ..
+            'alt-/:transform:[[ ! $FZF_PROMPT == "~/" ]] && {' ..
                 'echo "reload(' .. vim.fn.escape(fd_home, '"') .. ')+change-prompt(~/)";' ..
-                'touch ' .. under_home .. ';' ..
             '} || {' ..
                 'echo "reload(' .. vim.fn.escape(fd_cwd, '"') .. ')+change-prompt(' .. prompt_cwd .. ')";' ..
-                'rm ' .. under_home .. ';' ..
             '}',
         }),
     }
@@ -427,6 +424,10 @@ local function old_files(from_resume)
     local spec = {
         ['sink*'] = sink_file,
         options = get_fzf_opts(from_resume, {
+            '--delimiter',
+            '\t',
+            '--with-nth',
+            '2',
             '--prompt',
             'Old Files> ',
             '--tiebreak',
@@ -434,11 +435,11 @@ local function old_files(from_resume)
             '--expect',
             expect_keys(),
             '--preview',
-            fzf_previewer .. ' {2}',
+            fzf_previewer .. ' {1}',
             '--bind',
             set_preview_label('{2}'),
             '--accept-nth',
-            '2',
+            '1',
         }),
     }
 
@@ -448,7 +449,7 @@ local function old_files(from_resume)
             if vim.fn.filereadable(file) == 1 then
                 local icon = ansi_devicon(file)
                 file = vim.fn.fnamemodify(file, ':~:.')
-                local entry = icon .. ' ' .. file
+                local entry = string.format('%s\t%s %s', file, icon, file)
                 table.insert(entries, entry)
             end
         end
@@ -851,7 +852,7 @@ local function marks(from_resume)
             if key == 'alt-bs' then
                 -- ALT-BS to delete marks
                 for i = 2, #lines do
-                    local mark = lines[i]:match('[^ ]+')
+                    local mark = lines[i]:match('^(.-)\t')
                     vim.api.nvim_win_call(win, function()
                         local ok, res = pcall(vim.api.nvim_buf_del_mark, buf, mark)
                         if ok and res then
@@ -867,15 +868,17 @@ local function marks(from_resume)
                     if action then
                         vim.cmd(action)
                     end
-                    local mark = lines[i]:match('[^ ]+')
+                    local mark = lines[i]:match('^(.-)\t')
                     vim.cmd('stopinsert')
                     vim.cmd('normal! `' .. mark)
                 end
             end
         end,
         options = get_fzf_opts(from_resume, {
+            '--delimiter',
+            '\t',
             '--with-nth',
-            '..-2',
+            '4..',
             '--header-lines',
             '1',
             '--prompt',
@@ -885,11 +888,11 @@ local function marks(from_resume)
             '--expect',
             expect_keys({ 'alt-bs' }),
             '--preview',
-            ' [[ -f {-1} ]] && ' .. bat_prefix .. ' --highlight-line {2} -- {-1} || echo File does not exist, no preview!',
+            ' [[ -f {2} ]] && ' .. bat_prefix .. ' --highlight-line {3} -- {2} || echo File does not exist, no preview!',
             '--preview-window',
-            '+{2}-/2',
+            '+{3}-/2',
             '--bind',
-            set_preview_label('{-1}'),
+            set_preview_label('{2}'),
         })
     }
 
@@ -905,11 +908,16 @@ local function marks(from_resume)
         all_marks = vim.split(all_marks, '\n')
 
         -- First entry as the header
-        local header = string.format('%s  %s  %s %s %s', 'mark', 'line', 'col', 'file/text', 'filepath_for_preview')
+        local header = string.format('%s\t%s\t%s\t%s  %s  %s  %s', 'mark', 'filepath', 'lnum', 'mark', 'lnum', 'col', 'file/text')
         table.insert(entries, header)
 
+        local mark_width = #ansi_string('', 'FzfFilename') + 4
+        local lnum_width = #ansi_string('', 'FzfLnum') + 4
+        local col_width = #ansi_string('', 'FzfCol') + 3
+        local entry_fmt = '%s\t%s\t%s\t%-' .. mark_width .. 's  %' .. lnum_width .. 's  %' .. col_width .. 's  %s'
+
         for i = 3, #all_marks do
-            local mark, line, col, text = all_marks[i]:match('(.)%s+(%d+)%s+(%d+)%s+(.*)')
+            local mark, lnum, col, text = all_marks[i]:match('(.)%s+(%d+)%s+(%d+)%s+(.*)')
             col = tostring(tonumber(col) + 1)
 
             -- Get the file path of the mark. It won't be presented in fzf, but is used for preview.
@@ -923,18 +931,19 @@ local function marks(from_resume)
                 filepath = vim.api.nvim_buf_get_name(buf)
             end
             if filepath == '' then
-                filepath = 'No_File'
+                filepath = '[No File]'
             end
 
-            -- Each fzf entry has 5 parts: mark, line, col, file/text and filepath
-            -- The first 4 parts are presented in fzf; the last part, filepath, is used for preview
-            local entry = string.format(
-                ' %-26s %25s %25s %s %s',
-                ansi_string(mark, 'FzfFilename'), -- 23 chars
-                ansi_string(line, 'FzfLnum'), -- 22 chars if line is 1 digit
-                ansi_string(col, 'FzfCol'), -- 22 chars if col is 1 digit
-                text,
-                filepath
+            -- Entry: <mark>\t<filepath>\t<lnum>\t<colored_mark>  <colored_lnum>  <colored_col>  <text>
+            -- {4..} will be presented.
+            local entry = entry_fmt:format(
+                mark,
+                filepath,
+                lnum,
+                ansi_string(mark, 'FzfFilename'),
+                ansi_string(lnum, 'FzfLnum'),
+                ansi_string(col, 'FzfCol'),
+                text
             )
             table.insert(entries, entry)
         end
@@ -981,7 +990,7 @@ local function tabs(from_resume)
             '--prompt',
             'Tabs> ',
             '--header',
-            ':: ALT-BS (close tabs)',
+            ':: ALT-BS (delete tabs)',
             '--expect',
             'alt-bs',
             '--preview',
@@ -1022,10 +1031,10 @@ local function tabs(from_resume)
                         table.insert(filenames, filename)
                     end
                 end
-                -- prefix is used by fzf itself for preview and sink, and it won't be presented in each
-                -- entry
-                local prefix = cur_bufname .. '\t' .. cur_lnum .. '\t' .. tid .. '\t' .. table.concat(winids, ',')
-                local entry = prefix .. '\t' .. idx .. ': ' .. table.concat(filenames, ', ')
+                -- Entry: <cur_bufname>\t<cur_lnum>\t<tid>\t<winids>\t<idx>:<filenames>
+                -- {5..} will be presented.
+                local entry = cur_bufname .. '\t' .. cur_lnum .. '\t' .. tid .. '\t' .. table.concat(winids, ',') .. '\t'
+                    .. idx .. ': ' .. table.concat(filenames, ', ')
                 -- Indicator for current tab
                 if tid == cur_tab then
                     entry = entry .. ' ' .. icons.caret.left
@@ -1051,7 +1060,8 @@ local function args(from_resume)
             if key == 'alt-bs' then
                 -- ALT-BS: delete from arglist
                 for i = 2, #lines do
-                    vim.cmd.argdelete(string.match(lines[i], '%S+%s%S+%s(%S+)'))
+                    local filename = string.match(lines[i], '^%d+\t(.-)\t')
+                    vim.cmd.argdelete(filename)
                 end
             else
                 -- ENTER/CTRL-X/CTRL-V/CTRL-T
@@ -1060,14 +1070,16 @@ local function args(from_resume)
                     if action then
                         vim.cmd(action)
                     end
-                    local index = tonumber(lines[i]:match('^%d+'))
+                    local index = tonumber(lines[i]:match('^(%d+)\t'))
                     vim.cmd('argument! ' .. index)
                 end
             end
         end,
         options = get_fzf_opts(from_resume, {
+            '--delimiter',
+            '\t',
             '--with-nth',
-            '2..',
+            '3..',
             '--prompt',
             'Args> ',
             '--header',
@@ -1075,9 +1087,9 @@ local function args(from_resume)
             '--expect',
             expect_keys({ 'alt-bs' }),
             '--preview',
-            bat_prefix .. ' -- {3}',
+            bat_prefix .. ' -- {2}',
             '--bind',
-            set_preview_label('{3}'),
+            set_preview_label('{2}'),
         }),
     }
 
@@ -1095,9 +1107,10 @@ local function args(from_resume)
             local fs = vim.uv.fs_stat(f)
             if fs and fs.type == 'file' then
                 local devicon = ansi_devicon(f)
-                -- Fzf entry consists of 3 parts: index, devicon, filename
-                -- Index is used for file switch and it won't be presented in fzf
-                local entry = string.format('%s %s %s', #entries + 1, devicon, f)
+                -- Entry: <idx>\t<filename>\t<icon> <filename>
+                -- {3..} will be presented. <idx> is used to switch file; <filename> is used to
+                -- delete the file from arglist
+                local entry = string.format('%s\t%s\t%s %s', #entries + 1, f, devicon, f)
                 table.insert(entries, entry)
             end
         end
@@ -1120,7 +1133,7 @@ local function helptags(from_resume)
                 notify.warn('No support multiple selections')
             end
             local key = lines[1]
-            local tag = string.match(lines[2], '^%S+')
+            local tag = string.match(lines[2], '^(.-)\t')
             if key == '' or key == 'ctrl-x' then
                 vim.cmd('help ' .. tag)
             elseif key == 'ctrl-v' then
@@ -1130,8 +1143,10 @@ local function helptags(from_resume)
             end
         end,
         options = get_fzf_opts(from_resume, {
+            '--delimiter',
+            '\t',
             '--with-nth',
-            '..2',
+            '{4..}',
             '--nth',
             '1',
             '--no-multi',
@@ -1143,12 +1158,12 @@ local function helptags(from_resume)
             ':: CTRL-V (open in vertical split), CTRL-T (open in new tab)',
             '--preview',
             -- This script is taken from fzf.vim/bin/tagpreview.sh
-            'TARGET_LINE="$(nvim -R -i NONE -u NONE -e -m -s {3} -c "set nomagic" -c "silent "{4} -c \'let l=line(".") | new | put =l | print | qa!\')"; \
+            'TARGET_LINE="$(nvim -R -i NONE -u NONE -e -m -s {2} -c "set nomagic" -c "silent "{3} -c \'let l=line(".") | new | put =l | print | qa!\')"; \
             START_LINE="$(( TARGET_LINE - 5 ))"; \
             (( START_LINE <= 0 )) && START_LINE=1; \
-            END_LINE="$(( START_LINE + FZF_PREVIEW_LINES - 1 ))"; ' .. bat_prefix .. ' --style plain --language VimHelp --highlight-line "${TARGET_LINE}" --line-range="${START_LINE}:${END_LINE}" -- {3}',
+            END_LINE="$(( START_LINE + FZF_PREVIEW_LINES - 1 ))"; ' .. bat_prefix .. ' --style plain --language VimHelp --highlight-line "${TARGET_LINE}" --line-range="${START_LINE}:${END_LINE}" -- {2}',
             '--bind',
-            set_preview_label('{1} {2}'),
+            set_preview_label('{4}'),
         }),
     }
 
@@ -1196,20 +1211,20 @@ local function helptags(from_resume)
                     if not line:match('^!_TAG_') then
                         local fields = vim.split(line, delimiter)
                         if #fields == 3 and not tags_map[fields[1]] then
-                            -- fzf entry
-                            -- It consists of three parts: tag, filename, file_fullpath
-                            -- Only the first two parts are presented in fzf. The third part
-                            -- file_fullpath is used to open the help file.
+                            -- Entry: <tag>\t<file_fullpath>\t<cmd>\t<tag> <[filename]>
+                            -- {4..} will be presented. {1} <tab> is used to open the tag file; {2}
+                            -- <file_fullpath> is used to open the help file.
                             local tag = fields[1]
                             local filename = fields[2] -- help file name
                             local excmd = fields[3] -- Ex command
                             local file_fullpath = help_files[filename] -- help file fullpath
                             local entry = string.format(
-                                '%s %s %s %s',
-                                ansi_string(tag, 'Label'),
-                                ansi_string('[' .. filename .. ']', 'FzfDesc'),
+                                '%s\t%s\t%s\t%s %s',
+                                tag,
                                 file_fullpath,
-                                excmd
+                                excmd,
+                                ansi_string(tag, 'Label'),
+                                ansi_string('[' .. filename .. ']', 'FzfDesc')
                             )
                             table.insert(fzf_entries, entry)
                         end
@@ -1232,12 +1247,13 @@ end)
 local function commands(from_resume)
     local spec = {
         ['sink*'] = function(lines)
-            local cmd = lines[2]:match('^%S+')
+            local cmd = lines[1]:match('^(.-)\t')
             vim.cmd('stopinsert')
             vim.api.nvim_feedkeys(':' .. cmd, 'n', true)
         end,
         options = get_fzf_opts(from_resume, {
-            '--ansi',
+            '--delimiter',
+            '\t',
             '--no-multi',
             '--with-nth',
             '2',
@@ -1255,9 +1271,9 @@ local function commands(from_resume)
     local function handle_contents()
 
         -- The structure of each entry is as follows (3 parts):
-        -- command colored_command description
-        --    |       |                  |____________ shown in preview
-        --    |       |___ presented in fzf
+        -- <command>\t<colored_command>\t<description>
+        --    |            |                  |____________ shown in preview
+        --    |            |___ presented in fzf
         --    |___ used for sink
         local fzf_entries = {}
 
@@ -1288,7 +1304,7 @@ local function commands(from_resume)
             end
             for _, cmd in ipairs(cmds) do
                 local entry = cmd
-                .. ' '
+                .. '\t'
                 .. (buffer_local and ansi_string(cmd, 'Function') or ansi_string(cmd, 'Directory'))
                 local info = buffer_local and buf_commands[cmd] or global_commands[cmd]
                 local desc = {}
@@ -1301,7 +1317,7 @@ local function commands(from_resume)
                 if info.definition and info.definition ~= '' then
                     table.insert(desc, 'Definition: ' .. info.definition)
                 end
-                entry = entry .. ' ' .. table.concat(desc, '\\n')
+                entry = entry .. '\t' .. table.concat(desc, '\\n')
                 table.insert(entries, entry)
             end
             return entries
@@ -1321,7 +1337,7 @@ local function commands(from_resume)
                 -- Builtin command is in the line starting with `|:FOO`
                 if line:match('^|:[^|]') then
                     if cmd then
-                        table.insert(fzf_entries, cmd .. ' ' .. ansi_string(cmd, 'PreProc') .. ' Description: ' .. desc)
+                        table.insert(fzf_entries, cmd .. '\t' .. ansi_string(cmd, 'PreProc') .. '\tDescription: ' .. desc)
                     end
                     cmd, desc = line:match('^|:(%S+)|%s+%S+%s+(.*%S)')
                 elseif cmd then
@@ -1336,7 +1352,7 @@ local function commands(from_resume)
                 end
             end
             if cmd then
-                table.insert(fzf_entries, cmd .. ' ' .. ansi_string(cmd, 'PreProc') .. ' Description: ' .. desc)
+                table.insert(fzf_entries, cmd .. '\t' .. ansi_string(cmd, 'PreProc') .. '\tDescription: ' .. desc)
             end
         end
 
@@ -1398,6 +1414,7 @@ local function registers(from_resume)
             return text
         end
 
+        -- Entry: <[register]> <text>
         local entries = {}
         for _, r in ipairs(regs) do
             local _, text = pcall(vim.fn.getreg, r)
@@ -1461,6 +1478,7 @@ local function zoxide(from_resume)
         system.async('zoxide query --list --score', { text = true }, function(output)
             for line in output:gmatch('[^\n]+') do
                 local score, dir = line:match('(%d+%.%d+)%s+(.-)$')
+                -- Entry: <score>\t<directory>
                 local entry = string.format('%8s\t%s', score, dir)
                 table.insert(entries, entry)
             end
@@ -1643,12 +1661,14 @@ local function qf_history_fzf(win_local, from_resume)
     local prompt = win_local and 'Location List History' or 'Quickfix List History'
     local spec = {
         ['sink*'] = function(lines)
-            local count = string.match(lines[1], '^(%d+)')
+            local count = string.match(lines[1], '^(%d+)\t')
             vim.cmd('silent! ' .. count .. hist_cmd)
             vim.cmd(open_cmd)
         end,
         placeholder = '',
         options = get_fzf_opts(from_resume, {
+            '--delimiter',
+            '\t',
             '--with-nth',
             '3..',
             '--no-multi',
@@ -1682,11 +1702,11 @@ local function qf_history_fzf(win_local, from_resume)
                 err_tmpfile = err_tmpfile .. '-' .. vim.api.nvim_get_current_win()
             end
 
-            -- Build fzf entry: "3 tmpfile [3] 1 items    Diagnostics"
-            -- The first part is quickfix-id that is used to switch the specific quickfix.
-            -- The second part "tmpfile" is the path of the temporary file used by cat in --preview. The
-            -- other parts will be presented in fzf.
-            local entry = i .. ' ' .. err_tmpfile .. ' [' .. i .. '] ' .. list.size .. ' items    ' .. list.title
+            -- Entry: <quickfix_id>\t<err_tmpfile>\t<[quickfix_id]> <size> items    <title>
+            -- {3..} will be presented.
+            -- {1} <quickfix_id> is used to switch to the specific quickfix list; {2} <err_tmpfile>
+            -- is the path of the temporary file used by cat in fzf preview.
+            local entry = i .. '\t' .. err_tmpfile .. '\t[' .. i .. '] ' .. list.size .. ' items    ' .. list.title
             if list.nr == cur_nr then
                 entry = entry .. ' ' .. icons.caret.left
             end
@@ -2284,7 +2304,7 @@ local function locations_to_entries_and_items(locations, ctx, all_entries, all_i
             lnum,
             col,
             fzf_line,
-        }, ' ')
+        }, '\t')
         table.insert(all_entries, entry)
     end
 end
@@ -2333,6 +2353,8 @@ local function lsp_locations(method, title, from_resume)
             end
         end,
         options = get_fzf_opts(from_resume, {
+            '--delimiter',
+            '\t',
             '--with-nth',
             '6..',
             '--prompt',
@@ -2417,6 +2439,7 @@ local function diagnostics(from_resume, opts)
 
     local title = string.format('Diagnostics (%s)', opts.all and 'workspace' or 'document')
     local spec = {
+        -- NOTE:
         -- Even though diagnostics are multi-line items, `lines` contains linewise contents
         -- rather than the whole item. However, we can get the index of each item easily because
         -- it is the number in the beginning of the item.
@@ -2427,7 +2450,7 @@ local function diagnostics(from_resume, opts)
                 local loclist = key == 'ctrl-l'
                 local selected_diags = {}
                 for i = 2, #lines do
-                    local idx = tonumber(lines[i]:match('^%d+'))
+                    local idx = tonumber(lines[i]:match('^(%d+)\t'))
                     if idx then
                         table.insert(selected_diags, diags[idx])
                     end
@@ -2443,11 +2466,11 @@ local function diagnostics(from_resume, opts)
                 -- ENTER/CTRL-X/CTRL-V/CTRL-T
                 local action = vim.g.fzf_action[key]
                 for i = 2, #lines do
-                    if action then
-                        vim.cmd(action)
-                    end
-                    local idx = tonumber(lines[i]:match('^%d+'))
+                    local idx = tonumber(lines[i]:match('^(%d+)\t'))
                     if idx then
+                        if action then
+                            vim.cmd(action)
+                        end
                         local diag = diags[idx]
                         local bufnr = diag.bufnr
                         if bufnr and vim.api.nvim_buf_is_loaded(bufnr) then
@@ -2462,7 +2485,10 @@ local function diagnostics(from_resume, opts)
             end
         end,
         options = get_fzf_opts(from_resume, {
+            '--delimiter',
+            '\t',
             '--read0',
+            '--highlight-line',
             '--with-nth',
             '5..',
             '--prompt',
@@ -2496,10 +2522,8 @@ local function diagnostics(from_resume, opts)
             local diag_icon = ansi_string(diag_icons[diag.severity].text, diag_icons[diag.severity].hl)
             local lnum = diag.lnum + 1
             local col = diag.col + 1
-            -- Fzf entry
-            -- Each entry consists of 5 parts:
-            -- index, filename, lnum, col, fzf_line
-            -- Only fzf_line will be presented in fzf. The first part, index, is used to retrieve the
+            -- Entry: <index>\t<filename>\t<lnum>\t<col>\t<fzf_line>
+            -- Only fzf_line will be presented in fzf. The first part, <index>, is used to retrieve the
             -- corresponding original diagnostic item from the selected entry in fzf.
             local fzf_line = string.format(
                 -- Use `\0` and fzf's `--read0` to support multi-line items
@@ -2519,7 +2543,7 @@ local function diagnostics(from_resume, opts)
                 lnum,
                 col,
                 fzf_line
-            }, ' '))
+            }, '\t'))
         end
         write(entries, true)
     end
@@ -3304,7 +3328,6 @@ end)
 local function complete_path(from_resume)
     local fd_cmd = 'fd ' .. vim.env.FD_EXCLUDE
     local fd_abs_cmd = 'fd --absolute-path ' .. vim.env.FD_EXCLUDE
-    local path_type = vim.fn.tempname()
     local prompt = shortpath(vim.uv.cwd())
 
     local winid = vim.api.nvim_get_current_win()
@@ -3320,7 +3343,7 @@ local function complete_path(from_resume)
             local newcol = col + #lines[1]
             vim.api.nvim_set_current_line(newline)
             vim.api.nvim_win_set_cursor(winid, { row, newcol })
-            vim.api.nvim_feedkeys('i', 'n', true)
+            vim.api.nvim_feedkeys('a', 'n', true)
         end,
         options = get_fzf_opts(from_resume, {
             '--no-multi',
@@ -3329,13 +3352,11 @@ local function complete_path(from_resume)
             '--preview-window',
             'hidden',
             '--header',
-            ':: ALT-P (switch between absolute and relative)\n:: CWD: ' .. vim.uv.cwd(),
+            ':: ALT-/ (switch between absolute and relative)\n:: CWD: ' .. vim.uv.cwd(),
             '--bind',
             'ctrl-/:ignore',
             '--bind',
-            'start:execute(echo 0 > ' .. path_type .. ')',
-            '--bind',
-            'alt-p:transform:[[ $(cat ' .. path_type .. ') == 0 ]] && echo "reload(' .. fd_abs_cmd .. ')+change-prompt(Absolute Paths> )+execute(echo 1 > ' .. path_type .. ')" || echo "reload(' .. fd_cmd .. ')+change-prompt(' .. prompt .. ')+execute(echo 0 > ' .. path_type .. ')"',
+            'alt-/:transform:[[ ! $FZF_PROMPT =~ Absolute ]] && echo "reload(' .. fd_abs_cmd .. ')+change-prompt(Absolute Paths> )" || echo "reload(' .. fd_cmd .. ')+change-prompt(' .. prompt .. ')"',
         }),
     }
     fzf(spec, nil, fd_cmd)

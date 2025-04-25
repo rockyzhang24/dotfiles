@@ -176,20 +176,16 @@ cmd fzf-toggle-select ${{
 
 # Fzf: change the current file selection
 cmd fzf-file ${{
-    is_home="/tmp/lf-fzf-file-is-home"
-    rm -f "$is_home"
     fd_cmd="fd --type f --type l --hidden --follow $FD_EXCLUDE"
     select=$(eval "$fd_cmd" | fzf \
         --no-multi \
-        --header ':: CTRL-L (toggle HOME/Current dir)' \
+        --header ':: ALT-/ (toggle HOME/CWD)' \
         --prompt 'Files [Current]> ' \
-        --bind "ctrl-l:transform: \
-        [[ ! -e $is_home ]] && { \
-            touch $is_home; \
+        --bind "alt-/:transform: \
+        [[ ! \$FZF_PROMPT =~ HOME ]] && { \
             echo \"reload($fd_cmd . $HOME | sed 's|^$HOME|~|')+change-prompt(Files [HOME]> )\"; \
         } || { \
-            rm $is_home; \
-            echo \"reload($fd_cmd)+change-prompt(Files [Current]> )\"; \
+            echo \"reload($fd_cmd)+change-prompt(Files [CWD]> )\"; \
         }" \
     ) || true
     if [[ -n $select ]]; then
@@ -199,20 +195,16 @@ cmd fzf-file ${{
 
 # Fzf: cd into the selected directory
 cmd fzf-cd ${{
-    is_home="/tmp/lf-fzf-cd-is-home"
-    rm -f "$is_home"
     fd_cmd="fd --type d --hidden --follow $FD_EXCLUDE"
     select=$(eval "$fd_cmd" | fzf \
         --no-multi \
-        --header ':: CTRL-L (toggle HOME/Current dir)' \
+        --header ':: ALT-/ (toggle HOME/CWD)' \
         --prompt 'Dirs [Current]> ' \
-        --bind "ctrl-l:transform: \
-        [[ ! -e $is_home ]] && { \
-            touch $is_home; \
+        --bind "alt-/:transform: \
+        [[ ! \$FZF_PROMPT =~ HOME ]] && { \
             echo \"reload($fd_cmd . $HOME | sed 's|^$HOME|~|')+change-prompt(Dirs [HOME]> )\"; \
         } || { \
-            rm $is_home; \
-            echo \"reload($fd_cmd)+change-prompt(Dirs [Current]> )\"; \
+            echo \"reload($fd_cmd)+change-prompt(Dirs [CWD]> )\"; \
         }") || true
     if [[ -n $select ]]; then
         lf -remote "send $id cd $select"

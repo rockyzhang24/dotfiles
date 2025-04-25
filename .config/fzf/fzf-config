@@ -23,7 +23,7 @@ fi
 if [[ $COLOR_THEME == 'arctic' ]]; then
     [[ $bg != -1 ]] && bg='#1f1f1f'
     fg='#cccccc'
-    colors="dark,fg:$fg,bg:$bg,hl:#ffdd33,fg+:#ffffff,bg+:#04395e,gutter:$bg,hl+:#ffdd33,query:$fg,disabled:#808080,border:$fg,separator:#454545,label:#4ec9b0,header:#f9ae28:underline"
+    colors="dark,fg:$fg,bg:$bg,hl:#ffdd33,fg+:#ffffff,bg+:#04395e,gutter:$bg,hl+:#ffdd33,query:$fg,disabled:#808080,border:$fg,separator:#454545,label:#4ec9b0,header:#f9ae28:underline:bold"
 fi
 # monokai theme
 if [[ $COLOR_THEME == 'monokai' ]]; then
@@ -85,20 +85,18 @@ _fzf_compgen_dir() {
 }
 
 # CTRL-T to paste the selected files and directories onto the command-line
-ctrl_t_is_home="/tmp/fzf-ctrl-t-is-home"
+# - ALT-/: toggling listing items under HOME and CWD
+# - ALT-R: list items under system root
 export FZF_CTRL_T_COMMAND="$FD"
 export FZF_CTRL_T_OPTS=" \
     --prompt 'Fzf [Current]> ' \
-    --header ':: CTRL-L (toggle HOME/Current), CTRL-R (Root)' \
-    --bind 'start:execute:rm -f $ctrl_t_is_home' \
-    --bind 'ctrl-r:reload($FD . /)+change-prompt(Fzf [Root]> )' \
-    --bind 'ctrl-l:transform: \
-        [[ ! -e $ctrl_t_is_home ]] && { \
+    --header ':: ALT-/ (toggle HOME/CWD), ALT-R (Root)' \
+    --bind 'alt-r:reload($FD . /)+change-prompt(Fzf [Root]> )' \
+    --bind 'alt-/:transform: \
+        [[ ! \$FZF_PROMPT =~ HOME ]] && { \
             echo \"reload($FD . $HOME)+change-prompt(Fzf [HOME]> )\"; \
-            touch $ctrl_t_is_home; \
         } || { \
-            echo \"reload($FD)+change-prompt(Fzf [Current]> )\"; \
-            rm $ctrl_t_is_home; \
+            echo \"reload($FD)+change-prompt(Fzf [CWD]> )\"; \
         }' \
 "
 
@@ -111,25 +109,22 @@ export FZF_CTRL_R_OPTS=" \
 "
 
 # CTRL-J to cd into the selected dir
-# - ALT-P: show parent dirs
-# - ALT-S: show sub dirs
-alt_c_is_home="/tmp/fzf-alt-c-is-home"
+# - ALT-/: toggle listing dirs under HOME and CWD
+# - ALT-R: list dirs under system root
+# - ALT-P: list dirs under cwd's parent
 bindkey '^j' fzf-cd-widget
 export FZF_ALT_C_COMMAND="$FD --type d"
 export FZF_ALT_C_OPTS=" \
     --preview '[[ \$(command -v eza) ]] && eza -la --color=always --icons -g --group-directories-first {} || tree -C {} | head -200' \
-    --header ':: CTRL-L (toggle HOME/Current), CTRL-R (Root), CTRL-H (Parent)' \
+    --header ':: ALT-/ (toggle HOME/CWD), ALT-R (Root), ALT-P (Parent)' \
     --prompt 'SubDirs [Current]> ' \
-    --bind 'start:execute:rm -f $alt_c_is_home' \
-    --bind 'ctrl-r:reload($FD --type d . /)+change-prompt(SubDirs [Root]> )' \
-    --bind 'ctrl-h:reload(print-parent-dirs)+change-prompt(SubDirs [Parent]> )' \
-    --bind 'ctrl-l:transform: \
-        [[ ! -e $alt_c_is_home ]] && { \
+    --bind 'alt-r:reload($FD --type d . /)+change-prompt(SubDirs [Root]> )' \
+    --bind 'alt-p:reload(print-parent-dirs)+change-prompt(SubDirs [Parent]> )' \
+    --bind 'alt-/:transform: \
+        [[ ! \$FZF_PROMPT =~ HOME ]] && { \
             echo \"reload($FD --type d . $HOME)+change-prompt(SubDirs [HOME]> )\"; \
-            touch $alt_c_is_home; \
         } || { \
-            echo \"reload($FD --type d)+change-prompt(SubDirs [Current]> )\"; \
-            rm $alt_c_is_home; \
+            echo \"reload($FD --type d)+change-prompt(SubDirs [CWD]> )\"; \
         }' \
 "
 

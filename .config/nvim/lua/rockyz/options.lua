@@ -57,7 +57,6 @@ vim.opt.isfname:remove('=')
 vim.o.shada = "!,'500,<50,s10,h"
 vim.o.synmaxcol = 300
 vim.o.cindent = true
-vim.opt.cinoptions:append('g-1')
 vim.o.scrolloff = 3
 vim.o.mouse = 'a'
 vim.o.mousemodel = 'extend'

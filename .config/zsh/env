@@ -63,7 +63,7 @@ export LSCOLORS='ExfxcxdxbxGxDxabagacad'
 
 # Bat
 [[ $COLOR_THEME == 'monokai' ]] && export BAT_THEME='Monokai Extended Origin'
-[[ $COLOR_THEME == 'arctic' ]] && export BAT_THEME='arctic'
+[[ $COLOR_THEME == 'arctic' ]] && export BAT_THEME='gruvbox-dark'
 
 # Ripgrep
 export RIPGREP_CONFIG_PATH=$HOME/.config/ripgrep/ripgreprc

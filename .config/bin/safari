@@ -4,6 +4,6 @@
 # SYNOPSIS: safari [URL]
 
 osascript <<EOD
-  tell application "Safari" to make new document with properties {URL:"$1"}
-  return
+    tell application "Safari" to make new document with properties {URL:"$1"}
+    return
 EOD

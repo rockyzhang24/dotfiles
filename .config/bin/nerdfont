@@ -5,5 +5,5 @@
 
 for font in "$1"/*
 do
-  fontforge -script ~/Downloads/FontPatcher/font-patcher --complete "$font" --outputdir ~/Downloads/nerdfont-output/
+    fontforge -script ~/Downloads/FontPatcher/font-patcher --complete "$font" --outputdir ~/Downloads/nerdfont-output/
 done

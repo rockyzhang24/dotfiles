@@ -5,7 +5,7 @@
 # DESCRIPTION: Open neovim and run vim-grepper's rg to search the input query
 
 if [[ $* ]]; then
-  nvim -c "Grepper -noprompt -tool rg -query $*"
+    nvim -c "Grepper -noprompt -tool rg -query $*"
 else
-  echo "Query string is required!"
+    echo "Query string is required!"
 fi

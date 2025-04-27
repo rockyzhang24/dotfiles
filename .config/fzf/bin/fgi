@@ -9,12 +9,12 @@
 api="command curl -sL https://www.toptal.com/developers/gitignore/api"
 
 if  [ "$#" -eq 0 ]; then
-  IFS+=","
-  for item in $(eval "$api/list"); do
-    echo "$item"
-  done | fzf --multi --ansi --prompt="GitIgnore> " --preview "$api/{} | bat -p -l gitignore --color=always" | paste -s -d "," - |
-  { read -r result && eval "$api/$result"; }
+    IFS+=","
+    for item in $(eval "$api/list"); do
+        echo "$item"
+    done | fzf --multi --ansi --prompt="GitIgnore> " --preview "$api/{} | bat -p -l gitignore --color=always" | paste -s -d "," - |
+    { read -r result && eval "$api/$result"; }
 else
-  IFS=","
-  eval "$api/$*"
+    IFS=","
+    eval "$api/$*"
 fi

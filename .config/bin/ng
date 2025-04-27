@@ -1,16 +1,15 @@
 #!/usr/bin/env bash
 
 # MNEMONIC: [N]vim [G]it
-# DESCRIPTION: Open neovim and run fugitive's `:Git` command to open a summary
-# window akin to `git status`
+# DESCRIPTION: Open neovim and run fugitive's `:Git` command to open a summary window akin to `git status`
 
 if [[ $PWD == $HOME/.config || $PWD == $HOME/.config/* && $PWD != $HOME/.config/nvim/pack* ]]; then
-  export GIT_DIR="$HOME/dotfiles"
-  export GIT_WORK_TREE="$HOME"
+    export GIT_DIR="$HOME/dotfiles"
+    export GIT_WORK_TREE="$HOME"
 fi
 
 if git rev-parse >/dev/null 2>&1; then
-  nvim -c "Git" -c "bwipeout #"
+    nvim -c "Git" -c "bwipeout #"
 else
-  echo "Warning: not a git repo!"
+    echo "Warning: not a git repo!"
 fi

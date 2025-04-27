@@ -5,21 +5,21 @@
 # DESCRIPTION: Fuzzy finder for a process of $UID to kill.
 
 opts=" \
-  --multi \
-  --header=$':: ENTER (kill), CTRL-R (reload)\n\n' \
-  --header-lines=2 \
-  --preview='echo {}' \
-  --preview-window=down,30%,wrap \
-  --preview-label '[ Process Information ]' \
-  --bind 'start:unbind(focus)'"
+    --multi \
+    --header=$':: ENTER (kill), CTRL-R (reload)\n\n' \
+    --header-lines=2 \
+    --preview='echo {}' \
+    --preview-window=down,30%,wrap \
+    --preview-label '[ Process Information ]' \
+    --bind 'start:unbind(focus)'"
 
 if [ "$UID" != "0" ]; then
-  pid=$(eval "(date; ps -f -u $UID) | fzf --prompt='Kill> ' --bind='ctrl-r:reload(date; ps -f -u $UID)' $opts" | awk '{print $2}')
+    pid=$(eval "(date; ps -f -u $UID) | fzf --prompt='Kill> ' --bind='ctrl-r:reload(date; ps -f -u $UID)' $opts" | awk '{print $2}')
 else
-  pid=$(eval "(date; ps -ef) | fzf --prompt='Kill> ' --bind='ctrl-r:reload(date; ps -ef)' $opts" | awk '{print $2}')
+    pid=$(eval "(date; ps -ef) | fzf --prompt='Kill> ' --bind='ctrl-r:reload(date; ps -ef)' $opts" | awk '{print $2}')
 fi
 
 if [ "x$pid" != "x" ]
 then
-  echo "$pid" | xargs kill -"${1:-9}"
+    echo "$pid" | xargs kill -"${1:-9}"
 fi

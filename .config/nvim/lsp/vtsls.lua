@@ -21,9 +21,9 @@ return {
     settings = {
         -- See the configuration schema
         -- https://github.com/yioneko/vtsls/blob/main/packages/service/configuration.schema.json
+        javascript = lang_settings,
+        typescript = lang_settings,
         vtsls = {
-            javascript = lang_settings,
-            typescript = lang_settings,
             -- Use workspace version of TypeScript
             autoUseWorkspaceTsdk = true,
             experimental = {

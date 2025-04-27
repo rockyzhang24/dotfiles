@@ -13,31 +13,31 @@ git_cmd="git"
 status="status -s"
 # Handle my dotfile bare repo
 if [[ $PWD == $HOME/.config || $PWD == $HOME/.config/* && $PWD != $HOME/.config/nvim/pack* ]]; then
-  git_cmd="git --git-dir=$HOME/dotfiles/ --work-tree=$HOME"
-  # For my dotfile bare repo with set "showUntrackedFiles = no", show untracked files in ~/.config
-  status+=" -uall $XDG_CONFIG_HOME"
+    git_cmd="git --git-dir=$HOME/dotfiles/ --work-tree=$HOME"
+    # For my dotfile bare repo with set "showUntrackedFiles = no", show untracked files in ~/.config
+    status+=" -uall $XDG_CONFIG_HOME"
 fi
 
 # Entries listed by 'git status -s' look like this:
-# [ M] original/path/for/a/file -> new/path/for/the/file
+# [R ] original/path/for/a/file -> new/path/for/the/file
 # This is function is used to extract the file path
 # remove indicators | remove original path for rename case | remove surrounding quotes
 cleaner() {
-  sed 's/^.*]  //' |
-  sed 's/.* -> //' |
-  sed -e 's/^\"//' -e 's/\"$//'
+    sed 's/^.*]  //' |
+    sed 's/.* -> //' |
+    sed -e 's/^\"//' -e 's/\"$//'
 }
 
 # This script file is also used for fzf preview by passing in the current item
 if [[ $# -eq 1 ]]; then
-  delta_cmd="delta --width ${FZF_PREVIEW_COLUMNS:-$COLUMNS} --file-style omit"
-  file=$(echo "$1" | cleaner)
-  if ($git_cmd status -s -uall -- "$file" | grep '^??') &>/dev/null; then  # diff with /dev/null for untracked files
-    $git_cmd diff --color=always --no-index -- /dev/null "$file" | eval "$delta_cmd"
-  else
-    $git_cmd diff --color=always -- "$file" | eval "$delta_cmd"
-  fi
-  exit 0
+    delta_cmd="delta --width ${FZF_PREVIEW_COLUMNS:-$COLUMNS} --file-style omit"
+    file=$(echo "$1" | cleaner)
+    if ($git_cmd status -s -uall -- "$file" | grep '^??') &>/dev/null; then  # diff with /dev/null for untracked files
+        $git_cmd diff --color=always --no-index -- /dev/null "$file" | eval "$delta_cmd"
+    else
+        $git_cmd diff --color=always -- "$file" | eval "$delta_cmd"
+    fi
+    exit 0
 fi
 
 changed=$(eval "$git_cmd config --get-color color.status.changed red")
@@ -48,15 +48,15 @@ git_status_cmd="$git_cmd -c color.status=always -c status.relativePaths=true -c 
 
 # Create an array to store the selections
 while IFS= read -r file; do
-  files+=("$file")
+    files+=("$file")
 done < <(
-  $git_status_cmd |
-    grep -F -e "$changed" -e "$unmerged" -e "$untracked" |
-    sed -E 's/^(..[^[:space:]]*)[[:space:]]+(.*)$/[\1]  \2/' |
-    fzf --ansi --exit-0 --preview "$__fda {}" --preview-window down,60% --prompt="Git Add (dotfiles)> " --header ":: ENTER (git add files)" |
-    cleaner
+    $git_status_cmd |
+        grep -F -e "$changed" -e "$unmerged" -e "$untracked" |
+        sed -E 's/^(..[^[:space:]]*)[[:space:]]+(.*)$/[\1]  \2/' |
+        fzf --ansi --exit-0 --preview "$__fda {}" --preview-window down,60% --prompt="Git Add> " --header ":: ENTER (git add files)" |
+        cleaner
 )
 
 if [[ ${#files[@]} -gt 0 ]]; then
-  $git_cmd add "${files[@]}" && eval "$git_cmd $status"
+    $git_cmd add "${files[@]}" && eval "$git_cmd $status"
 fi

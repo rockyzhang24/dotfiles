@@ -7,12 +7,12 @@
 # USAGE: "ngd --staged @" to see "git diff --staged"
 
 if [[ $PWD == $HOME/.config || $PWD == $HOME/.config/* && $PWD != $HOME/.config/nvim/pack* ]]; then
-  export GIT_DIR="$HOME/dotfiles"
-  export GIT_WORK_TREE="$HOME"
+    export GIT_DIR="$HOME/dotfiles"
+    export GIT_WORK_TREE="$HOME"
 fi
 
 if git rev-parse >/dev/null 2>&1; then
-  nvim -c "Git difftool -y $*" -c "bwipeout 1" -c "let g:from_script = 1"
+    nvim -c "Git difftool -y $*" -c "bwipeout 1" -c "let g:from_script = 1"
 else
-  echo "Warning: not a git repo!"
+    echo "Warning: not a git repo!"
 fi

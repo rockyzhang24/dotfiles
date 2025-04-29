@@ -7,7 +7,7 @@
 -- 2. VSCode theme color: https://code.visualstudio.com/api/references/theme-color
 --
 
-local util = require('rockyz.utils.color_utils')
+local utils = require('rockyz.utils.color_utils')
 
 local red = '#f44747'
 local dark_red = '#d16969'
@@ -68,11 +68,11 @@ local winbar_fg = '#a9a9a9' -- breadcrumb.foreground
 -- Tabline
 local tab_bg = black4 -- editorGroupHeader.tabsBackground
 local tab_active_fg = white -- tab.activeForeground
-local tab_active_bg = util.lighten(norm_bg, 0.15) -- tab.activeBackground
+local tab_active_bg = utils.lighten(norm_bg, 0.15) -- tab.activeBackground
 local tab_inactive_fg = '#ccccc7' -- tab.inactiveForeground
 local tab_inactive_bg = tab_bg -- tab.inactiveBackground
 local tab_indicator_active_fg = '#0078d4' -- indicator for the active tab, a bar on the leftmost of the current tab
-local tab_indicator_inactive_fg = util.lighten(tab_active_bg, 0.1)
+local tab_indicator_inactive_fg = utils.lighten(tab_active_bg, 0.1)
 
 -- Statusline
 local stl_fg = white -- statusBar.foreground
@@ -122,7 +122,7 @@ local groups = {
     PeekViewBorder = { fg = '#3794ff' }, -- peekView.border
     PeekViewNormal = { bg = norm_bg }, -- peekViewEditor.background
     PeekViewTitle = { fg = white }, -- peekViewTitleLabel.foreground
-    PeekViewCursorLine = { bg = black3 }, -- same with CursorLine
+    PeekViewCursorLine = 'CursorLine', -- same with CursorLine
     PeekViewMatchHighlight = { bg = '#5d4616' }, -- peekViewEditor.matchHighlightBackground
     GhostText = { fg = '#6b6b6b' }, -- editorGhostText.foreground
     Icon = { fg = '#cccccc' }, -- icon.foreground
@@ -163,7 +163,7 @@ local groups = {
     -- Indent scope
     IndentScopeSymbol = 'Delimiter',
     -- CursorLine of not-current windows
-    CursorLineNC = { underdashed = true, sp = gray2 },
+    CursorLineNC = { bg = black3, underdashed = true, sp = gray2 },
 
     --
     -- diff
@@ -200,7 +200,7 @@ local groups = {
     DiagnosticVirtualTextError = { fg = error_red, bg = '#332323', italic = true },
     DiagnosticVirtualTextWarn = { fg = warn_yellow, bg = '#2f2c1b', italic = true },
     DiagnosticVirtualTextInfo = { fg = info_blue, bg = '#212a35', italic = true },
-    DiagnosticVirtualTextHint = { fg = util.lighten(hint_virtualtext_bg, 0.3), bg = hint_virtualtext_bg, italic = true },
+    DiagnosticVirtualTextHint = { fg = utils.lighten(hint_virtualtext_bg, 0.3), bg = hint_virtualtext_bg, italic = true },
     DiagnosticVirtualTextOk = { fg = ok_green, bg = '#233323', italic = true },
     DiagnosticVirtualLinesError = 'DiagnosticVirtualTextError',
     DiagnosticVirtualLinesWarn = 'DiagnosticVirtualTextWarn',
@@ -270,7 +270,7 @@ local groups = {
     --
 
     CursorLine = { bg = black3 },
-    CursorColumn = { bg = black3 },
+    CursorColumn = 'CursorLine',
     ColorColumn = { bg = black2 }, -- editorRuler.foreground (vscodes uses #5a5a5a but it's too bright)
     Conceal = { fg = gray2 },
     Cursor = { fg = norm_bg, bg = norm_fg },
@@ -996,7 +996,7 @@ local groups = {
     FzfFilename = { fg = filename },
     FzfLnum = { fg = lnum },
     FzfCol = { fg = col },
-    FzfDesc = { fg = util.lighten(norm_bg, 0.4) },
+    FzfDesc = { fg = utils.lighten(norm_bg, 0.4) },
     FzfRgQuery = { fg = red },
     FzfTagsPattern = { fg = dark_blue },
 

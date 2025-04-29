@@ -1,1 +1,2 @@
-require('flatten').setup({})
+require('flatten').setup({
+})

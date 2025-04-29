@@ -1,7 +1,9 @@
-# lf doc - https://godoc.org/github.com/gokcehan/lf
+# lf doc: https://github.com/gokcehan/lf/blob/master/doc.md
 # lfrc example - https://github.com/gokcehan/lf/blob/master/etc/lfrc.example
 
-# ========== General settings ==========
+#
+# Options
+#
 
 set shell bash
 set shellopts '-eu'
@@ -25,7 +27,9 @@ setlocal ~/Downloads sortby "atime"
 setlocal ~/Downloads reverse
 set hiddenfiles ".DS_Store:.git"
 
-# ========== Commands ==========
+#
+# Commands
+#
 
 # Override the default open for file opening (binded to 'l' by default)
 cmd open &{{
@@ -227,7 +231,9 @@ cmd dot ${{
     git --git-dir=/Users/rockyzhang/dotfiles/ --work-tree=/Users/rockyzhang $@
 }}
 
-# ========== Mappings ==========
+#
+# Mappings
+#
 
 # Remove some defaults
 map gh
@@ -271,7 +277,7 @@ map rn push A<c-u> # rename the filename
 map re push A<c-f><c-k> # rename the extension
 map <c-r> bulk-rename
 
-# compress (give a name like abc and it will compress the selected items to abc.zip)
+# compress (give a name like foo and it will compress the selected items to foo.zip)
 map <space>c push :zip<space>
 # extract
 map <space>x extract
@@ -280,3 +286,20 @@ map <space>f &if [[ -d $f ]]; then open $f; fi
 
 cmap <tab> cmd-menu-complete
 cmap <backtab> cmd-menu-complete-back
+
+#
+# Utils
+#
+
+# Store the absolute path of the selected file(s) to a temp file.
+# For example, I can launch lf in Nvim's terminal, select files and open them in vsplit windows.
+# To implement this, after openning lf, I can execute a shell command `lf -remote "send $pid
+# util-store-filepath` to store the paths of the selected files to a temp file and then read the
+# content of this temp file to get the file paths. Alternatively, after binding this command to
+# a key, in Nvim I can use nvim_feedkeys to achieve the same goal.
+cmd util-store-filepath ${{
+    tempfile="$TMPDIR"/lf-filepath
+        echo $fx > $tempfile
+}}
+
+map <a-E> util-store-filepath

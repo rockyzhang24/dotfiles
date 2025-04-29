@@ -372,8 +372,6 @@ local function sink_file(lines)
     for i = 2, #lines do
         if vim.fn.fnamemodify(lines[i], ':p') ~= vim.fn.expand('%:p') then
             vim.cmd(action .. ' ' .. lines[i])
-        elseif action ~= 'edit' then
-            vim.cmd(action)
         end
     end
 end

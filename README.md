@@ -116,7 +116,7 @@ Backup the stock configuration files that will be overwritten:
 
 ```bash
 mkdir -p .config-backup
-config checkout 2>&1 | egrep "\s+\." | awk {'print $1'} | xargs -I{} mv {} .config-backup/{}
+dot checkout 2>&1 | egrep "\s+\." | awk {'print $1'} | xargs -I{} mv {} .config-backup/{}
 ```
 
 Checkout the actual content from the bare repository to `$HOME`:

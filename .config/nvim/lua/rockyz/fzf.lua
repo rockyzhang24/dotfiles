@@ -684,7 +684,7 @@ local function bufs_and_mru(from_resume)
         for _, b in ipairs(bufinfo_list) do
             local bufnr = b.bufnr
             local buftype = vim.bo[bufnr].buftype
-            if buftype ~= 'help' and buftype ~= 'quickfix' and buftype ~= 'terminal' and buftype ~= 'prompt' then
+            if buftype ~= 'help' and buftype ~= 'quickfix' and buftype ~= 'prompt' then
                 local name = b.name
                 local icon = ansi_devicon(name)
                 local lnum = b.lnum

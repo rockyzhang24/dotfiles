@@ -257,7 +257,7 @@ map T trash
 map U !printf "\n"; du -csh *
 map <c-t> fzf-toggle-select
 map <c-f> fzf-file
-map <c-j> fzf-cd
+map <c-z> fzf-cd
 # give a name and then make a directory
 map <c-n> push :mkdir<space>
 map <a-n> new-folder-with-selection

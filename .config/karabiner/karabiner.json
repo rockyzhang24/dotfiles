@@ -23,8 +23,8 @@
                     {
                         "manipulators": [
                             {
-                                "description": "Change right Shift to MEH key (Option + Shift + Control)",
-                                "from": { "key_code": "right_shift" },
+                                "description": "Change right Option to MEH key (Option + Shift + Control)",
+                                "from": { "key_code": "right_option" },
                                 "to": [
                                     {
                                         "key_code": "left_shift",

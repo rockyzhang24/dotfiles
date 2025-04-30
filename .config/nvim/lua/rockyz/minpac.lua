@@ -44,7 +44,6 @@ local plugins = {
     'inkarkat/vim-mark',
 
     -- LSP
-    'SmiteshP/nvim-navic',
     'smjonas/inc-rename.nvim',
     'b0o/SchemaStore.nvim',
     'hedyhli/outline.nvim',

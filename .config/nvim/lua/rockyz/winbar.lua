@@ -10,7 +10,6 @@
 
 local M = {}
 
-local navic = require('nvim-navic')
 local icons  = require('rockyz.icons')
 local delimiter = icons.caret.right
 local special_filetypes = require('rockyz.special_filetypes')
@@ -160,16 +159,6 @@ M.render = function()
     local status_str = table.concat(status, '')
     if status_str ~= '' then
         table.insert(items, status_str)
-    end
-
-    -- Truncate if too long
-    items[#items] = items[#items] .. '%<'
-
-    -- Breadcrumbs
-    if navic.is_available() then
-        local context = navic.get_location()
-        local breadcrumbs = delimiter .. ' ' .. (context == '' and icons.misc.ellipsis or context)
-        table.insert(items, breadcrumbs)
     end
 
     return table.concat(items, ' ')

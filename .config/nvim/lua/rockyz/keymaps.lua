@@ -165,15 +165,38 @@ end, { expr = true })
 -- Toggle a shallow fold view for quick code overview
 vim.keymap.set('n', '\\z', function()
     if vim.w.shallow_outline_enabled then
-        vim.wo.foldmethod, vim.wo.foldnestmax, vim.wo.foldlevel = vim.w.prev_foldmethod, vim.w.prev_foldnestmax, vim.w.prev_foldlevel
+        vim.wo.foldmethod, vim.wo.foldnestmax, vim.wo.foldlevel = unpack(vim.w.shallow_outline_prev_opts)
         vim.cmd('1,$foldopen!')
         vim.w.shallow_outline_enabled = false
     else
-        vim.w.prev_foldmethod, vim.w.prev_foldnestmax, vim.w.prev_foldlevel = vim.wo.foldmethod, vim.wo.foldnestmax, vim.wo.foldlevel
+        vim.w.shallow_outline_prev_opts = {
+            foldmethod = vim.wo.foldmethod,
+            foldnestmax = vim.wo.foldnestmax,
+            foldlevel = vim.wo.foldlevel
+        }
         vim.wo.foldmethod, vim.wo.foldnestmax, vim.wo.foldlevel = 'indent', 2, 0
         vim.w.shallow_outline_enabled = true
     end
 end)
+
+-- Toggle a fold view to preview search matching
+-- Source: https://vim.fandom.com/wiki/Folding_with_Regular_Expression
+vim.keymap.set('n', 'z/', function()
+    if vim.w.preview_search_matching then
+        vim.wo.foldmethod, vim.wo.foldexpr, vim.wo.foldlevel, vim.wo.foldcolumn = unpack(vim.w.preview_search_matching_prev_opts)
+        vim.cmd.redraw()
+        vim.w.preview_search_matching = false
+    else
+        vim.w.preview_search_matching_prev_opts = {
+            foldmethod = vim.wo.foldmethod,
+            foldexpr = vim.wo.foldexpr,
+            foldlevel = vim.wo.foldlevel,
+            foldcolumn = vim.wo.foldcolumn
+        }
+        vim.w.preview_search_matching = true
+        return ':setlocal foldexpr=(getline(v:lnum)=~@/)?0:(getline(v:lnum-1)=~@/)\\|\\|(getline(v:lnum+1)=~@/)?1:2 foldmethod=expr foldlevel=0 foldcolumn=2<CR>'
+    end
+end, { expr = true })
 
 -- Enhanced Ctrl-G (borrowed from justinmk/config)
 local function ctrl_g()
@@ -517,13 +540,6 @@ end)
 vim.keymap.set('n', ']<C-t>', function()
     cmd({ cmd = 'ptnext', range = { vim.v.count1 } })
 end)
--- Tabs
-vim.keymap.set('n', '<M-[>', function()
-    cmd({ cmd = 'tabprevious', range = { vim.v.count1 } })
-end)
-vim.keymap.set('n', '<M-]>', function()
-    vim.cmd('+' .. vim.v.count1 .. 'tabnext')
-end)
 -- Make section-jump work if '{' or '}' are not in the first column (see :h [[)
 vim.keymap.set('n', '[[', ":<C-u>eval search('{', 'b')<CR>w99[{", { silent = true })
 vim.keymap.set('n', '[]', "k$][%:<C-u>silent! eval search('}', 'b')<CR>", { silent = true })
@@ -533,6 +549,13 @@ vim.keymap.set('n', '][', ":<C-u>silent! eval search('}')<CR>b99]}", { silent = 
 --
 -- Tab
 --
+
+vim.keymap.set('n', '<M-[>', function()
+    cmd({ cmd = 'tabprevious', range = { vim.v.count1 } })
+end)
+vim.keymap.set('n', '<M-]>', function()
+    vim.cmd('+' .. vim.v.count1 .. 'tabnext')
+end)
 
 -- Open a new tab with an empty window
 vim.keymap.set('n', '<Leader>tn', '<Cmd>$tabnew<CR>')
@@ -552,6 +575,10 @@ end, { expr = true })
 -- Open current buffer in new tab
 vim.keymap.set('n', '<M-t>', '<Cmd>tab split<CR>')
 
+for i = 1, 9 do
+    vim.keymap.set('n', ',' .. i , i .. 'gt')
+end
+
 --
 -- Window
 --
@@ -562,7 +589,7 @@ vim.keymap.set('n', '<C-j>', '<C-w>j')
 vim.keymap.set('n', '<C-k>', '<C-w>k')
 vim.keymap.set('n', '<C-l>', '<C-w>l')
 -- Move cursor to the window 1 to 9
-for i = 1, 9, 1 do
+for i = 1, 9 do
     vim.keymap.set('n', '<Leader>' .. i, '<Cmd>' .. i .. 'wincmd w<CR>')
 end
 -- Go to the previous window
@@ -614,7 +641,7 @@ vim.keymap.set('n', '\\m', require('rockyz.utils.win_utils').win_maximize_toggle
 -- Terminal
 --
 
-vim.keymap.set('t', '<M-\\>', '<C-\\><C-n>')
+vim.keymap.set('t', '<Leader><Esc>', '<C-\\><C-n>')
 
 -- Simulate <C-r> in insert mode for inserting the content of a register.
 -- Reference: http://vimcasts.org/episodes/neovim-terminal-paste/

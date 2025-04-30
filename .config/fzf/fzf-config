@@ -108,11 +108,11 @@ export FZF_CTRL_R_OPTS=" \
     --header ':: CTRL-Y (copy to clipboard)' \
 "
 
-# CTRL-Z to cd into the selected dir
+# CTRL-J to cd into the selected dir
 # - ALT-/: toggle listing dirs under HOME and CWD
 # - ALT-R: list dirs under system root
 # - ALT-P: list dirs under cwd's parent
-bindkey '^z' fzf-cd-widget
+bindkey '^j' fzf-cd-widget
 export FZF_ALT_C_COMMAND="$FD --type d"
 export FZF_ALT_C_OPTS=" \
     --preview '[[ \$(command -v eza) ]] && eza -la --color=always --icons -g --group-directories-first {} || tree -C {} | head -200' \

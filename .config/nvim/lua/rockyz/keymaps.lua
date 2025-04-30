@@ -615,16 +615,12 @@ vim.keymap.set('n', '\\m', require('rockyz.utils.win_utils').win_maximize_toggle
 --
 
 vim.keymap.set('t', '<M-\\>', '<C-\\><C-n>')
+
 -- Simulate <C-r> in insert mode for inserting the content of a register.
 -- Reference: http://vimcasts.org/episodes/neovim-terminal-paste/
 vim.keymap.set('t', '<M-r>', function()
     return '<C-\\><C-n>"' .. vim.fn.nr2char(vim.fn.getchar()) .. 'pi'
 end, { expr = true })
-
-vim.keymap.set('t', '<C-h>', '<C-\\><C-n><C-w>h')
-vim.keymap.set('t', '<C-j>', '<C-\\><C-n><C-w>j')
-vim.keymap.set('t', '<C-k>', '<C-\\><C-n><C-w>k')
-vim.keymap.set('t', '<C-l>', '<C-\\><C-n><C-w>l')
 
 --
 -- Vimscript goes here

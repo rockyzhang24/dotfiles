@@ -7,18 +7,12 @@ local M = {}
 
 local io_utils = require('rockyz.utils.io_utils')
 
-local term_bufnr
-local term_winid
-local job_id
-
+local term = {
+    winid = -1,
+    bufnr = -1,
+}
 
 local prev_FZF_DEFAULT_OPTS
-
-local win_opts = {
-    relative = 'editor',
-    border = vim.g.border_style,
-    style = 'minimal',
-}
 
 local actions = {
     ['<C-x>'] = 'belowright split',
@@ -39,25 +33,26 @@ local function create_keymaps()
                     vim.cmd(act .. ' ' .. f)
                 end
             end, 100)
-        end, { buffer = term_bufnr })
+        end, { buffer = term.bufnr })
     end
 
     vim.keymap.set('t', '<C-_>', function()
         M.close()
-    end, { buffer = term_bufnr })
+    end, { buffer = term.bufnr })
 end
 
 local function calculate_win_pos()
-    local editor_width = vim.o.columns
-    local editor_height = vim.o.lines
 
-    local win_width = math.floor(editor_width * 0.8)
-    local win_height = math.floor(editor_height * 0.8)
+    local win_width = math.floor(vim.o.columns * 0.8)
+    local win_height = math.floor(vim.o.lines * 0.8)
 
-    local row = math.floor((editor_height - win_height) / 2)
-    local col = math.floor((editor_width - win_width) / 2)
+    local row = math.floor((vim.o.lines - win_height) / 2)
+    local col = math.floor((vim.o.columns - win_width) / 2)
 
     return {
+        relative = 'editor',
+        border = vim.g.border_style,
+        style = 'minimal',
         row = row,
         col = col,
         width = win_width,
@@ -70,44 +65,34 @@ function M.open()
     prev_FZF_DEFAULT_OPTS = vim.env.FZF_DEFAULT_OPTS
     vim.env.FZF_DEFAULT_OPTS = vim.env.FZF_DEFAULT_OPTS:gsub('%-%-tmux%s+%S+', '')
 
-    if not term_bufnr then
-        term_bufnr = vim.api.nvim_create_buf(false, true)
+    if not vim.api.nvim_buf_is_valid(term.bufnr) then
+        term.bufnr = vim.api.nvim_create_buf(false, true)
+        vim.api.nvim_buf_call(term.bufnr, function()
+            vim.fn.jobstart({ vim.o.shell, '-c', 'lf' }, {
+                term = true,
+                on_exit = function()
+                    -- Immediately close the buffer and window to avoid the redundant message "[Process
+                    -- exited 0]"
+                    vim.api.nvim_buf_delete(term.bufnr, { force = true })
+                end,
+            })
+        end)
     end
 
-    local opts = vim.tbl_extend('force', win_opts, calculate_win_pos())
-    term_winid = vim.api.nvim_open_win(term_bufnr, true, opts)
-
-    if not job_id then
-        local shell = vim.o.shell
-        local command = 'lf'
-        job_id = vim.fn.jobstart({ shell, '-c', command }, {
-            term = true,
-            on_exit = function()
-                -- Immediately close the buffer and window to avoid the redundant message "[Process
-                -- exited 0]"
-                vim.api.nvim_buf_delete(term_bufnr, { force = true })
-                term_bufnr = nil
-                term_winid = nil
-                job_id = nil
-            end,
-        })
-    end
+    term.winid = vim.api.nvim_open_win(term.bufnr, true, calculate_win_pos())
 
     create_keymaps()
 end
 
 -- Close the window
 function M.close()
-    if term_winid then
-        vim.api.nvim_win_close(term_winid, true)
-        term_winid = nil
-        vim.env.FZF_DEFAULT_OPTS = prev_FZF_DEFAULT_OPTS
-    end
+    vim.api.nvim_win_hide(term.winid)
+    vim.env.FZF_DEFAULT_OPTS = prev_FZF_DEFAULT_OPTS
 end
 
 -- Toggle lf window
 function M.toggle()
-    if term_winid and vim.api.nvim_win_is_valid(term_winid) then
+    if vim.api.nvim_win_is_valid(term.winid) then
         M.close()
     else
         M.open()

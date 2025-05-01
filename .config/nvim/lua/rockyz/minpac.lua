@@ -12,7 +12,6 @@ local plugins = {
     'tpope/vim-surround',
     'tpope/vim-sleuth',
     'tpope/vim-repeat',
-    'brenoprata10/nvim-highlight-colors',
     'godlygeek/tabular',
     'mbbill/undotree',
     'haya14busa/vim-asterisk',

@@ -61,44 +61,42 @@ function M.list()
     return mru_list
 end
 
-M.flush = (function()
-    local debounced
-    return function(force)
-        last_bufnr = nil
-        if force then
-            io_utils.write_file(db, table.concat(list(db), '\n'))
-        else
-            if not debounced then
-                debounced = require('rockyz.utils.debounce')(function()
-                    io_utils.write_file_async(db, table.concat(list(db), '\n'))
-                end, 50, false, true)
-            end
-            debounced()
+local debounced
+function M.flush(force)
+    last_bufnr = nil
+    if force then
+        io_utils.write_file(db, table.concat(list(db), '\n'))
+    else
+        if not debounced then
+            debounced = require('rockyz.utils.debounce')(function()
+                io_utils.write_file_async(db, table.concat(list(db), '\n'))
+            end, 50, false, true)
         end
+        debounced()
     end
-end)()
+end
 
-M.store_buf = (function()
-    local count = 0
-    return function(bufnr)
-        bufnr = bufnr or tonumber(vim.fn.expand('<abuf>', true)) or vim.api.nvim_get_current_buf()
-        local buftype = vim.bo[bufnr].buftype
-        if buftype ~= '' and buftype ~= 'acwrite' or last_bufnr == bufnr then
-            return
-        end
-        local filetype = vim.bo[bufnr].filetype
-        if vim.list_contains(ignored_filetypes, filetype) then
-            return
-        end
-        table.insert(bufs, bufnr)
-        last_bufnr = bufnr
-        count = (count + 1) % 10
-        if count == 0 then
-            M.list()
-        end
+local count = 0
+function M.store_buf(bufnr)
+    bufnr = bufnr or tonumber(vim.fn.expand('<abuf>', true)) or vim.api.nvim_get_current_buf()
+    if vim.api.nvim_buf_get_name(bufnr) == '' then
+        return
     end
-end)()
-
+    local buftype = vim.bo[bufnr].buftype
+    if buftype ~= '' and buftype ~= 'acwrite' or last_bufnr == bufnr then
+        return
+    end
+    local filetype = vim.bo[bufnr].filetype
+    if vim.list_contains(ignored_filetypes, filetype) then
+        return
+    end
+    table.insert(bufs, bufnr)
+    last_bufnr = bufnr
+    count = (count + 1) % 10
+    if count == 0 then
+        M.list()
+    end
+end
 
 vim.api.nvim_create_augroup('rockyz.mru', { clear = true })
 vim.api.nvim_create_autocmd({ 'BufEnter', 'FocusGained' }, {

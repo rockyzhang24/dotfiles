@@ -294,9 +294,8 @@ end
 -- Filetype
 function M.filetype()
     local filetype = vim.bo.filetype
-    -- No file
     if filetype == '' then
-        return string.format('%%#StlComponentInactive#%s [No File]%%*', icons.misc.file)
+        return string.format('%%#StlComponentInactive#%s [Empty]%%*', icons.misc.file)
     end
     -- Handle special filetype
     local sp_ft = special_filetypes[filetype]

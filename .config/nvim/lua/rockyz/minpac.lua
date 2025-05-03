@@ -24,7 +24,6 @@ local plugins = {
     'danymat/neogen',
     'stevearc/conform.nvim',
     'Wansmer/treesj',
-    'willothy/flatten.nvim',
     'junegunn/vim-after-object',
     'preservim/tagbar',
     'dhananjaylatkar/cscope_maps.nvim',

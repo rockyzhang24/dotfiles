@@ -1,2 +1,0 @@
-require('flatten').setup({
-})

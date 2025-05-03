@@ -98,7 +98,7 @@ vim.api.nvim_create_autocmd('LspAttach', {
 vim.api.nvim_create_autocmd('FileType', {
     group = augroup,
     callback = function(args)
-        if not vim.w.lsp_folding_enabled then
+        if vim.bo[args.buf].filetype ~= 'bigfile' and not vim.w.lsp_folding_enabled then
             local has_parser, _ = pcall(vim.treesitter.get_parser, args.buf)
             if has_parser then
                 vim.wo.foldmethod = 'expr'

@@ -1,3 +1,5 @@
+local notify = require('rockyz.utils.notify_utils')
+
 -- Dotfiles setup
 local function update_git_env()
     local cwd = vim.fn.getcwd()
@@ -207,6 +209,22 @@ vim.api.nvim_create_autocmd('WinLeave', {
     group = 'rockyz.cursorlinenc',
     callback = function()
         vim.opt_local.winhighlight:append({ CursorLine = 'CursorLineNC' })
+    end,
+})
+
+-- In large file, only use vim syntax (LSP semantic highlight and treesitter highlight will be
+-- disabled).
+vim.api.nvim_create_autocmd('FileType', {
+    group = vim.api.nvim_create_augroup('rockyz.big_file', { clear = true }),
+    pattern = 'bigfile',
+    callback = function(ev)
+        local path = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(ev.buf), ':p:~:.')
+        notify.warn(
+            ('Big file detected: %s.\nSome Neovim features such as Treesitter highlighting have been disabled.'):format(path)
+        )
+        vim.schedule(function()
+            vim.bo[ev.buf].syntax = vim.filetype.match({ buf = ev.buf }) or ''
+        end)
     end,
 })
 

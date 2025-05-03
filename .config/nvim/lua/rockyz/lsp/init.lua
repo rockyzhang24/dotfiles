@@ -1,3 +1,5 @@
+local methods = vim.lsp.protocol.Methods
+
 local M = {}
 
 -- Diagnostic config
@@ -161,7 +163,8 @@ local function on_attach(client, bufnr)
     if vim.g.inlay_hint_enabled then
         vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
     end
-    -- Toggle (buffer-local)
+    -- Toggle inlay hints
+    -- (1). Buffer locally
     vim.keymap.set('n', '\\h', function()
         local is_enabled = vim.lsp.inlay_hint.is_enabled({ bufnr = 0 })
         vim.b.inlay_hint_enabled = not is_enabled
@@ -169,7 +172,7 @@ local function on_attach(client, bufnr)
 
         vim.notify(string.format('Inlay hints (buffer-local) is %s', vim.b.inlay_hint_enabled and 'enabled' or 'disabled'), vim.log.levels.INFO)
     end, opts)
-    -- Toggle (global)
+    -- (2). Globally
     vim.keymap.set('n', '\\H', function()
         vim.g.inlay_hint_enabled = not vim.g.inlay_hint_enabled
         vim.lsp.inlay_hint.enable(vim.g.inlay_hint_enabled)
@@ -193,7 +196,7 @@ local function on_attach(client, bufnr)
     -- end
 
     -- Document highlight
-    if client:supports_method('textDocument/documentHighlight') then
+    if client:supports_method(methods.textDocument_documentHighlight) then
         vim.api.nvim_create_autocmd({ 'CursorHold', 'InsertLeave' }, {
             buffer = bufnr,
             callback = function()
@@ -209,7 +212,7 @@ local function on_attach(client, bufnr)
     end
 
     -- Document colors
-    if client:supports_method('textDocument/documentColor') then
+    if client:supports_method(methods.textDocument_documentColor) then
         vim.lsp.document_color.enable(true, bufnr)
     end
 end

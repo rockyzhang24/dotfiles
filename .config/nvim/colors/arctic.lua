@@ -27,7 +27,6 @@ local gray2 = '#6e7681' -- LineNr (editorLineNumber.foreground)
 local gray3 = '#808080'
 
 local black = '#2d2d2d' -- TabLine
-local black2 = '#252526'
 local black3 = '#282828' -- CursorLine (editor.lineHighlightBorder). Or use #2a2d2e (list.hoverBackground) for a brighter color
 local black4 = '#181818' -- Statusline and Tabline (editorGroupHeader.tabsBackground, tab.inactiveBackground)
 
@@ -117,7 +116,8 @@ local groups = {
     GutterGitAdded = { fg = gutter_git_added }, -- editorGutter.addedBackground
     GutterGitDeleted = { fg = gutter_git_deleted }, -- editorGutter.deletedBackground
     GutterGitModified = { fg = gutter_git_modified }, -- editorGutter.modifiedBackground
-    Breadcrumb = { fg = winbar_fg, bg = norm_bg }, -- breadcrumb.foreground/background
+    Breadcrumb = { fg = winbar_fg, bg = norm_bg, bold = true }, -- breadcrumb.foreground/background
+    BreadcrumbNC = { fg = winbar_fg, bg = norm_bg },
     ScrollbarSliderHover = { bg = '#4f4f4f' }, -- scrollbarSlider.hoverBackground
     PeekViewBorder = { fg = '#3794ff' }, -- peekView.border
     PeekViewNormal = { bg = norm_bg }, -- peekViewEditor.background
@@ -185,8 +185,9 @@ local groups = {
     LspReferenceWrite = 'SelectionHighlightBackground',
     LspCodeLens = 'CodeLens',
     -- LspCodeLensSeparator = { }, -- color the seperator between two or more code lens.
-    LspSignatureActiveParameter = 'MatchedCharacters',
+    LspSignatureActiveParameter = { fg = matched_chars, bg = selected_item_bg, underline = true, bold = true },
     LspInlayHint = 'InlayHint',
+    -- SnippetTabstop = {},
 
     --
     -- Diagnostics
@@ -271,7 +272,7 @@ local groups = {
 
     CursorLine = { bg = black3 },
     CursorColumn = 'CursorLine',
-    ColorColumn = { bg = black2 }, -- editorRuler.foreground (vscodes uses #5a5a5a but it's too bright)
+    ColorColumn = { bg = utils.darken('#5a5a5a', 0.4) }, -- editorRuler.foreground (vscodes uses #5a5a5a but it's too bright)
     Conceal = { fg = gray2 },
     Cursor = { fg = norm_bg, bg = norm_fg },
     CurSearch = { fg = norm_bg, bg = '#ff966c' }, -- editor.findMatchBackground. Take the color from tokyonight moon.
@@ -289,9 +290,12 @@ local groups = {
     WinSeparator = { fg = norm_fg }, -- VSCode uses color win_separator
     VirtSplit = 'WinSeparator', -- deprecated and use WinSeparator instead
     LineNr = { fg = gray2 }, -- editorLineNumber.foreground
-    CursorLineNr = { fg = '#cccccc' }, -- editorLineNumber.activeForeground
+    -- LineNrAbove = {},
+    -- LineNrBelow = {},
+    CursorLineNr = { fg = '#cccccc', bold = true }, -- editorLineNumber.activeForeground
     Folded = { bg = folded_line_bg },
     CursorLineFold = 'CursorLineNr',
+    -- CursorLineSign = {},
     FoldColumn = 'LineNr', -- editorGutter.foldingControlForeground (vscode uses #c5c5c5 but it's too bright)
     SignColumn = 'LineNr',
     IncSearch = 'CurSearch', -- editor.findMatchBackground (vscode uses #9e6a03)
@@ -305,16 +309,19 @@ local groups = {
     Normal = { fg = norm_fg, bg = norm_bg },
     -- NormalNC = { },
     Pmenu = { fg = norm_fg, bg = norm_bg }, -- editorSuggestWidget.background/foreground
-    PmenuSel = { fg = white, bg = selected_item_bg }, -- editorSuggestWidget.selectedForeground/selectedBackground
+    PmenuSel = { fg = white, bg = selected_item_bg, bold = true }, -- editorSuggestWidget.selectedForeground/selectedBackground
     -- PmenuKind = {},
     -- PmenuKindSel = {},
     -- PmenuExtra = {},
     -- PmenuExtraSel = {},
     PmenuSbar = 'ScrollbarGutter',
     PmenuThumb = 'ScrollbarSlider',
-    PmenuMatch = { fg = matched_chars, bg = norm_bg },
-    PmenuMatchSel = { fg = matched_chars, bg = selected_item_bg },
+    PmenuMatch = { fg = matched_chars, bg = norm_bg, bold = true },
+    PmenuMatchSel = { fg = matched_chars, bg = selected_item_bg, bold = true },
+    -- ComplMatchIns = {},
     NormalFloat = 'Pmenu',
+    -- FloatTitle = {},
+    -- FloatFooter = {},
     Question = { fg = warn_yellow },
     QuickFixLine = 'QfSelection',
     Search = { fg = norm_fg, bg = '#3e68d7' }, -- editor.findMatchHighlightBackground (vscode uses #623315). Take the color from tokyonight moon.
@@ -327,7 +334,7 @@ local groups = {
     StatusLineNC = { fg = gray, bg = stl_bg },
     TabLine = { fg = tab_inactive_fg, bg = tab_inactive_bg }, -- tab.inactiveBackground, tab.inactiveForeground
     TabLineFill = { fg = 'NONE', bg = tab_bg }, -- editorGroupHeader.tabsBackground
-    TabLineSel = { fg = tab_active_fg, bg = tab_active_bg }, -- tab.activeBackground, tab.activeForeground
+    TabLineSel = { fg = tab_active_fg, bg = tab_active_bg, bold = true }, -- tab.activeBackground, tab.activeForeground
     Title = { fg = dark_blue, bold = true },
     Visual = { bg = '#264F78' }, -- editor.selectionBackground
     -- VisualNOS = { },
@@ -335,7 +342,7 @@ local groups = {
     Whitespace = { fg = indent_guide_fg },
     WildMenu = 'PmenuSel',
     Winbar = 'Breadcrumb',
-    WinbarNC = 'Breadcrumb',
+    WinbarNC = 'BreadcrumbNC',
 
     --
     -- Statusline
@@ -479,7 +486,7 @@ local groups = {
     ['@string.special.path'] = '@string.special', -- filenames
 
     ['@character'] = 'Character', -- character literals
-    ['@character.special'] = 'SpecialChar', -- special characters (e.g. wildcards)
+    ['@character.special'] = '@string.special', -- special characters (e.g. wildcards)
 
     ['@boolean'] = 'Boolean', -- boolean literals
     ['@number'] = 'Number', -- numeric literals
@@ -516,7 +523,7 @@ local groups = {
     ['@keyword.function'] = 'Type', -- keywords that define a function (e.g. `func` in Go, `def` in Python)
     ['@keyword.operator'] = '@operator', -- operators that are English words (e.g. `and` / `or`)
     ['@keyword.import'] = 'Include', -- keywords for including modules (e.g. `import` / `from` in Python)
-    ['@keyword.type'] = 'Type', -- keywords describing composite types (e.g. `struct`, `enum`)
+    ['@keyword.type'] = '@keyword.function', -- keywords describing composite types (e.g. `struct`, `enum`)
     ['@keyword.modifier'] = { fg = dark_blue }, -- keywords modifying other constructs (e.g. `const`, `static`, `public`)
     ['@keyword.repeat'] = 'Repeat', -- keywords related to loops (e.g. `for` / `while`)
     ['@keyword.return'] = { fg = dark_pink }, --  keywords like `return` and `yield`
@@ -606,13 +613,13 @@ local groups = {
     ['@lsp.type.enumMember'] = { fg = blue }, -- variable.other.enummember
     ['@lsp.type.decorator'] = '@attribute',
     ['@lsp.type.event'] = '@property',
-    ['@lsp.type.function'] = {},
-    ['@lsp.type.method'] = {},
+    -- ['@lsp.type.function'] = {},
+    -- ['@lsp.type.method'] = {},
     ['@lsp.type.macro'] = '@constant.macro',
     ['@lsp.type.label'] = '@label',
     ['@lsp.type.comment'] = '@comment',
     ['@lsp.type.string'] = '@string',
-    ['@lsp.type.keyword'] = {},
+    -- ['@lsp.type.keyword'] = {},
     ['@lsp.type.number'] = '@number',
     ['@lsp.type.regexp'] = '@string.regexp',
     ['@lsp.type.operator'] = '@operator',
@@ -645,6 +652,7 @@ local groups = {
     ['@lsp.type.selfParamete'] = '@variable.parameter',
     ['@lsp.type.boolean'] = '@boolean',
     ['@lsp.typemod.class.constructorOrDestructor'] = { fg = blue_green },
+    ['@lsp.typemod.const.declaration'] = { fg = blue }, -- gotten from rust code
 
     -- Set injected highlights. Mainly for Rust doc comments and also works for other lsps that inject
     -- tokens in comments.
@@ -668,7 +676,7 @@ local groups = {
     --
 
     CmpItemAbbrDeprecated = { fg = gray3, bg = 'NONE', strikethrough = true },
-    CmpItemAbbrMatch = { fg = matched_chars, bg = 'NONE' },
+    CmpItemAbbrMatch = { fg = matched_chars, bg = 'NONE', bold = true },
     CmpItemAbbrMatchFuzzy = 'CmpItemAbbrMatch',
     CmpItemMenu = 'Description',
     CmpItemKindText = 'SymbolKindText',
@@ -708,16 +716,16 @@ local groups = {
     CmpItemKindPackage = 'SymbolKindPackage',
     -- Predefined for the winhighlight config of cmp float window
     SuggestWidgetBorder = 'FloatBorder',
-    SuggestWidgetSelect = { bg = selected_item_bg },
+    SuggestWidgetSelect = { bg = selected_item_bg, bold = true },
 
     --
     -- blink.cmp
     --
 
     -- Completion menu window
-    BlinkCmpMenu = 'Normal',
+    BlinkCmpMenu = 'Pmenu',
     BlinkCmpMenuBorder = 'FloatBorder',
-    BlinkCmpMenuSelection = { bg = selected_item_bg },
+    BlinkCmpMenuSelection = { bg = selected_item_bg, bold = true },
     BlinkCmpScrollBarThumb = 'ScrollbarSlider',
     BlinkCmpScrollBarGutter = 'ScrollbarGutter',
     -- Document window
@@ -732,7 +740,7 @@ local groups = {
     -- Label
     BlinkCmpLabel = { fg = norm_fg },
     BlinkCmpLabelDeprecated = { fg = gray3, bg = 'NONE', strikethrough = true },
-    BlinkCmpLabelMatch = { fg = matched_chars, bg = 'NONE' },
+    BlinkCmpLabelMatch = { fg = matched_chars, bg = 'NONE', bold = true },
     BlinkCmpLabelDetail = { fg = gray3, bg = 'NONE' },
     BlinkCmpLabelDescription = 'BlinkCmpLabelDetail',
     -- Source
@@ -882,7 +890,7 @@ local groups = {
     TelescopeResultsBorder = 'TelescopePromptBorder',
     TelescopePreviewBorder = 'TelescopePromptBorder',
     TelescopeNormal = 'Normal',
-    TelescopeSelection = { fg = white, bg = selected_item_bg },
+    TelescopeSelection = { fg = white, bg = selected_item_bg, bold = true },
     TelescopeSelectionCaret = { fg = colors256_161_pink },
     TelescopeMultiSelection = 'TelescopeNormal',
     TelescopeMultiIcon = { fg = colors256_168_pink2 },

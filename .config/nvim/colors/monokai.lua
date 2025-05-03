@@ -13,7 +13,7 @@
 -- 2. VSCode theme color: https://code.visualstudio.com/api/references/theme-color
 --
 
-local util = require('rockyz.utils.color_utils')
+local utils = require('rockyz.utils.color_utils')
 
 -- Colors from Monokai
 local pink = '#f92472'
@@ -66,21 +66,12 @@ local icon_fg = '#ffcc00' -- fg for icons on tabline, winbar and statusline
 local directory = '#569CD6'
 local winbar_fg = '#ababaa' -- breadcrumb.foreground
 
--- Tabline
-local tab_bg = norm_bg -- editorGroupHeader.tabsBackground
-local tab_active_fg = white -- tab.activeForeground
-local tab_active_bg = util.lighten(norm_bg, 0.15) -- tab.activeBackground
-local tab_inactive_fg = '#ccccc7' -- tab.inactiveForeground
-local tab_inactive_bg = tab_bg -- tab.inactiveBackground
-local tab_indicator_active_fg = '#0078d4' -- indicator for the active tab, a bar on the leftmost of the current tab
-local tab_indicator_inactive_fg = util.lighten(tab_active_bg, 0.1)
-
 -- Statusline
 local stl_fg = white -- statusBar.foreground
-local stl_bg = util.lighten(norm_bg, 0.05) -- statusBar.background
+local stl_bg = utils.lighten(norm_bg, 0.05) -- statusBar.background
 local stl_mode_fg = '#282828'
 local stl_normal = '#a89984'
-local stl_insert = '#83a598'
+local stl_insert = '#67d8ef'
 local stl_visual = '#fe8019'
 local stl_replace = '#c586c0'
 local stl_command = '#b8bb26'
@@ -89,6 +80,15 @@ local stl_pending = '#fb3934'
 local stl_inactive = '#858585' -- component is inactive (e.g., treesitter is inactive if no parser)
 local stl_on = '#2ea043' -- component is on (e.g., treesitter highlight is on)
 local stl_off = '#f85149' -- component is off (e.g., treesitter highlight is off)
+
+-- Tabline
+local tab_bg = stl_bg -- editorGroupHeader.tabsBackground
+local tab_active_fg = white -- tab.activeForeground
+local tab_active_bg = utils.lighten(tab_bg, 0.15) -- tab.activeBackground
+local tab_inactive_fg = '#ccccc7' -- tab.inactiveForeground
+local tab_inactive_bg = tab_bg -- tab.inactiveBackground
+local tab_indicator_active_fg = '#0078d4' -- indicator for the active tab, a bar on the leftmost of the current tab
+local tab_indicator_inactive_fg = utils.lighten(tab_active_bg, 0.1)
 
 -- 256 colros
 local colors256_110_blue = '#87afd7' -- 110
@@ -119,7 +119,8 @@ local groups = {
     GutterGitAdded = { fg = gutter_git_added }, -- editorGutter.addedBackground
     GutterGitDeleted = { fg = gutter_git_deleted }, -- editorGutter.deletedBackground
     GutterGitModified = { fg = gutter_git_modified }, -- editorGutter.modifiedBackground
-    Breadcrumb = { fg = winbar_fg, bg = norm_bg }, -- breadcrumb.foreground/background
+    Breadcrumb = { fg = winbar_fg, bg = norm_bg, bold = true}, -- breadcrumb.foreground/background
+    BreadcrumbNC = { fg = winbar_fg, bg = norm_bg },
     ScrollbarSliderHover = { bg = '#525250' }, -- scrollbarSlider.hoverBackground
     PeekViewBorder = { fg = brown }, -- peekView.border
     PeekViewNormal = { bg = norm_bg }, -- peekViewEditor.background
@@ -165,7 +166,7 @@ local groups = {
     -- Indent scope
     IndentScopeSymbol = 'Delimiter',
     -- CursorLine of not-current windows
-    CursorLineNC = { underdashed = true, sp = '#9b9ea4' },
+    CursorLineNC = { bg = gray3, underdashed = true, sp = '#9b9ea4' },
 
     --
     -- diff
@@ -186,6 +187,7 @@ local groups = {
     -- LspCodeLensSeparator = { }, -- color the seperator between two or more code lens.
     LspSignatureActiveParameter = 'MatchedCharacters',
     LspInlayHint = 'InlayHint',
+    -- SnippetTabstop = {},
 
     --
     -- Diagnostics
@@ -196,10 +198,10 @@ local groups = {
     DiagnosticInfo = { fg = info_blue },
     DiagnosticHint = { fg = hint_gray },
     DiagnosticOk = { fg = ok_green },
-    DiagnosticVirtualTextError = { fg = error_red, bg = util.blend(error_red, 0.9, norm_bg), italic = true },
-    DiagnosticVirtualTextWarn = { fg = warn_yellow, bg = util.blend(warn_yellow, 0.9, norm_bg), italic = true },
-    DiagnosticVirtualTextInfo = { fg = info_blue, bg = util.blend(info_blue, 0.9, norm_bg), italic = true },
-    DiagnosticVirtualTextHint = { fg = hint_gray, bg = util.blend(hint_gray, 0.9, norm_bg), italic = true },
+    DiagnosticVirtualTextError = { fg = error_red, bg = utils.blend(error_red, 0.9, norm_bg), italic = true },
+    DiagnosticVirtualTextWarn = { fg = warn_yellow, bg = utils.blend(warn_yellow, 0.9, norm_bg), italic = true },
+    DiagnosticVirtualTextInfo = { fg = info_blue, bg = utils.blend(info_blue, 0.9, norm_bg), italic = true },
+    DiagnosticVirtualTextHint = { fg = hint_gray, bg = utils.blend(hint_gray, 0.9, norm_bg), italic = true },
     DiagnosticVirtualTextOk = { fg = ok_green, bg = '#31392c', italic = true },
     DiagnosticVirtualLinesError = 'DiagnosticVirtualTextError',
     DiagnosticVirtualLinesWarn = 'DiagnosticVirtualTextWarn',
@@ -269,8 +271,8 @@ local groups = {
     --
 
     CursorLine = { bg = gray3 },
-    CursorColumn = { bg = gray3 },
-    ColorColumn = { bg = '#5a5a5a' }, -- editorRuler.foreground
+    CursorColumn = 'CursorLine',
+    ColorColumn = { bg = utils.darken('#5a5a5a', 0.4) }, -- editorRuler.foreground
     Conceal = { fg = gray2 },
     Cursor = { fg = norm_bg, bg = '#f8f8f0' },
     CurSearch = { fg = norm_bg, bg = '#ff966c' }, -- editor.findMatchBackground. Take the color from tokyonight moon.
@@ -288,14 +290,17 @@ local groups = {
     WinSeparator = { fg = norm_fg }, -- VSCode uses color win_separator
     VirtSplit = 'WinSeparator', -- deprecated and use WinSeparator instead
     LineNr = { fg = gray2 }, -- editorLineNumber.foreground
-    CursorLineNr = { fg = yellow2 }, -- editorLineNumber.activeForeground
+    -- LineNrAbove = {},
+    -- LineNrBelow = {},
+    CursorLineNr = { fg = yellow2, bold = true }, -- editorLineNumber.activeForeground
     Folded = { bg = folded_line_bg },
     CursorLineFold = 'CursorLineNr',
+    -- CursorLineSign = {},
     FoldColumn = 'LineNr',
-    SignColumn = { bg = norm_bg },
+    SignColumn = 'LineNr',
     IncSearch = 'CurSearch',
     -- Substitute = { },
-    MatchParen = { fg = norm_fg, bg = '#5a9ed1' }, -- editorBracketMatch.background
+    MatchParen = { fg = norm_fg, bg = '#5a9ed1', bold = true, underline = true }, -- editorBracketMatch.background
     ModeMsg = { fg = norm_fg },
     MsgArea = { fg = norm_fg },
     -- MsgSeparator = { },
@@ -313,7 +318,10 @@ local groups = {
     PmenuThumb = 'ScrollbarSlider',
     PmenuMatch = { fg = matched_chars, bg = norm_bg, bold = true },
     PmenuMatchSel = { fg = matched_chars, bg = selected_item_bg, bold = true },
+    -- ComplMatchIns = {},
     NormalFloat = 'Pmenu',
+    -- FloatTitle = {},
+    -- FloatFooter = {},
     Question = { fg = warn_yellow },
     QuickFixLine = 'QfSelection',
     Search = { fg = norm_fg, bg = '#3e68d7' }, -- editor.findMatchHighlightBackground. Take the color from tokyonight moon.
@@ -326,7 +334,7 @@ local groups = {
     -- StatusLineNC = { },
     TabLine = { fg = tab_inactive_fg, bg = tab_inactive_bg }, -- tab.inactiveBackground, tab.inactiveForeground
     TabLineFill = { fg = 'NONE', bg = tab_bg }, -- editorGroupHeader.tabsBackground
-    TabLineSel = { fg = tab_active_fg, bg = tab_active_bg }, -- tab.activeBackground, tab.activeForeground
+    TabLineSel = { fg = tab_active_fg, bg = tab_active_bg, bold = true }, -- tab.activeBackground, tab.activeForeground
     Title = { fg = orange, bold = true },
     Visual = { bg = '#555449' }, -- editor.selectionBackground, use the selection color in Sublime Text
     -- VisualNOS = { },
@@ -334,7 +342,7 @@ local groups = {
     Whitespace = { fg = indent_guide_fg },
     WildMenu = 'PmenuSel',
     Winbar = 'Breadcrumb',
-    WinbarNC = 'Breadcrumb',
+    WinbarNC = 'BreadcrumbNC',
 
     --
     -- Statusline
@@ -479,7 +487,7 @@ local groups = {
     ['@string.special.path'] = '@string.special', -- filenames
 
     ['@character'] = 'Character', -- character literals
-    ['@character.special'] = 'SpecialChar', -- special characters (e.g. wildcards)
+    ['@character.special'] = '@string.special', -- special characters (e.g. wildcards)
 
     ['@boolean'] = 'Boolean', -- boolean literals
     ['@number'] = 'Number', -- numeric literals
@@ -497,7 +505,7 @@ local groups = {
     -- Function
     ['@function'] = 'Function', -- function definitions. (entity.name.function)
     ['@function.builtin'] = { fg = blue }, -- built-in functions
-    ['@function.call'] = { fg = blue }, -- function calls. (variable.function)
+    ['@function.call'] = '@function', -- function calls. (variable.function)
     ['@function.macro'] = '@function', -- preprocessor macros, e.g., the function name after #define in C++, #define foo() (...)
 
     ['@function.method'] = '@function', -- method definitions
@@ -602,13 +610,13 @@ local groups = {
     ['@lsp.type.enumMember'] = '@variable', -- identifiers that declare or reference an enumeration property, constant, or member. (variable.other.enummember)
     ['@lsp.type.decorator'] = '@attribute', -- identifiers that declare or reference decorators and annotations.
     ['@lsp.type.event'] = '@property', --  identifiers that declare an event property.
-    ['@lsp.type.function'] = {}, -- identifiers that declare a function.
-    ['@lsp.type.method'] = {}, -- identifiers that declare a member function or method.
+    -- ['@lsp.type.function'] = {}, -- identifiers that declare a function.
+    -- ['@lsp.type.method'] = {}, -- identifiers that declare a member function or method.
     ['@lsp.type.macro'] = '@constant.macro', --  identifiers that declare a macro.
     ['@lsp.type.label'] = '@label', -- identifiers that declare a label.
     ['@lsp.type.comment'] = '@comment', -- tokens that represent a comment.
     ['@lsp.type.string'] = '@string', -- tokens that represent a string literal.
-    ['@lsp.type.keyword'] = {}, -- tokens that represent a language keyword.
+    -- ['@lsp.type.keyword'] = {}, -- tokens that represent a language keyword.
     ['@lsp.type.number'] = '@number', -- tokens that represent a number literal.
     ['@lsp.type.regexp'] = '@string.regexp', -- tokens that represent a regular expression literal.
     ['@lsp.type.operator'] = '@operator', -- tokens that represent an operator.
@@ -704,14 +712,14 @@ local groups = {
     CmpItemKindPackage = 'SymbolKindPackage',
     -- Predefined for the winhighlight config of cmp float window
     SuggestWidgetBorder = 'FloatBorder',
-    SuggestWidgetSelect = { bg = selected_item_bg },
+    SuggestWidgetSelect = { bg = selected_item_bg, bold = true },
 
     --
     -- blink.cmp
     --
 
     -- Completion menu window
-    BlinkCmpMenu = 'Normal',
+    BlinkCmpMenu = 'Pmenu',
     BlinkCmpMenuBorder = 'FloatBorder',
     BlinkCmpMenuSelection = { bg = selected_item_bg, bold = true },
     BlinkCmpScrollBarThumb = 'ScrollbarSlider',
@@ -994,9 +1002,9 @@ local groups = {
     FzfFilename = { fg = filename },
     FzfLnum = { fg = lnum },
     FzfCol = { fg = col },
-    FzfDesc = { fg = util.lighten(norm_bg, 0.4) },
+    FzfDesc = { fg = utils.lighten(norm_bg, 0.4) },
     FzfRgQuery = { fg = pink },
-    FzfTagsPattern = { fg = util.darken(green, 0.2) },
+    FzfTagsPattern = { fg = utils.darken(green, 0.2) },
 
     GitStatusStaged = { fg = green },
     GitStatusUnstaged = { fg = pink },

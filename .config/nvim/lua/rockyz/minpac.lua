@@ -52,6 +52,7 @@ local plugins = {
         'saghen/blink.cmp',
         {
             ['do'] = function()
+                vim.notify('Building blink.cmp', vim.log.levels.INFO)
                 local obj = vim.system({ 'cargo', 'build', '--release' }):wait()
                 if obj.code == 0 then
                     vim.notify('Building blink.cmp done', vim.log.levels.INFO)
@@ -59,6 +60,7 @@ local plugins = {
                     vim.notify('Building blink.cmp failed', vim.log.levels.ERROR)
                 end
             end,
+            -- rev = '*',
         },
     },
 

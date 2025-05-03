@@ -23,7 +23,7 @@ fi
 if [[ $COLOR_THEME == 'arctic' ]]; then
     [[ $bg != -1 ]] && bg='#1f1f1f'
     fg='#cccccc'
-    colors="dark,fg:$fg,bg:$bg,hl:#ffdd33,fg+:#ffffff,bg+:#04395e,gutter:$bg,hl+:#ffdd33,query:$fg,disabled:#808080,border:$fg,separator:#454545,label:#4ec9b0,header:#f9ae28:underline:bold"
+    colors="dark,fg:$fg,bg:$bg,hl:#ffdd33:bold,fg+:#ffffff:bold,bg+:#04395e,gutter:$bg,hl+:#ffdd33:bold,query:$fg,disabled:#808080,border:$fg,separator:#454545,label:#4ec9b0,header:#f9ae28:underline:bold"
 fi
 # monokai theme
 if [[ $COLOR_THEME == 'monokai' ]]; then

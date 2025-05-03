@@ -3,6 +3,5 @@ require('iswap').setup({
     grey = 'disable',
 })
 
--- Use cx as the prefix for keymaps regarding exchange. It's consistent with tommcdo/vim-exchange. i
--- for "interactively".
-vim.keymap.set('n', 'cxi', '<Cmd>ISwap<CR>')
+-- Use cx as the prefix for keymaps regarding exchange. It's consistent with tommcdo/vim-exchang.
+vim.keymap.set('n', 'cxI', '<Cmd>ISwap<CR>')

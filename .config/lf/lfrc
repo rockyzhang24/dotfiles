@@ -299,7 +299,14 @@ cmap <backtab> cmd-menu-complete-back
 # a key, in Nvim I can use nvim_feedkeys to achieve the same goal.
 cmd util-store-filepath ${{
     tempfile="$TMPDIR"/lf-filepath
-        echo $fx > $tempfile
+    echo $fx > $tempfile
 }}
-
 map <a-E> util-store-filepath
+
+# Save PWD to a temp file
+# In my nvim's lf (~/.config/nvim/lua/rockyz/lf.lua), I create a keymap to change nvim's cwd to the
+# current directory of lf.
+map <a-Q> ${{
+    tempfile="$TMPDIR"/lf-pwd
+    echo $PWD > $tempfile
+}}

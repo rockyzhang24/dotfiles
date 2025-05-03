@@ -1,11 +1,13 @@
 -- Use <C-/> to toggle lf
 -- Use lf's builtin q to quit
 -- <C-x>, <C-v>, <C-t> to open the selected files in split, vsplit or tab
--- e to open the files in the previous window
+-- <C-Enter> to open the files in the previous window
+-- <C-q> to change nvim's cwd to the current directory of lf
 
 local M = {}
 
 local io_utils = require('rockyz.utils.io_utils')
+local notify = require('rockyz.utils.notify_utils')
 
 local term = {
     winid = -1,
@@ -18,7 +20,7 @@ local actions = {
     ['<C-x>'] = 'belowright split',
     ['<C-v>'] = 'belowright vsplit',
     ['<C-t>'] = 'tab split',
-    e = 'edit',
+    ['<C-Enter>'] = 'edit',
 }
 
 local function create_keymaps()
@@ -38,6 +40,17 @@ local function create_keymaps()
 
     vim.keymap.set('t', '<C-_>', function()
         M.close()
+    end, { buffer = term.bufnr })
+
+    vim.keymap.set('t', '<C-q>', function()
+        local key = vim.api.nvim_replace_termcodes('<A-S-q>', true, false, true)
+        vim.api.nvim_feedkeys(key, 'n', false)
+        vim.defer_fn(function()
+            M.close()
+            local path = io_utils.read_file(vim.env.TMPDIR .. '/lf-pwd'):gsub('\n', '')
+            vim.cmd.cd(path)
+            notify.info('Current directory is changed to ' .. path)
+        end, 100)
     end, { buffer = term.bufnr })
 end
 

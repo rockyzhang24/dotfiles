@@ -15,14 +15,14 @@ conform.setup({
     formatters = {
         shfmt = {
             -- Use 2 spaces as indentation
-            prepend_args = { '-i', '2' },
+            prepend_args = { '-i', '4' },
         },
     },
     -- Autoformat (format-on-save) can be toggled via the custom :ToggleFormat[!] command.
     -- Toggle buffer-local autoformat without [!]; Global autoformat with [!].
     format_on_save = function(bufnr)
         if not vim.g.autoformat and not vim.b[bufnr].autoformat then
-            return
+            return nil
         end
         return {}
     end,

@@ -378,7 +378,7 @@ vim.keymap.set('n', 'y/', function()
     yank_reg(vim.v.register, vim.fn.expand('%:.:h'))
 end)
 -- (3). Path (relative)
-vim.keymap.set('n', 'y5', function()
+vim.keymap.set('n', 'yp', function()
     yank_reg(vim.v.register, vim.fn.expand('%:.'))
 end)
 
@@ -405,7 +405,7 @@ vim.o.cedit = '<C-o>'
 -- Put the current file's directory
 vim.keymap.set({ 'c', 'i' }, '<M-/>', '<C-r>=expand("%:.:h", 1)<CR>')
 -- Put filename tail
-vim.keymap.set({ 'c', 'i' }, '<M-5>', '<C-r>=fnamemodify(@%, ":t")<CR>')
+vim.keymap.set({ 'c', 'i' }, '<M-n>', '<C-r>=fnamemodify(@%, ":t")<CR>')
 
 -- Put the last search pattern
 vim.keymap.set({ 'c', 'i' }, '<C-r>?', '<C-r>=substitute(getreg("/"), "[<>\\]", "", "g")<CR>')

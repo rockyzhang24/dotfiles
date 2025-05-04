@@ -15,7 +15,6 @@ local last_bufnr
 
 local ignored_filetypes = {
     'gitcommit',
-    'netrw',
 }
 
 local function list(db_file)
@@ -25,7 +24,8 @@ local function list(db_file)
     local should_add_list = function(fname)
         if not fname_set[fname] then
             fname_set[fname] = true
-            if vim.uv.fs_stat(fname) then
+            local fs_stat = vim.uv.fs_stat(fname)
+            if fs_stat and fs_stat.type ~= 'directory' then
                 return #mru_list < max
             end
         end

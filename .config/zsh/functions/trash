@@ -6,20 +6,21 @@
 
 target=($@)
 if [[ $# == 0 ]]; then
-  target=($(gls -A -I .DS_Store -I .localized | fzf))
+    target=($(gls -A -I .DS_Store -I .localized | fzf))
 fi
 
 if [[ -z $target ]]; then
-  echo "Failed! Please give files/dirs to trash."
-  return 1
+    echo "Failed! Please give files/dirs to trash."
+    return 1
 fi
 
+# `read -p` does not work in Zsh, so we use echo or printf for the prompt message
 echo -n "Items to be trashed:\n$(echo $target | tr ' ' '\n')\n\nTrash? [y/N]"
-read ans
+read -r ans
 if [[ $ans == "y" ]]; then
-  command trash -F $target && echo "Trash complete!"
+    command trash -F $target && echo "Trash complete!"
 elif [[ $ans == "n" ]]; then
-  echo "Canceled!"
+    echo "Canceled!"
 else
-  echo "Failed! Use y to trash."
+    echo "Failed! Use y to trash."
 fi

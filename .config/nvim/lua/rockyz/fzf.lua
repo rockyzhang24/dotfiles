@@ -2708,10 +2708,10 @@ local function git_status(from_resume)
             -- 3) Staged: git diff --staged <file>
             'git_status=$(' .. git .. ' status -s -uall -- {2}); \
             echo $git_status | grep "^??" &>/dev/null && ' .. git .. ' diff --no-index -- /dev/null {2} ' .. diff_pager .. ' || \
-            (diff_output=$(' .. git .. ' diff {2}) && \
+            (diff_output=$(' .. git .. ' diff -- {2}) && \
                 [[ -n $diff_output ]] && \
                 echo $diff_output ' .. diff_pager .. ' || \
-                ' .. git .. ' diff --staged {2} ' .. diff_pager .. ')',
+                ' .. git .. ' diff --staged -- {2} ' .. diff_pager .. ')',
             '--bind',
             set_preview_label('{1}'),
         }),

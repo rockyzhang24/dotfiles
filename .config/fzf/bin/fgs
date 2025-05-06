@@ -1,0 +1,103 @@
+#!/usr/bin/env bash
+
+# MNEMONIC: [F]uzzy search for [G]it [S]tatus
+# SYNOPSIS: fgs
+# DESCRIPTION: Fuzzy finder for files in git status with stage, unstage and reset support
+
+# Reference: the _forgit_add() implementation in forgit, see
+# https://github.com/wfxr/forgit/blob/master/bin/git-forgit
+
+__fda=${BASH_SOURCE[0]}
+
+git_cmd="git"
+status="status -s"
+# Handle my dotfile bare repo
+if [[ $PWD == $HOME/.config || $PWD == $HOME/.config/* && $PWD != $HOME/.config/nvim/pack* ]]; then
+    git_cmd="git --git-dir=$HOME/dotfiles/ --work-tree=$HOME"
+    # For my dotfile bare repo with set "showUntrackedFiles = no", show untracked files in ~/.config
+    status+=" -uall $XDG_CONFIG_HOME"
+fi
+
+# Entries listed by 'git status -s' look like this:
+# [R ] original/path/for/a/file -> new/path/for/the/file
+# This is function is used to extract the file path
+# remove indicators | remove original path for rename case | remove surrounding quotes
+cleaner() {
+    sed 's/^.*]  //' |
+    sed 's/.* -> //' |
+    sed -e 's/^\"//' -e 's/\"$//'
+}
+
+# This script file is also used for fzf preview by passing in the current entry
+if [[ $# -eq 1 ]]; then
+    delta_cmd="delta --width ${FZF_PREVIEW_COLUMNS:-$COLUMNS} --file-style omit"
+    file=$(echo "$1" | cleaner)
+    if ($git_cmd status -s -uall -- "$file" | grep '^??') &>/dev/null; then
+        # (1). Untracked file: diff with /dev/null <file>
+        $git_cmd diff --color=always --no-index -- /dev/null "$file" | eval "$delta_cmd"
+    else
+        # (2). Unstaged: git diff <file>
+        # (3). Staged: git diff --staged <file>
+        diff_output=$($git_cmd diff -- "$file")
+        if [[ -n $diff_output ]]; then
+            echo "$diff_output" | eval "$delta_cmd"
+        else
+            $git_cmd diff --staged -- "$file" | eval "$delta_cmd"
+        fi
+    fi
+    exit 0
+fi
+
+git_status_cmd="$git_cmd -c color.status=always -c status.relativePaths=true -c core.quotePath=false $status"
+
+# Create an array to store the selections
+while IFS= read -r file; do
+    lines+=("$file")
+done < <(
+    $git_status_cmd |
+        sed -E 's/^(..[^[:space:]]*|[^[:space:]]*[[:space:]]?)[[:space:]]+(.*)$/[\1]  \2/' |
+        fzf \
+            --ansi \
+            --exit-0 \
+            --preview "$__fda {}" \
+            --preview-window down,60% \
+            --prompt="Git Status> " \
+            --expect 'ctrl-h,ctrl-l,ctrl-r' \
+            --header ":: CTRL-H (unstaged), CTRL-L (staged), CTRL-R (reset), ENTER (open)" |
+    cleaner
+)
+
+if [[ ! ${#lines[@]} -gt 1 ]]; then
+    exit
+fi
+
+key=${lines[0]}
+if [[ -z $key ]]; then
+    # ENTER: open files in EDITOR
+    nvim "${lines[@]:1}"
+elif [[ $key == 'ctrl-h' ]]; then
+    # CTRL-H: unstage
+    $git_cmd reset -- "${lines[@]:1}" >/dev/null
+elif [[ $key == 'ctrl-l' ]]; then
+    # CTRL-L: stage
+    $git_cmd add -- "${lines[@]:1}"
+elif [[ $key == 'ctrl-r' ]]; then
+    # CTRL-R: reset
+    file_list=$(printf '%s\n' "${lines[@]:1}")
+    read -rp $'Reset files:\n'"$file_list"$'\n\nContinue? [y/N]' answer
+    if [[ ! $answer =~ ^[Yy]$ ]]; then
+        exit 1
+    fi
+    for file in "${lines[@]:1}"; do
+        if $git_cmd status -s -uall -- "$file" | grep -q "^??"; then
+            # For untracked file
+            $git_cmd clean -f "$file"
+        else
+            # For tracked file
+            $git_cmd checkout HEAD -- "$file"
+        fi
+    done
+fi
+
+printf "\nGit Status:\n"
+eval "$git_cmd $status"

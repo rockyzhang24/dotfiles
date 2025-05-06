@@ -1,7 +1,7 @@
 return {
     cmd = { 'taplo', 'lsp', 'stdio' },
     filetypes = { 'toml' },
-    root_markers = { '.git' },
+    root_markers = { '.taplo.toml', 'taplo.toml', '.git' },
     settings = {
         -- See all the setting options
         -- https://github.com/tamasfe/taplo/blob/master/editors/vscode/package.json

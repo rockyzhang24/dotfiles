@@ -385,7 +385,7 @@ end
 local group = vim.api.nvim_create_augroup('rockyz.lsp_progress', { clear = true })
 vim.api.nvim_create_autocmd({ 'LspProgress' }, {
     group = group,
-    pattern = '*',
+    pattern = { 'begin', 'report', 'end' },
     callback = function(args)
         handler(args)
     end,

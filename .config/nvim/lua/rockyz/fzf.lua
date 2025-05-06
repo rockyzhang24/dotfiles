@@ -191,6 +191,15 @@ local function ansi_devicon(filename)
     return ansi_string(file_icon, file_icon_hl)
 end
 
+local fzf_notify = {}
+for _, level in ipairs({ 'error', 'warn', 'info' }) do
+    fzf_notify[level] = function(msg)
+        if msg and msg ~= '' then
+            notify[level]('[FZF] ' .. msg)
+        end
+    end
+end
+
 ---Handler for vim.system's error
 ---@param error string obj.stderr
 ---@param output string obj.stdout
@@ -198,10 +207,10 @@ end
 local function system_on_error(error, output, level)
     level = level or 'error'
     if error and error ~= '' then
-        notify[level](error)
+        fzf_notify[level](error)
     end
     if output and output ~= '' then
-        notify[level](output)
+        fzf_notify[level](output)
     end
 end
 
@@ -319,6 +328,10 @@ local function fzf(spec, handle_contents, fzf_cmd)
                 error(err)
             end
             output_pipe = vim.uv.new_pipe(false)
+            if not output_pipe then
+                fzf_notify.error('Failed to create the output pipe!')
+                return
+            end
             output_pipe:open(fd)
             handle_contents()
         end))
@@ -332,14 +345,19 @@ end
 -- Close the pipe and kill tail process to terminate fzf's "loading" indicator
 local function finish()
     system.async({ 'bash', '-c', 'kill -9 $(<' .. tail_pid .. ')' }, {}, nil, system_on_error)
-    output_pipe:close()
-    output_pipe = nil
+    if output_pipe then
+        output_pipe:close()
+        output_pipe = nil
+    end
 end
 
 ---Write fzf entries to the pipe
 ---@param entries table Fzf entries
 ---@param multiline boolean? Whether each entry is a multiline item
 local function write(entries, multiline)
+    if not output_pipe then
+        return
+    end
     output_pipe:write(vim.tbl_map(function(x)
             return not multiline and x .. '\n' or x
     end, entries), function()
@@ -359,7 +377,7 @@ end
 -- Resume
 vim.keymap.set('n', '<Leader>fr', function()
     if not cached_finder then
-        notify.warn('No resume finder available!')
+        fzf_notify.warn('No resume finder available!')
         return
     end
     run(cached_finder, true)
@@ -1095,7 +1113,7 @@ local function args(from_resume)
 
     local argc = vim.fn.argc()
     if argc == 0 then
-        notify.warn('Argument list is empty')
+        fzf_notify.warn('Argument list is empty')
         return
     end
 
@@ -1130,7 +1148,7 @@ local function helptags(from_resume)
     local spec = {
         ['sink*'] = function(lines)
             if #lines > 2 then
-                notify.warn('No support multiple selections')
+                fzf_notify.warn('No support multiple selections')
             end
             local key = lines[1]
             local tag = string.match(lines[2], '^(.-)\t')
@@ -1374,6 +1392,7 @@ local function registers(from_resume)
             local reg = lines[1]:match("%[(.-)%]")
             local ok, text = pcall(vim.fn.getreg, reg)
             if ok and #text > 0 then
+                ---@diagnostic disable-next-line: param-type-mismatch
                 vim.api.nvim_paste(text, false, -1)
             end
         end,
@@ -1451,7 +1470,7 @@ local function zoxide(from_resume)
             local cwd = lines[1]:match('[^\t]+$')
             if vim.uv.fs_stat(cwd) then
                 vim.cmd('cd ' .. cwd)
-                notify.info('cwd set to ' .. cwd)
+                fzf_notify.info('cwd set to ' .. cwd)
             end
         end,
         options = get_fzf_opts(from_resume, {
@@ -1940,7 +1959,7 @@ local function live_grep_cur_buffer(from_resume)
     local rg_cmd = rg_prefix .. ' --'
     local filename = vim.api.nvim_buf_get_name(0)
     if #filename == 0 or not vim.uv.fs_stat(filename) then
-        notify.warn('Live grep in current buffer requires a valid buffer!')
+        fzf_notify.warn('Live grep in current buffer requires a valid buffer!')
         return
     end
     local spec = {
@@ -2160,7 +2179,7 @@ local function lsp_symbols(method, params, title, symbol_query, from_resume)
     local bufnr = vim.api.nvim_get_current_buf()
     local clients = vim.lsp.get_clients({ method = method, bufnr = bufnr })
     if not next(clients) then
-        notify.warn(string.format('No active clients supporting %s method', method))
+        fzf_notify.warn(string.format('No active clients supporting %s method', method))
         return
     end
 
@@ -2313,7 +2332,7 @@ local function lsp_locations(method, title, from_resume)
     local bufnr = vim.api.nvim_get_current_buf()
     local clients = vim.lsp.get_clients({ method = method, bufnr = bufnr })
     if not next(clients) then
-        notify.warn(string.format('No active clients supporting %s method', method))
+        fzf_notify.warn(string.format('No active clients supporting %s method', method))
         return
     end
     local win = vim.api.nvim_get_current_win()
@@ -2433,7 +2452,7 @@ local function diagnostics(from_resume, opts)
     local curbuf = vim.api.nvim_get_current_buf()
     local diags = vim.diagnostic.get(not opts.all and curbuf or nil)
     if vim.tbl_isempty(diags) then
-        notify.warn('No diagnostics!')
+        fzf_notify.warn('No diagnostics!')
         return
     end
 
@@ -2517,6 +2536,7 @@ local function diagnostics(from_resume, opts)
         local entries = {}
         for _, diag in ipairs(diags) do
             local bufnr = diag.bufnr
+            ---@diagnostic disable-next-line: param-type-mismatch
             local filename = vim.api.nvim_buf_get_name(bufnr)
             local devicon = ansi_devicon(filename)
             local diag_icon = ansi_string(diag_icons[diag.severity].text, diag_icons[diag.severity].hl)
@@ -2663,14 +2683,16 @@ local function git_status(from_resume)
                 -- CTRL-H to unstage
                 ui.input_yes(string.format('%s\nUnstage %s above? (y/N)', files_newline, file_or_files), function()
                     system.async(git .. ' reset -- ' .. files_str, {}, function(output)
-                        notify.info(output)
+                        if output and output ~= '' then
+                            fzf_notify.info(output)
+                        end
                     end, system_on_error)
                 end)
             elseif key == 'ctrl-l' then
                 -- CTRL-L to stage
                 ui.input_yes(string.format('%s\nStage %s above? (y/N)', files_newline, file_or_files), function()
                     system.async(git .. ' add -- ' .. files_str, {}, function(output)
-                        notify.info(output)
+                        fzf_notify.info(output)
                     end, system_on_error)
                 end)
             elseif key == 'ctrl-r' then
@@ -2684,7 +2706,7 @@ local function git_status(from_resume)
                             (git .. ' checkout HEAD -- ' .. filenames[i - 1])
                         system.async(cmd, {}, vim.schedule_wrap(function(output)
                             vim.cmd('checktime')
-                            notify.info(output)
+                            fzf_notify.info(output)
                         end), system_on_error)
                     end
                 end)
@@ -2772,10 +2794,10 @@ local function git_branches(from_resume)
                     print(branch)
                 end
                 table.insert(cmd, branch)
-                notify.info('[Git] switching to ' .. branch .. ' branch...')
+                fzf_notify.info('Switching to ' .. branch .. ' branch...')
                 system.async(cmd, {}, vim.schedule_wrap(function(_)
                     vim.cmd('checktime')
-                    notify.info('[Git] switched to ' .. branch .. ' branch.')
+                    fzf_notify.info('Switched to ' .. branch .. ' branch.')
                 end), system_on_error)
             elseif key == 'alt-bs' then
                 -- ALT-BS to delete branches
@@ -2800,7 +2822,7 @@ local function git_branches(from_resume)
                     if input and input:lower() == 'y' then
                         cmd_del_branch = vim.list_extend(cmd_del_branch, del_branches)
                         system.async(cmd_del_branch, {}, function(output)
-                            notify.info(output)
+                            fzf_notify.info(output)
                         end, system_on_error)
                     end
                 end)
@@ -2889,7 +2911,7 @@ local function get_sink_fn_git_commits(root_dir)
             reg = selection_regs[vim.o.clipboard] and selection_regs[vim.o.clipboard] or [["]]
             vim.fn.setreg(reg, hashes)
             vim.fn.setreg([[0]], hashes)
-            notify.info(string.format('commit hashes copied to register %s', reg))
+            fzf_notify.info(string.format('Commit hashes copied to register %s', reg))
         elseif key == 'alt-bs' then
             -- ALT-BS to diff against the commits (only available for buffer commits)
             for i = 2, #lines do
@@ -2902,7 +2924,7 @@ local function get_sink_fn_git_commits(root_dir)
         elseif key == '' then
             -- ENTER to checkout the commit
             if #lines > 2 then
-                notify.warn('To checkout a commit, select only one and do not choose multiple.')
+                fzf_notify.warn('To checkout a commit, select only one and do not choose multiple.')
                 return
             end
             local cur_commit_hash = system.sync({ 'git', '-C', root_dir, 'rev-parse', '--short', 'HEAD' }).stdout
@@ -2919,7 +2941,7 @@ local function get_sink_fn_git_commits(root_dir)
                     if obj.code ~= 0 then
                         system_on_error(obj.stderr, obj.stdout)
                     else
-                        notify.info(obj.stdout)
+                        fzf_notify.info(obj.stdout)
                     end
                 end
             end)
@@ -2971,7 +2993,7 @@ local function git_buf_commit(from_resume)
 
     local bufname = vim.api.nvim_buf_get_name(0)
     if #bufname == 0 then
-        notify.info('Git commits (buffer) is not available for unnamed buffers.')
+        fzf_notify.info('Git commits (buffer) is not available for unnamed buffers.')
         return
     end
 
@@ -3043,7 +3065,7 @@ local function git_stash(from_resume)
                         -- Extract the stash name , e.g., stash@{1}
                         local name = lines[2]:match('^(%S+):')
                         system.async('git stash apply ' .. name, {}, function(output)
-                            notify.info(output)
+                            fzf_notify.info(output)
                         end, system_on_error)
                     end
                 end)
@@ -3056,7 +3078,7 @@ local function git_stash(from_resume)
                         for i = 2, #lines do
                             local name = lines[i]:match('^(%S+):')
                             system.async('git stash drop ' .. name, {}, function(output)
-                                notify.info(output)
+                                fzf_notify.info(output)
                             end, system_on_error)
                         end
                     end
@@ -3069,7 +3091,7 @@ local function git_stash(from_resume)
                     if input and input:lower() == 'y' then
                         local name = lines[2]:match('^(%S+):')
                         system.async('git stash pop ' .. name, {}, function(output)
-                            notify.info(output)
+                            fzf_notify.info(output)
                         end, system_on_error)
                     end
                 end)
@@ -3125,7 +3147,7 @@ local special_delimiter = '@@@@'
 local function tags(from_resume)
     local tagfiles = vim.fn.tagfiles()
     if vim.tbl_isempty(tagfiles) then
-        notify.warn('Tags file does not exist. Create one with ctags -R')
+        fzf_notify.warn('Tags file does not exist. Create one with ctags -R')
         return
     end
 
@@ -3229,11 +3251,11 @@ end)
 local function buffer_tags(from_resume)
     local filename = vim.api.nvim_buf_get_name(0)
     if #filename == 0 then
-        notify.warn('Buffer tags is not available for unnamed buffer.')
+        fzf_notify.warn('Buffer tags is not available for unnamed buffer.')
         return
     end
     if vim.fn.filereadable(filename) == 0 then
-        notify.warn('Save the file first')
+        fzf_notify.warn('Save the file first')
         return
     end
     local bufnr = vim.api.nvim_get_current_buf()
@@ -3250,6 +3272,7 @@ local function buffer_tags(from_resume)
                     table.insert(items, {
                         filename = filename,
                         lnum = lnum,
+                        ---@diagnostic disable-next-line: param-type-mismatch
                         text = vim.api.nvim_buf_get_lines(bufnr, lnum - 1, lnum, false)[1],
                     })
                 else
@@ -3384,6 +3407,8 @@ local function select(items, opts, on_choice)
         end,
         options = get_fzf_opts(nil, {
             '--no-multi',
+            '--nth',
+            1,
             '--prompt',
             title .. '> ',
             '--preview-window',

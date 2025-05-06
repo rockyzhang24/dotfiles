@@ -185,25 +185,40 @@ local function on_attach(client, bufnr)
     -- Show a lightbulb when code actions are available under the cursor
     require('rockyz.lsp.lightbulb')
 
-    -- Enable code lens
-    -- if client and client.server_capabilities.codeLensProvider then
-    --     vim.api.nvim_create_autocmd({ 'BufEnter', 'CursorHold', 'InsertLeave' }, {
-    --         buffer = bufnr,
-    --         callback = function()
-    --             vim.lsp.codelens.refresh({ bufnr = 0 })
+    -- Code lens
+    -- if client:supports_method(methods.textDocument_codeLens) then
+    --     local codelens_group = vim.api.nvim_create_augroup('rockyz.lsp.codelens', { clear = true })
+    --     vim.api.nvim_create_autocmd("LspProgress", {
+    --         group = codelens_group,
+    --         pattern = { 'begin', 'end' },
+    --         callback = function(ev)
+    --             if ev.buf == bufnr then
+    --                 vim.lsp.codelens.refresh({ bufnr = bufnr })
+    --             end
     --         end,
     --     })
+    --     vim.api.nvim_create_autocmd({ "BufEnter", "TextChanged", "InsertLeave" }, {
+    --         group = codelens_group,
+    --         buffer = bufnr,
+    --         callback = function()
+    --             vim.lsp.codelens.refresh({ bufnr = bufnr })
+    --         end,
+    --     })
+    --     vim.lsp.codelens.refresh({ bufnr = bufnr })
     -- end
 
     -- Document highlight
     if client:supports_method(methods.textDocument_documentHighlight) then
+        local document_highlight_group = vim.api.nvim_create_augroup('rockyz.lsp.document_highlight', { clear = true })
         vim.api.nvim_create_autocmd({ 'CursorHold', 'InsertLeave' }, {
+            group = document_highlight_group,
             buffer = bufnr,
             callback = function()
                 vim.lsp.buf.document_highlight()
             end,
         })
         vim.api.nvim_create_autocmd({ 'CursorMoved', 'InsertEnter', 'BufLeave' }, {
+            group = document_highlight_group,
             buffer = bufnr,
             callback = function()
                 vim.lsp.buf.clear_references()
@@ -211,10 +226,8 @@ local function on_attach(client, bufnr)
         })
     end
 
-    -- Document colors
-    if client:supports_method(methods.textDocument_documentColor) then
-        vim.lsp.document_color.enable(true, bufnr)
-    end
+    -- Document colors (no need to check supports_method)
+    vim.lsp.document_color.enable(true, bufnr)
 end
 
 vim.api.nvim_create_autocmd('LspAttach', {

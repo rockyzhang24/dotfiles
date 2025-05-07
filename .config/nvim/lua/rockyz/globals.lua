@@ -12,3 +12,6 @@ vim.g.autoformat = false -- global autoformat (format-on-save)
 -- Some LSP and Treesitter features will be disabled.
 vim.g.bigfile_size = 1024 * 1024 * 1.5 -- 1.5 MB
 vim.g.bigfile_line_length = 1000
+
+-- Can be 'default', 'ivy'
+vim.g.fzf_theme = 'ivy'

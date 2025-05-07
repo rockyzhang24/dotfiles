@@ -121,12 +121,73 @@ local api = require('rockyz.utils.api_utils')
 local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
 local mru = require('rockyz.mru')
 
-vim.g.fzf_layout = {
-    window = {
-        width = 0.8,
-        height = 0.85,
+local theme = vim.g.fzf_theme or 'default'
+
+---@alias LabelPos 'preview' | 'border' # Where to place the label, used for transform-preview-label or transform-border-label
+---
+---@class FzfWindowLayout
+---@field width number
+---@field height number
+---@field yoffset? number
+---
+---@class FzfLayout # vim.g.fzf_layout, ref: https://github.com/junegunn/fzf/blob/master/README-VIM.md#configuration
+---@field window FzfWindowLayout
+---
+---@class FzfTheme
+---@field layout table vim.g.fzf_layout
+---@field border string fzf's --border
+---@field preview_window string fzf's --preview-window
+---@field label_pos LabelPos
+---@field get_select_ui_layout fun(n: number): FzfLayout # vim.g.fzf_layout specific to vim.ui.select
+
+---@class FzfConfig
+---@field default FzfTheme
+---@field ivy FzfTheme
+local config = {
+    -- Default theme
+    default = {
+        layout = {
+            window = {
+                width = 0.8,
+                height = 0.85,
+            },
+        },
+        border = 'rounded',
+        preview_window = 'nohidden',
+        get_select_ui_layout = function(n)
+            return {
+                window = {
+                    width = 0.4,
+                    height = math.floor(math.min(vim.o.lines * 0.8 - 10, n + 4) + 0.5),
+                },
+            }
+        end,
+    },
+    -- Ivy theme
+    ivy = {
+        layout = {
+            window = {
+                width = 1,
+                height = 20,
+                yoffset = 1.1,
+            },
+        },
+        border = 'top',
+        preview_window = 'hidden,border-left',
+        label_pos = 'border',
+        get_select_ui_layout = function(n)
+            return {
+                window = {
+                    width = 1,
+                    height = math.floor(math.min(vim.o.lines * 0.8 - 10, n + 3) + 0.5),
+                    yoffset = 1.1,
+                },
+            }
+        end,
     },
 }
+
+vim.g.fzf_layout = config[theme].layout
 
 vim.g.fzf_action = {
     ['ctrl-x'] = 'split',
@@ -249,31 +310,40 @@ end
 -- Record whether Rg is in fzf mode or not
 local in_fzf_mode = ''
 
+local common_opts = {
+    '--ansi',
+    '--multi',
+    '--border',
+    config[theme].border,
+    '--preview-window',
+    config[theme].preview_window,
+    '--border-label-pos',
+    '-3',
+}
+
 ---Get fzf options
 ---@param from_resume boolean? Whether the finder is called by fzf resume
----@param extra_opts table? Extra options
-local function get_fzf_opts(from_resume, extra_opts)
-    extra_opts = extra_opts or {}
-    local common_opts = {
-        '--ansi',
-        '--multi',
-        '--bind',
+---@param extra table? Extra options
+local function get_fzf_opts(from_resume, extra)
+    extra = extra or {}
+    local opts = vim.list_extend(vim.deepcopy(common_opts), {
         -- Cache the query for fzf resume
+        '--bind',
         'result:execute-silent(echo {q} > ' .. cached_fzf_query .. ')',
-    }
+    })
     -- When the finder is called by fzf resume, use the fzf's start event to fetch the cached query
     if from_resume then
-        common_opts = vim.list_extend(common_opts, {
+        opts = vim.list_extend(opts, {
             '--bind',
             'start:transform-query:cat ' .. cached_fzf_query,
         })
     end
-    return vim.list_extend(common_opts, extra_opts)
+    return vim.list_extend(opts, extra)
 end
 
 ---@param label string The label or a shell command to generate the label
-local function set_preview_label(label)
-    return string.format('focus:transform-preview-label:echo [ %s ]', label)
+local function set_label(label)
+    return string.format('focus:transform-%s-label:echo ┨ %s ┠', config[theme].label_pos, label)
 end
 
 ---Bash command to replace $HOME with tilde
@@ -420,7 +490,7 @@ local function files(from_resume)
             '--header',
             ':: ALT-/ (toggle HOME/CWD)',
             '--bind',
-            set_preview_label(tildefy_home('{2}')),
+            set_label(tildefy_home('{2}')),
             '--bind',
             'alt-/:transform:[[ ! $FZF_PROMPT == "~/" ]] && {' ..
                 'echo "reload(' .. vim.fn.escape(fd_home, '"') .. ')+change-prompt(~/)";' ..
@@ -455,7 +525,7 @@ local function old_files(from_resume)
             '--preview',
             fzf_previewer .. ' {1}',
             '--bind',
-            set_preview_label('{2}'),
+            set_label('{2}'),
             '--accept-nth',
             '1',
         }),
@@ -511,7 +581,7 @@ local function dot_files(from_resume)
             '--accept-nth',
             '~/{2}',
             '--bind',
-            set_preview_label('{2}'),
+            set_label('{2}'),
         }),
     }
 
@@ -566,7 +636,7 @@ local function buffers(from_resume)
             '--preview-window',
             '+{2}-/2',
             '--bind',
-            set_preview_label('{3..}'),
+            set_label('{3..}'),
         }),
     }
 
@@ -684,7 +754,7 @@ local function bufs_and_mru(from_resume)
             '--preview-window',
             '+{2}-/2',
             '--bind',
-            set_preview_label('{3..}'),
+            set_label('{3..}'),
         }),
     }
 
@@ -910,7 +980,7 @@ local function marks(from_resume)
             '--preview-window',
             '+{3}-/2',
             '--bind',
-            set_preview_label('{2}'),
+            set_label('{2}'),
         })
     }
 
@@ -1014,7 +1084,7 @@ local function tabs(from_resume)
             '--preview',
             'file={1}; [[ -f $file ]] && ' .. bat_prefix .. ' --highlight-line {2} -- $file || echo "No preview support!"',
             '--bind',
-            set_preview_label(tildefy_home('{1}')),
+            set_label(tildefy_home('{1}')),
         }),
     }
 
@@ -1107,7 +1177,7 @@ local function args(from_resume)
             '--preview',
             bat_prefix .. ' -- {2}',
             '--bind',
-            set_preview_label('{2}'),
+            set_label('{2}'),
         }),
     }
 
@@ -1181,7 +1251,7 @@ local function helptags(from_resume)
             (( START_LINE <= 0 )) && START_LINE=1; \
             END_LINE="$(( START_LINE + FZF_PREVIEW_LINES - 1 ))"; ' .. bat_prefix .. ' --style plain --language VimHelp --highlight-line "${TARGET_LINE}" --line-range="${START_LINE}:${END_LINE}" -- {2}',
             '--bind',
-            set_preview_label('{4}'),
+            set_label('{4}'),
         }),
     }
 
@@ -1280,9 +1350,9 @@ local function commands(from_resume)
             '--preview',
             'echo {3..}',
             '--preview-window',
-            'down,3',
+            theme == 'default' and 'down,3' or '',
             '--bind',
-            set_preview_label('{1}'),
+            set_label('{1}'),
         }),
     }
 
@@ -1406,7 +1476,7 @@ local function registers(from_resume)
             '--preview', -- show register content in preview
             "echo {} | sed '1s/^\\[[0-9A-Z\"-\\#\\=_/\\*\\+:\\.%]\\] //'",
             '--bind',
-            set_preview_label('Register {1}'),
+            set_label('Register {1}'),
         }),
     }
 
@@ -1488,7 +1558,7 @@ local function zoxide(from_resume)
             '--preview',
             preview_cmd,
             '--bind',
-            set_preview_label('{2}'),
+            set_label('{2}'),
         }),
     }
 
@@ -1608,15 +1678,15 @@ local function qf_items_fzf(win_local, from_resume)
             '--header',
             ':: ENTER (display the error), CTRL-R (refine the current ' .. (win_local and 'loclist' or 'quickfix') .. ')\n:: CTRL-Q (send to quickfix), CTRL-L (send to loclist)',
             '--with-nth',
-            '4..',
+            '7..',
             '--expect',
             expect_keys({ 'ctrl-q', 'ctrl-l', 'ctrl-r' }),
             '--preview',
             bat_prefix .. ' --highlight-line {3} -- {2}',
             '--preview-window',
-            'down,45%,+{3}-/2',
+            '+{3}-/2' .. (theme == 'default' and ',down,45%' or ''),
             '--bind',
-            set_preview_label(tildefy_home('{2}')),
+            set_label(tildefy_home('{2}') .. ':{3}:{4}: \\[{5}\\] {6}'),
         }),
     }
 
@@ -1636,6 +1706,9 @@ local function qf_items_fzf(win_local, from_resume)
                 #entries + 1,
                 bufname,
                 item.lnum,
+                item.col,
+                item.type,
+                item.text,
                 fzf_line,
             }, '\t')
         end
@@ -1696,11 +1769,11 @@ local function qf_history_fzf(win_local, from_resume)
             '--header',
             ':: ENTER (switch to selected list)',
             '--preview-window',
-            'down,45%',
+            theme == 'default' and 'down,45%' or '',
             '--preview',
             'cat {2}',
             '--bind',
-            set_preview_label('{3..}'),
+            set_label('{3..}'),
         }),
     }
 
@@ -1816,7 +1889,7 @@ local function get_fzf_opts_for_live_grep(rg, rg_query, path, prompt, extra_opts
     -- E.g., "Live Grep: Rg Query foo | Fzf Query bar"
     local print_qf_title = 'transform(rg_query=$(cat ' .. cached_rg_query .. '); rg_query=${rg_query:-[empty]}; fzf_query=$(cat ' .. cached_fzf_query .. '); fzf_query=${fzf_query:-[empty]}; echo "print(' .. prompt .. ': Rg Query $rg_query | Fzf Query $fzf_query)")'
 
-    local opts =  {
+    local opts = vim.list_extend(vim.deepcopy(common_opts), {
         '--ansi',
         '--multi',
         '--prompt',
@@ -1838,7 +1911,7 @@ local function get_fzf_opts_for_live_grep(rg, rg_query, path, prompt, extra_opts
             echo "change-prompt(' .. prompt .. ' [RG]> )+disable-search+reload(' .. rg .. ' {q} || true)+rebind(change)+transform-query(cat ' .. cached_rg_query .. ')"\
         }',
         '--bind',
-        set_preview_label(tildefy_home('{1}') .. ':{2}:{3}'),
+        set_label(tildefy_home('{1}') .. ':{2}:{3}'),
         '--delimiter',
         ':',
         '--header',
@@ -1850,10 +1923,10 @@ local function get_fzf_opts_for_live_grep(rg, rg_query, path, prompt, extra_opts
         '--bind',
         'ctrl-q:print(ctrl-q)+' .. print_qf_title .. '+accept',
         '--preview-window',
-        'down,45%,+{2}-/2',
+        '+{2}-/2' .. (theme == 'default' and ',down,45%' or ''),
         '--preview',
         bat_prefix .. ' --highlight-line {2} -- {1}',
-    }
+    })
 
     if not search_enabled then
         table.insert(opts, '--disabled')
@@ -2006,13 +2079,13 @@ local function grep_cur_word(from_resume)
             '--prompt',
             'Word [Grep]> ',
             '--preview-window',
-            'down,45%,+{2}-/2',
+            '+{2}-/2' .. (theme == 'default' and ',down,45%' or ''),
             '--preview',
             bat_prefix .. ' --highlight-line {2} -- {1}',
             '--header',
             ':: Word/Selection: ' .. ansi_string(rg_query, 'FzfRgQuery'),
             '--bind',
-            set_preview_label('{1}:{2}:{3}'),
+            set_label('{1}:{2}:{3}'),
             '--bind',
             'enter:print()+accept,ctrl-x:print(ctrl-x)+accept,ctrl-v:print(ctrl-v)+accept,ctrl-t:print(ctrl-t)+accept',
             '--bind',
@@ -2190,7 +2263,7 @@ local function lsp_symbols(method, params, title, symbol_query, from_resume)
     local fzf_preview_window = '+{4}-/2'
     if symbol_query then
         fzf_header = ':: Query: ' .. (symbol_query == '' and '[empty]' or ansi_string(symbol_query, 'FzfRgQuery')) .. '\n' .. fzf_header
-        fzf_preview_window = 'down,45%,' .. fzf_preview_window
+        fzf_preview_window = fzf_preview_window .. (theme == 'default' and ',down,45%' or '')
     end
 
     local spec = {
@@ -2248,7 +2321,7 @@ local function lsp_symbols(method, params, title, symbol_query, from_resume)
             '--preview-window',
             fzf_preview_window,
             '--bind',
-            set_preview_label(tildefy_home('{3}:{4}:{5}')),
+            set_label(tildefy_home('{3}:{4}:{5}')),
         }),
     }
 
@@ -2385,9 +2458,9 @@ local function lsp_locations(method, title, from_resume)
             '--preview',
             bat_prefix .. ' --highlight-line {4} -- {3}',
             '--preview-window',
-            'down,45%,+{4}-/2',
+            '+{4}-/2' .. (theme == 'default' and ',down,45%' or ''),
             '--bind',
-            set_preview_label(tildefy_home('{3}:{4}:{5}')),
+            set_label(tildefy_home('{3}:{4}:{5}')),
         }),
     }
 
@@ -2521,7 +2594,7 @@ local function diagnostics(from_resume, opts)
             '--preview-window',
             '+{3}-/2',
             '--bind',
-            set_preview_label(tildefy_home('{2}:{3}:{4}')),
+            set_label(tildefy_home('{2}:{3}:{4}')),
         }),
     }
 
@@ -2645,7 +2718,7 @@ local function git_files(from_resume)
             '--header',
             'Git Root: ' .. vim.fn.fnamemodify(git_root, ':~'),
             '--bind',
-            set_preview_label('{2}'),
+            set_label('{2}'),
         }),
     }
 
@@ -2735,7 +2808,7 @@ local function git_status(from_resume)
                 echo $diff_output ' .. diff_pager .. ' || \
                 ' .. git .. ' diff --staged -- {2} ' .. diff_pager .. ')',
             '--bind',
-            set_preview_label('{1}'),
+            set_label('{1}'),
         }),
     }
 
@@ -2836,11 +2909,11 @@ local function git_branches(from_resume)
             '--header',
             ':: ENTER (checkout), ALT-BS (delete branches)',
             '--preview-window',
-            'down,60%',
+            theme == 'default' and 'down,60%' or '',
             '--preview',
             'git log --graph --pretty=oneline --abbrev-commit --color $(' .. extract_branch_cmd .. ')',
             '--bind',
-            set_preview_label('Branch: $(' .. extract_branch_cmd .. ')'),
+            set_label('Branch: $(' .. extract_branch_cmd .. ')'),
         })
     }
 
@@ -2967,11 +3040,11 @@ local function git_commits(from_resume)
             '--expect',
             expect_keys({ 'ctrl-y' }, true),
             '--preview-window',
-            'down,60%',
+            theme == 'default' and 'down,60%' or '',
             '--preview',
             preview_cmd,
             '--bind',
-            set_preview_label('Preview'),
+            set_label('Preview'),
         }),
     }
 
@@ -3031,11 +3104,11 @@ local function git_buf_commit(from_resume)
             '--expect',
             expect_keys({ 'alt-bs', 'ctrl-y' }, true),
             '--preview-window',
-            'down,60%',
+            theme == 'default' and 'down,60%' or '',
             '--preview',
             preview_cmd,
             '--bind',
-            set_preview_label('Preview'),
+            set_label('Preview'),
         }),
     }
 
@@ -3109,9 +3182,9 @@ local function git_stash(from_resume)
             '--preview',
             'git --no-pager stash show --patch --color {1} ' .. diff_pager,
             '--preview-window',
-            'down,60%',
+            theme == 'default' and 'down,60%' or '',
             '--bind',
-            set_preview_label('{1}'),
+            set_label('{1}'),
         }),
     }
 
@@ -3208,7 +3281,7 @@ local function tags(from_resume)
             end_line="$(( start_line + FZF_PREVIEW_LINES - 1 ))";'
             .. bat_prefix .. ' --line-range="$start_line:$end_line" --highlight-line="$center" -- {1}',
             '--bind',
-            set_preview_label('{3} \\| ' .. tildefy_home('{1}')), -- show "tagname | filename" on the preview label
+            set_label('{3} \\| ' .. tildefy_home('{1}')), -- show "tagname | filename" on the preview label
         }),
     }
 
@@ -3312,7 +3385,7 @@ local function buffer_tags(from_resume)
             '--preview-window',
             '+{2}-/2',
             '--bind',
-            set_preview_label(tildefy_home(filename .. ':{2} \\({1}\\)')),
+            set_label(tildefy_home(filename .. ':{2} \\({1}\\)')),
         }),
     }
 
@@ -3443,13 +3516,10 @@ local function select(items, opts, on_choice)
     end
 
     local prev_layout = vim.g.fzf_layout
-    vim.g.fzf_layout = {
-        window = {
-            width = 0.4,
-            height = math.floor(math.min(vim.o.lines * 0.8 - 10, #items + 4) + 0.5),
-        },
-    }
+    vim.g.fzf_layout = config[theme].get_select_ui_layout(#items)
+
     fzf(spec, handle_contents)
+
     vim.g.fzf_layout = prev_layout
 end
 

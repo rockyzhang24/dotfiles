@@ -69,7 +69,7 @@ export FZF_DEFAULT_OPTS=" \
         `ctrl-e:execute(\$EDITOR {+} < /dev/tty > /dev/tty 2>&1),`
         `alt-x:exclude-multi,`
         `change:first' \
-    --bind 'focus:transform-preview-label:echo [ {} ]' \
+    --bind 'focus:transform-preview-label:echo ┨ {} ┠' \
     --preview '~/.config/fzf/fzf-previewer.sh {}' \
     --preview-window 'right,60%,nowrap' \
     --color=$colors"

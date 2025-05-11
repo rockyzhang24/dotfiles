@@ -1,12 +1,10 @@
 local M = {}
 
-local notify = require('rockyz.utils.notify_utils')
-
 ---Execute an external command asynchronously
 ---@param command string|table The external command
----@param opts table? opts for vim.system
----@param on_success function?
----@param on_error function?
+---@param opts table opts for vim.system
+---@param on_success? fun(stdout: string)
+---@param on_error? fun(stderr: string, stdout: string)
 function M.async(command, opts, on_success, on_error)
     opts = opts or {}
     local cmd
@@ -28,14 +26,16 @@ end
 
 ---Execute an external command synchronously
 ---@param command string|table
-function M.sync(command)
+---@param opts? table opts for vim.system
+function M.sync(command, opts)
+    opts = opts or {}
     local cmd
     if type(command) == 'string' then
         cmd = vim.split(command, ' ')
     else
         cmd = command
     end
-    return vim.system(cmd):wait()
+    return vim.system(cmd, opts):wait()
 end
 
 return M

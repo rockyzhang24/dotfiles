@@ -130,6 +130,7 @@ icons.misc = {
     lightning_bolt = '󱐋',
     list = '',
     location = '',
+    lock = '',
     indent = '',
     logo = '󰀘',
     maximized = '',
@@ -145,6 +146,8 @@ icons.misc = {
     switch_off = '',
     task = '',
     term = '',
+    thumbsup = '',
+    thumbsdown = '',
     tree = '󰐅',
 }
 

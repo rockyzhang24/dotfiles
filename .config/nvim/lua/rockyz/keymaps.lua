@@ -621,19 +621,6 @@ vim.keymap.set('n', '<Leader>wo', function()
         return vim.api.nvim_win_get_config(v).relative == ''
     end)) > 1 and '<C-w>o' or ''
 end, { expr = true })
----Scroll the other window
----@param dir string direction, u for up and d for down
-local function scroll_other_win(dir)
-    vim.cmd('noautocmd silent! wincmd p')
-    vim.cmd('exec "normal! \\<C-' .. dir .. '>"')
-    vim.cmd('noautocmd silent! wincmd p')
-end
-vim.keymap.set({ 'n', 'i' }, '<M-u>', function()
-    scroll_other_win('u')
-end)
-vim.keymap.set({ 'n', 'i' }, '<M-d>', function()
-    scroll_other_win('d')
-end)
 -- Maximize and restore the current window
 vim.keymap.set('n', '\\m', require('rockyz.utils.win_utils').win_maximize_toggle)
 

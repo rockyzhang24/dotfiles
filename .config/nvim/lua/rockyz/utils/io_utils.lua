@@ -1,20 +1,18 @@
-local uv = vim.uv
-
 local M = {}
 
 ---Read a file synchronously
 ---Taken from fzf-lua
 function M.read_file(filepath)
-    local fd = uv.fs_open(filepath, 'r', 438)
+    local fd = vim.uv.fs_open(filepath, 'r', 438)
     if fd == nil then
         return ''
     end
-    local stat = assert(uv.fs_stat(filepath))
+    local stat = assert(vim.uv.fs_stat(filepath))
     if stat.type ~= 'file' then
         return ''
     end
-    local data = assert(uv.fs_read(fd, stat.size, 0))
-    assert(uv.fs_close(fd))
+    local data = assert(vim.uv.fs_read(fd, stat.size, 0))
+    assert(vim.uv.fs_close(fd))
     return data
 end
 
@@ -22,7 +20,7 @@ end
 ---Taken from fzf-lua
 ---@param callback fun(data: string) The callback accepts the read data as its argument
 function M.read_file_async(filepath, callback)
-    uv.fs_open(filepath, 'r', 438, function(err_open, fd)
+    vim.uv.fs_open(filepath, 'r', 438, function(err_open, fd)
         if err_open then
             -- we must schedule this or we get
             -- E5560: nvim_exec must not be called in a lua loop callback
@@ -33,15 +31,15 @@ function M.read_file_async(filepath, callback)
                 )
             end)
         end
-        uv.fs_fstat(fd, function(err_fstat, stat)
+        vim.uv.fs_fstat(fd, function(err_fstat, stat)
             assert(not err_fstat, err_fstat)
             assert(stat)
             if stat.type ~= 'file' then
                 return callback('')
             end
-            uv.fs_read(fd, stat.size, 0, function(err_read, data)
+            vim.uv.fs_read(fd, stat.size, 0, function(err_read, data)
                 assert(not err_read, err_read)
-                uv.fs_close(fd, function(err_close)
+                vim.uv.fs_close(fd, function(err_close)
                     assert(not err_close, err_close)
                     callback(data)
                 end)
@@ -52,14 +50,14 @@ end
 
 ---Write data to a file synchronously
 function M.write_file(filepath, contents)
-    local fd = assert(uv.fs_open(filepath, 'w', 438))
-    assert(uv.fs_write(fd, contents, -1))
-    assert(uv.fs_close(fd))
+    local fd = assert(vim.uv.fs_open(filepath, 'w', 438))
+    assert(vim.uv.fs_write(fd, contents, -1))
+    assert(vim.uv.fs_close(fd))
 end
 
 ---Write data to a file asynchronously
 function M.write_file_async(filepath, contents)
-    uv.fs_open(filepath, 'w', 438, function(err_open, fd)
+    vim.uv.fs_open(filepath, 'w', 438, function(err_open, fd)
         if err_open then
             vim.schedule(function()
                 vim.notify(
@@ -68,9 +66,9 @@ function M.write_file_async(filepath, contents)
                 )
             end)
         end
-        uv.fs_write(fd, contents, -1, function(err_write, _)
+        vim.uv.fs_write(fd, contents, -1, function(err_write, _)
             assert(not err_write, err_write)
-            uv.fs_close(fd, function(err_close)
+            vim.uv.fs_close(fd, function(err_close)
                 assert(not err_close, err_close)
             end)
         end)

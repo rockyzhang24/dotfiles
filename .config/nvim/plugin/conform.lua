@@ -17,6 +17,10 @@ conform.setup({
             -- Use 2 spaces as indentation
             prepend_args = { '-i', '4' },
         },
+        -- prettier = {
+        --     -- Require a Prettier configuration file to format
+        --     require_cwd = true,
+        -- },
     },
     -- Autoformat (format-on-save) can be toggled via the custom :ToggleFormat[!] command.
     -- Toggle buffer-local autoformat without [!]; Global autoformat with [!].

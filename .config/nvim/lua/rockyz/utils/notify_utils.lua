@@ -6,7 +6,7 @@
 local M = {}
 
 local function handle_fast_event(msg, level)
-    if not msg or msg == '' or not next(msg) then
+    if not msg or msg == '' or (type(msg) == 'table' and #msg == 0) then
         return
     end
     if type(msg) == 'table' then

@@ -74,7 +74,7 @@ vim.api.nvim_create_autocmd({ 'BufWritePre' }, {
 vim.api.nvim_create_autocmd({ 'TextYankPost' }, {
     group = vim.api.nvim_create_augroup('rockyz.highlight_yank', {}),
     callback = function()
-        vim.hl.on_yank({ timeout = 300 })
+        vim.hl.on_yank({ timeout = 300, priority = 65535 })
     end,
 })
 

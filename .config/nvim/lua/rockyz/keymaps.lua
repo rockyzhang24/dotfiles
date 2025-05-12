@@ -241,6 +241,45 @@ vim.keymap.set('x', 'g?', function()
     vim.api.nvim_input('<esc>')
 end)
 
+-- Enhanced ga
+-- Copied from @mfussenegger's config
+local function bytesize(n, multiplier)
+    if n > multiplier ^ 3 then
+        n = n / (multiplier ^ 3)
+        return n, "G"
+    end
+    if n > multiplier ^ 2 then
+        n = n / (multiplier ^ 2)
+        return n, "M"
+    end
+    if n > multiplier then
+        n = n / multiplier
+        return n, "K"
+    end
+    return n, ""
+end
+vim.keymap.set('n', 'ga', function()
+    local cword = vim.fn.expand("<cword>")
+    local num = tonumber(cword)
+    if num then
+        local n1024, unit1024 = bytesize(num, 1024)
+        local n1000, unit1000 = bytesize(num, 1000)
+        local bytesizestr = num > 1024
+        and string.format("%.2f %siB   %.2f %sB", n1024, unit1024, n1000, unit1000)
+        or ""
+        vim.print(string.format(
+            "%s   0x%02x   o%o   %s   %s",
+            cword,
+            num,
+            num,
+            os.date("%Y-%m-%d %H:%M", num),
+            bytesizestr
+        ))
+    else
+        vim.cmd.ascii()
+    end
+end)
+
 -- Insert on-the-fly snippet (expand snippet stored in register s)
 -- Uncomment this after discarding LuaSnip
 -- vim.keymap.set('i', '<C-r>s', function()

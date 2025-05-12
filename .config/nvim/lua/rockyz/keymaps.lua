@@ -339,26 +339,41 @@ vim.keymap.set('n', '<Leader>bo', require('rockyz.utils.buf_utils').bufdelete_ot
 -- Copy and paste
 --
 
-vim.keymap.set({ 'n', 'x' }, '<Leader>y', '"+y')
+-- Keep cursor position when yanking
+vim.keymap.set('n', 'y', function()
+    require('rockyz.yank').save_win_view()
+    return 'y'
+end, { expr = true })
+
+vim.keymap.set('n', '<Leader>y', function()
+    require('rockyz.yank').save_win_view()
+    return '"+y'
+end, { expr = true })
+vim.keymap.set('x', '<Leader>y', '"+y')
 vim.keymap.set('n', '<Leader>Y', '"+y$')
-vim.keymap.set('n', '<Leader>Y', '"+y$')
+
 -- Copy the entire buffer to system clipboard
 vim.keymap.set('n', 'yY', ':let b:winview=winsaveview()<bar>exe \'keepjumps keepmarks norm ggVG"+y\'<bar>call winrestview(b:winview)<cr>')
+
 -- Paste and format
 vim.keymap.set('n', 'p', 'p=`]')
 vim.keymap.set('n', 'P', 'P=`]')
+
 -- Paste over the selected text
 vim.keymap.set('x', 'p', '"_c<ESC>p')
+
 vim.keymap.set('n', '<Leader>p', function()
     require('rockyz.utils.misc_utils').putline(vim.v.count1 .. ']p')
 end)
 vim.keymap.set('n', '<Leader>P', function()
     require('rockyz.utils.misc_utils').putline(vim.v.count1 .. '[p')
 end)
+
 -- Select the last changed (or pasted) text
 vim.keymap.set('n', 'gp', function()
     return '`[' .. vim.fn.strpart(vim.fn.getregtype(vim.v.register), 0, 1) .. '`]'
 end, { expr = true })
+
 -- Copy unnamed(") register to system(+) register
 vim.keymap.set('n', 'yc', function()
     vim.fn.setreg('+', vim.fn.getreg('"'))

@@ -1,11 +1,15 @@
 --
 -- Inspired by https://github.com/kawre/leetcode.nvim
 --
--- Run command :LeetCode <question_url> <language> to generate a file that contains the problem
--- description and the code snippet.
+-- Run command :LeetCode <question_url> <label>.<ext> that will first create a directory specific
+-- this question and then genreate two files
+-- (1). a md file containing question description
+-- (2). a solution file with code snippet
 --
--- For example, run :LeetCode https://leetcode.com/two-sum/description javascript will create a file
--- ~/.config/oj/leetcode-javascript/two-sum.js.
+-- For example, run :LeetCode https://leetcode.com/two-sum/description m1.js will create a directory
+-- ~/oj/leetcode-js. Then it genreates two files under this directory
+-- (1). 1-two-sum.md
+-- (2). 1-two-sum-m1.js
 --
 
 local io_utils = require('rockyz.utils.io_utils')
@@ -13,15 +17,9 @@ local system = require('rockyz.utils.system_utils')
 local notify = require('rockyz.utils.notify_utils')
 local icons = require('rockyz.icons')
 
--- The file storing leetcode.com cookie
 local cookie_file = vim.env.XDG_CONFIG_HOME .. '/leetcode-cookie'
-
--- Each solution is saved in a file ~/oj/leetcode-<lang>/<question_id>-<title>-<MMDDYYYY>.<lang>
-local solution_dir = vim.env.HOME .. '/oj'
-
+local oj_dir = vim.env.HOME .. '/oj'
 local cached_cookie
-
-local line_length = 100
 
 -- Graphql queries
 local queries = {}
@@ -56,6 +54,7 @@ queries.question = [[
                 slug
             }
             similar: similarQuestionList {
+                id: questionId
                 difficulty
                 title_slug: titleSlug
                 title
@@ -77,21 +76,6 @@ queries.auth = [[
         }
     }
 ]]
-
--- Map from language to file extension
--- Language should be given with LeetCode command
-local lang_to_ext = {
-    c = 'c',
-    cpp = 'cpp',
-    csharp = 'cs',
-    golang = 'go',
-    java = 'java',
-    javascript = 'js',
-    python = 'py',
-    python3 = 'py',
-    rust = 'rust',
-    typescript = 'ts',
-}
 
 local function get_cookie()
     if cached_cookie then
@@ -137,38 +121,7 @@ local function get_curl_command(query)
     return command
 end
 
----@param q_id string Question id
----@param q_title string Question title
----@param lang string language I want to write in
----@return string|nil # Return the path of newly created file
-local function create_file(q_id, q_title, lang)
-    local ext = lang_to_ext[lang]
-    local date = os.date('%m%d%y')
-    local path = string.format('%s/leetcode-%s', solution_dir, lang)
-    local name = string.format('%s-%s-%s.%s', q_id, q_title, date, ext)
-    local filepath = path .. '/' .. name
-
-    if vim.fn.isdirectory(path) == 0 then
-        vim.fn.mkdir(path, 'p')
-    end
-
-    local filepath_home = vim.fn.fnamemodify(filepath, ':~')
-    local stat = vim.uv.fs_stat(filepath)
-    if not stat then
-        local fd = vim.uv.fs_open(filepath, "w", 420)
-        if fd then
-            vim.uv.fs_close(fd)
-            notify.info('[LeetCode] Created file: ' .. filepath_home)
-            return filepath
-        else
-            notify.error('[LeetCode] Failed to create file: ' .. filepath_home)
-        end
-    else
-        notify.warn('[LeetCode] File already exists: ' .. filepath_home)
-    end
-end
-
----@param res table result decoded from the response JSON data
+---@param res table The result decoded from the JSON data response
 local function handle_http_error(res)
     if res.error then
         notify.error('res.error')
@@ -222,7 +175,10 @@ local function get_question(title_slug)
     return res and res.data.question or nil
 end
 
-local function run(question_url, lang)
+---@param question_url string
+---@param method_id string "m1" in m1.cpp
+---@param lang string "cpp" in m1.cpp
+local function run(question_url, method_id, lang)
     get_cookie()
     if not cached_cookie then
         notify.error('[LeetCode] Cookie not found. Check ~/.config/leetcode-cookie.')
@@ -254,96 +210,139 @@ local function run(question_url, lang)
         return
     end
 
-    local content = q.content
-
-    -- Convert HTML to plain text
-    -- Keep image url, replace non-breaking spaces with regular spaces
-    content = content
-        :gsub('<img%s+[^>]*src="([^"]+)"[^>]*>', '[Image: %1]')
-        :gsub('&nbsp;', ' ')
-        :gsub('\u{00A0}', ' ')
-    local html2text_obj = system.sync({
-        'pandoc', '-f', 'html', '-t', 'plain',
-    }, { stdin = content })
-    if html2text_obj.code ~= 0 then
-        notify.error({
-            '[LeetCode] pandoc failed',
-            html2text_obj.stderr,
-            html2text_obj.stdout,
-        })
-        return
+    -- Create question directory
+    local dirpath = string.format('%s/leetcode-%s/%s-%s', oj_dir, lang, q.id, q.title_slug)
+    if vim.fn.isdirectory(dirpath) == 0 then
+        local ok = vim.fn.mkdir(dirpath, 'p')
+        local dirpath_home = vim.fn.fnamemodify(dirpath, ':~')
+        if ok == 1 then
+            notify.info('[LeetCode] Created directory: ' .. dirpath_home)
+        else
+            notify.error('[LeetCode] Failed to create directory: ' .. dirpath_home)
+            return
+        end
     end
 
-    -- Create the file and open it
-    local newfile = create_file(q.id, q.title_slug, lang)
-    if not newfile then
-        return
-    end
-    vim.cmd.edit(newfile)
+    -- [1]. Question info
 
-    local lines = {}
-    local commentstring = vim.bo.commentstring
-    local comment_chars = commentstring:match('^(.-)%%s') or '# '
-
-    local function center_str(str)
-        local indent = math.max(0, math.floor((line_length - vim.fn.strdisplaywidth(str)) / 2))
-        return comment_chars .. (' '):rep(indent) .. str
-    end
-
-    -- Put questiont title and center it
-    table.insert(lines, center_str(q.id .. '. ' .. q.title))
-    table.insert(lines, '')
-
-    -- Put question url and center it
-    table.insert(lines, center_str(question_url))
-
-    -- Put questin info and center it
     local info = {
-        q.difficulty,
-        string.format('%s %s  %s %s ', q.likes, icons.misc.thumbsup, q.dislikes, icons.misc.thumbsdown),
+        string.format('%s [Link](%s)', icons.emoji.link, question_url),
+        icons.emoji.star .. ' ' .. q.difficulty,
+        string.format('%s %s %s %s', icons.emoji.thumbsup, q.likes, icons.emoji.thumbsdown, q.dislikes),
     }
     local stats = vim.json.decode(q.stats)
     table.insert(info, string.format('%s of %s', stats.acRate, stats.totalSubmission))
     if q.is_paid_only then
-        table.insert(info, icons.misc.lock .. ' ')
-    end
-    table.insert(lines, center_str(table.concat(info, ' | ')))
-
-    table.insert(lines, '')
-
-    -- Put question content
-    for line in html2text_obj.stdout:gmatch('([^\n]*)\n?') do
-        local commented = comment_chars .. line
-        table.insert(lines, commented)
+        table.insert(info, icons.emoji.lock)
     end
 
-    table.insert(lines, '')
+    -- [2]. Question content
 
-    -- Put code snippet
-    for _, snippet in ipairs(q.code_snippets) do
-        if snippet.lang_slug == lang then
-            local code_lines = vim.split(snippet.code, '\n', { plain = true, trimempty = true })
-            for _, line in ipairs(code_lines) do
-                table.insert(lines, line)
+    -- Convert HTML to markdown
+    local html2md_obj = system.sync({
+        'pandoc', '-f', 'html', '-t', 'markdown',
+    }, { stdin = q.content })
+    if html2md_obj.code ~= 0 then
+        notify.error({
+            '[LeetCode] pandoc failed',
+            html2md_obj.stderr,
+            html2md_obj.stdout,
+        })
+        return
+    end
+    -- Strip image style part
+    local content = html2md_obj.stdout:gsub('!%[(.-)%]%((.-)%)%b{}', '!%[%1%](%2)')
+
+    -- [3]. Topic tags
+
+    local tags = {}
+    for _, tag in ipairs(q.topic_tags) do
+        local fmt_str = '[%s](https://leetcode.com/problem-list/%s)'
+        table.insert(tags, fmt_str:format(tag.name, tag.slug))
+    end
+
+    -- [4]. Similar questions
+
+    local similar = {}
+    for _, s in ipairs(q.similar) do
+        local fmt_str = '**[%s. %s](https://leetcode.com/problems/%s)** [%s]'
+        table.insert(similar, fmt_str:format(s.id, s.title, s.title_slug, s.difficulty))
+    end
+
+    local question_description = {
+        string.format('## %s. %s', q.id, q.title),
+        '',
+        string.format('**%s**', table.concat(info, ' | ')),
+        '',
+        content,
+        '',
+        '---',
+        '',
+        '**' .. icons.emoji.tag .. ' Topics**',
+        '',
+        table.concat(tags, ', '),
+        '',
+        '---',
+        '',
+        '**' .. icons.emoji.puzzle .. ' Similar Questions**',
+        '',
+        table.concat(similar, '  \n'),
+    }
+
+    -- Create md file and write question description
+    local md_name = string.format('%s-%s.md', q.id, q.title_slug)
+    local md_path = dirpath .. '/' .. md_name
+    local stat = vim.uv.fs_stat(md_path)
+    if stat then
+        vim.uv.fs_unlink(md_path)
+    end
+    local fd = vim.uv.fs_open(md_path, 'w', 438)
+    if not fd then
+        notify.error('[LeetCode] Failed to create md file: ' .. md_name)
+        return
+    end
+    vim.uv.fs_close(fd)
+    notify.info('[LeetCode] Created md file: ' .. md_name)
+
+    io_utils.write_file(md_path, table.concat(question_description, '\n'))
+
+    -- Create a solution file and open it
+    local filename = string.format('%s-%s-%s.%s', q.id, q.title_slug, method_id, lang)
+    local filepath = dirpath .. '/' .. filename
+    stat = vim.uv.fs_stat(filepath)
+    if not stat then
+        fd = vim.uv.fs_open(filepath, 'w', 420)
+        if not fd then
+            notify.error('[LeetCode] Failed to create solution file: ' .. filename)
+            return
+        else
+            notify.info('[LeetCode] Created solution file: ' .. filename)
+            -- Write code snippet
+            local code = {}
+            for _, snippet in ipairs(q.code_snippets) do
+                if snippet.lang_slug == lang then
+                    local code_lines = vim.split(snippet.code, '\n', { plain = true, trimempty = true })
+                    for _, line in ipairs(code_lines) do
+                        table.insert(code, line)
+                    end
+                end
             end
+            io_utils.write_file(filepath, table.concat(code, '\n'))
         end
+    else
+        notify.warn('[LeetCode] Solution file already exists: ' .. filename)
     end
-
-    -- Clean: trim trailing whitespaces
-    local cleaned = {}
-    for _, line in ipairs(lines) do
-        local trimmed = line:gsub('%s+$', '')
-        table.insert(cleaned, trimmed)
-    end
-
-    vim.api.nvim_buf_set_lines(0, 0, -1, false, cleaned)
+    vim.cmd.edit(filepath)
 end
 
 vim.api.nvim_create_user_command('LeetCode', function(args)
     if #args.fargs ~= 2 then
-        notify.warn('[LeetCode] Expected 2 arguments: question URL and language')
+        notify.warn('[LeetCode] Expected 2 arguments: question URL and filename')
         return
     end
-    local question_url, lang = unpack(args.fargs)
-    run(question_url, lang)
+    -- The first arg is the question url; the second arg is a filename like m1.cpp representing
+    -- method 1, cpp solution.
+    local question_url, filename = unpack(args.fargs)
+    local method_id, ext = filename:match('^(.*)%.(.*)$')
+    run(question_url, method_id, ext)
 end, { nargs = '+' })

@@ -151,4 +151,14 @@ icons.misc = {
     tree = '󰐅',
 }
 
+icons.emoji = {
+    star = '⭐️',
+    link = '🔗',
+    lock = '🔒',
+    puzzle = '🧩',
+    tag = '🏷️',
+    thumbsup = '👍',
+    thumbsdown = '👎',
+}
+
 return icons

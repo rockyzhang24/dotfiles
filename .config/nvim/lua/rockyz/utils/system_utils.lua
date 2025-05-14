@@ -2,7 +2,7 @@ local M = {}
 
 ---Execute an external command asynchronously
 ---@param command string|table The external command
----@param opts table opts for vim.system
+---@param opts? table opts for vim.system
 ---@param on_success? fun(stdout: string)
 ---@param on_error? fun(stderr: string, stdout: string)
 function M.async(command, opts, on_success, on_error)

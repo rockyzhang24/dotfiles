@@ -11,13 +11,13 @@ font-feature = ss18
 
 window-padding-x = 0
 window-padding-y = 0
-window-decoration = false
+window-decoration = auto
 
 theme = arctic
 
 # macOS specific
 macos-option-as-alt = left
-macos-titlebar-style = transparent
+macos-titlebar-style = tabs
 font-thicken = true
 
 #

@@ -1,5 +1,3 @@
-<div align="center">
-
 # .dotfiles
 
 My dotfiles for `macOS` and `Linux`. Just cherry pick the piece of code you totally understand.
@@ -7,11 +5,9 @@ My dotfiles for `macOS` and `Linux`. Just cherry pick the piece of code you tota
 ![platform](https://img.shields.io/badge/platform-macOS%2FLinux-blue)
 ![last commit](https://img.shields.io/github/last-commit/rockyzhang24/dotfiles)
 
-<img width="1774" alt="image" src="https://github.com/user-attachments/assets/659b3854-b876-4506-92cc-8f340e4ad32e" />
+![demo](https://github.com/user-attachments/assets/659b3854-b876-4506-92cc-8f340e4ad32e)
 
-  <sub>Like the color theme? Please check [arctic](https://github.com/rockyzhang24/arctic.nvim)</sub>
-
-</div>
+↗ Like the color theme? Please check [arctic](https://github.com/rockyzhang24/arctic.nvim).
 
 # ✨ Contents
 
@@ -23,10 +19,12 @@ My dotfiles for `macOS` and `Linux`. Just cherry pick the piece of code you tota
 
 #### [Zsh](https://www.zsh.org) ([config](./.config/zsh/))
 
-* Use [Zim](https://zimfw.sh) to manage Zsh plugins
-* The theme is [Powerlevel10k](https://github.com/romkatv/powerlevel10k)
+* Use [Zimfw](https://zimfw.sh) framework
+* The prompt is [Starship](https://starship.rs/)
 
 ### 🛠️ Terminal Emulator
+
+#### [Ghostty](https://ghostty.org/) ([config](./.config/ghostty/))
 
 #### [Kitty](https://sw.kovidgoyal.net/kitty/) ([config](./.config/kitty/))
 
@@ -43,9 +41,9 @@ My dotfiles for `macOS` and `Linux`. Just cherry pick the piece of code you tota
 
 #### [lf](https://pkg.go.dev/github.com/gokcehan/lf) ([config](./.config/lf/))
 
-#### [vifm](https://vifm.info) ([config](./.config/vifm/))
+#### [Vifm](https://vifm.info) ([config](./.config/vifm/))
 
-#### [ranger](https://ranger.github.io) ([config](./.config/ranger/))
+#### [Ranger](https://ranger.github.io) ([config](./.config/ranger/))
 
 ### ⌨️ Keyboard Customizer
 

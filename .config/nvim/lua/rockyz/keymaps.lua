@@ -140,7 +140,7 @@ vim.keymap.set('n', '\\F', ':ToggleAutoFormat!<CR>') -- global
 vim.keymap.set('n', '<C-c>', 'ciw')
 
 -- From TJ
-vim.keymap.set('n', '<Leader><Leader>x', '<Cmd>source %<CR>') -- execute the current file
+vim.keymap.set('n', '<Leader><Leader>x', ':source %<CR>') -- execute the current file
 vim.keymap.set('n', '<Leader>x', ':.lua<CR>') -- execute the current line
 vim.keymap.set('v', '<Leader>x', ':lua<CR>') -- execute the selected lines
 
@@ -392,7 +392,10 @@ vim.keymap.set('x', '<Leader>y', '"+y')
 vim.keymap.set('n', '<Leader>Y', '"+y$')
 
 -- Copy the entire buffer to system clipboard
-vim.keymap.set('n', 'yY', ':let b:winview=winsaveview()<bar>exe \'keepjumps keepmarks norm ggVG"+y\'<bar>call winrestview(b:winview)<cr>')
+vim.keymap.set('n', 'yY', function()
+    require('rockyz.yank').save_win_view()
+    vim.cmd('keepjumps keepmarks norm ggVG"+y')
+end)
 
 -- Paste and format
 vim.keymap.set('n', 'p', 'p=`]')

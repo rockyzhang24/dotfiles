@@ -19,10 +19,10 @@ local function open_preview(file)
     tell application "System Events"
         set terminalApp to name of first application process whose frontmost is true
     end tell
-    -- (2). Move terminal to the left half
+    -- (2). Move terminal to the right half
     tell application "System Events"
         tell process terminalApp
-            click menu item "Left" of menu 1 of menu item "Move & Resize" of menu "Window" of menu bar 1
+            click menu item "Right" of menu 1 of menu item "Move & Resize" of menu "Window" of menu bar 1
         end tell
     end tell
     -- (3). Open the markdown file in Marked 2
@@ -31,12 +31,12 @@ local function open_preview(file)
         activate
     end tell
     delay 0.5
-    -- (4). Move Marked 2 to the right half
+    -- (4). Move Marked 2 to the left half
     tell application "System Events"
         tell process "Marked 2"
             set frontmost to true
             delay 0.3
-            click menu item "Right" of menu 1 of menu item "Move & Resize" of menu "Window" of menu bar 1
+            click menu item "Left" of menu 1 of menu item "Move & Resize" of menu "Window" of menu bar 1
         end tell
     end tell
     -- (5). Refocus terminal

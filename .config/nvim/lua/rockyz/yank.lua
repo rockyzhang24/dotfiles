@@ -5,17 +5,24 @@ local M = {}
 local saved_win_view
 local winid
 local bufnr
+local report
 
 function M.save_win_view()
     saved_win_view = vim.fn.winsaveview()
     winid = vim.api.nvim_get_current_win()
     bufnr = vim.api.nvim_get_current_buf()
+    report = vim.o.report
+    vim.o.report = 65535
 end
 
 function M.clear_win_view()
     saved_win_view = nil
     winid = nil
     bufnr = nil
+    if report then
+        vim.o.report = report
+        report = nil
+    end
 end
 
 function M.restore()

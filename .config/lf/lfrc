@@ -244,13 +244,15 @@ map zh
 # <space> is used as the leader key
 map <space>
 
+# enter to open
+map <enter> open
+
 map z. set hidden!
 map <tab> :toggle; down
 map <c-s> :toggle
 map yy copy
 map yn copy-filename
 map yP copy-absolute-path
-map <enter> shell
 map d delete
 map T trash
 # list the size of each item in the current directory

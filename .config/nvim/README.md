@@ -1,5 +1,3 @@
-<div align="center">
-
 # Neovim Config
 
 Simple but featured. Focused on ergonomics, mnemonics and consistency.
@@ -8,11 +6,9 @@ Cherry pick the lines you need and totally understand.
 
 Always a WIP 🏗️
 
-<img width="1774" alt="nvim-demo" src="https://github.com/user-attachments/assets/9bfbfa4f-a108-4479-b0ff-2113e74bbddf">
+![demo](https://github.com/user-attachments/assets/9bfbfa4f-a108-4479-b0ff-2113e74bbddf)
 
-<sub>For more pics, please check [Showcases](#-showcases) below</sub>
-
-</div>
+↗ For more pics, please check [Showcases](#-showcases) below
 
 # ✨ Features
 
@@ -25,16 +21,16 @@ Functionalities I implemented:
 * Lightbulb with VSCode-style: [Lightbulb](./lua/rockyz/lsp/lightbulb.lua) ([showcase](#lightbulb-config))
 * Minimalist indent guide built on `listchars`: [Indent guide](./lua/rockyz/indentline.lua)
 * Neat indent scope display with support for motions and text objects: [Indent scope](./lua/rockyz/indentscope.lua) ([showcase](#indent-scope-config))
-* Appealing winbar showing file path, diagnostics and breadcrumbss: [Winbar](./lua/rockyz/winbar.lua) ([showcase](#winbar-config))
+* Appealing winbar showing file path and diagnostics: [Winbar](./lua/rockyz/winbar.lua) ([showcase](#winbar-config))
 * Elegant tabline: [Tabline](./lua/rockyz/tabline.lua) ([showcase](#tabline-config))
 * Simple yet efficient statuscolumn: [Statuscolumn](./lua/rockyz/statuscolumn.lua)
 * Clean and visually pleasing quickfix window: [Quickfix window](./lua/rockyz/quickfix.lua) ([showcase](#quickfix-list-config))
 * Comprehensive set of lightning-fast fuzzy finders: [Fuzzy finders](./lua/rockyz/fzf.lua) ([showcase](#fuzzy-finders-config))
+* Handy togglable popup for lf file manager: [lf](./lua/rocky/lf.lua) ([showcase](#lf-file-manager-config))
 
 Plugins essential to my setup:
 
 * Minimal plugin manager [minpac](https://github.com/k-takata/minpac)
-* Nvim builtin LSP client configured by [nvim-lspconfig](https://github.com/neovim/nvim-lspconfig)
 * Treesitter support [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter)
 * Ultra-fast auto-completion backed by [blink.cmp](https://github.com/Saghen/blink.cmp)
 * Fully Git integration with [vim-fugitive](https://github.com/tpope/vim-fugitive), [gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim), [vim-flog](https://github.com/rbong/vim-flog), etc
@@ -98,3 +94,7 @@ I implemented a series of fuzzy finders based on fzf.vim instead of using ready-
 ### Quickfix list ([config](./lua/rockyz/quickfix.lua))
 
 ![quickfix](https://github.com/user-attachments/assets/7c3446d4-3fb1-47ad-a1c5-c96b06a999a3)
+
+### lf file manager ([config](./lua/rockyz/lf.lua))
+
+![lf](https://github.com/user-attachments/assets/b4055211-d0c4-4422-82b6-c447fb0d5902)

@@ -59,7 +59,7 @@ local function calculate_win_pos()
     local win_width = math.floor(vim.o.columns * 0.8)
     local win_height = math.floor(vim.o.lines * 0.8)
 
-    local row = math.floor((vim.o.lines - win_height) / 2)
+    local row = math.floor((vim.o.lines - win_height) / 2) - 2
     local col = math.floor((vim.o.columns - win_width) / 2)
 
     return {

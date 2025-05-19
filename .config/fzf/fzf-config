@@ -72,7 +72,8 @@ export FZF_DEFAULT_OPTS=" \
     --bind 'focus:transform-preview-label:echo ┨ {} ┠' \
     --preview '~/.config/fzf/fzf-previewer.sh {}' \
     --preview-window 'right,60%,nowrap' \
-    --color=$colors"
+    --color=$colors \
+"
 
 # Use fd for FZF completion
 # 1). listing files and dirs ($1 is the base path to start search) such as "vim ~/.config/**<TAB>"

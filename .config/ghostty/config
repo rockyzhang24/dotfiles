@@ -7,7 +7,6 @@ adjust-underline-thickness = 2
 font-feature = -calt
 font-feature = -liga
 font-feature = -dlig
-font-feature = ss18
 
 window-padding-x = 2
 window-padding-y = 0

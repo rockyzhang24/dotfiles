@@ -89,6 +89,12 @@ local plugins = {
     'tpope/vim-fugitive',
     'tpope/vim-rhubarb', -- :GBrowse
     'rbong/vim-flog',
+    {
+        'rockyzhang24/git-messenger.vim',
+        {
+            branch = 'dev',
+        },
+    },
 }
 
 local function pack_init()

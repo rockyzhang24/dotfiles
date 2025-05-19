@@ -35,6 +35,14 @@ local white = '#ffffff'
 local norm_fg = '#cccccc'
 local norm_bg = '#1f1f1f'
 
+-- Some colors vary depending on whether the border is enabled or not
+local float_norm_bg = norm_bg -- normal bg of float win
+local float_scrollbar_gutter = float_norm_bg -- bg of scrollbar gutter in float win
+if not vim.g.border_enabled then
+    float_norm_bg = utils.darken(norm_bg, 0.4)
+    float_scrollbar_gutter = utils.lighten(float_norm_bg, 0.2)
+end
+
 -- Signs for git in signcolumn
 local gutter_git_added = '#2ea043' -- editorGutter.addedBackground
 local gutter_git_deleted = '#f85149' -- editorGutter.deletedBackground
@@ -109,7 +117,7 @@ local groups = {
     -- And for aesthetics, set the scrollbar to the same color as the border.
     FloatBorder = { fg = norm_fg }, -- VSCode uses color floatwin_border
     ScrollbarSlider = { bg = norm_fg }, -- VSCode uses color scrollbar
-    ScrollbarGutter = { bg = norm_bg },
+    ScrollbarGutter = { bg = float_scrollbar_gutter },
     SelectionHighlightBackground = { bg = '#343a41' }, -- editor.selectionHighlightBackground
     LightBulb = { fg = '#ffcc00' }, -- editorLightBulb.foreground
     CodeLens = { fg = '#999999' }, -- editorCodeLens.foreground
@@ -308,7 +316,7 @@ local groups = {
     NonText = { fg = gray2 },
     Normal = { fg = norm_fg, bg = norm_bg },
     -- NormalNC = { },
-    Pmenu = { fg = norm_fg, bg = norm_bg }, -- editorSuggestWidget.background/foreground
+    Pmenu = { fg = norm_fg, bg = float_norm_bg }, -- editorSuggestWidget.background/foreground
     PmenuSel = { fg = white, bg = selected_item_bg, bold = true }, -- editorSuggestWidget.selectedForeground/selectedBackground
     -- PmenuKind = {},
     -- PmenuKindSel = {},
@@ -319,7 +327,7 @@ local groups = {
     PmenuMatch = { fg = matched_chars, bg = norm_bg, bold = true },
     PmenuMatchSel = { fg = matched_chars, bg = selected_item_bg, bold = true },
     -- ComplMatchIns = {},
-    NormalFloat = 'Pmenu',
+    NormalFloat = { fg = norm_fg, bg = float_norm_bg },
     -- FloatTitle = {},
     -- FloatFooter = {},
     Question = { fg = warn_yellow },
@@ -952,7 +960,7 @@ local groups = {
     -- nvim-treesitter-context
     --
 
-    -- TreesitterContext = {},
+    TreesitterContext = 'Normal',
     TreesitterContextLineNumber = 'LineNr',
     -- TreesitterContextSeparator = {},
     TreesitterContextBottom = { underline = true, sp = '#000000' },
@@ -996,6 +1004,15 @@ local groups = {
     TagbarType = 'Comment',
     TagbarSignature = 'Normal',
     TagbarFoldIcon = 'Normal',
+
+    --
+    -- git-messenger
+    --
+    gitmessengerPopupNormal = 'NormalFloat',
+    gitmessengerHeader = 'Identifier',
+    gitmessengerHash = 'Number',
+    gitmessengerHistory = 'Constant',
+    gitmessengerEmail = 'String',
 
     --
     -- Fzf

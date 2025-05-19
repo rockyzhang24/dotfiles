@@ -36,7 +36,6 @@ export FZF_DEFAULT_OPTS=" \
     --scrollbar '█' \
     --history /tmp/fzfhistory \
     --prompt 'FZF> ' \
-    --border rounded \
     --tabstop=4 \
     --highlight-line \
     --tmux 80%,85% \

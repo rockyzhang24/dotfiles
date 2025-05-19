@@ -14,24 +14,6 @@ FD="fd --hidden --follow $FD_EXCLUDE"
 # Use fd instead of default find
 export FZF_DEFAULT_COMMAND="$FD --type f --type l"
 
-# Define color themes
-# Default colors are defined in https://github.com/junegunn/fzf/blob/master/src/tui/tui.go
-if $TRANSPARENT; then
-    bg=-1
-fi
-# arctic theme
-if [[ $COLOR_THEME == 'arctic' ]]; then
-    [[ $bg != -1 ]] && bg='#1f1f1f'
-    fg='#cccccc'
-    colors="dark,fg:$fg,bg:$bg,hl:#ffdd33:bold,fg+:#ffffff:bold,bg+:#04395e,gutter:$bg,hl+:#ffdd33:bold,query:$fg,disabled:#808080,border:$fg,separator:#454545,label:#4ec9b0,header:#f9ae28:underline:bold"
-fi
-# monokai theme
-if [[ $COLOR_THEME == 'monokai' ]]; then
-    [[ $bg != -1 ]] && bg='#272822'
-    fg='#f8f8f2'
-    colors="dark,fg:$fg,bg:$bg,hl:#ffdd33:bold,fg+:#ffffff,bg+:#414339,gutter:$bg,hl+:#ffdd33:bold,query:$fg,disabled:#7a7a77,border:$fg,separator:#454545,label:$fg,header:#fd9621:underline:bold"
-fi
-
 # Config the default options when running fzf
 # Keybindings:
 # - ctrl-d: move cursor half page down
@@ -72,7 +54,18 @@ export FZF_DEFAULT_OPTS=" \
     --bind 'focus:transform-preview-label:echo ┨ {} ┠' \
     --preview '~/.config/fzf/fzf-previewer.sh {}' \
     --preview-window 'right,60%,nowrap' \
-    --color=$colors \
+    --color=`
+        `dark,`
+        `fg:-1,bg:-1,`
+        `fg+:#ffffff:bold,bg+:#04395e,gutter:-1,`
+        `hl:#ffdd33:bold,`
+        `hl+:#ffdd33:bold,`
+        `query:-1,`
+        `disabled:#808080,`
+        `border:-1,`
+        `separator:#454545,`
+        `label:#4ec9b0,`
+        `header:#f9ae28:underline:bold \
 "
 
 # Use fd for FZF completion

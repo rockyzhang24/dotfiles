@@ -213,7 +213,7 @@ end
 -- Get the row position of the current floating window. If it is the first one, it is placed just
 -- right above the statuslien; if not, it is placed on top of others.
 local function get_win_row(pos)
-    return vim.o.lines - vim.o.cmdheight - 1 - pos * 3
+    return vim.o.lines - vim.o.cmdheight - 1 - pos * (vim.g.border_enabled and 3 or 1)
 end
 
 -- Update the window config
@@ -300,8 +300,8 @@ local function show_message(client)
     else
         win_update_config(client)
     end
+    -- vim.wo[winid].winhl = 'Normal:Normal'
     -- Write the message into the buffer
-    vim.wo[winid].winhl = 'Normal:Normal'
     guard(function()
         vim.api.nvim_buf_set_lines(client.bufnr, 0, 1, false, { client.message })
     end)

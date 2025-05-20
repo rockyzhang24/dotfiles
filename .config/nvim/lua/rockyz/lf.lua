@@ -20,7 +20,7 @@ local actions = {
     ['<C-x>'] = 'belowright split',
     ['<C-v>'] = 'belowright vsplit',
     ['<C-t>'] = 'tab split',
-    ['<Enter>'] = 'edit',
+    ['<M-Enter>'] = 'edit',
 }
 
 local function create_keymaps()

@@ -1,20 +1,12 @@
 local icons = require('rockyz.icons')
 
-vim.o.number = true
-vim.o.relativenumber = true
-vim.o.laststatus = 3
+vim.o.breakindent = true
+vim.o.cindent = true
 vim.o.cmdheight = 1
+vim.o.completeopt = 'menuone,noselect,noinsert,fuzzy,popup'
 vim.o.cursorline = true
-vim.o.showmode = false
-vim.o.textwidth = 100
-vim.o.wildmode = 'longest:full,full'
-vim.o.list = true
-vim.opt.listchars = {
-    trail = '•',
-    nbsp = '.',
-    precedes = '‹',
-    extends = '›',
-}
+vim.opt.diffopt:append('vertical,algorithm:patience,linematch:60')
+vim.o.expandtab = true
 vim.opt.fillchars = {
     fold = ' ',
     foldopen = icons.caret.down,
@@ -23,45 +15,52 @@ vim.opt.fillchars = {
     eob = ' ',
     msgsep = '‾',
 }
-vim.opt.jumpoptions:append('view')
-vim.o.tabclose = 'uselast'
 vim.o.foldcolumn = '1'
 vim.o.foldlevel = 99
 vim.o.foldlevelstart = 99
-vim.o.completeopt = 'menuone,noselect,noinsert,fuzzy,popup'
-vim.o.timeoutlen = 500
-vim.o.updatetime = 250
-vim.opt.shortmess:append('acS')
-vim.opt.matchpairs:append('<:>')
-vim.o.splitbelow = true
-vim.o.splitright = true
-vim.o.expandtab = true
-vim.o.tabstop = 4
-vim.o.shiftwidth = 4
-vim.o.softtabstop = -1 -- fall back to shiftwidth
-vim.o.shiftround = true
 vim.o.ignorecase = true
-vim.o.smartcase = true
-vim.opt.diffopt:append('vertical,algorithm:patience,linematch:60')
-vim.o.signcolumn = 'yes'
-vim.o.spelllang = 'en_us'
-vim.o.pumheight = 15
-vim.o.pumwidth = 20
-vim.o.breakindent = true
-vim.o.showbreak = '↳ '
--- Presistent undo (use set undodir=... to change the undodir, default is ~/.local/share/nvim/undo)
-vim.o.undofile = true
-vim.o.nrformats = 'octal,bin,hex,unsigned,alpha'
-vim.opt.sessionoptions:append('globals,localoptions,winpos')
 vim.opt.isfname:remove('=')
-vim.o.shada = "!,'500,<50,s10,h"
-vim.o.synmaxcol = 300
-vim.o.cindent = true
-vim.o.scrolloff = 3
+vim.opt.jumpoptions:append('view')
+vim.o.laststatus = 3
+vim.o.linebreak = true
+vim.o.list = true
+vim.opt.listchars = {
+    trail = '•',
+    nbsp = '.',
+    precedes = '‹',
+    extends = '›',
+}
+vim.opt.matchpairs:append('<:>')
 vim.o.mouse = 'a'
 vim.o.mousemodel = 'extend'
+vim.o.nrformats = 'octal,bin,hex,unsigned,alpha'
+vim.o.number = true
+vim.o.pumheight = 15
+vim.o.pumwidth = 20
+vim.o.relativenumber = true
+vim.o.scrolloff = 3
+vim.opt.sessionoptions:append('globals,localoptions,winpos')
+vim.o.shada = "!,'500,<50,s10,h"
+vim.o.shiftwidth = 4
+vim.o.shiftround = true
+vim.o.showbreak = '↳ '
+vim.o.showmode = false
+vim.opt.shortmess:append('acS')
+vim.o.signcolumn = 'yes'
+vim.o.smartcase = true
+vim.o.softtabstop = -1 -- fall back to shiftwidth
+vim.o.spelllang = 'en_us'
+vim.o.splitbelow = true
+vim.o.splitright = true
 vim.o.synmaxcol = 500
-vim.o.linebreak = true
+vim.o.tabclose = 'uselast'
+vim.o.tabstop = 4
+vim.o.textwidth = 100
+vim.o.timeoutlen = 500
+-- Presistent undo (use set undodir=... to change the undodir, default is ~/.local/share/nvim/undo)
+vim.o.undofile = true
+vim.o.updatetime = 250
+vim.o.wildmode = 'longest:full,full'
 
 -- Avoid highlighting the last search when sourcing vimrc
 vim.cmd('nohlsearch')

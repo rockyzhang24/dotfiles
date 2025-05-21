@@ -6,7 +6,7 @@
 -- 2. If using tab as indentation: set leadmultispace to a special character for denotation and tab
 --    to the indent line character.
 
-local symbol = require('rockyz.icons').lines.indentline
+local symbol = require('rockyz.icons').lines.double_dash_vertical
 
 local function indentchar_update(is_local)
     local tab

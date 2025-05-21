@@ -84,7 +84,7 @@ local config = {
     indent_at_cursor_col = true,
 }
 
-local symbol = require('rockyz.icons').lines.indentscope or '|'
+local symbol = require('rockyz.icons').lines.double_dash_vertical or '╎'
 
 local ns_id = vim.api.nvim_create_namespace('rockyz.indentscope.symbols')
 

@@ -49,8 +49,10 @@ icons.symbol_kinds = {
 }
 
 icons.lines = {
-    indentline = '|',
-    indentscope = '╎',
+    vertical = '|',
+    double_dash_vertical = '╎',
+    triple_dash_vertical = '┆',
+    quadruple_dash_vertical = '┊',
 }
 
 icons.diagnostics = {

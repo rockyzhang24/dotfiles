@@ -1,7 +1,10 @@
+# Same as the font on GitHub
 font-family = ""
-font-family = "PragmataPro"
-font-size = 16.5
-adjust-underline-thickness = 2
+font-family = "SF Mono"
+font-size = 14
+adjust-cell-width = -1
+adjust-cell-height = 10
+adjust-cursor-height = 10
 
 # Disable ligatures
 font-feature = -calt
@@ -11,6 +14,7 @@ font-feature = -dlig
 window-padding-x = 2
 window-padding-y = 0
 window-decoration = auto
+background-opacity = 1
 
 theme = arctic
 

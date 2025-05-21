@@ -13,6 +13,7 @@ local opts = {
     virt_text = {
         { icon .. ' ', 'LightBulb' },
     },
+    hl_mode = 'combine',
     virt_text_win_col = 0,
 }
 

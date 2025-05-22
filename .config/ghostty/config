@@ -1,10 +1,13 @@
-# Same as the font on GitHub
+# Looks the same as the style on GitHub
 font-family = ""
 font-family = "SF Mono"
 font-size = 14
 adjust-cell-width = -1
 adjust-cell-height = 10
 adjust-cursor-height = 10
+adjust-underline-position = 6
+adjust-underline-thickness = 30%
+adjust-cursor-thickness = 150%
 
 # Disable ligatures
 font-feature = -calt

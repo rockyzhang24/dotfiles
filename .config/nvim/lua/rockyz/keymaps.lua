@@ -228,10 +228,10 @@ end
 vim.keymap.set('n', '<Leader><C-g>', ctrl_g)
 
 -- g?: Web search
-vim.keymap.set('n', 'g?', function()
+vim.keymap.set('n', 'g??', function()
     vim.ui.open(('https://google.com/search?q=%s'):format(vim.fn.expand('<cword>')))
 end)
-vim.keymap.set('x', 'g?', function()
+vim.keymap.set('x', 'g??', function()
     local region = vim.fn.getregion(
         vim.fn.getpos('.'),
         vim.fn.getpos('v'),

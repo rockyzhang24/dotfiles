@@ -1,0 +1,2 @@
+require('debugprint').setup({
+})

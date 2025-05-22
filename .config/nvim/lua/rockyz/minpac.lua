@@ -41,6 +41,7 @@ local plugins = {
     'inkarkat/vim-ingo-library',
     'inkarkat/vim-mark',
     'justinmk/vim-sneak',
+    'andrewferrier/debugprint.nvim',
 
     -- LSP
     'smjonas/inc-rename.nvim',

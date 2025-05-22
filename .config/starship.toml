@@ -78,9 +78,9 @@ truncation_length = 10
 truncation_symbol = ' /'
 
 [git_branch]
-symbol = ' '
+symbol = ''
 style = 'bg:color_aqua'
-format = '[ $symbol$branch(:$remote_branch) ](fg:color_fg0 bg:color_aqua)'
+format = '[ $symbol $branch(:$remote_branch) ](fg:color_fg0 bg:color_aqua)'
 truncation_symbol = ' '
 
 [git_commit]
@@ -111,12 +111,12 @@ style = 'bg:color_blue'
 format = '[ took $duration ](fg:color_fg0 bg:color_blue)'
 
 [c]
-symbol = ' '
+symbol = ''
 style = 'bg:color_blue'
 format = '[ $symbol( $version) ](fg:color_fg0 bg:color_blue)'
 
 [cmake]
-symbol = '△ '
+symbol = '△'
 style = 'bg:color_blue'
 format = '[ $symbol( $version) ](fg:color_fg0 bg:color_blue)'
 
@@ -125,76 +125,76 @@ style = 'bg:color_bg3'
 format = '[ $symbol( $environment) ](fg:#83a598 bg:color_bg3)'
 
 [docker_context]
-symbol = ' '
+symbol = ''
 style = 'bg:color_bg3'
 format = '[ $symbol( $context) ](fg:#83a598 bg:color_bg3)'
 
 [golang]
-symbol = ' '
+symbol = ''
 style = 'bg:color_blue'
 format = '[ $symbol( $version) ](fg:color_fg0 bg:color_blue)'
 
 [java]
-symbol = ' '
+symbol = ''
 style = 'bg:color_blue'
 format = '[ $symbol( $version) ](fg:color_fg0 bg:color_blue)'
 
 [jobs]
-symbol = '✦ '
+symbol = '✦'
 style = 'bg:color_blue'
 format = '[ $symbol$number ](fg:color_fg0 bg:color_blue)'
 
 [kotlin]
-symbol = ' '
+symbol = ''
 style = 'bg:color_blue'
 format = '[ $symbol( $version) ](fg:color_fg0 bg:color_blue)'
 
 [lua]
-symbol = ' '
+symbol = ''
 style = 'bg:color_blue'
 format = '[ $symbol( $version) ](fg:color_fg0 bg:color_blue)'
 
 [nodejs]
-symbol = ' '
+symbol = ''
 style = 'bg:color_blue'
 format = '[ $symbol( $version) ](fg:color_fg0 bg:color_blue)'
 
 [ocaml]
-symbol = ' '
+symbol = ''
 style = 'bg:color_blue'
 format = '[ $symbol( $version) ](fg:color_fg0 bg:color_blue)'
 
 [package]
-symbol = ' '
+symbol = ''
 style = 'bg:color_blue'
 format = '[ $symbol( $version) ](fg:color_fg0 bg:color_blue)'
 
 [perl]
-symbol = ' '
+symbol = ''
 style = 'bg:color_blue'
 format = '[ $symbol( $version) ](fg:color_fg0 bg:color_blue)'
 
 [php]
-symbol = ' '
+symbol = ''
 style = 'bg:color_blue'
 format = '[ $symbol( $version) ](fg:color_fg0 bg:color_blue)'
 
 [python]
-symbol = ' '
+symbol = ''
 style = 'bg:color_blue'
 format = '[ $symbol( $version) ](fg:color_fg0 bg:color_blue)'
 
 [ruby]
-symbol = ' '
+symbol = ''
 style = 'bg:color_blue'
 format = '[ $symbol( $version) ](fg:color_fg0 bg:color_blue)'
 
 [rust]
-symbol = ' '
+symbol = ''
 style = 'bg:color_blue'
 format = '[ $symbol( $version) ](fg:color_fg0 bg:color_blue)'
 
 [zig]
-symbol = ' '
+symbol = ''
 style = 'bg:color_blue'
 format = '[ $symbol( $version) ](fg:color_fg0 bg:color_blue)'

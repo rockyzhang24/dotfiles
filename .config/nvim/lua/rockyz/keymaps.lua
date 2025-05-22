@@ -260,19 +260,22 @@ local function bytesize(n, multiplier)
 end
 vim.keymap.set('n', 'ga', function()
     local cword = vim.fn.expand("<cword>")
-    local num = tonumber(cword)
+    local num = tonumber(cword:match("[^%d]*(%d+)[^%d]*"))
     if num then
         local n1024, unit1024 = bytesize(num, 1024)
         local n1000, unit1000 = bytesize(num, 1000)
         local bytesizestr = num > 1024
-        and string.format("%.2f %siB   %.2f %sB", n1024, unit1024, n1000, unit1000)
-        or ""
+            and string.format("%.2f %siB   %.2f %sB", n1024, unit1024, n1000, unit1000)
+            or ""
+        local timestamp = num > 253402300800 -- unix timestamp in seconds for 9999-12-31
+            and num / 1000.0
+            or num
         vim.print(string.format(
             "%s   0x%02x   o%o   %s   %s",
             cword,
             num,
             num,
-            os.date("%Y-%m-%d %H:%M", num),
+            os.date('%Y-%m-%d %H:%M', timestamp),
             bytesizestr
         ))
     else

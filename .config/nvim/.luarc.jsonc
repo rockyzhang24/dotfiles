@@ -11,7 +11,7 @@
       "${3rd}/luv/library"
     ],
     "ignoreDir": [
-      "lua/rockyz/snippets"
+      "luasnippets"
     ]
   },
   "diagnostics.disable": [

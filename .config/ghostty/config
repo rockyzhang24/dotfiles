@@ -16,7 +16,7 @@ font-feature = -dlig
 
 window-padding-x = 2
 window-padding-y = 0
-window-decoration = auto
+window-decoration = none
 background-opacity = 1
 
 theme = arctic

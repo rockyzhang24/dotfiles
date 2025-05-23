@@ -1,0 +1,8 @@
+{
+    "workspace": {
+        "library": [
+            "$VIMRUNTIME",
+            "$XDG_CONFIG_HOME/nvim/luasnippets/luasnip_globals.lua"
+        ]
+    }
+}

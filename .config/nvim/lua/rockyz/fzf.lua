@@ -8,7 +8,7 @@
 -- <Leader>fo : Old files
 -- <Leader>f. : Files for my dotfiles
 -- <Leader>fb : Buffers
--- <C-\>  : Buffers and MRU
+-- <C-m>  : Buffers and MRU
 
 -- <Leader>f/ : Search history
 -- <Leader>f: : Command history
@@ -168,7 +168,7 @@ local config = {
         layout = {
             window = {
                 width = 1,
-                height = 24,
+                height = 0.4,
                 yoffset = 1.1,
             },
         },
@@ -807,7 +807,7 @@ local function bufs_and_mru(from_resume)
     fzf(spec, handle_contents)
 end
 
-vim.keymap.set('n', '<C-\\>', function()
+vim.keymap.set('n', '<C-m>', function()
     run(bufs_and_mru)
 end)
 

@@ -1,3 +1,5 @@
+-- Ref: https://github.com/L3MON4D3/LuaSnip/blob/master/DOC.md#snip-env-diagnostics
+
 ---@meta
 
 s = require("luasnip.nodes.snippet").S

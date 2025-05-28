@@ -140,9 +140,9 @@ vim.keymap.set('n', '\\F', ':ToggleAutoFormat!<CR>') -- global
 vim.keymap.set('n', '<C-c>', 'ciw')
 
 -- From TJ
-vim.keymap.set('n', '<Leader><Leader>x', ':source %<CR>') -- execute the current file
-vim.keymap.set('n', '<Leader>x', ':.lua<CR>') -- execute the current line
-vim.keymap.set('v', '<Leader>x', ':lua<CR>') -- execute the selected lines
+-- vim.keymap.set('n', '<Leader><Leader>x', ':source %<CR>') -- execute the current file
+-- vim.keymap.set('n', '<Leader>x', ':.lua<CR>') -- execute the current line
+-- vim.keymap.set('v', '<Leader>x', ':lua<CR>') -- execute the selected lines
 
 -- Make I and A in character-wise and linewise VISUAL be v_b_I
 vim.keymap.set('x', 'I', function()
@@ -698,27 +698,12 @@ end, { expr = true })
 
 -- Toggle a small terminal at the bottom
 -- <C-d> to kill
-local bot_term = {
-    bufnr = -1,
-    winid = -1,
-    winopts = {
-        split = 'below',
-        height = 15,
-    },
-}
 vim.keymap.set({ 'n', 't' }, '<M-`>', function()
-    if vim.api.nvim_win_is_valid(bot_term.winid) then
-        vim.api.nvim_win_hide(bot_term.winid)
-    else
-        if not vim.api.nvim_buf_is_valid(bot_term.bufnr) then
-            bot_term.bufnr = vim.api.nvim_create_buf(true, true)
-            vim.api.nvim_buf_call(bot_term.bufnr, function()
-                vim.cmd.term()
-            end)
-        end
-        bot_term.winid = vim.api.nvim_open_win(bot_term.bufnr, true, bot_term.winopts)
-        vim.wo[bot_term.winid][0].winfixheight = true
-    end
+    require('rockyz.utils.term').toggle()
+end)
+
+vim.keymap.set('n', '<Leader>x', function()
+    require('rockyz.utils.term').run()
 end)
 
 --

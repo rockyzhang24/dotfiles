@@ -1,87 +1,90 @@
 [user]
-  name = Rocky Zhang
-  email = yzhang.rocky@gmail.com
+    name = Rocky Zhang
+    email = yzhang.rocky@gmail.com
 [core]
-  excludesfile = /Users/rockyzhang/.gitignore_global
-  pager = delta
-  commentchar = ";"
-  editor = nvim
+    excludesfile = /Users/rockyzhang/.gitignore_global
+    pager = delta
+    commentchar = ";"
+    editor = nvim
 [init]
-  defaultBranch = main
+    defaultBranch = main
 [commit]
-  verbose = true
+    verbose = true
 [branch]
-  sort = -committerdate
+    sort = -committerdate
+[tag]
+    sort = version:refname
 [push]
-  autoSetupRemote = true
+    autoSetupRemote = true
 [alias]
-  a = add -p
-  b = branch
-  c = commit
-  co = checkout
-  cp = cherry-pick
-  d = diff
-  lg = log --all --color --graph --abbrev-commit --date=short --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold dim blue)<%an>%Creset'
-  m = merge
-  p = push
-  r = rebase -i origin/main
-  s = status
+    a = add -p
+    b = branch
+    c = commit
+    co = checkout
+    cp = cherry-pick
+    d = diff
+    lg = log --all --color --graph --abbrev-commit --date=short --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold dim blue)<%an>%Creset'
+    m = merge
+    p = push
+    r = rebase -i origin/main
+    s = status
 [interactive]
-  diffFilter = delta --color-only
+    diffFilter = delta --color-only
 [delta]
-  navigate = true
-  hyperlinks = true
-  features = side-by-side line-numbers decorations interactive
-  syntax-theme = Monokai Extended
-  plus-style = syntax "#374026" ; diff line added
-  plus-emph-style = syntax "#495e21" ; diff text added
-  minus-style = syntax "#432f31" ; diff line deleted
-  minus-emph-stype = syntax "#642f3e" ; diff text deleted
-  ; For git's "--color-moved" feature. Ref: https://dandavison.github.io/delta/color-moved-support.html
-  map-styles = \
-    bold purple => syntax "#330f29", \
-    bold blue => syntax "#271344", \
-    bold cyan => syntax "#0d3531", \
-    bold yellow => syntax "#222f14"
+    navigate = true
+    hyperlinks = true
+    features = side-by-side line-numbers decorations interactive
+    syntax-theme = Monokai Extended
+    plus-style = syntax "#374026" ; diff line added
+    plus-emph-style = syntax "#495e21" ; diff text added
+    minus-style = syntax "#432f31" ; diff line deleted
+    minus-emph-stype = syntax "#642f3e" ; diff text deleted
+    ; For git's "--color-moved" feature. Ref: https://dandavison.github.io/delta/color-moved-support.html
+    map-styles = \
+        bold purple => syntax "#330f29", \
+        bold blue => syntax "#271344", \
+        bold cyan => syntax "#0d3531", \
+        bold yellow => syntax "#222f14"
 [delta "line-numbers"]
-  line-numbers = true
-  line-numbers-zero-style = "#90908a" ; line number
-  line-numbers-minus-style = "#f85149" ; gutter git added
-  line-numbers-plus-style = "#2ea043" ; gutter git deleted
-  line-numbers-left-style = "#636361" ; separator, 60% darken than the fg color #f8f8f2
-  line-numbers-right-style = "#636361" ; separator
+    line-numbers = true
+    line-numbers-zero-style = "#90908a" ; line number
+    line-numbers-minus-style = "#f85149" ; gutter git added
+    line-numbers-plus-style = "#2ea043" ; gutter git deleted
+    line-numbers-left-style = "#636361" ; separator, 60% darken than the fg color #f8f8f2
+    line-numbers-right-style = "#636361" ; separator
 [delta "decorations"]
-  file-style = "#fd9621" bold ul
-  file-decoration-style = none
-  file-added-label = [+]
-  file-copied-label = [==]
-  file-modified-label = [*]
-  file-removed-label = [-]
-  file-renamed-label = [->]
-  hunk-header-decoration-style = "#636361" box ul ; separator
+    file-style = "#fd9621" bold ul
+    file-decoration-style = none
+    file-added-label = [+]
+    file-copied-label = [==]
+    file-modified-label = [*]
+    file-removed-label = [-]
+    file-renamed-label = [->]
+    hunk-header-decoration-style = "#636361" box ul ; separator
 [delta "interactive"]
-  keep-plus-minus-markers = false
+    keep-plus-minus-markers = false
 [filter "lfs"]
-  clean = git-lfs clean -- %f
-  smudge = git-lfs smudge -- %f
-  process = git-lfs filter-process
-  required = true
+    clean = git-lfs clean -- %f
+    smudge = git-lfs smudge -- %f
+    process = git-lfs filter-process
+    required = true
 [credential]
-  helper = osxkeychain
+    helper = osxkeychain
 ; Use neovim as git diff and merge tool
 [diff]
-  tool = nvimdiff
-  colorMoved = default
-  algorithm = histogram
+    tool = nvimdiff
+    colorMoved = plain
+    algorithm = histogram
+    renames = true
 [difftool]
-  prompt = false
+    prompt = false
 [difftool "nvimdiff"]
-  cmd = nvim -d $LOCAL $REMOTE
+    cmd = nvim -d $LOCAL $REMOTE
 [merge]
-  tool = nvimdiff
-  ; Reference on zdiff3: https://ductile.systems/zdiff3/
-  conflictStyle = zdiff3
+    tool = nvimdiff
+    ; Reference on zdiff3: https://ductile.systems/zdiff3/
+    conflictStyle = zdiff3
 [mergetool]
-  prompt = true
+    prompt = true
 [mergetool "nvimdiff"]
-  cmd = nvim -c \"Gvdiffsplit!\" \"$MERGED\"
+    cmd = nvim -c \"Gvdiffsplit!\" \"$MERGED\"

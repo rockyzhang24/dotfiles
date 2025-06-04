@@ -51,6 +51,11 @@ return {
         },
         offsetEncoding = { 'utf-8', 'utf-16' },
     },
+    on_init = function(client, init_result)
+        if init_result.offsetEncoding then
+            client.offset_encoding = init_result.offsetEncoding
+        end
+    end,
     on_attach = function(client, bufnr)
         -- Create a command to switch between source file and header
         -- https://clangd.llvm.org/extensions.html#switch-between-sourceheader

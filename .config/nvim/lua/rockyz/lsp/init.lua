@@ -85,6 +85,8 @@ local function on_attach(client, bufnr)
     --  * grn in NORMAL maps to vim.lsp.buf.rename()
     --  * gra in NORMAL and VISUAL maps to vim.lsp.buf.code_action()
     --  * <C-s> in INSERT and SELECT maps to vim.lsp.buf.signature_help()
+    --  * an and in in VISUAL maps to outer and inner incremental selections, respectively, using
+    --  vim.lsp.buf.selection_range()
     -- Also, the following default diagnostic mappings are creataed:
     --  * ]d and [d: jump to the next or previous diagnostic
     --  * ]D and [D: jump to the last or first diagnostic

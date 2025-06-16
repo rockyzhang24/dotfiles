@@ -78,6 +78,7 @@ local plugins = {
         'nvim-treesitter/nvim-treesitter',
         {
             ['do'] = 'TSUpdate',
+            rev = 'v0.10.0',
         },
     },
     'nvim-treesitter/nvim-treesitter-context',

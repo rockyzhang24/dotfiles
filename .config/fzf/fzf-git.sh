@@ -1,5 +1,5 @@
 # Reference: https://github.com/junegunn/fzf-git.sh/blob/main/fzf-git.sh
-# till the commit 6651e719da630cd8e6e00191af7f225f6d13a801 on 2/19/2025
+# till the commit 3ec3e97d1cc75ec97c0ab923ed5aa567aee01a5e on 5/8/2025
 
 # shellcheck disable=SC2039
 [[ $0 = - ]] && return
@@ -92,7 +92,7 @@ if [[ $1 = --list ]]; then
     # Only supports GitHub for now
     case "$1" in
       commit)
-        hash=$(grep -o "[a-f0-9]\{7,\}" <<< "$2")
+        hash=$(grep -o "[a-f0-9]\{7,\}" <<< "$2" | head -n 1)
         path=/commit/$hash
         ;;
       branch|remote-branch)
@@ -121,9 +121,16 @@ if [[ $1 = --list ]]; then
       url=${remote_url%.git}
     fi
 
-    case "$(uname -s)" in
-      Darwin) open "$url$path"     ;;
-      *)      xdg-open "$url$path" ;;
+    case "$(uname -sr)" in
+      Darwin*)
+        open "$url$path"
+        ;;
+      *microsoft* | *Microsoft*)
+        explorer.exe "$url$path"
+        ;;
+      *)
+        xdg-open "$url$path"
+        ;;
     esac
     exit 0
   fi
@@ -131,22 +138,27 @@ fi
 
 if [[ $- =~ i ]] || [[ $1 = --run ]]; then # ----------------------------------
 
-# Redefine this function to change the options
-_fzf_git_fzf() {
-  fzf --multi \
-    --min-height=20 \
-    --color='header:underline' \
-    --preview-window='nohidden,right,60%' \
-    --bind='ctrl-/:change-preview-window(down,45%|hidden|)' "$@"
+if [[ $__fzf_git_fzf ]]; then
+  eval "$__fzf_git_fzf"
+else
+  # Redefine this function to change the options
+  _fzf_git_fzf() {
+    fzf --multi \
+      --min-height=20 \
+      --color='header:underline' \
+      --preview-window='nohidden,right,60%' \
+      --bind='ctrl-/:change-preview-window(down,45%|hidden|)' "$@"
 
-  # fzf --height 50% --tmux 90%,70% \
-  #   --layout reverse --multi --min-height 20+ --border \
-  #   --no-separator --header-border horizontal \
-  #   --border-label-pos 2 \
-  #   --color 'label:blue' \
-  #   --preview-window 'right,50%' --preview-border line \
-  #   --bind 'ctrl-/:change-preview-window(down,50%|hidden|)' "$@"
-}
+      # fzf --height 50% --tmux 90%,70% \
+      #   --layout reverse --multi --min-height 20+ --border \
+      #   --no-separator --header-border horizontal \
+      #   --border-label-pos 2 \
+      #   --color 'label:blue' \
+      #   --preview-window 'right,50%' --preview-border line \
+      #   --bind 'ctrl-/:change-preview-window(down,50%|hidden|)' "$@"
+    }
+fi
+
 
 # Check git repository
 _fzf_git_check() {
@@ -186,8 +198,12 @@ _fzf_git_files() {
 # Branches
 _fzf_git_branches() {
   _fzf_git_check || return
+
+  local shell
+  [[ -n "${BASH_VERSION:-}" ]] && shell=bash || shell=zsh
+
   bash "$__fzf_git" --list branches |
-  _fzf_git_fzf --ansi \
+  __fzf_git_fzf=$(declare -f _fzf_git_fzf) _fzf_git_fzf --ansi \
     --prompt '🌲 Branches> ' \
     --header-lines 2 \
     --tiebreak begin \
@@ -196,7 +212,7 @@ _fzf_git_branches() {
     --bind 'ctrl-/:change-preview-window(down,70%|hidden|)' \
     --bind "ctrl-o:execute-silent:bash \"$__fzf_git\" --list branch {}" \
     --bind "alt-a:change-prompt(🌳 All branches> )+reload:bash \"$__fzf_git\" --list all-branches" \
-    --bind "alt-h:become:LIST_OPTS=\$(cut -c3- <<< {} | cut -d' ' -f1) bash \"$__fzf_git\" --run hashes" \
+    --bind "alt-h:become:LIST_OPTS=\$(cut -c3- <<< {} | cut -d' ' -f1) $shell \"$__fzf_git\" --run hashes" \
     --bind "alt-enter:become:printf '%s\n' {+} | cut -c3- | sed 's@[^/]*/@@'" \
     --preview "git log --oneline --graph --date=short --color=$(__fzf_git_color .) --pretty='format:%C(auto)%cd %h%d %s' \$(cut -c3- <<< {} | cut -d' ' -f1) --" "$@" |
   sed 's/^\* //' | awk '{print $1}' # Slightly modified to work with hashes as well

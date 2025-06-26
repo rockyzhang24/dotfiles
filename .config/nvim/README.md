@@ -27,6 +27,7 @@ Functionalities I implemented:
 * Clean and visually pleasing quickfix window: [Quickfix window](./lua/rockyz/quickfix.lua) ([showcase](#quickfix-list-config))
 * Comprehensive set of lightning-fast fuzzy finders: [Fuzzy finders](./lua/rockyz/fzf.lua) ([showcase](#fuzzy-finders-config))
 * Handy togglable popup for lf file manager: [lf](./lua/rocky/lf.lua) ([showcase](#lf-file-manager-config))
+* Minimal but fully featured terminal: [Terminal](./lua/rocky/terminal.lua) ([showcase](#terminal-config))
 
 Plugins essential to my setup:
 
@@ -98,3 +99,7 @@ I implemented a series of fuzzy finders based on fzf.vim instead of using ready-
 ### lf file manager ([config](./lua/rockyz/lf.lua))
 
 ![lf](https://github.com/user-attachments/assets/b4055211-d0c4-4422-82b6-c447fb0d5902)
+
+### Terminal ([config](./lua/rockyz/terminal.lua))
+
+https://github.com/user-attachments/assets/37acb4f1-002c-418f-8c01-d2c5ecb44626

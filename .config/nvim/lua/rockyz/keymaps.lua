@@ -696,12 +696,6 @@ vim.keymap.set('t', '<M-r>', function()
     return '<C-\\><C-n>"' .. vim.fn.nr2char(vim.fn.getchar()) .. 'pi'
 end, { expr = true })
 
--- Toggle a small terminal at the bottom
--- <C-d> to kill
-vim.keymap.set({ 'n', 't' }, '<M-`>', function()
-    require('rockyz.utils.term').toggle()
-end)
-
 vim.keymap.set('n', '<Leader>x', function()
     require('rockyz.utils.term').run()
 end)

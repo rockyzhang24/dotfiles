@@ -89,6 +89,10 @@ local special_filetypes = {
         icon = icons.misc.term,
         title = 'Term',
     },
+    TerminalPanel = {
+        icon = icons.misc.term,
+        title = 'Terminals',
+    },
     TelescopePrompt = {
         icon = icons.misc.search,
         title = 'Telescope',

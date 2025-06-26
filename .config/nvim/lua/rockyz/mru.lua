@@ -1,6 +1,6 @@
 local M = {}
 
-local io_utils = require('rockyz.utils.io_utils')
+local io_utils = require('rockyz.utils.io')
 
 local db = vim.env.HOME .. '/.mru_file'
 local stat = vim.uv.fs_stat(db)

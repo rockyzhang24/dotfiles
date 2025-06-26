@@ -1,7 +1,7 @@
 -- Clangd requires compile_commands.json to work and the easiest way to generate it is to use CMake.
 -- How to use clangd C/C++ LSP in any project: https://gist.github.com/Strus/042a92a00070a943053006bf46912ae9
 
-local notify = require('rockyz.utils.notify_utils')
+local notify = require('rockyz.utils.notify')
 
 local function switch_source_header(bufnr)
     bufnr = bufnr == 0 and vim.api.nvim_get_current_buf() or bufnr

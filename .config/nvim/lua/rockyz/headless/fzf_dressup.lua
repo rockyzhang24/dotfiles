@@ -2,7 +2,7 @@
 -- line or ANSI color part of texts. And output processed lines to stdout.
 
 local devicons = require('nvim-web-devicons')
-local color = require('rockyz.utils.color_utils')
+local color = require('rockyz.utils.color')
 
 local source = vim.g.source
 local cwd = vim.uv.cwd()

@@ -1,4 +1,4 @@
-local notify = require('rockyz.utils.notify_utils')
+local notify = require('rockyz.utils.notify')
 local mod_cache = nil
 
 ---@param fname string

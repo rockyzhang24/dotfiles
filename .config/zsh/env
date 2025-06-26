@@ -72,6 +72,9 @@ export RIPGREP_CONFIG_PATH=$HOME/.config/ripgrep/ripgreprc
 # For narraw fonts like PragmataPro, add an extra space between the icon and the name
 export EZA_ICON_SPACING=2
 
+# Rust
+. "$HOME/.cargo/env"
+
 #
 # User-defined
 #

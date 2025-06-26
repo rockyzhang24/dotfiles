@@ -6,8 +6,8 @@
 
 local M = {}
 
-local io_utils = require('rockyz.utils.io_utils')
-local notify = require('rockyz.utils.notify_utils')
+local io_utils = require('rockyz.utils.io')
+local notify = require('rockyz.utils.notify')
 
 local term = {
     winid = -1,

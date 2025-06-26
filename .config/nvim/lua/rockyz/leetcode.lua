@@ -12,9 +12,9 @@
 -- (2). 1-two-sum-m1.js
 --
 
-local io_utils = require('rockyz.utils.io_utils')
-local system = require('rockyz.utils.system_utils')
-local notify = require('rockyz.utils.notify_utils')
+local io_utils = require('rockyz.utils.io')
+local system = require('rockyz.utils.system')
+local notify = require('rockyz.utils.notify')
 local icons = require('rockyz.icons')
 
 local cookie_file = vim.env.XDG_CONFIG_HOME .. '/leetcode-cookie'

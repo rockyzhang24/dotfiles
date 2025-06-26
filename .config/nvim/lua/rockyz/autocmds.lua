@@ -1,4 +1,4 @@
-local notify = require('rockyz.utils.notify_utils')
+local notify = require('rockyz.utils.notify')
 
 -- Dotfiles setup
 local function update_git_env()

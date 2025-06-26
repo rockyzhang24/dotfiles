@@ -1,4 +1,4 @@
-local notify = require('rockyz.utils.notify_utils')
+local notify = require('rockyz.utils.notify')
 
 vim.g.mapleader = ' '
 
@@ -295,9 +295,9 @@ end)
 --
 
 -- Diff windows
-vim.keymap.set('n', 'qd', require('rockyz.utils.win_utils').close_diff)
+vim.keymap.set('n', 'qd', require('rockyz.utils.win').close_diff)
 -- Diff windows in all tabs
-vim.keymap.set('n', 'qD', [[<Cmd>tabdo lua require("rockyz.utils.win_utils").close_diff()<CR>]])
+vim.keymap.set('n', 'qD', [[<Cmd>tabdo lua require("rockyz.utils.win").close_diff()<CR>]])
 -- Current tab
 vim.keymap.set('n', 'qt', '<Cmd>tabclose<CR>')
 -- Current window
@@ -371,11 +371,11 @@ end, { silent = false, expr = true })
 --
 
 -- Switch to the alternate buffer or the first available file in MRU list
-vim.keymap.set('n', '<Tab>', require('rockyz.utils.buf_utils').switch_last_buf)
+vim.keymap.set('n', '<Tab>', require('rockyz.utils.buf').switch_last_buf)
 -- Delete the current buffer and switch back to the previous one
-vim.keymap.set('n', '<Leader>bd', require('rockyz.utils.buf_utils').bufdelete)
+vim.keymap.set('n', '<Leader>bd', require('rockyz.utils.buf').bufdelete)
 -- Delete all the other unmodified buffers
-vim.keymap.set('n', '<Leader>bo', require('rockyz.utils.buf_utils').bufdelete_other)
+vim.keymap.set('n', '<Leader>bo', require('rockyz.utils.buf').bufdelete_other)
 
 --
 -- Copy and paste
@@ -408,10 +408,10 @@ vim.keymap.set('n', 'P', 'P=`]')
 vim.keymap.set('x', 'p', '"_c<ESC>p')
 
 vim.keymap.set('n', '<Leader>p', function()
-    require('rockyz.utils.misc_utils').putline(vim.v.count1 .. ']p')
+    require('rockyz.utils.misc').putline(vim.v.count1 .. ']p')
 end)
 vim.keymap.set('n', '<Leader>P', function()
-    require('rockyz.utils.misc_utils').putline(vim.v.count1 .. '[p')
+    require('rockyz.utils.misc').putline(vim.v.count1 .. '[p')
 end)
 
 -- Select the last changed (or pasted) text
@@ -658,8 +658,8 @@ vim.keymap.set('n', '<M-Tab>', function()
     require('rockyz.mru_win').goto_recent()
 end)
 -- Split
-vim.keymap.set('n', '<Leader>-', require('rockyz.utils.win_utils').split)
-vim.keymap.set('n', '<Leader><BSlash>', require('rockyz.utils.win_utils').vsplit)
+vim.keymap.set('n', '<Leader>-', require('rockyz.utils.win').split)
+vim.keymap.set('n', '<Leader><BSlash>', require('rockyz.utils.win').vsplit)
 -- Move current window to new tab
 vim.keymap.set('n', '<Leader>wt', '<C-w>T')
 -- Duplicate the current window in a new tab
@@ -674,7 +674,7 @@ vim.keymap.set('n', '<Leader>w=', '<C-w>=')
 -- Close windows by giving the window numbers
 vim.keymap.set('n', '<Leader>wq', ':CloseWin<Space>')
 -- Switch the layout (horizontal and vertical) of the TWO windows
-vim.keymap.set('n', '<Leader>wl', require('rockyz.utils.win_utils').switch_layout)
+vim.keymap.set('n', '<Leader>wl', require('rockyz.utils.win').switch_layout)
 -- Close all other windows (not including floating ones)
 vim.keymap.set('n', '<Leader>wo', function()
     return vim.fn.len(vim.fn.filter(vim.api.nvim_tabpage_list_wins(0), function(_, v)
@@ -682,7 +682,7 @@ vim.keymap.set('n', '<Leader>wo', function()
     end)) > 1 and '<C-w>o' or ''
 end, { expr = true })
 -- Maximize and restore the current window
-vim.keymap.set('n', '\\m', require('rockyz.utils.win_utils').win_maximize_toggle)
+vim.keymap.set('n', '\\m', require('rockyz.utils.win').win_maximize_toggle)
 
 --
 -- Terminal

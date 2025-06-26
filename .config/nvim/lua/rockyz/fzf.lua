@@ -8,7 +8,7 @@
 -- <Leader>fo : Old files
 -- <Leader>f. : Files for my dotfiles
 -- <Leader>fb : Buffers
--- <C-m>  : Buffers and MRU
+-- <M-m>  : Buffers and MRU
 
 -- <Leader>f/ : Search history
 -- <Leader>f: : Command history
@@ -111,13 +111,13 @@
 --
 
 local qf = require('rockyz.quickfix')
-local color = require('rockyz.utils.color_utils')
-local io_utils = require('rockyz.utils.io_utils')
+local color = require('rockyz.utils.color')
+local io_utils = require('rockyz.utils.io')
 local icons = require('rockyz.icons')
-local notify = require('rockyz.utils.notify_utils')
-local system = require('rockyz.utils.system_utils')
-local ui = require('rockyz.utils.ui_utils')
-local api = require('rockyz.utils.api_utils')
+local notify = require('rockyz.utils.notify')
+local system = require('rockyz.utils.system')
+local ui = require('rockyz.utils.ui')
+local api = require('rockyz.utils.api')
 local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
 local mru = require('rockyz.mru')
 
@@ -585,7 +585,7 @@ local function buffers(from_resume)
                 -- ALT-BS to delete selected buffers
                 for i = 2, #lines do
                     local bufnr = tonumber(string.match(lines[i], '%[(%d+)%]'))
-                    require('rockyz.utils.buf_utils').bufdelete({ bufnr = bufnr, wipe = true })
+                    require('rockyz.utils.buf').bufdelete({ bufnr = bufnr, wipe = true })
                 end
             else
                 -- ENTER with only a single selection: switch to the buffer
@@ -710,7 +710,7 @@ local function bufs_and_mru(from_resume)
                 local cmd = bufnr and ('buffer ' .. bufnr) or ('edit ' .. filename)
                 if key == 'alt-bs' then
                     if bufnr then
-                        require('rockyz.utils.buf_utils').bufdelete({ bufnr = tonumber(bufnr), wipe = true })
+                        require('rockyz.utils.buf').bufdelete({ bufnr = tonumber(bufnr), wipe = true })
                     end
                 else
                     vim.cmd(action and (action .. ' | ' .. cmd) or cmd)
@@ -807,7 +807,7 @@ local function bufs_and_mru(from_resume)
     fzf(spec, handle_contents)
 end
 
-vim.keymap.set('n', '<C-m>', function()
+vim.keymap.set('n', '<M-m>', function()
     run(bufs_and_mru)
 end)
 

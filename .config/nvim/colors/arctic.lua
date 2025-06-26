@@ -7,7 +7,7 @@
 -- 2. VSCode theme color: https://code.visualstudio.com/api/references/theme-color
 --
 
-local utils = require('rockyz.utils.color_utils')
+local utils = require('rockyz.utils.color')
 
 local red = '#f44747'
 local dark_red = '#d16969'

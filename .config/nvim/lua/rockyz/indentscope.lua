@@ -84,7 +84,8 @@ local config = {
     indent_at_cursor_col = true,
 }
 
-local symbol = require('rockyz.icons').lines.double_dash_vertical or '╎'
+local ok, icons = pcall(require, 'rockyz.icons')
+local symbol_icon = ok and icons.lines.double_dash_vertical or '╎'
 
 local ns_id = vim.api.nvim_create_namespace('rockyz.indentscope.symbols')
 
@@ -296,7 +297,7 @@ local function draw_scope(scope, opts)
         hl_mode = 'combine',
         priority = config.priority,
         right_gravity = false,
-        virt_text = { { symbol, 'IndentScopeSymbol' } },
+        virt_text = { { symbol_icon, 'IndentScopeSymbol' } },
         virt_text_win_col = col,
         virt_text_pos = 'overlay',
         virt_text_repeat_linebreak = true,

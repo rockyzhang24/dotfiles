@@ -5,13 +5,14 @@
 --
 -- This is implemented by using window-local extmark
 
-local icon = require('rockyz.icons').misc.lightbulb
+local ok, icons = pcall(require, 'rockyz.icons')
+local bulb_icon = ok and icons.misc.lightbulb or ''
 
 local method = 'textDocument/codeAction'
 
 local opts = {
     virt_text = {
-        { icon .. ' ', 'LightBulb' },
+        { bulb_icon .. ' ', 'LightBulb' },
     },
     hl_mode = 'combine',
     virt_text_win_col = 0,

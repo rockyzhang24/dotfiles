@@ -1,9 +1,9 @@
 local M = {}
 
-local icons = require('rockyz.icons')
+local ok, icons = pcall(require, 'rockyz.icons')
 
 local MAX_FNAME_LEN = 50
-local TRUNCATE_PREFIX = icons.misc.ellipsis
+local TRUNCATE_PREFIX = ok and icons.misc.ellipsis or ''
 
 function M.normalize(item)
     local fname_fmt1 = '%-' .. MAX_FNAME_LEN .. 's'

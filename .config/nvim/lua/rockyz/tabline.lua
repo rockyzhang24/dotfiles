@@ -6,8 +6,10 @@
 
 local M = {}
 
-local icons = require('rockyz.icons')
+local ok, icons = pcall(require, 'rockyz.icons')
 local special_filetypes = require('rockyz.special_filetypes')
+
+local file_icon = ok and icons.misc.file or ''
 
 local cached_hls = {}
 
@@ -59,7 +61,7 @@ local function get_icon_and_title(winid, is_cur, title_hl)
         end
         return string.format('%%#%s#%s%%#%s# %s', icon_hl, icon, title_hl, title)
     end
-    return icons.misc.file .. title
+    return file_icon .. title
 end
 
 function M.render()

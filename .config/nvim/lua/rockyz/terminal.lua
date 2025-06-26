@@ -13,7 +13,9 @@
 
 local M = {}
 
-local icons = require('rockyz.icons')
+local ok, icons = pcall(require, 'rockyz.icons')
+
+local term_icon = ok and icons.misc.term or ''
 
 local state = {
     -- Terminal window
@@ -256,7 +258,7 @@ local function create_terminal()
         count - 1,
         count,
         false,
-        { '[' .. count .. '] ' .. icons.misc.term .. ' Terminal'}
+        { '[' .. count .. '] ' .. term_icon .. ' Terminal'}
     )
 end
 
@@ -337,7 +339,7 @@ M.rename = function()
     vim.ui.input({ prompt = "[Terminal] Enter name: " }, function(input)
         local cur_index = state.cur_index
         vim.api.nvim_buf_set_lines(state.panel_buf, cur_index - 1, cur_index, false, {
-            '[' .. cur_index .. '] ' .. icons.misc.term .. ' ' .. input
+            '[' .. cur_index .. '] ' .. term_icon .. ' ' .. input
         })
     end)
 end

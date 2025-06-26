@@ -109,6 +109,9 @@ local function set_autocmd()
                 if win == state.term_win then
                     state.term_height = vim.api.nvim_win_get_height(state.term_win)
                 end
+                if win == state.panel_win then
+                    state.panel_width = vim.api.nvim_win_get_width(state.panel_win)
+                end
             end
         end,
     })

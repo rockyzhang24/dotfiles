@@ -665,10 +665,14 @@ vim.keymap.set('n', '<Leader>wt', '<C-w>T')
 -- Duplicate the current window in a new tab
 vim.keymap.set('n', '<Leader>wT', ':tab split<CR>', { silent = true })
 -- Resize
-vim.keymap.set('n', '<Leader><Down>', '<C-w>5-')
-vim.keymap.set('n', '<Leader><Up>', '<C-w>5+')
-vim.keymap.set('n', '<Leader><Left>', '<C-w>5<')
-vim.keymap.set('n', '<Leader><Right>', '<C-w>5>')
+vim.keymap.set('n', '<C-Down>', '<C-w>5-')
+vim.keymap.set('n', '<C-Up>', '<C-w>5+')
+vim.keymap.set('n', '<C-Left>', '<C-w>5<')
+vim.keymap.set('n', '<C-Right>', '<C-w>5>')
+vim.keymap.set('t', '<C-Down>', '<C-\\><C-n><C-w>5-i')
+vim.keymap.set('t', '<C-Up>', '<C-\\><C-n><C-w>5+i')
+vim.keymap.set('t', '<C-Left>', '<C-\\><C-n><C-w>5<i')
+vim.keymap.set('t', '<C-Right>', '<C-\\><C-n><C-w>5>i')
 -- Balance size
 vim.keymap.set('n', '<Leader>w=', '<C-w>=')
 -- Close windows by giving the window numbers

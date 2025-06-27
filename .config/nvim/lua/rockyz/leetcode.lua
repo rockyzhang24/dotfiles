@@ -6,10 +6,14 @@
 -- (1). a md file containing question description
 -- (2). a solution file with code snippet
 --
--- For example, run :LeetCode https://leetcode.com/two-sum/description m1.js will create a directory
--- ~/oj/leetcode-js. Then it genreates two files under this directory
+-- For example, run :LeetCode https://leetcode.com/problems/two-sum/description/ method-1.js will
+-- create a directory ~/oj/leetcode-js. Then it genreates two files under this directory
 -- (1). 1-two-sum.md
--- (2). 1-two-sum-m1.js
+-- (2). 1-two-sum-method-1.js
+--
+-- Keymap <Leader>ol (ol means oj leetcode) will try to fetch the question url from Chrome's current
+-- tab or the system clipboard, and then insert partial command ":LeetCode <url> " in the command
+-- line.
 --
 
 local io_utils = require('rockyz.utils.io')
@@ -176,8 +180,8 @@ local function get_question(title_slug)
 end
 
 ---@param question_url string
----@param method_id string "m1" in m1.cpp
----@param lang string "cpp" in m1.cpp
+---@param method_id string "method-1" in method-1.cpp
+---@param lang string "cpp" in method-1.cpp
 local function run(question_url, method_id, lang)
     get_cookie()
     if not cached_cookie then
@@ -335,14 +339,41 @@ local function run(question_url, method_id, lang)
     vim.cmd.edit(filepath)
 end
 
+-- User command
 vim.api.nvim_create_user_command('LeetCode', function(args)
     if #args.fargs ~= 2 then
         notify.warn('[LeetCode] Expected 2 arguments: question URL and filename')
         return
     end
-    -- The first arg is the question url; the second arg is a filename like m1.cpp representing
+    -- The first arg is the question url; the second arg is a filename like method-1.cpp representing
     -- method 1, cpp solution.
     local question_url, filename = unpack(args.fargs)
     local method_id, ext = filename:match('^(.*)%.(.*)$')
     run(question_url, method_id, ext)
 end, { nargs = '+' })
+
+local function get_url_handler(obj)
+    if obj.code ~= 0 or not obj.stdout:match('^https://leetcode.com/problems/') then
+        return
+    end
+    return obj.stdout:gsub('\n$', '')
+end
+
+local function get_url_from_chrome()
+    local obj = system.sync({
+        'osascript',
+        '-e',
+        'tell application "Google Chrome" to get URL of active tab of front window',
+    }, { text = true })
+    return get_url_handler(obj)
+end
+
+local function get_url_from_clipboard()
+    local obj = system.sync({ 'pbpaste' }, { text = true })
+    return get_url_handler(obj)
+end
+
+vim.keymap.set('n', '<Leader>ol', function()
+    local url = get_url_from_chrome() or get_url_from_clipboard()
+    return url and ':LeetCode ' .. url .. ' ' or ':LeetCode '
+end, { expr = true })

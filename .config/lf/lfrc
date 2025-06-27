@@ -17,7 +17,7 @@ set ignorecase
 set anchorfind
 set findlen 1
 set tabstop 4
-set info size
+set info size:custom
 set sixel
 set preview
 set previewer ~/.config/lf/previewer
@@ -229,6 +229,40 @@ cmd zi ${{
 # Git for dotfiles
 cmd dot ${{
     git --git-dir=/Users/rockyzhang/dotfiles/ --work-tree=/Users/rockyzhang $@
+}}
+
+# Display git indicators in the info column
+# Ref: https://github.com/gokcehan/lf/blob/master/doc.md#loading-directory
+# on-load will be called automatically after loading a directory. The files inside the current
+# directory will be the arguments.
+cmd on-load &{{
+    cd "$(dirname "$1")" || exit 1
+    git_cmd="git"
+    if [[ $PWD == $HOME/.config || $PWD == $HOME/.config/* && $PWD != $HOME/.config/nvim/pack* ]]; then
+        # For the bare repo managing my dotfiles
+        git_cmd="git --git-dir=$HOME/dotfiles/ --work-tree=$HOME"
+    fi
+    [ "$(eval $git_cmd rev-parse --is-inside-git-dir 2>/dev/null)" = false ] || exit 0
+
+    cmds=""
+
+    for file in "$@"; do
+        case "$file" in
+            */.git|*/.git/*) continue;;
+        esac
+
+        status=$(eval "$git_cmd" -c color.status=always status -s --ignored -- "$file" | cat -v | awk '{print $1}' | sed 's/\^\[/\\033/g' | head -n1)
+
+        if [ -n "$status" ]; then
+            cmds="${cmds}addcustominfo \"${file}\" \"$status\"; "
+        else
+            cmds="${cmds}addcustominfo \"${file}\" ''; "
+        fi
+    done
+
+    if [ -n "$cmds" ]; then
+        lf -remote "send $id :$cmds"
+    fi
 }}
 
 #

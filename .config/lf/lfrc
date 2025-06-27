@@ -251,10 +251,16 @@ cmd on-load &{{
             */.git|*/.git/*) continue;;
         esac
 
-        status=$(eval "$git_cmd" -c color.status=always status -s --ignored -- "$file" | cat -v | awk '{print $1}' | sed 's/\^\[/\\033/g' | head -n1)
+        status=$(
+            eval "$git_cmd" -c color.status=always status -s --ignored -- "$file" |
+            cat -v |
+            sed -E 's/^(..[^[:space:]]*|[^[:space:]]*[[:space:]]?)[[:space:]]+(.*)$/\1/' |
+            sed 's/\^\[/\\033/g' |
+            head -n1
+        )
 
         if [ -n "$status" ]; then
-            cmds="${cmds}addcustominfo \"${file}\" \"$status\"; "
+            cmds="${cmds}addcustominfo \"${file}\" \"\\033[33m[\\033[0m$status\\033[33m]\\033[0m\"; "
         else
             cmds="${cmds}addcustominfo \"${file}\" ''; "
         fi

@@ -180,9 +180,9 @@ local function get_question(title_slug)
 end
 
 ---@param question_url string
----@param method_id string "method-1" in method-1.cpp
+---@param label string "method-1" in method-1.cpp
 ---@param lang string "cpp" in method-1.cpp
-local function run(question_url, method_id, lang)
+local function run(question_url, label, lang)
     get_cookie()
     if not cached_cookie then
         notify.error('[LeetCode] Cookie not found. Check ~/.config/leetcode-cookie.')
@@ -311,7 +311,8 @@ local function run(question_url, method_id, lang)
     io_utils.write_file(md_path, table.concat(question_description, '\n'))
 
     -- Create a solution file and open it
-    local filename = string.format('%s-%s-%s.%s', q.id, q.title_slug, method_id, lang)
+    local fmt_str = '%s-%s' .. (label == '' and '' or '-') .. '%s.%s'
+    local filename = string.format(fmt_str, q.id, q.title_slug, label, lang)
     local filepath = dirpath .. '/' .. filename
     stat = vim.uv.fs_stat(filepath)
     if not stat then
@@ -342,14 +343,18 @@ end
 -- User command
 vim.api.nvim_create_user_command('LeetCode', function(args)
     if #args.fargs ~= 2 then
-        notify.warn('[LeetCode] Expected 2 arguments: question URL and filename')
+        notify.warn('[LeetCode] Expected 2 arguments: question URL and label.ext')
         return
     end
-    -- The first arg is the question url; the second arg is a filename like method-1.cpp representing
-    -- method 1, cpp solution.
-    local question_url, filename = unpack(args.fargs)
-    local method_id, ext = filename:match('^(.*)%.(.*)$')
-    run(question_url, method_id, ext)
+    -- The first arg is the question url; the second arg is label and extension to construct the
+    -- filename, e.g., method-1.cpp representing method 1 and cpp file.
+    local question_url, second = unpack(args.fargs)
+    local label, ext = second:match('^(.*)%.(.*)$')
+    if not label and not ext then
+        label = ''
+        ext = second
+    end
+    run(question_url, label, ext)
 end, { nargs = '+' })
 
 local function get_url_handler(obj)

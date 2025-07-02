@@ -248,14 +248,16 @@ local function run(question_url, label, lang)
     }, { stdin = q.content })
     if html2md_obj.code ~= 0 then
         notify.error({
-            '[LeetCode] pandoc failed',
+            '[LeetCode] pandoc failed to convert HTML to markdown',
             html2md_obj.stderr,
             html2md_obj.stdout,
         })
         return
     end
-    -- Strip image style part
-    local content = html2md_obj.stdout:gsub('!%[(.-)%]%((.-)%)%b{}', '!%[%1%](%2)')
+    -- Strip image style and data-keyword
+    local content = html2md_obj.stdout
+        :gsub('!%[(.-)%]%((.-)%)%b{}', '!%[%1%](%2)')
+        :gsub('\n%[(.-)%]{keyword=.-}', ' %1')
 
     -- [3]. Topic tags
 

@@ -42,6 +42,7 @@ local plugins = {
     'inkarkat/vim-mark',
     'justinmk/vim-sneak',
     'andrewferrier/debugprint.nvim',
+    'uga-rosa/ccc.nvim',
 
     -- LSP
     'smjonas/inc-rename.nvim',

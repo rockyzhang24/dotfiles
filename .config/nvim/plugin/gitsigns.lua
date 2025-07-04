@@ -39,6 +39,8 @@ gitsigns.setup({
         [9] = '₉',
         ['+'] = '₊',
     },
+    gh = true,
+    current_line_blame = false,
 
     on_attach = function(bufnr)
 
@@ -49,12 +51,20 @@ gitsigns.setup({
         end
 
         -- Hunk navigation
-        buf_map('n', ']h', function()
-            gitsigns.nav_hunk('next', { target = 'all' })
+        buf_map('n', ']c', function()
+            if vim.wo.diff then
+                vim.cmd.normal({ '[c', bang = true })
+            else
+                gitsigns.nav_hunk('next', { target = 'all' })
+            end
         end)
 
-        buf_map('n', '[h', function()
-            gitsigns.nav_hunk('prev', { target = 'all' })
+        buf_map('n', '[c', function()
+            if vim.wo.diff then
+                vim.cmd.normal({ ']c', bang = true })
+            else
+                gitsigns.nav_hunk('prev', { target = 'all' })
+            end
         end)
 
         -- Stage hunk or buffer
@@ -90,6 +100,17 @@ gitsigns.setup({
         buf_map('n', '<Leader>hD', function()
             gitsigns.diffthis('~')
         end)
+
+        -- Show the commit with revision of the current line blame's sha
+        -- Available when current_lien_blame is toggled on
+        buf_map('n', '<Leader>hc', function()
+            if vim.b.gitsigns_blame_line_dict then
+                gitsigns.show_commit(vim.b.gitsigns_blame_line_dict.sha)
+            end
+        end)
+
+        -- Change base revision to diff against, e.g., ~2
+        buf_map('n', '<leader>hB', ':Gitsigns change_base ~')
 
         -- Toggle
         buf_map('n', '\\dw', gitsigns.toggle_word_diff) -- toggle the word_diff in the buffer

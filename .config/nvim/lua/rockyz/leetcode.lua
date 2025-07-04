@@ -254,10 +254,17 @@ local function run(question_url, label, lang)
         })
         return
     end
-    -- Strip image style and data-keyword
+    -- Strip useless parts
     local content = html2md_obj.stdout
+        -- image style
         :gsub('!%[(.-)%]%((.-)%)%b{}', '!%[%1%](%2)')
+        -- data-keyword
         :gsub('\n%[(.-)%]{keyword=.-}', ' %1')
+        -- example-block
+        :gsub(':::\n', '')
+        :gsub(':::.-example%-block\n', '')
+        -- example-io
+        :gsub('%[([^\n]-)%]{%.example%-io}', '%1')
 
     -- [3]. Topic tags
 

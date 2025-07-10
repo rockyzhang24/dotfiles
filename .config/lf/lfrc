@@ -5,27 +5,28 @@
 # Options
 #
 
-set shell bash
-set shellopts '-eu'
-set ifs "\n"
-set scrolloff 10
-set icons
-# set drawbox
-set incsearch
-set smartcase
-set ignorecase
 set anchorfind
-set findlen 1
-set tabstop 4
-set info size:custom
-set sixel
-set preview
-set previewer ~/.config/lf/previewer
 set cleaner ~/.config/lf/cleaner
 set dircounts
+# set drawbox
+set findlen 1
+set hiddenfiles ".DS_Store:.git"
+set icons
+set ifs "\n"
+set ignorecase
+set incsearch
+set info size:custom
+set preview
+set previewer ~/.config/lf/previewer
+set scrolloff 10
+set shell bash
+set shellopts '-eu'
+set sixel
+set smartcase
+set tabstop 4
+
 setlocal ~/Downloads sortby "atime"
 setlocal ~/Downloads reverse
-set hiddenfiles ".DS_Store:.git"
 
 #
 # Commands
@@ -271,60 +272,69 @@ cmd on-load &{{
     fi
 }}
 
+# Toggle selection of the VISUAL selected files
+cmd visual-toggle &{{
+    while read -r file; do
+        lf -remote "send $id toggle \"$file\""
+    done <<< "$fv"
+    lf -remote "send $id visual-discard"
+}}
+
 #
 # Mappings
 #
 
 # Remove some defaults
-map gh
-map d
-map y
-map zh
+nmap gh
+nmap d
+nmap y
+nmap zh
 
-# <space> is used as the leader key
+# <space> will be used as the leader key
 map <space>
 
 # enter to open
-map <enter> open
+nmap <enter> open
 
-map z. set hidden!
-map <tab> :toggle; down
-map <c-s> :toggle
-map yy copy
-map yn copy-filename
-map yP copy-absolute-path
-map d delete
-map T trash
+nmap z. set hidden!
+nmap <tab> :toggle; down
+nmap <c-s> :toggle
+vmap <c-s> visual-toggle
+nmap yy copy
+nmap yn copy-filename
+nmap yP copy-absolute-path
+nmap d delete
+nmap T trash
 # list the size of each item in the current directory
-map U !printf "\n"; du -csh *
-map <c-t> fzf-toggle-select
-map <c-f> fzf-file
-map <c-j> fzf-cd
+nmap U !printf "\n"; du -csh *
+nmap <c-t> fzf-toggle-select
+nmap <c-f> fzf-file
+nmap <c-j> fzf-cd
 # give a name and then make a directory
-map <c-n> push :mkdir<space>
-map <a-n> new-folder-with-selection
-map x cut
-# give a name and then use neovim to edit it
-map V push :!nvim<space>
+nmap <c-n> push :mkdir<space>
+nmap <a-n> new-folder-with-selection
+nmap x cut
+# give a name and then open neovim to edit it
+nmap <space>v push :!nvim<space>
 
 # Navigate among the parent directories
-map [ push hkl
-map ] push hjl
+nmap [ push hkl
+nmap ] push hjl
 
 # Rename
-map r
-map A rename # at the very end
-map I push A<c-a> # at the very beginning
-map rn push A<c-u> # rename the filename
-map re push A<c-f><c-k> # rename the extension
-map <c-r> bulk-rename
+nmap r
+nmap A rename # at the very end
+nmap I push A<c-a> # at the very beginning
+nmap rn push A<c-u> # rename the filename
+nmap re push A<c-f><c-k> # rename the extension
+nmap <c-r> bulk-rename
 
 # compress (give a name like foo and it will compress the selected items to foo.zip)
-map <space>c push :zip<space>
+nmap <space>c push :zip<space>
 # extract
-map <space>x extract
+nmap <space>x extract
 # Open the directory in Finder on macOS
-map <space>f &if [[ -d $f ]]; then open $f; fi
+nmap <space>f &if [[ -d $f ]]; then open $f; fi
 
 cmap <tab> cmd-menu-complete
 cmap <backtab> cmd-menu-complete-back

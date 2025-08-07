@@ -43,6 +43,7 @@ local plugins = {
     'justinmk/vim-sneak',
     'andrewferrier/debugprint.nvim',
     'uga-rosa/ccc.nvim',
+    'stefandtw/quickfix-reflector.vim',
 
     -- LSP
     'smjonas/inc-rename.nvim',

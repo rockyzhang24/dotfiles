@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+# Ref: https://brettterpstra.com/2025/08/16/lsgrep-rapid-recursive-file-search
+#
+# Find files matching a search pattern in current directory
+# `lsgrep foo bar` will find any files whose name contains foo and bar, e.g., the file foo_bar.sh
+
+# Convert search to regex: change .X to \.X, ? to ., and space or * to .*?
+NEEDLE=$(echo "$@" | sed -E 's/\.([a-z0-9]+)$/\\\.\1/'|sed -E 's/\?/./'| sed -E 's/[ *]/.*?/g')
+command fd --hidden --max-depth 5 --regex "$NEEDLE" .

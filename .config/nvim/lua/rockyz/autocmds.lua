@@ -242,6 +242,9 @@ vim.api.nvim_create_autocmd('BufNewFile', {
     group = vim.api.nvim_create_augroup('rockyz.templates', { clear = true }),
     desc = 'Load template file',
     callback = function(args)
+        if not vim.bo[args.buf].modifiable then
+            return
+        end
         local home = os.getenv('HOME')
         local fname = vim.fn.fnamemodify(args.file, ':t')
         local ext = vim.fn.fnamemodify(args.file, ':e')

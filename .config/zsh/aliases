@@ -38,6 +38,7 @@ alias sc="shellcheck"
 alias iina="open -a 'IINA'"
 alias highlight="highlight --out-format=truecolor --force -s darkplus"
 alias ncdu="ncdu --color dark -rr -x --exclude .git --exclude node_modules"
+alias net="networkQuality" # Internet speed test
 
 # Kitty
 alias kcat="kitty +kitten icat"

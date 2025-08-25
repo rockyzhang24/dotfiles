@@ -1,16 +1,10 @@
 font-family = ""
-font-family = "SF Mono"
-font-style-italic = "Regular Italic"
-font-size = 14
+font-family = "Fira Code"
+font-size = 13
+adjust-underline-position = 2
+adjust-underline-thickness = 150%
 
-adjust-cell-width = -1
-adjust-cell-height = 4
-adjust-cursor-height = 4
-adjust-underline-position = 3
-adjust-underline-thickness = 30%
-adjust-cursor-thickness = 150%
-
-window-title-font-family = "SF Mono"
+window-title-font-family = "Fira Code"
 
 # Disable ligatures
 font-feature = -calt
@@ -19,14 +13,14 @@ font-feature = -dlig
 
 window-padding-x = 2
 window-padding-y = 0
-window-decoration = auto
+window-decoration = none
 background-opacity = 1
 
-theme = arctic
+theme = monokai
 
 # macOS specific
 macos-option-as-alt = left
-macos-titlebar-style = transparent
+macos-titlebar-style = native
 font-thicken = true
 mouse-hide-while-typing = true
 

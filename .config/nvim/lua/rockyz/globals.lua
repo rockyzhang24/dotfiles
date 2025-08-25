@@ -1,4 +1,4 @@
-vim.g.colorscheme = 'arctic'
+vim.g.colorscheme = 'monokai'
 vim.g.transparent = false
 vim.g.border_enabled = false
 vim.g.border_style = vim.g.border_enabled and 'rounded' or 'none'

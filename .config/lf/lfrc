@@ -261,7 +261,7 @@ cmd on-load &{{
         )
 
         if [ -n "$status" ]; then
-            cmds="${cmds}addcustominfo \"${file}\" \"\\033[33m[\\033[0m$status\\033[33m]\\033[0m\"; "
+            cmds="${cmds}addcustominfo \"${file}\" \"\\033[37m[\\033[0m$status\\033[37m]\\033[0m\"; "
         else
             cmds="${cmds}addcustominfo \"${file}\" ''; "
         fi

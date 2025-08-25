@@ -1,29 +1,29 @@
 # arctic theme
 
---colors
-# #c586c0
-path:fg:197,134,192
---colors
-# 90ee8f
-line:fg:144,238,143
---colors
-# 97f5ff
-column:fg:151,245,255
---colors
-# #f44747
-match:fg:244,71,71
+# --colors
+# # #c586c0
+# path:fg:197,134,192
+# --colors
+# # 90ee8f
+# line:fg:144,238,143
+# --colors
+# # 97f5ff
+# column:fg:151,245,255
+# --colors
+# # #f44747
+# match:fg:244,71,71
 
 # monokai theme
 
-# --colors
-# # #67d8ef
-# path:fg:103,216,239
-# --colors
-# # Number (#ac80ff)
-# line:fg:172,128,255
-# --colors
-# # Number (#a6e22c)
-# column:fg:166,226,44
-# --colors
-# # #f92472
-# match:fg:249,36,114
+--colors
+# #67d8ef
+path:fg:103,216,239
+--colors
+# Number (#ac80ff)
+line:fg:172,128,255
+--colors
+# Number (#a6e22c)
+column:fg:166,226,44
+--colors
+# #f92472
+match:fg:249,36,114

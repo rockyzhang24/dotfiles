@@ -2,7 +2,7 @@
 
 # Color theme for fzf, bat, etc
 # Options: arctic, monokai
-export COLOR_THEME="arctic"
+export COLOR_THEME="monokai"
 
 # Terminal backgroud is transparent or not
 export TRANSPARENT=false

@@ -1,10 +1,10 @@
 [colors]
 foreground = '#f8f8f2'
-background = '#272822'
-cursor_bg = '#ffdd33'
-cursor_fg = '#272822'
+background = '#282923'
+cursor_bg = '#e3e3dc'
+cursor_fg = '#000000'
 ansi = [
-    '#272822',
+    '#282923',
     '#f92472',
     '#a6e22c',
     '#e7db74',

@@ -14,6 +14,34 @@ FD="fd --hidden --follow $FD_EXCLUDE"
 # Use fd instead of default find
 export FZF_DEFAULT_COMMAND="$FD --type f --type l"
 
+# Theme
+arctic="`
+`dark,`
+`fg:-1,bg:-1,`
+`fg+:#ffffff:bold,bg+:#04395e,gutter:-1,`
+`hl:#ffdd33:bold,`
+`hl+:#ffdd33:bold,`
+`query:-1,`
+`disabled:#808080,`
+`border:-1,`
+`separator:#454545,`
+`label:#4ec9b0,`
+`header:#f9ae28:underline:bold \
+"
+monokai="`
+`dark,`
+`fg:-1,bg:-1,`
+`fg+:#ffffff:bold,bg+:#414339,gutter:-1,`
+`hl:#ffdd33:bold,`
+`hl+:#ffdd33:bold,`
+`query:-1,`
+`disabled:#808080,`
+`border:-1,`
+`separator:#454545,`
+`label:#4ec9b0,`
+`header:#f9ae28:underline:bold \
+"
+
 # Config the default options when running fzf
 # Keybindings:
 # - ctrl-d: move cursor half page down
@@ -53,18 +81,7 @@ export FZF_DEFAULT_OPTS=" \
     --bind 'focus:transform-preview-label:echo ┨ {} ┠' \
     --preview '~/.config/fzf/fzf-previewer.sh {}' \
     --preview-window 'right,60%,nowrap' \
-    --color=`
-        `dark,`
-        `fg:-1,bg:-1,`
-        `fg+:#ffffff:bold,bg+:#04395e,gutter:-1,`
-        `hl:#ffdd33:bold,`
-        `hl+:#ffdd33:bold,`
-        `query:-1,`
-        `disabled:#808080,`
-        `border:-1,`
-        `separator:#454545,`
-        `label:#4ec9b0,`
-        `header:#f9ae28:underline:bold \
+    --color=$monokai \
 "
 
 # Use fd for FZF completion

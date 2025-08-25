@@ -16,28 +16,42 @@
 local utils = require('rockyz.utils.color')
 
 -- Colors from Monokai
-local pink = '#f92472'
+local red = '#f83535'
+local red2 = '#f92472'
 local yellow = '#e7db74'
 local yellow2 = '#ffdd33'
 local orange = '#fd9621'
+local orange2 = '#9f570f'
+local orange3 = '#ffe894'
 local green = '#a6e22c'
 local blue = '#67d8ef'
 local purple = '#ac80ff'
 local brown = '#75715e'
-local brown2 = '#88846f'
-local brown3 = '#74705d'
+local brown2 = '#74705d'
 
-local gray = '#7a7a77' -- disabledForeground
-local gray2 = '#90908a'
-local gray3 = '#2f302b'
-local gray4 = '#34352f'
-local gray5 = '#b3b3b1'
+local gray = '#48473e' -- background color of visual selection
+local gray2 = '#7a7a77' -- disabledForeground
+local gray3 = '#90908a'
+local gray4 = '#3e3d32' -- CursorLine
+local gray5 = '#34352f'
+local gray6 = '#b3b3b1'
 
 local white = '#ffffff'
+local white3 = '#f8f8f2'
 local black = '#000000'
+local black2 = '#212117'
+local black3 = '#282923'
 
-local norm_fg = '#f8f8f2' -- editor.foreground
-local norm_bg = '#272822' -- editor.background
+local norm_fg = white3 -- editor.foreground
+local norm_bg = black3 -- editor.background
+
+-- Some colors vary depending on whether the border is enabled or not
+local float_norm_bg = norm_bg -- normal bg of float win
+local float_scrollbar_gutter = float_norm_bg -- bg of scrollbar gutter in float win
+if not vim.g.border_enabled then
+    float_norm_bg = utils.darken(norm_bg, 0.3)
+    float_scrollbar_gutter = utils.lighten(float_norm_bg, 0.2)
+end
 
 -- Signs for git in signcolumn
 local gutter_git_added = '#2ea043' -- editorGutter.addedBackground
@@ -55,13 +69,13 @@ local error_list = '#f88070' -- list.errorForeground, for list items (like files
 local warn_list = '#cca700' -- list.warningForeground, for list items containing warnings
 
 local selected_item_bg = '#414339' -- editorSuggestWidget.selectedBackground
-local matched_chars = pink -- editorSuggestWidget.focusHighlightForeground, color for the matched characters in the autocomplete menu
+local matched_chars = red2 -- editorSuggestWidget.focusHighlightForeground, color for the matched characters in the autocomplete menu
 local folded_line_bg = '#353733' -- editor.foldBackground
 local floatwin_border = '#454545' -- editorWidget.border, fg for the border of any floating window
 local scrollbar = '#646461' -- scrollbarSlider.activeBackground
 local indent_guide_fg = '#464741' -- editorIndentGuide.background
 local indent_guide_scope_fg = '#767771' -- editorIndentGuide.activeBackground
-local win_separator = gray4 -- editorGroup.border
+local win_separator = gray5 -- editorGroup.border
 local icon_fg = '#ffcc00' -- fg for icons on tabline, winbar and statusline
 local directory = '#569CD6'
 local winbar_fg = '#ababaa' -- breadcrumb.foreground
@@ -111,8 +125,8 @@ local groups = {
     -- windows in Neovim don't have shadows. Using the same border color as in VSCode is too subtle.
     -- And for aesthetics, set the scrollbar to the same color as the border.
     FloatBorder = { fg = norm_fg }, -- VSCode uses color floatwin_border
-    ScrollbarSlider = { bg = norm_fg }, -- VSCode uses color scrollbar
-    ScrollbarGutter = { bg = norm_bg },
+    ScrollbarSlider = { bg = '#6c6d67' }, -- VSCode uses color scrollbar
+    ScrollbarGutter = { bg = float_scrollbar_gutter },
     SelectionHighlightBackground = { bg = '#3f4242' }, -- editor.selectionHighlightBackground
     LightBulb = { fg = '#ffcc00' }, -- editorLightBulb.foreground
     CodeLens = { fg = '#999999' }, -- editorCodeLens.foreground
@@ -125,7 +139,7 @@ local groups = {
     PeekViewBorder = { fg = brown }, -- peekView.border
     PeekViewNormal = { bg = norm_bg }, -- peekViewEditor.background
     PeekViewTitle = { fg = white }, -- peekViewTitleLabel.foreground
-    PeekViewCursorLine = { bg = gray3 }, -- same with CursorLine
+    PeekViewCursorLine = 'CursorLine',
     PeekViewMatchHighlight = { bg = brown }, -- peekViewEditor.matchHighlightBackground
     GhostText = { fg = '#70716d' }, -- editorGhostText.foreground
     Icon = { fg = '#c5c5c5' }, -- icon.foreground
@@ -166,7 +180,7 @@ local groups = {
     -- Indent scope
     IndentScopeSymbol = 'Delimiter',
     -- CursorLine of not-current windows
-    CursorLineNC = { bg = gray3, underdashed = true, sp = '#9b9ea4' },
+    CursorLineNC = { bg = gray4, underdashed = true, sp = '#9b9ea4' },
 
     --
     -- diff
@@ -201,7 +215,7 @@ local groups = {
     DiagnosticVirtualTextError = { fg = error_red, bg = utils.blend(error_red, 0.9, norm_bg), italic = true },
     DiagnosticVirtualTextWarn = { fg = warn_yellow, bg = utils.blend(warn_yellow, 0.9, norm_bg), italic = true },
     DiagnosticVirtualTextInfo = { fg = info_blue, bg = utils.blend(info_blue, 0.9, norm_bg), italic = true },
-    DiagnosticVirtualTextHint = { fg = hint_gray, bg = utils.blend(hint_gray, 0.9, norm_bg), italic = true },
+    DiagnosticVirtualTextHint = { fg = utils.darken(hint_gray, 0.4), bg = utils.blend(hint_gray, 0.9, norm_bg), italic = true },
     DiagnosticVirtualTextOk = { fg = ok_green, bg = '#31392c', italic = true },
     DiagnosticVirtualLinesError = 'DiagnosticVirtualTextError',
     DiagnosticVirtualLinesWarn = 'DiagnosticVirtualTextWarn',
@@ -224,7 +238,7 @@ local groups = {
     DiagnosticSignHint = 'DiagnosticHint',
     DiagnosticSignOk = 'DiagnosticOk',
     DiagnosticUnnecessary = {}, -- don't gray the unused code
-    DiagnosticDeprecated = { fg = gray, strikethrough = true },
+    DiagnosticDeprecated = { fg = gray2, strikethrough = true },
 
     --
     -- Symbol kinds
@@ -270,12 +284,12 @@ local groups = {
     -- Editor
     --
 
-    CursorLine = { bg = gray3 },
+    CursorLine = { bg = gray4 },
     CursorColumn = 'CursorLine',
     ColorColumn = { bg = utils.darken('#5a5a5a', 0.4) }, -- editorRuler.foreground
-    Conceal = { fg = gray2 },
+    Conceal = { fg = gray3 },
     Cursor = { fg = norm_bg, bg = '#f8f8f0' },
-    CurSearch = { fg = norm_bg, bg = '#ff966c' }, -- editor.findMatchBackground. Take the color from tokyonight moon.
+    CurSearch = { fg = black, bg = '#ffe894' }, -- editor.findMatchBackground. Take the color from tokyonight moon.
     -- lCursor = { },
     -- CursorIM = { },
     Directory = { fg = directory },
@@ -289,7 +303,7 @@ local groups = {
     ErrorMsg = { fg = error_red },
     WinSeparator = { fg = norm_fg }, -- VSCode uses color win_separator
     VirtSplit = 'WinSeparator', -- deprecated and use WinSeparator instead
-    LineNr = { fg = gray2 }, -- editorLineNumber.foreground
+    LineNr = { fg = gray3 }, -- editorLineNumber.foreground
     -- LineNrAbove = {},
     -- LineNrBelow = {},
     CursorLineNr = { fg = yellow2, bold = true }, -- editorLineNumber.activeForeground
@@ -300,15 +314,15 @@ local groups = {
     SignColumn = 'LineNr',
     IncSearch = 'CurSearch',
     -- Substitute = { },
-    MatchParen = { fg = norm_fg, bg = '#5a9ed1', bold = true, underline = true }, -- editorBracketMatch.background
+    MatchParen = { underline = true }, -- editorBracketMatch.background
     ModeMsg = { fg = norm_fg },
     MsgArea = { fg = norm_fg },
     -- MsgSeparator = { },
     MoreMsg = { fg = norm_fg },
-    NonText = { fg = gray2 },
+    NonText = { fg = gray3 },
     Normal = { fg = norm_fg, bg = norm_bg },
     -- NormalNC = { },
-    Pmenu = { fg = norm_fg, bg = norm_bg }, -- editorSuggestWidget.background/foreground
+    Pmenu = { fg = norm_fg, bg = float_norm_bg }, -- editorSuggestWidget.background/foreground
     PmenuSel = { fg = white, bg = selected_item_bg, bold = true }, -- editorSuggestWidget.selectedForeground/selectedBackground
     -- PmenuKind = {},
     -- PmenuKindSel = {},
@@ -324,7 +338,7 @@ local groups = {
     -- FloatFooter = {},
     Question = { fg = warn_yellow },
     QuickFixLine = 'QfSelection',
-    Search = { fg = norm_fg, bg = '#3e68d7' }, -- editor.findMatchHighlightBackground. Take the color from tokyonight moon.
+    Search = { fg = white, bg = '#3e68d7' }, -- editor.findMatchHighlightBackground. Take the color from tokyonight moon.
     SpecialKey = 'NonText',
     SpellBad = { undercurl = true, sp = error_red },
     SpellCap = { undercurl = true, sp = warn_yellow },
@@ -336,7 +350,7 @@ local groups = {
     TabLineFill = { fg = 'NONE', bg = tab_bg }, -- editorGroupHeader.tabsBackground
     TabLineSel = { fg = tab_active_fg, bg = tab_active_bg, bold = true }, -- tab.activeBackground, tab.activeForeground
     Title = { fg = orange, bold = true },
-    Visual = { bg = '#555449' }, -- editor.selectionBackground, use the selection color in Sublime Text
+    Visual = { bg = gray }, -- editor.selectionBackground
     -- VisualNOS = { },
     WarningMsg = { fg = warn_yellow },
     Whitespace = { fg = indent_guide_fg },
@@ -422,22 +436,22 @@ local groups = {
     Identifier = { fg = norm_fg }, -- Any variable name (variable)
     Function = { fg = green }, -- Function name (also: methods for classes). (entity.name.function)
 
-    Statement = { fg = pink }, -- Any statement. (keyword)
+    Statement = { fg = red2 }, -- Any statement. (keyword)
     Conditional = 'Statement', -- if, then, else, endif, switch, etc.
     Repeat = 'Statement', -- for, do, while, etc.
     Label = 'Statement', -- case, default, etc.
-    Operator = { fg = pink }, -- "sizeof", "+", "*", etc. (keyword.operator)
-    Keyword = { fg = pink }, -- any other keyword. (keyword.other)
+    Operator = { fg = red2 }, -- "sizeof", "+", "*", etc. (keyword.operator)
+    Keyword = { fg = red2 }, -- any other keyword. (keyword.other)
     Exception = 'Statement', -- try, catch, throw.
 
-    PreProc = { fg = pink }, -- Generic Preprocessor. (keyword)
+    PreProc = { fg = red2 }, -- Generic Preprocessor. (keyword)
     Include = 'PreProc', -- Preprocessor #include.
     Define = 'PreProc', -- Preprocessor #define.
     Macro = 'PreProc', -- Same as Define.
     PreCondit = 'PreProc', -- Preprocessor #if, #else, #endif, etc.
 
     Type = { fg = blue, italic = true }, -- int, long, char, etc. (storage.type)
-    StorageClass = { fg = pink, italic = true }, -- static, register, volatile, etc. (storage.modifier)
+    StorageClass = { fg = red2, italic = true }, -- static, register, volatile, etc. (storage.modifier)
     Structure = 'Type', -- struct, union, enum, etc.
     Typedef = 'Keyword', -- A typedef
 
@@ -479,7 +493,7 @@ local groups = {
     -- Literals
     ['@string'] = 'String', -- string literals
     ['@string.documentation'] = '@comment', -- string documenting code (e.g. Python docstrings). (string.quoted.docstring)
-    ['@string.regexp'] = { fg = pink }, -- regular expressions. (string.regexp)
+    ['@string.regexp'] = "@string", -- regular expressions. (string.regexp)
     ['@string.escape'] = { fg = purple }, -- escape sequences. (constant.character.escape)
     ['@string.special'] = 'SpecialChar', -- other special strings (e.g. dates)
     ['@string.special.symbol'] = '@string.special', -- symbols or atoms
@@ -521,7 +535,7 @@ local groups = {
     ['@keyword.operator'] = '@keyword', -- operators that are English words (e.g. `and` / `or`). (keyword.operator.word)
     ['@keyword.import'] = '@keyword', -- keywords for including modules (e.g. `import` / `from` in Python). (keyword.control.import)
     ['@keyword.type'] = 'Type', -- keywords describing composite types (e.g. `struct`, `enum`). (keyword.declaration.struct, falls back to storage.type.struct)
-    ['@keyword.modifier'] = { fg = pink, italic = true }, -- keywords modifying other constructs (e.g. `const`, `static`, `public`). (storage.modifier)
+    ['@keyword.modifier'] = { fg = red2, italic = true }, -- keywords modifying other constructs (e.g. `const`, `static`, `public`). (storage.modifier)
     ['@keyword.repeat'] = 'Repeat', -- keywords related to loops (e.g. `for` / `while`)
     ['@keyword.return'] = '@keyword', --  keywords like `return` and `yield`
     ['@keyword.debug'] = 'Debug', -- keywords related to debugging
@@ -536,8 +550,8 @@ local groups = {
     -- Punctuation
     ['@punctuation.delimiter'] = { fg = norm_fg }, -- delimiters (e.g. `;` / `.` / `,`)
     ['@punctuation.bracket'] = { fg = norm_fg }, -- brackets (e.g. `()` / `{}` / `[]`)
-    ['@punctuation.special'] = { fg = pink }, -- special symbols (e.g. `{}` in string interpolation)
-    ['@punctuation.special.markdown'] = { fg = brown3 }, -- quote mark `>` in markdown
+    ['@punctuation.special'] = { fg = red2 }, -- special symbols (e.g. `{}` in string interpolation)
+    ['@punctuation.special.markdown'] = { fg = brown2 }, -- quote mark `>` in markdown
 
     -- Comments
     ['@comment'] = 'Comment', -- line and block comments
@@ -571,7 +585,7 @@ local groups = {
     ['@markup.link.url'] = '@markup.link', -- url links in markup
 
     ['@markup.raw'] = { fg = norm_fg, bg = '#3b3c37' }, -- literal or verbatim text (e.g., inline code). (markup.inline.raw)
-    ['@markup.raw.block'] = { fg = gray5 }, -- literal or verbatim text as a stand-alone block
+    ['@markup.raw.block'] = { fg = gray6 }, -- literal or verbatim text as a stand-alone block
 
     ['@markup.list'] = { fg = yellow }, -- list markers. (markup.list)
     -- ["@markup.list.checked"] = { }, -- checked todo-style list markers
@@ -581,12 +595,12 @@ local groups = {
     ['@diff.minus'] = 'DiffTextDeleted', -- deleted text (for diff files)
     ['@diff.delta'] = 'DiffTextChanged', -- changed text (for diff files)
 
-    ['@tag'] = { fg = pink }, -- XML tag names. (entity.name.tag)
+    ['@tag'] = { fg = red2 }, -- XML tag names. (entity.name.tag)
     ['@tag.builtin'] = '@tag', -- builtin tag names (e.g. HTML5 tags)
     ['@tag.attribute'] = { fg = green }, -- XML tag attributes. (entity.other.attribute-name)
     ['@tag.delimiter'] = { fg = norm_fg }, -- XML tag delimiters
 
-    ['@conceal.markdown_inline'] = { fg = gray5 }, -- backtick of the inline code
+    ['@conceal.markdown_inline'] = { fg = gray6 }, -- backtick of the inline code
 
     --
     -- LSP semantic tokens
@@ -632,7 +646,7 @@ local groups = {
     -- ["@lsp.mod.async"] = "", -- functions that are marked async.
     -- ["@lsp.mod.modification"] = "", -- variable references where the variable is assigned to.
     -- ["@lsp.mod.documentation"] = "", -- occurrences of symbols in documentation.
-    ['@lsp.mod.defaultLibrary'] = { fg = blue }, -- symbols that are part of the standard library. (support.*)
+    -- ['@lsp.mod.defaultLibrary'] = { fg = blue }, -- symbols that are part of the standard library. (support.*)
 
     -- Predefined in vscode
     -- (https://code.visualstudio.com/api/language-extensions/semantic-highlight-guide#predefined-textmate-scope-mappings)
@@ -670,7 +684,7 @@ local groups = {
     -- nvim-cmp
     --
 
-    CmpItemAbbrDeprecated = { fg = gray, bg = 'NONE', strikethrough = true },
+    CmpItemAbbrDeprecated = { fg = gray2, bg = 'NONE', strikethrough = true },
     CmpItemAbbrMatch = { fg = matched_chars, bg = 'NONE', bold = true }, -- editorSuggestWidget.focusHighlightForeground
     CmpItemAbbrMatchFuzzy = 'CmpItemAbbrMatch',
     CmpItemMenu = 'Description',
@@ -735,9 +749,9 @@ local groups = {
     BlinkCmpSignatureHelpActiveParameter = 'LspSignatureActiveParameter',
     -- Label
     BlinkCmpLabel = { fg = norm_fg },
-    BlinkCmpLabelDeprecated = { fg = gray, bg = 'NONE', strikethrough = true },
+    BlinkCmpLabelDeprecated = { fg = gray2, bg = 'NONE', strikethrough = true },
     BlinkCmpLabelMatch = { fg = matched_chars, bg = 'NONE', bold = true },
-    BlinkCmpLabelDetail = { fg = gray, bg = 'NONE' },
+    BlinkCmpLabelDetail = { fg = gray2, bg = 'NONE' },
     BlinkCmpLabelDescription = 'BlinkCmpLabelDetail',
     -- Source
     BlinkCmpSource = 'BlinkCmpLabelDetail',
@@ -926,7 +940,7 @@ local groups = {
     UfoPreviewCursorLine = 'PeekViewCursorLine',
     UfoFoldedFg = { fg = norm_fg },
     UfoFoldedBg = { bg = folded_line_bg },
-    UfoCursorFoldedLine = { bg = gray3, bold = true, italic = true },
+    UfoCursorFoldedLine = { bg = gray4, bold = true, italic = true },
     UfoPreviewSbar = 'PeekViewNormal',
     UfoPreviewThumb = 'ScrollbarSlider',
     UfoFoldedEllipsis = 'Whitespace',
@@ -950,10 +964,10 @@ local groups = {
     -- nvim-treesitter-context
     --
 
-    -- TreesitterContext = {},
+    TreesitterContext = { bg = norm_bg },
     TreesitterContextLineNumber = 'LineNr',
     -- TreesitterContextSeparator = {},
-    TreesitterContextBottom = { underline = true, sp = '#000000' },
+    TreesitterContextBottom = { underline = true, sp = black },
     -- TreesitterContextLineNumberBottom = {},
 
     --
@@ -1003,11 +1017,11 @@ local groups = {
     FzfLnum = { fg = lnum },
     FzfCol = { fg = col },
     FzfDesc = { fg = utils.lighten(norm_bg, 0.4) },
-    FzfRgQuery = { fg = pink },
+    FzfRgQuery = { fg = red2 },
     FzfTagsPattern = { fg = utils.darken(green, 0.2) },
 
     GitStatusStaged = { fg = green },
-    GitStatusUnstaged = { fg = pink },
+    GitStatusUnstaged = { fg = red2 },
 }
 
 for k, v in pairs(groups) do

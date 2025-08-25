@@ -201,7 +201,6 @@ local function run(question_url, label, lang)
     end
     -- notify.info('[LeetCode] Valid cookie is varified')
 
-    question_url = question_url:match('^(https://leetcode%.com/problems/[^/]+)')
     local title_slug = get_title_slug(question_url)
 
     local q = get_question(title_slug)
@@ -358,6 +357,11 @@ vim.api.nvim_create_user_command('LeetCode', function(args)
     -- The first arg is the question url; the second arg is label and extension to construct the
     -- filename, e.g., method-1.cpp representing method 1 and cpp file.
     local question_url, second = unpack(args.fargs)
+    question_url = question_url:match('^(https://leetcode%.com/problems/[^/]+)')
+    if not question_url then
+        notify.error('[LeetCode] Invalid question URL. It should be "https://leetcode.com/problems/question-title/foo/bar".')
+        return
+    end
     local label, ext = second:match('^(.*)%.(.*)$')
     if not label and not ext then
         label = ''
@@ -366,11 +370,11 @@ vim.api.nvim_create_user_command('LeetCode', function(args)
     run(question_url, label, ext)
 end, { nargs = '+' })
 
-local function get_url_handler(obj)
+local function get_url(obj)
     if obj.code ~= 0 or not obj.stdout:match('^https://leetcode.com/problems/') then
         return
     end
-    return obj.stdout:gsub('\n$', '')
+    return obj.stdout:match('^(https://leetcode%.com/problems/[^/]+)')
 end
 
 local function get_url_from_chrome()
@@ -379,12 +383,12 @@ local function get_url_from_chrome()
         '-e',
         'tell application "Google Chrome" to get URL of active tab of front window',
     }, { text = true })
-    return get_url_handler(obj)
+    return get_url(obj)
 end
 
 local function get_url_from_clipboard()
     local obj = system.sync({ 'pbpaste' }, { text = true })
-    return get_url_handler(obj)
+    return get_url(obj)
 end
 
 vim.keymap.set('n', '<Leader>ol', function()

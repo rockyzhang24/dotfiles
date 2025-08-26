@@ -5,7 +5,7 @@ vim.o.cindent = true
 vim.o.cmdheight = 1
 vim.o.completeopt = 'menuone,noselect,noinsert,fuzzy,popup'
 vim.o.cursorline = true
-vim.opt.diffopt:append('vertical,algorithm:patience,linematch:60')
+vim.opt.diffopt = {'algorithm:patience', 'closeoff', 'filler', 'inline:word', 'internal', 'linematch:60', 'vertical'}
 vim.o.expandtab = true
 vim.opt.fillchars = {
     fold = ' ',

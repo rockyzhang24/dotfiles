@@ -291,6 +291,7 @@ local groups = {
     DiffDelete = 'DiffLineDeleted',
     DiffChange = 'DiffLineChanged',
     DiffText = 'DiffTextChanged',
+    DiffTextAdd = 'DiffTextAdded',
     EndOfBuffer = { fg = norm_bg },
     TermCursor = { fg = norm_bg, bg = '#ffdd33' },
     -- TermCursorNC = { },

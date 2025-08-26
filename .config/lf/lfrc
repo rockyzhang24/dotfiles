@@ -21,7 +21,6 @@ set previewer ~/.config/lf/previewer
 set scrolloff 10
 set shell bash
 set shellopts '-eu'
-set sixel
 set smartcase
 set tabstop 4
 

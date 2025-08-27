@@ -25,8 +25,9 @@ export PATH=$HOME/.config/fzf/bin:$PATH # fzf scripts
 export PATH=$GOPATH/bin:$PATH   # Golong programs
 export PATH=$HOME/gitrepos/diff-so-fancy:$PATH  # diff-so-fancy
 export PATH=/opt/homebrew/opt/llvm/bin:$PATH  # Use the latest llvm instead of macOS builtin
+export PATH="/Applications/Sublime Text.app/Contents/SharedSupport/bin:$PATH" # sublime text
 
-# Use Neovim as "preferred editor"
+# Use Neovim as "preferred editor aaaa"
 export EDITOR="nvim"
 export VISUAL="$EDITOR"
 

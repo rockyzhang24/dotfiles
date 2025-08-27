@@ -8,18 +8,20 @@
 #              tmux-sessionizer [DIRECTORY] [SESSION_NAME]
 #              tmux-sessionizer [SESSION_NAME] [DIRECTORY]
 
-# List all the parent directories that contain the projects here
+# Directories under these parent directories will be listed in fzf
 read -r -d '' parent_dirs << EOM
 $HOME/oj/
 $HOME/projects/*/
 EOM
 
-# Other scattered project directories
+# Other scattered directories that will be listed in fzf
 read -r -d '' other_dirs << EOM
 $HOME/.config
 EOM
 
 if [[ $# -eq 1 ]]; then
+    # Only one argument is given
+    # It can be [DIRECTORY] or [SESSION_NAME]
     if [[ -d $1 ]]; then
         directory=$1
     else
@@ -27,6 +29,8 @@ if [[ $# -eq 1 ]]; then
         directory=$(pwd)
     fi
 elif [[ $# -eq 2 ]]; then
+    # Two arguments are given
+    # They're [DIRECTORY] and [SESSION_NAME]. The order doesn't matter.
     if [[ -d $1 ]]; then
         directory=$1
         session_name=$2
@@ -35,6 +39,7 @@ elif [[ $# -eq 2 ]]; then
         session_name=$1
     fi
 else
+    # If no arguments are given, open fzf and list directory candidates to select
     project_dirs=$(fd --type d --exact-depth 1 . $parent_dirs)
     combined_dirs=$(echo -e "$project_dirs\n$other_dirs")
     directory=$(echo "$combined_dirs" | fzf --no-multi)

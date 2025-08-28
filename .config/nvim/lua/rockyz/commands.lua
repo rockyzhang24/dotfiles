@@ -8,6 +8,7 @@
 -- Reindent 4 8
 -- ToggleAutoFormat[!]
 -- CopyPath [nameonly|relative|absolute]
+-- Restart
 
 local function scratch_buf_init()
     for name, value in pairs({
@@ -162,3 +163,23 @@ end, {
 vim.cmd([[
 command! DiffOrig leftabove vnew | set bt=nofile | r ++edit # | 0d_ | diffthis | wincmd p | diffthis
 ]])
+
+-- Restart nvim
+-- Thanks @lewis6991
+local session = '/tmp/_session_restart.vim'
+
+vim.api.nvim_create_user_command('Restart', function()
+    vim.cmd.mksession({ session, bang = true })
+    vim.cmd.restart()
+end, {})
+
+vim.api.nvim_create_augroup('rockyz.restart', { clear = true })
+vim.api.nvim_create_autocmd('VimEnter', {
+    group = 'rockyz.restart',
+    callback = vim.schedule_wrap(function()
+        if vim.uv.fs_stat(session) then
+            vim.cmd.source(session)
+            vim.fs.rm(session)
+        end
+    end),
+})

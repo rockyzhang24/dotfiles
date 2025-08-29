@@ -8,7 +8,7 @@
 -- <Leader>fo : Old files
 -- <Leader>f. : Files for my dotfiles
 -- <Leader>fb : Buffers
--- <M-m>  : Buffers and MRU
+-- <C-m>  : Buffers and MRU
 
 -- <Leader>f/ : Search history
 -- <Leader>f: : Command history
@@ -807,7 +807,7 @@ local function bufs_and_mru(from_resume)
     fzf(spec, handle_contents)
 end
 
-vim.keymap.set('n', '<M-m>', function()
+vim.keymap.set('n', '<C-m>', function()
     run(bufs_and_mru)
 end)
 
@@ -2781,15 +2781,26 @@ local function git_status(from_resume)
             expect_keys({ 'ctrl-h', 'ctrl-l', 'ctrl-r' }, true),
             '--preview',
             -- Three cases:
-            -- 1) Untracked: git diff --no-index /dev/null <file>
+            -- 1) Untracked:
+            --   folder: list contents of the folder by tree
+            --   file: git diff --no-index /dev/null <file>
             -- 2) Unstaged: git diff <file>
             -- 3) Staged: git diff --staged <file>
-            'git_status=$(' .. git .. ' status -s -uall -- {2}); \
-            echo $git_status | grep "^??" &>/dev/null && ' .. git .. ' diff --no-index -- /dev/null {2} ' .. diff_pager .. ' || \
-            (diff_output=$(' .. git .. ' diff -- {2}) && \
-                [[ -n $diff_output ]] && \
-                echo $diff_output ' .. diff_pager .. ' || \
-                ' .. git .. ' diff --staged -- {2} ' .. diff_pager .. ')',
+            'git_status=$(' .. git .. ' status -s -uall -- {2}) \
+            if (echo $git_status | grep "^??") &>/dev/null; then \
+                if [[ -d {2} ]]; then \
+                    tree -C {2} \
+                else \
+                    ' .. git .. ' diff --no-index -- /dev/null {2} ' .. diff_pager .. ' \
+                fi \
+            else \
+                diff_output=$(' .. git .. ' diff -- {2}) \
+                if [[ -n $diff_output ]]; then \
+                    echo $diff_output ' .. diff_pager .. ' \
+                else \
+                    ' .. git .. ' diff --staged -- {2} ' .. diff_pager .. ' \
+                fi \
+            fi',
             '--bind',
             set_label('{1}'),
         }),

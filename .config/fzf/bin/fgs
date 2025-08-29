@@ -33,8 +33,14 @@ if [[ $# -eq 1 ]]; then
     delta_cmd="delta --width ${FZF_PREVIEW_COLUMNS:-$COLUMNS} --file-style omit"
     file=$(echo "$1" | cleaner)
     if ($git_cmd status -s -uall -- "$file" | grep '^??') &>/dev/null; then
-        # (1). Untracked file: diff with /dev/null <file>
-        $git_cmd diff --color=always --no-index -- /dev/null "$file" | eval "$delta_cmd"
+        # (1). Untracked file or folder
+        # folder: list contents of the folder by tree
+        # file: diff with /dev/null <file>
+        if [[ -d $file ]]; then
+            tree -C "$file"
+        else
+            $git_cmd diff --color=always --no-index -- /dev/null "$file" | eval "$delta_cmd"
+        fi
     else
         # (2). Unstaged: git diff <file>
         # (3). Staged: git diff --staged <file>

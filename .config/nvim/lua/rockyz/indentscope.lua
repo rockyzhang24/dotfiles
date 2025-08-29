@@ -495,8 +495,8 @@ end)
 --
 -- Incremental selection
 --
--- <C-n> to expand
--- <C-m> to shrink
+-- <C-,> to expand
+-- <C-.> to shrink
 --
 
 ---Push when expand and pop when shrink
@@ -544,12 +544,12 @@ local function incremental_selection()
 end
 
 -- Expand
-vim.keymap.set({ 'n', 'x' }, '<C-n>', function()
+vim.keymap.set({ 'n', 'x' }, '<C-,>', function()
     incremental_selection()
 end)
 
 -- Shrink
-vim.keymap.set('x', '<C-m>', function()
+vim.keymap.set('x', '<C-.>', function()
     if #stack < 2 then
         return
     end

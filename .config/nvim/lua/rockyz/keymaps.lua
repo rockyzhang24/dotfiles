@@ -39,6 +39,8 @@ vim.keymap.set('n', 'zh', '10zh')
 vim.keymap.set('n', 'zl', '10zl')
 -- Visual select all
 vim.keymap.set('n', '<M-a>', 'VggoG')
+-- Restart nvim
+vim.keymap.set('n', '<Leader>R', '<Cmd>restart<CR>')
 
 -- Smart jk
 local function smart_jk(jk)

@@ -252,7 +252,7 @@ cmd on-load &{{
         esac
 
         status=$(
-            eval "$git_cmd" -c color.status=always status -s --ignored -- "$file" |
+            eval "$git_cmd" -c color.status=always status -s -- "$file" |
             cat -v |
             sed -E 's/^(..[^[:space:]]*|[^[:space:]]*[[:space:]]?)[[:space:]]+(.*)$/\1/' |
             sed 's/\^\[/\\033/g' |

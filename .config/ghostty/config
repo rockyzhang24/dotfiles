@@ -1,10 +1,8 @@
 font-family = ""
-font-family = "Fira Code"
+font-family = "JetBrains Mono"
 font-size = 13
-adjust-underline-position = 2
-adjust-underline-thickness = 150%
 
-window-title-font-family = "Fira Code"
+window-title-font-family = "JetBrains Mono"
 
 # Disable ligatures
 font-feature = -calt
@@ -13,7 +11,7 @@ font-feature = -dlig
 
 window-padding-x = 2
 window-padding-y = 0
-window-decoration = none
+window-decoration = false
 background-opacity = 1
 
 theme = monokai
@@ -23,6 +21,7 @@ macos-option-as-alt = left
 macos-titlebar-style = native
 font-thicken = true
 mouse-hide-while-typing = true
+macos-window-shadow = false
 
 #
 # Keybindings

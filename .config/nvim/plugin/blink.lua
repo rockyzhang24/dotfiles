@@ -72,6 +72,9 @@ require('blink.cmp').setup({
         max_typos = function()
             return 0
         end,
+        frecency = {
+            path = vim.env.HOME .. '/.local/share/nvim/blink/cmp/fuzzy.db'
+        },
     },
     appearance = {
         kind_icons = kind_icons,

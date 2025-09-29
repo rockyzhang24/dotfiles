@@ -1,0 +1,18 @@
+#!/bin/zsh
+
+# This script should be executed by sudo
+
+# check if running as root
+if [[ $(id -u) -ne 0 ]]; then
+    echo "This script must be run with sudo (root)."
+    exit 1
+fi
+
+wirelessInterface=$( networksetup -listnetworkserviceorder | sed -En 's/^\(Hardware Port: (Wi-Fi|AirPort), Device: (en.)\)$/\2/p' )
+ipconfig setverbose 1
+result=$( ipconfig getsummary "${wirelessInterface}" | awk -F ' SSID : ' '/ SSID : / {print $2}')
+ipconfig setverbose 0
+
+echo "${result}"
+
+exit 0

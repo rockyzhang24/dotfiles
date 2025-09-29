@@ -8,9 +8,9 @@ if (( SSID_LEN > 10 )); then
     SSID="${SSID:0:5}...${SSID: -5}"
 fi
 
-ICON="󰖪 "
+ICON="􀙈 "
 if [[ -n "$IP" ]]; then
-    ICON="󰖩 "
+    ICON="􀙇 "
     HOTSPOT=$(ipconfig getsummary en0 | grep sname | awk '{print $3}')
     if [[ $HOTSPOT != "" ]]; then
         ICON=" "

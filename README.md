@@ -5,57 +5,54 @@ My dotfiles for `macOS` and `Linux`. Just cherry pick the piece of code you tota
 ![platform](https://img.shields.io/badge/platform-macOS%2FLinux-blue)
 ![last commit](https://img.shields.io/github/last-commit/rockyzhang24/dotfiles)
 
-![demo](https://github.com/user-attachments/assets/659b3854-b876-4506-92cc-8f340e4ad32e)
+![demo](https://github.com/user-attachments/assets/de888ec1-a391-48f2-b951-0a7dfabdbb90)
 
-↗ Like the color theme? Please check [arctic](https://github.com/rockyzhang24/arctic.nvim).
+↗ Like the color theme? Please check [arctic.nvim](https://github.com/rockyzhang24/arctic.nvim).
 
 # ✨ Contents
 
 ### 🔥 Text Editor
 
-#### [Neovim](https://neovim.io) ([config](./.config/nvim/))
+* [Neovim](https://neovim.io) ([config](./.config/nvim/))
 
 ### 🐚 Shell
 
-#### [Zsh](https://www.zsh.org) ([config](./.config/zsh/))
+* [Zsh](https://www.zsh.org) ([config](./.config/zsh/))
 
-* Use [Zimfw](https://zimfw.sh) framework
-* The prompt is [Starship](https://starship.rs/)
+  * Use [Zimfw](https://zimfw.sh) framework
+  * The prompt is [Starship](https://starship.rs/)
 
-### 🛠️ Terminal Emulator
+### 📟 Terminal Emulator
 
-#### [Ghostty](https://ghostty.org/) ([config](./.config/ghostty/))
-
-#### [Kitty](https://sw.kovidgoyal.net/kitty/) ([config](./.config/kitty/))
-
-#### [Wezterm](https://wezfurlong.org/wezterm/) ([config](./.config/wezterm/))
-
-#### [Alacritty](https://alacritty.org) ([config](./.config/alacritty/))
+* [Ghostty](https://ghostty.org/) ([config](./.config/ghostty/))
+* [Kitty](https://sw.kovidgoyal.net/kitty/) ([config](./.config/kitty/))
+* [Wezterm](https://wezfurlong.org/wezterm/) ([config](./.config/wezterm/))
+* [Alacritty](https://alacritty.org) ([config](./.config/alacritty/))
 
 ### 🪄 Tiling Window Manager
 
-#### [yabai](https://github.com/koekeishiya/yabai) ([config](./.config/yabai/))
-#### [skhd](https://github.com/koekeishiya/skhd) ([config](./.config/yabai/))
+* [yabai](https://github.com/koekeishiya/yabai) ([config](./.config/yabai/))
+* [skhd](https://github.com/koekeishiya/skhd) ([config](./.config/yabai/))
 
 ### 🗃️ Console File Manager
 
-#### [lf](https://pkg.go.dev/github.com/gokcehan/lf) ([config](./.config/lf/))
+* [lf](https://pkg.go.dev/github.com/gokcehan/lf) ([config](./.config/lf/))
+* [Vifm](https://vifm.info) ([config](./.config/vifm/))
+* [Ranger](https://ranger.github.io) ([config](./.config/ranger/))
 
-#### [Vifm](https://vifm.info) ([config](./.config/vifm/))
+### 🪟 Menu Bar
 
-#### [Ranger](https://ranger.github.io) ([config](./.config/ranger/))
+* [Sketchybar](https://github.com/FelixKratz/SketchyBar) ([config](./.config/sketchybar))
 
 ### ⌨️ Keyboard Customizer
 
-#### [Karabiner-Elements](https://karabiner-elements.pqrs.org) ([config](./.config/karabiner/))
+* [Karabiner-Elements](https://karabiner-elements.pqrs.org) ([config](./.config/karabiner/))
 
 ### 🧶 Others
 
-#### [Tmux](https://github.com/tmux/tmux) ([config](./.tmux.conf))
-
-#### [fzf](https://github.com/junegunn/fzf) ([config](./.config/fzf/))
-
-#### My scripts: [bin](./.config/bin/)
+* [Tmux](https://github.com/tmux/tmux) ([config](./.tmux.conf))
+* [fzf](https://github.com/junegunn/fzf) ([config](./.config/fzf/))
+* My scripts: [bin](./.config/bin/)
 
 # 💡 How I am managing the dotfiles
 

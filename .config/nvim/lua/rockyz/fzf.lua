@@ -49,6 +49,7 @@
 -- ,fc        : Git commits (buffer)
 -- ,fC        : Git commits
 -- ,fh        : Git stash
+-- ,ft        : Git worktrees
 
 -- <Leader>fg : Tags (buffer)
 -- <Leader>fG : Tags
@@ -1523,7 +1524,10 @@ local function zoxide(from_resume)
             -- ENTER will cd to the selected directory
             local cwd = lines[1]:match('[^\t]+$')
             if vim.uv.fs_stat(cwd) then
-                vim.cmd('cd ' .. cwd)
+                -- Instead of changing cwd globally, we can change it locally: lcd (window local) or
+                -- tcd (tab local)
+                local cmd = 'cd'
+                vim.cmd(cmd .. ' ' .. cwd)
                 notify.info('cwd is set to ' .. cwd)
             end
         end,
@@ -3203,6 +3207,55 @@ end
 
 vim.keymap.set('n', ',fh', function()
     run(git_stash)
+end)
+
+-- Git worktrees
+local function git_worktrees(from_resume)
+    local root_dir = get_git_root()
+    if root_dir == nil then
+        return
+    end
+
+    local git_cmd = 'git worktree list'
+
+    local spec = {
+        ['sink*'] = function(lines)
+            local path = lines[1]:match('^(.*) %x+ %[[^%]]+%]$'):gsub('^%s+', ''):gsub('%s+$', '')
+            if path == vim.uv.cwd() then
+                notify.warn('cwd already set to ' .. path)
+                return
+            end
+            path = vim.fn.fnamemodify(path, ':p')
+            if vim.uv.fs_stat(path) then
+                -- Instead of changing cwd globally, we can change it locally: lcd (window local) or
+                -- tcd (tab local)
+                local cmd = 'cd'
+                vim.cmd(cmd .. ' ' .. path)
+                notify.info('cwd set to ' .. path)
+            else
+                notify.warn('Unable to set cwd to ' .. path .. ', directory is not accessible.')
+            end
+        end,
+        options = get_fzf_opts(from_resume, {
+            '--no-multi',
+            '--prompt',
+            'Git Worktrees> ',
+            '--header',
+            ':: ENTER (cd to path)\n:: CWD: ' .. vim.uv.cwd(),
+            '--preview',
+            'git log --color --pretty=format:"%C(yellow)%h%Creset %Cgreen(%><(12)%cr%><|(12))%Creset %s %C(blue)<%an>%Creset" {-2}',
+            '--preview-window',
+            theme == 'default' and 'down,60%' or '',
+            '--bind',
+            set_label('{}'),
+        })
+    }
+
+    fzf(spec, nil, git_cmd)
+end
+
+vim.keymap.set('n', ',ft', function()
+    run(git_worktrees)
 end)
 
 -- In each line of a tag file, the tagname may contain whitespaces and \t is the delimiter to

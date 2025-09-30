@@ -21,7 +21,7 @@ local system = require('rockyz.utils.system')
 local notify = require('rockyz.utils.notify')
 local icons = require('rockyz.icons')
 
-local cookie_file = vim.env.XDG_CONFIG_HOME .. '/leetcode-cookie'
+local cookie_file = vim.env.HOME .. '/.config/leetcode-cookie'
 local oj_dir = vim.env.HOME .. '/oj'
 local cached_cookie
 

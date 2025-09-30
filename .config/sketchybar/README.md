@@ -11,3 +11,5 @@
 * SF Symbols (installed by `brew install --cask sf-symbols`)
 
 * [switchaudio-osx](https://github.com/deweller/switchaudio-osx) for getting the current audio output source
+
+* [icalBuddy](https://hasseg.org/icalBuddy/) for listing the calendar upcoming event

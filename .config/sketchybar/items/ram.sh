@@ -2,7 +2,7 @@
 
 ram=(
     icon="􀫦 "
-    padding_right=10
+    icon.font="$FONT:Regular:16.0"
     update_freq=4
     script="$PLUGIN_DIR/ram.sh"
 )

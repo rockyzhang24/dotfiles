@@ -7,4 +7,4 @@ wifi=(
 
 sketchybar --add item wifi right \
            --set wifi "${wifi[@]}" \
-           --subscribe wifi wifi_change
+           --subscribe wifi wifi_change mouse.entered mouse.exited

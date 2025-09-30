@@ -14,8 +14,12 @@ update() {
 }
 
 mouse_entered() {
-    SSID="$(sudo "$HOME"/.config/bin/ssid)"
     IP="$(ipconfig getifaddr en0)"
+    if [[ -z "$IP" ]]; then
+        return
+    fi
+
+    SSID="$(sudo "$HOME"/.config/bin/ssid)"
 
     popup_properties=(
         popup.height=20

@@ -13,7 +13,7 @@ update() {
     sketchybar --set "$NAME" icon="$ICON"
 }
 
-mouse_entered() {
+mouse_clicked() {
     IP="$(ipconfig getifaddr en0)"
     if [[ -z "$IP" ]]; then
         return
@@ -30,7 +30,7 @@ mouse_entered() {
     )
 
     sketchybar --set "$NAME" "${popup_properties[@]}"
-    sketchybar --set "$NAME" popup.drawing=on
+    sketchybar --set "$NAME" popup.drawing=toggle
 
     # Add item showing SSID in popup
     sketchybar --add item wifi.ssid popup.wifi
@@ -41,15 +41,8 @@ mouse_entered() {
     sketchybar --set wifi.ip label="IP: $IP"
 }
 
-mouse_exited() {
-    sketchybar --set "$NAME" popup.drawing=off
-}
-
-
 case "$SENDER" in
-    "mouse.entered") mouse_entered
-    ;;
-    "mouse.exited") mouse_exited
+    "mouse.clicked") mouse_clicked
     ;;
     "wifi_change") update
     ;;

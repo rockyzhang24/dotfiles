@@ -58,6 +58,9 @@ function icon_map() {
     "Alfred")
         icon_result=":alfred:"
         ;;
+    "AltTab")
+        icon_result=":alttab:"
+        ;;
     "Android Messages")
         icon_result=":android_messages:"
         ;;
@@ -80,7 +83,7 @@ function icon_map() {
         icon_result=":audacity:"
         ;;
     "Automator")
-        icon_result="automator:"
+        icon_result=":automator:"
         ;;
     "Bear")
         icon_result=":bear:"
@@ -118,6 +121,9 @@ function icon_map() {
     "ChatGPT")
         icon_result=":openai:"
         ;;
+    "Choosy")
+        icon_result=":choosy:"
+        ;;
     "Citrix Workspace" | "Citrix Viewer")
         icon_result=":citrix:"
         ;;
@@ -139,11 +145,17 @@ function icon_map() {
     "Color Picker")
         icon_result=":color_picker:"
         ;;
+    "Craft")
+        icon_result=":craft:"
+        ;;
     "Cursor")
         icon_result=":cursor:"
         ;;
     "Cypress")
         icon_result=":cypress:"
+        ;;
+    "Dash")
+        icon_result=":dash:"
         ;;
     "Default")
         icon_result=":default:"
@@ -160,6 +172,9 @@ function icon_map() {
     "Docker" | "Docker Desktop")
         icon_result=":docker:"
         ;;
+    "Downie 4")
+        icon_result=":downie:"
+        ;;
     "Drafts")
         icon_result=":drafts:"
         ;;
@@ -174,6 +189,9 @@ function icon_map() {
         ;;
     "Emacs")
         icon_result=":emacs:"
+        ;;
+    "EuDic")
+        icon_result=":eudic:"
         ;;
     "Evernote Legacy")
         icon_result=":evernote_legacy:"
@@ -190,6 +208,9 @@ function icon_map() {
     "Final Cut Pro")
         icon_result=":final_cut_pro:"
         ;;
+    "Find My")
+        icon_result=":find_my:"
+        ;;
     "Finder")
         icon_result=":finder:"
         ;;
@@ -204,6 +225,12 @@ function icon_map() {
         ;;
     "Fork")
         icon_result=":fork:"
+        ;;
+    "Freeform")
+        icon_result=":freeform:"
+        ;;
+    "FSNotes")
+        icon_result=":fsnotes:"
         ;;
     "Games")
         icon_result=":games:"
@@ -226,6 +253,9 @@ function icon_map() {
     "GoLand")
         icon_result=":goland:"
         ;;
+    "GoodLinks")
+        icon_result=":goodlinks:"
+        ;;
     "Goodnotes")
         icon_result=":goodnotes:"
         ;;
@@ -244,11 +274,26 @@ function icon_map() {
     "GrandTotal" | "Receipts")
         icon_result=":dollar:"
         ;;
+    "Gifski")
+        icon_result=":gifski:"
+        ;;
+    "Hammerspoon")
+        icon_result=":hammerspoon:"
+        ;;
+    "Hazel")
+        icon_result=":hazel:"
+        ;;
+    "Home")
+        icon_result=":home:"
+        ;;
     "Hyper")
         icon_result=":hyper:"
         ;;
     "IINA")
         icon_result=":iina:"
+        ;;
+    "Image Playground")
+        icon_result=":image_playground:"
         ;;
     "Infuse")
         icon_result=":infuse:"
@@ -256,8 +301,14 @@ function icon_map() {
     "Inkdrop")
         icon_result=":inkdrop:"
         ;;
+    "Inkscape")
+        icon_result=":inkscape:"
+        ;;
     "Insomnia")
         icon_result=":insomnia:"
+        ;;
+    "Instapaper")
+        icon_result=":instapaper:"
         ;;
     "IntelliJ IDEA")
         icon_result=":idea:"
@@ -270,6 +321,9 @@ function icon_map() {
         ;;
     "Iris")
         icon_result=":iris:"
+        ;;
+    "Jane Reader")
+        icon_result=":jane_reader:"
         ;;
     "Jellyfin Media Player")
         icon_result=":jellyfin:"
@@ -343,6 +397,9 @@ function icon_map() {
     "Maps" | "Google Maps" | "マップ" | "Karten")
         icon_result="maps"
         ;;
+    "Marked 2")
+        icon_result=":marked_2:"
+        ;;
     "Matlab")
         icon_result=":matlab:"
         ;;
@@ -394,6 +451,9 @@ function icon_map() {
     "MongoDB Compass"*)
         icon_result=":mongodb:"
         ;;
+    "Movist Pro")
+        icon_result=":movist_pro:"
+        ;;
     "mpv")
         icon_result=":mpv:"
         ;;
@@ -436,6 +496,9 @@ function icon_map() {
     "Numbers")
         icon_result=":numbers:"
         ;;
+    "nvALT")
+        icon_result=":nvalt:"
+        ;;
     "OBS Studio")
         icon_result=":obsstudio:"
         ;;
@@ -466,6 +529,9 @@ function icon_map() {
     "Parallels Desktop")
         icon_result=":parallels:"
         ;;
+    "Parcel")
+        icon_result=":parcel:"
+        ;;
     "Passwords")
         icon_result=":passwords:"
         ;;
@@ -495,6 +561,9 @@ function icon_map() {
         ;;
     "Pixelmator Pro")
         icon_result=":pixelmator_pro:"
+        ;;
+    "Play")
+        icon_result=":play:"
         ;;
     "Plex")
         icon_result=":plex:"
@@ -550,6 +619,9 @@ function icon_map() {
     "Reminders")
         icon_result=":reminders:"
         ;;
+    "Remind Faster")
+        icon_result=":remind_me_faster:"
+        ;;
     "Replit")
         icon_result=":replit:"
         ;;
@@ -583,6 +655,9 @@ function icon_map() {
     "Slack")
         icon_result=":slack:"
         ;;
+    "SnippetsLab")
+        icon_result=":snippetslab:"
+        ;;
     "Spark Desktop")
         icon_result=":spark:"
         ;;
@@ -597,6 +672,9 @@ function icon_map() {
         ;;
     "Sublime Text")
         icon_result=":sublime_text:"
+        ;;
+    "Sublime Merge")
+        icon_result=":sublime_merge:"
         ;;
     "Surfshark")
         icon_result=":surfshark:"
@@ -631,6 +709,9 @@ function icon_map() {
     "TIDAL")
         icon_result=":tidal:"
         ;;
+    "Timery")
+        icon_result=":timery:"
+        ;;
     "Todoist")
         icon_result=":todoist:"
         ;;
@@ -639,6 +720,9 @@ function icon_map() {
         ;;
     "Tor Browser")
         icon_result=":tor_browser:"
+        ;;
+    "Tot")
+        icon_result=":tot:"
         ;;
     "Tower")
         icon_result=":tower:"
@@ -667,6 +751,9 @@ function icon_map() {
     "VLC")
         icon_result=":vlc:"
         ;;
+    "Voice Memos")
+        icon_result=":voice_memos:"
+        ;;
     "VSCodium")
         icon_result=":vscodium:"
         ;;
@@ -690,6 +777,9 @@ function icon_map() {
         ;;
     "Xcode")
         icon_result=":xcode:"
+        ;;
+    "Yoink")
+        icon_result=":yoink:"
         ;;
     "Yuque")
         icon_result=":yuque:"

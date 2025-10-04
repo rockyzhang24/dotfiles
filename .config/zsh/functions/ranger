@@ -1,6 +1,7 @@
 # vim: filetype=zsh
 
-# When quitting ranger using Z, change the shell pwd to the last visited directory
+# Quitting ranger by Z to change the shell pwd to the last visited directory
+
 local IFS=$'\t\n'
 local tempfile="$(mktemp -t tmp.XXXXXX)"
 local ranger_cmd=(

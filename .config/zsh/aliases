@@ -15,33 +15,18 @@ alias ka="killall"
 
 # ls
 alias ls="gls -hFN --color=auto --group-directories-first --hyperlink=auto" # Use GNU ls (brew install coreutils)
-alias la="ls -A"
-alias l="ls -l"
-alias ll="l -A"
-alias lr="l -R"  # recursive
-alias lk="l -Sr" # sort by size, largest last
-alias lm="l -tr" # sort by modification time, i.e., mtime, newest last
-alias lc="lm -c"  # sort by change (status) time, i.e., ctime, newest last
-alias lx="l -X"  # sort by extension
 
 # Tmux
 alias s="tmux-sessionizer"
 
-# brew
-alias bu="brew update"
-alias bU="brew upgrade"
-alias bls="brew list"
-
 # Misc
-alias t="trash" # trash is ~/.config/zsh/functions/trash
-alias sc="shellcheck"
 alias iina="open -a 'IINA'"
 alias highlight="highlight --out-format=truecolor --force -s darkplus"
 alias ncdu="ncdu --color dark -rr -x --exclude .git --exclude node_modules"
-alias net="networkQuality" # Internet speed test
+alias netspeed="networkQuality" # Internet speed test
 
 # Kitty
-alias kcat="kitty +kitten icat"
+alias kittycat="kitty +kitten icat"
 
 # Download
 alias wget="wget --continue --progress=bar --timestamping"
@@ -59,17 +44,13 @@ alias lnvim='nvim -c "normal '\''0"'
 # `ls W` will load the output of ls into Neovim.
 alias -g W='| nvim -c "setlocal buftype=nofile bufhidden=wipe" -c "nnoremap <buffer> q :q!<CR>" -'
 
-# Dotfiles management
+# Manage dotfiles
 alias dot="git --git-dir=$HOME/dotfiles/ --work-tree=$HOME"
 alias ds="dot status -uall $HOME/.config"
 
 # Convert video to GIF (with 2K resolution) using ffmpeg
 # Usage: vtg input output, then output.gif will be generated
-alias vtg='function video_to_gif(){ ffmpeg -i $1 -pix_fmt rgb8 -r 10 -vf scale=2560:-1 $2.gif && gifsicle -O3 $2.gif -o $2.gif && osascript -e "display notification \"$2.gif successfully converted and saved\" with title \"VIDEO2GIF SUCCESS!\""};video_to_gif'
-
-# "ranger" is an autoload function defined at ../functions/ranger
-# When quitting ranger using Z, change the shell pwd to the last visited directory
-alias ra="ranger"
+alias video2gif='function video_to_gif(){ ffmpeg -i $1 -pix_fmt rgb8 -r 10 -vf scale=2560:-1 $2.gif && gifsicle -O3 $2.gif -o $2.gif && osascript -e "display notification \"$2.gif successfully converted and saved\" with title \"VIDEO2GIF SUCCESS!\""};video_to_gif'
 
 # inferno-flamegraph
 # https://github.com/jonhoo/inferno

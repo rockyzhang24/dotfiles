@@ -17,17 +17,8 @@
 [push]
     autoSetupRemote = true
 [alias]
-    a = add -p
-    b = branch
-    c = commit
-    co = checkout
-    cp = cherry-pick
-    d = diff
     lg = log --all --color --graph --abbrev-commit --date=short --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold dim blue)<%an>%Creset'
-    m = merge
-    p = push
     r = rebase -i origin/main
-    s = status
 [interactive]
     diffFilter = delta --color-only
 [delta]

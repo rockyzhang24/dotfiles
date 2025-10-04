@@ -7,4 +7,5 @@ events=(
 )
 
 sketchybar --add item events right \
-           --set events "${events[@]}"
+           --set events "${events[@]}" \
+           --subscribe events mouse.clicked

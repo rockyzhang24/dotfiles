@@ -1,5 +1,3 @@
-local methods = vim.lsp.protocol.Methods
-
 local M = {}
 
 -- Diagnostic config
@@ -188,7 +186,7 @@ local function on_attach(client, bufnr)
     require('rockyz.lsp.lightbulb')
 
     -- Code lens
-    -- if client:supports_method(methods.textDocument_codeLens) then
+    -- if client:supports_method('textDocument/codeAction') then
     --     local codelens_group = vim.api.nvim_create_augroup('rockyz.lsp.codelens', { clear = true })
     --     vim.api.nvim_create_autocmd("LspProgress", {
     --         group = codelens_group,
@@ -210,7 +208,7 @@ local function on_attach(client, bufnr)
     -- end
 
     -- Document highlight
-    if client:supports_method(methods.textDocument_documentHighlight) then
+    if client:supports_method('textDocument/documentHighlight') then
         local document_highlight_group = vim.api.nvim_create_augroup('rockyz.lsp.document_highlight', { clear = true })
         vim.api.nvim_create_autocmd({ 'CursorHold', 'InsertLeave' }, {
             group = document_highlight_group,

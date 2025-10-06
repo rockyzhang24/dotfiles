@@ -12,6 +12,7 @@ vim.opt.fillchars = {
     foldopen = icons.caret.down,
     foldclose = icons.caret.right,
     foldsep = ' ',
+    foldinner = ' ',
     eob = ' ',
     msgsep = '‾',
 }
@@ -109,3 +110,10 @@ vim.api.nvim_create_autocmd('FileType', {
         end
     end,
 })
+
+-- statuscolumn
+function _G.stc()
+    local lnum = vim.v.virtnum ~= 0 and '%=' or '%l'
+    return lnum .. '%s%C' .. ' '
+end
+vim.o.statuscolumn = '%!v:lua.stc()'

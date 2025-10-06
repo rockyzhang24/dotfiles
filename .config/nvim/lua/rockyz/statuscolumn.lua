@@ -1,4 +1,9 @@
--- Code is taken from luukvbaal/statuscol.nvim
+-- UPDATE (10/5/2025): Since the commit
+-- https://github.com/neovim/neovim/commit/b6b80824cc71fb9f32ddf2e9a96205633342827e that added
+-- "foldinner" suboption value to the "fillchars" option, we don't need the foldfunc below to
+-- remove numeric foldlevel, and instead we just need to set foldinner to whitespace.
+
+-- Inspired by luukvbaal/statuscol.nvim
 
 local ffi = require('ffi')
 ffi.cdef([[
@@ -33,6 +38,7 @@ local callargs = {}
 --     },
 --     lnum,
 --     relnum,
+--     virtnum,
 --     cursorline,
 -- }
 --
@@ -116,6 +122,6 @@ function _G.statuscolumn()
 end
 
 -- statuscolumn is local to window, so here both "%{% ... %}" and "%! ... " work (as for their
--- difference, see :h statusline). I use the latter because I can use vim.g.statusline_winid
--- variable.
+-- difference, see :h statusline). I use the latter because the vim.g.statusline_winid variable will
+-- be available to use (see :h g:statusline_winid).
 vim.o.statuscolumn = '%!v:lua.statuscolumn()'

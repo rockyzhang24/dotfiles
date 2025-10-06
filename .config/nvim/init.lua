@@ -42,7 +42,6 @@ local modules = {
     'statusline',
     'quickfix',
     'lsp',
-    'statuscolumn',
     'fzf',
     'mru_win',
     'mru',

@@ -1,12 +1,12 @@
 --
 -- Inspired by https://github.com/kawre/leetcode.nvim
 --
--- Run command :LeetCode <question_url> <label>.<ext> that will first create a directory specific
--- this question and then genreate two files
+-- Run command :LeetCode <question_url> <label> <extension> and it will first create a directory
+-- specific this question and then genreate two files
 -- (1). a md file containing question description
 -- (2). a solution file with code snippet
 --
--- For example, run :LeetCode https://leetcode.com/problems/two-sum/description/ method-1.js will
+-- For example, run :LeetCode https://leetcode.com/problems/two-sum/description/ method-1 js will
 -- create a directory ~/oj/leetcode-js. Then it genreates two files under this directory
 -- (1). 1-two-sum.md
 -- (2). 1-two-sum-method-1.js
@@ -350,24 +350,23 @@ end
 
 -- User command
 vim.api.nvim_create_user_command('LeetCode', function(args)
-    if #args.fargs ~= 2 then
-        notify.warn('[LeetCode] Expected 2 arguments: question URL and label.ext')
+    if #args.fargs < 2 then
+        notify.warn('[LeetCode] Expected 2 or 3 arguments: question URL, optional label, and language (file extension)')
         return
     end
-    -- The first arg is the question url; the second arg is label and extension to construct the
-    -- filename, e.g., method-1.cpp representing method 1 and cpp file.
-    local question_url, second = unpack(args.fargs)
+    -- E.g., Leetcode https://leetcode.com/problems/two-sum/ method1 cpp
+    --                      |                                 |        |___ file extension
+    --                      |                                 |
+    --                      |____ question_url                |___ label
+    local question_url, second, third = unpack(args.fargs)
     question_url = question_url:match('^(https://leetcode%.com/problems/[^/]+)')
     if not question_url then
         notify.error('[LeetCode] Invalid question URL. It should be "https://leetcode.com/problems/question-title/foo/bar".')
         return
     end
-    local label, ext = second:match('^(.*)%.(.*)$')
-    if not label and not ext then
-        label = ''
-        ext = second
-    end
-    run(question_url, label, ext)
+    local label = third == nil and '' or second
+    local extension = third == nil and second or third
+    run(question_url, label, extension)
 end, { nargs = '+' })
 
 local function get_url(obj)

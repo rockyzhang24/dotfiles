@@ -272,9 +272,13 @@ vim.keymap.set('n', 'ga', function()
         local timestamp = num > 253402300800 -- unix timestamp in seconds for 9999-12-31
             and num / 1000.0
             or num
+        local char = num < 128
+            and string.format("char=%c", num)
+            or ""
         vim.print(string.format(
-            "%s   0x%02x   o%o   %s   %s",
+            "%s %s 0x%02x   o%o   %s   %s",
             cword,
+            char,
             num,
             num,
             os.date('%Y-%m-%d %H:%M', timestamp),

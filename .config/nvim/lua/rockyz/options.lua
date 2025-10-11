@@ -39,6 +39,7 @@ vim.o.nrformats = 'octal,bin,hex,unsigned,alpha'
 vim.o.number = true
 vim.o.pumheight = 15
 vim.o.pumwidth = 20
+vim.o.pumborder = vim.g.border_style
 vim.o.relativenumber = true
 vim.o.scrolloff = 3
 vim.opt.sessionoptions:append('globals,localoptions,winpos')

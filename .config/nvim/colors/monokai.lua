@@ -333,6 +333,7 @@ local groups = {
     PmenuThumb = 'ScrollbarSlider',
     PmenuMatch = { fg = matched_chars, bg = norm_bg, bold = true },
     PmenuMatchSel = { fg = matched_chars, bg = selected_item_bg, bold = true },
+    PmenuBorder = 'FloatBorder',
     -- ComplMatchIns = {},
     NormalFloat = 'Pmenu',
     -- FloatTitle = {},

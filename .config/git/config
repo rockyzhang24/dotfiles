@@ -70,7 +70,9 @@
 [difftool]
     prompt = false
 [difftool "nvimdiff"]
-    cmd = nvim -d $LOCAL $REMOTE
+    ; Nvim plugin nvim.difftool has a command DiffTool that supports directories comparasion
+    ; Ref: https://github.com/neovim/neovim/commit/fec02ae8e411658a5f97291ac9d7cf7426f1fcbf
+    cmd = nvim -c "packadd nvim.difftool" -c "DiffTool $LOCAL $REMOTE"
 [merge]
     tool = nvimdiff
     ; Reference on zdiff3: https://ductile.systems/zdiff3/

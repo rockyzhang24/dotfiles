@@ -25,7 +25,6 @@ mouse_clicked() {
     )
 
     sketchybar --set "$NAME" "${popup_properties[@]}"
-    sketchybar --set "$NAME" popup.drawing=toggle
 
     i=1
     echo "$TODAY_EVENTS" | while IFS= read -r line; do
@@ -34,6 +33,8 @@ mouse_clicked() {
         sketchybar --set events.today_events_line_$i label="$line"
         ((i++))
     done
+
+    sketchybar --set "$NAME" popup.drawing=toggle
 }
 
 if [[ $SENDER == "mouse.clicked" ]]; then

@@ -30,7 +30,6 @@ mouse_clicked() {
     )
 
     sketchybar --set "$NAME" "${popup_properties[@]}"
-    sketchybar --set "$NAME" popup.drawing=toggle
 
     # Add item showing SSID in popup
     sketchybar --add item wifi.ssid popup.wifi
@@ -39,6 +38,8 @@ mouse_clicked() {
     # Add item showing IP address in popup
     sketchybar --add item wifi.ip popup.wifi
     sketchybar --set wifi.ip label="IP: $IP"
+
+    sketchybar --set "$NAME" popup.drawing=toggle
 }
 
 case "$SENDER" in

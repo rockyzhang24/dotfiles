@@ -16,13 +16,10 @@
 local utils = require('rockyz.utils.color')
 
 -- Colors from Monokai
-local red = '#f83535'
-local red2 = '#f92472'
+local red = '#f92472'
 local yellow = '#e7db74'
 local yellow2 = '#ffdd33'
 local orange = '#fd9621'
-local orange2 = '#9f570f'
-local orange3 = '#ffe894'
 local green = '#a6e22c'
 local blue = '#67d8ef'
 local purple = '#ac80ff'
@@ -31,19 +28,18 @@ local brown2 = '#74705d'
 
 local gray = '#48473e' -- background color of visual selection
 local gray2 = '#7a7a77' -- disabledForeground
-local gray3 = '#90908a'
+local gray3 = '#90908a' -- LineNr
 local gray4 = '#3e3d32' -- CursorLine
-local gray5 = '#34352f'
+local gray5 = '#34352f' -- VSCode's window separator
 local gray6 = '#b3b3b1'
 
 local white = '#ffffff'
-local white3 = '#f8f8f2'
+local white2 = '#f8f8f2'
 local black = '#000000'
-local black2 = '#212117'
-local black3 = '#282923'
+local black2 = '#282923'
 
-local norm_fg = white3 -- editor.foreground
-local norm_bg = black3 -- editor.background
+local norm_fg = white2 -- editor.foreground
+local norm_bg = black2 -- editor.background
 
 -- Some colors vary depending on whether the border is enabled or not
 local float_norm_bg = norm_bg -- normal bg of float win
@@ -69,7 +65,7 @@ local error_list = '#f88070' -- list.errorForeground, for list items (like files
 local warn_list = '#cca700' -- list.warningForeground, for list items containing warnings
 
 local selected_item_bg = '#414339' -- editorSuggestWidget.selectedBackground
-local matched_chars = red2 -- editorSuggestWidget.focusHighlightForeground, color for the matched characters in the autocomplete menu
+local matched_chars = red -- editorSuggestWidget.focusHighlightForeground, color for the matched characters in the autocomplete menu
 local folded_line_bg = '#353733' -- editor.foldBackground
 local floatwin_border = '#454545' -- editorWidget.border, fg for the border of any floating window
 local scrollbar = '#646461' -- scrollbarSlider.activeBackground
@@ -438,22 +434,22 @@ local groups = {
     Identifier = { fg = norm_fg }, -- Any variable name (variable)
     Function = { fg = green }, -- Function name (also: methods for classes). (entity.name.function)
 
-    Statement = { fg = red2 }, -- Any statement. (keyword)
+    Statement = { fg = red }, -- Any statement. (keyword)
     Conditional = 'Statement', -- if, then, else, endif, switch, etc.
     Repeat = 'Statement', -- for, do, while, etc.
     Label = 'Statement', -- case, default, etc.
-    Operator = { fg = red2 }, -- "sizeof", "+", "*", etc. (keyword.operator)
-    Keyword = { fg = red2 }, -- any other keyword. (keyword.other)
+    Operator = { fg = red }, -- "sizeof", "+", "*", etc. (keyword.operator)
+    Keyword = { fg = red }, -- any other keyword. (keyword.other)
     Exception = 'Statement', -- try, catch, throw.
 
-    PreProc = { fg = red2 }, -- Generic Preprocessor. (keyword)
+    PreProc = { fg = red }, -- Generic Preprocessor. (keyword)
     Include = 'PreProc', -- Preprocessor #include.
     Define = 'PreProc', -- Preprocessor #define.
     Macro = 'PreProc', -- Same as Define.
     PreCondit = 'PreProc', -- Preprocessor #if, #else, #endif, etc.
 
     Type = { fg = blue, italic = true }, -- int, long, char, etc. (storage.type)
-    StorageClass = { fg = red2, italic = true }, -- static, register, volatile, etc. (storage.modifier)
+    StorageClass = { fg = red, italic = true }, -- static, register, volatile, etc. (storage.modifier)
     Structure = 'Type', -- struct, union, enum, etc.
     Typedef = 'Keyword', -- A typedef
 
@@ -537,7 +533,7 @@ local groups = {
     ['@keyword.operator'] = '@keyword', -- operators that are English words (e.g. `and` / `or`). (keyword.operator.word)
     ['@keyword.import'] = '@keyword', -- keywords for including modules (e.g. `import` / `from` in Python). (keyword.control.import)
     ['@keyword.type'] = 'Type', -- keywords describing composite types (e.g. `struct`, `enum`). (keyword.declaration.struct, falls back to storage.type.struct)
-    ['@keyword.modifier'] = { fg = red2, italic = true }, -- keywords modifying other constructs (e.g. `const`, `static`, `public`). (storage.modifier)
+    ['@keyword.modifier'] = { fg = red, italic = true }, -- keywords modifying other constructs (e.g. `const`, `static`, `public`). (storage.modifier)
     ['@keyword.repeat'] = 'Repeat', -- keywords related to loops (e.g. `for` / `while`)
     ['@keyword.return'] = '@keyword', --  keywords like `return` and `yield`
     ['@keyword.debug'] = 'Debug', -- keywords related to debugging
@@ -552,7 +548,7 @@ local groups = {
     -- Punctuation
     ['@punctuation.delimiter'] = { fg = norm_fg }, -- delimiters (e.g. `;` / `.` / `,`)
     ['@punctuation.bracket'] = { fg = norm_fg }, -- brackets (e.g. `()` / `{}` / `[]`)
-    ['@punctuation.special'] = { fg = red2 }, -- special symbols (e.g. `{}` in string interpolation)
+    ['@punctuation.special'] = { fg = red }, -- special symbols (e.g. `{}` in string interpolation)
     ['@punctuation.special.markdown'] = { fg = brown2 }, -- quote mark `>` in markdown
 
     -- Comments
@@ -597,7 +593,7 @@ local groups = {
     ['@diff.minus'] = 'DiffTextDeleted', -- deleted text (for diff files)
     ['@diff.delta'] = 'DiffTextChanged', -- changed text (for diff files)
 
-    ['@tag'] = { fg = red2 }, -- XML tag names. (entity.name.tag)
+    ['@tag'] = { fg = red }, -- XML tag names. (entity.name.tag)
     ['@tag.builtin'] = '@tag', -- builtin tag names (e.g. HTML5 tags)
     ['@tag.attribute'] = { fg = green }, -- XML tag attributes. (entity.other.attribute-name)
     ['@tag.delimiter'] = { fg = norm_fg }, -- XML tag delimiters
@@ -1019,11 +1015,11 @@ local groups = {
     FzfLnum = { fg = lnum },
     FzfCol = { fg = col },
     FzfDesc = { fg = utils.lighten(norm_bg, 0.4) },
-    FzfRgQuery = { fg = red2 },
+    FzfRgQuery = { fg = red },
     FzfTagsPattern = { fg = utils.darken(green, 0.2) },
 
     GitStatusStaged = { fg = green },
-    GitStatusUnstaged = { fg = red2 },
+    GitStatusUnstaged = { fg = red },
 }
 
 for k, v in pairs(groups) do

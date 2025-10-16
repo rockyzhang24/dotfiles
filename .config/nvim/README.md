@@ -31,7 +31,6 @@ Functionalities I implemented:
 
 Plugins essential to my setup:
 
-* Minimal plugin manager [minpac](https://github.com/k-takata/minpac)
 * Treesitter support [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter)
 * Ultra-fast auto-completion backed by [blink.cmp](https://github.com/Saghen/blink.cmp)
 * Fully Git integration with [vim-fugitive](https://github.com/tpope/vim-fugitive), [gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim), [vim-flog](https://github.com/rbong/vim-flog), etc
@@ -42,7 +41,7 @@ Plugins essential to my setup:
 * Enhanced text objects with [targets.vim](https://github.com/wellle/targets.vim), etc
 * Symbol outline and tags with [outline.nvim](https://github.com/hedyhli/outline.nvim) and [tagbar](https://github.com/preservim/tagbar)
 
-To see all the plugins I am using 👉 [my plugins](./lua/rockyz/minpac.lua) and their configs 👉 [plugin configs](./plugin/)
+I use the built-in plugin manager `vim.pack` to manage my plugins. Check out the list of plugins I use [here](./lua/rockyz/plugins.lua) and their configs [here](./plugin/).
 
 # 🚀 Key mappings
 

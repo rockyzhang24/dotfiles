@@ -1,0 +1,161 @@
+{
+  "plugins": {
+    "LuaSnip": {
+      "rev": "113f831",
+      "src": "https://github.com/L3MON4D3/LuaSnip"
+    },
+    "SchemaStore.nvim": {
+      "rev": "667eaa5",
+      "src": "https://github.com/b0o/SchemaStore.nvim"
+    },
+    "blink.cmp": {
+      "rev": "cb87357",
+      "src": "https://github.com/saghen/blink.cmp"
+    },
+    "ccc.nvim": {
+      "rev": "9d1a256",
+      "src": "https://github.com/uga-rosa/ccc.nvim"
+    },
+    "conform.nvim": {
+      "rev": "fbcb4fa",
+      "src": "https://github.com/stevearc/conform.nvim"
+    },
+    "cscope_maps.nvim": {
+      "rev": "5a91d16",
+      "src": "https://github.com/dhananjaylatkar/cscope_maps.nvim"
+    },
+    "eregex.vim": {
+      "rev": "950027d",
+      "src": "https://github.com/othree/eregex.vim"
+    },
+    "git-messenger.vim": {
+      "rev": "6f17ec9",
+      "src": "https://github.com/rockyzhang24/git-messenger.vim",
+      "version": "'dev'"
+    },
+    "gitsigns.nvim": {
+      "rev": "1ee5c1f",
+      "src": "https://github.com/lewis6991/gitsigns.nvim"
+    },
+    "hlargs.nvim": {
+      "rev": "0b29317",
+      "src": "https://github.com/m-demare/hlargs.nvim"
+    },
+    "inc-rename.nvim": {
+      "rev": "7c79416",
+      "src": "https://github.com/smjonas/inc-rename.nvim"
+    },
+    "iswap.nvim": {
+      "rev": "e02cc91",
+      "src": "https://github.com/mizlan/iswap.nvim"
+    },
+    "linediff.vim": {
+      "rev": "ddae71e",
+      "src": "https://github.com/AndrewRadev/linediff.vim"
+    },
+    "neogen": {
+      "rev": "d7f9461",
+      "src": "https://github.com/danymat/neogen"
+    },
+    "nvim-treesitter": {
+      "rev": "42fc28ba",
+      "src": "https://github.com/nvim-treesitter/nvim-treesitter"
+    },
+    "nvim-treesitter-context": {
+      "rev": "41847d3",
+      "src": "https://github.com/nvim-treesitter/nvim-treesitter-context"
+    },
+    "nvim-treesitter-textobjects": {
+      "rev": "71385f1",
+      "src": "https://github.com/nvim-treesitter/nvim-treesitter-textobjects"
+    },
+    "nvim-web-devicons": {
+      "rev": "b8221e4",
+      "src": "https://github.com/kyazdani42/nvim-web-devicons"
+    },
+    "outline.nvim": {
+      "rev": "6b62f73",
+      "src": "https://github.com/hedyhli/outline.nvim"
+    },
+    "quickfix-reflector.vim": {
+      "rev": "6a6a9e2",
+      "src": "https://github.com/stefandtw/quickfix-reflector.vim"
+    },
+    "tabular": {
+      "rev": "12437cd",
+      "src": "https://github.com/godlygeek/tabular"
+    },
+    "tagbar": {
+      "rev": "7bfffca",
+      "src": "https://github.com/preservim/tagbar"
+    },
+    "targets.vim": {
+      "rev": "6325416",
+      "src": "https://github.com/wellle/targets.vim"
+    },
+    "treesj": {
+      "rev": "4770492",
+      "src": "https://github.com/Wansmer/treesj"
+    },
+    "undotree": {
+      "rev": "0f1c981",
+      "src": "https://github.com/mbbill/undotree"
+    },
+    "vim-after-object": {
+      "rev": "7f52106",
+      "src": "https://github.com/junegunn/vim-after-object"
+    },
+    "vim-asterisk": {
+      "rev": "77e9706",
+      "src": "https://github.com/haya14busa/vim-asterisk"
+    },
+    "vim-eunuch": {
+      "rev": "e86bb79",
+      "src": "https://github.com/tpope/vim-eunuch"
+    },
+    "vim-exchange": {
+      "rev": "d6c1e97",
+      "src": "https://github.com/tommcdo/vim-exchange"
+    },
+    "vim-flog": {
+      "rev": "665b16a",
+      "src": "https://github.com/rbong/vim-flog"
+    },
+    "vim-fugitive": {
+      "rev": "61b51c0",
+      "src": "https://github.com/tpope/vim-fugitive"
+    },
+    "vim-ingo-library": {
+      "rev": "3ea510a",
+      "src": "https://github.com/inkarkat/vim-ingo-library"
+    },
+    "vim-mark": {
+      "rev": "a613b06",
+      "src": "https://github.com/inkarkat/vim-mark"
+    },
+    "vim-repeat": {
+      "rev": "6584602",
+      "src": "https://github.com/tpope/vim-repeat"
+    },
+    "vim-rhubarb": {
+      "rev": "5496d7c",
+      "src": "https://github.com/tpope/vim-rhubarb"
+    },
+    "vim-sleuth": {
+      "rev": "be69bff",
+      "src": "https://github.com/tpope/vim-sleuth"
+    },
+    "vim-sneak": {
+      "rev": "18b1faf",
+      "src": "https://github.com/justinmk/vim-sneak"
+    },
+    "vim-startuptime": {
+      "rev": "b6f0d93",
+      "src": "https://github.com/dstein64/vim-startuptime"
+    },
+    "vim-surround": {
+      "rev": "3d188ed",
+      "src": "https://github.com/tpope/vim-surround"
+    }
+  }
+}

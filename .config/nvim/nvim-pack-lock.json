@@ -1,15 +1,15 @@
 {
   "plugins": {
     "LuaSnip": {
-      "rev": "113f831",
+      "rev": "f958d98",
       "src": "https://github.com/L3MON4D3/LuaSnip"
     },
     "SchemaStore.nvim": {
-      "rev": "667eaa5",
+      "rev": "e71cc06",
       "src": "https://github.com/b0o/SchemaStore.nvim"
     },
     "blink.cmp": {
-      "rev": "cb87357",
+      "rev": "a4ab037",
       "src": "https://github.com/saghen/blink.cmp"
     },
     "ccc.nvim": {

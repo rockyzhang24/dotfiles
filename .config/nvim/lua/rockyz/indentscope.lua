@@ -571,6 +571,7 @@ local disabled_filetypes = {
     'Outline',
     'tagbar',
     'term',
+    'undotree',
 }
 vim.api.nvim_create_autocmd('FileType', {
     group = vim.api.nvim_create_augroup('rockyz.indentscope.exclude', { clear = true }),

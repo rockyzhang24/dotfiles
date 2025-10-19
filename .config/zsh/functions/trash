@@ -7,10 +7,14 @@
 target=($@)
 if [[ $# == 0 ]]; then
     target=($(gls -A -I .DS_Store -I .localized | fzf))
+    if [[ -z $target ]]; then
+        return 1
+    fi
 fi
 
-if [[ -z $target ]]; then
-    echo "Failed! Please give files/dirs to trash."
+
+if [[ ! -f $target && ! -d $target ]]; then
+    echo "Failed! $target is not a file or directory."
     return 1
 fi
 

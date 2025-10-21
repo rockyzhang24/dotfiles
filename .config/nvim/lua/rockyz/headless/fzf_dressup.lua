@@ -1,6 +1,8 @@
 -- Get input lines from stdin. Decorate each line, e.g., prepend a devicon to the filename in each
 -- line or ANSI color part of texts. And output processed lines to stdout.
 
+vim.cmd.packadd('nvim-web-devicons')
+
 local devicons = require('nvim-web-devicons')
 local color = require('rockyz.utils.color')
 

@@ -18,7 +18,7 @@ export FZF_DEFAULT_COMMAND="$FD --type f --type l"
 arctic="`
 `dark,`
 `fg:-1,bg:-1,`
-`fg+:#ffffff:bold,bg+:#04395e,gutter:-1,`
+`fg+:#ffffff:bold,bg+:#04395e,`
 `hl:#ffdd33:bold,`
 `hl+:#ffdd33:bold,`
 `query:-1,`
@@ -31,7 +31,7 @@ arctic="`
 monokai="`
 `dark,`
 `fg:-1,bg:-1,`
-`fg+:#ffffff:bold,bg+:#414339,gutter:-1,`
+`fg+:#ffffff:bold,bg+:#414339,`
 `hl:#ffdd33:bold,`
 `hl+:#ffdd33:bold,`
 `query:-1,`
@@ -44,6 +44,12 @@ monokai="`
 
 # Config the default options when running fzf
 # Keybindings:
+# - ctrl-j: down
+# - ctrl-k: up
+# - alt-j: down match
+# - alt-k: up match
+# - ctrl-n: next history
+# - ctrl-p: previous history
 # - ctrl-d: move cursor half page down
 # - ctrl-u: move cursor halp page up
 # - alt-d: move preview half page down
@@ -53,6 +59,7 @@ monokai="`
 # - ctrl-/: toggle preview window
 # - ctrl-w: toggle wrap
 # - alt-w: toggle preview wrap
+# - alt-r: toggle raw mode
 # - ctrl-o: open the selections via default application
 # - ctrl-y: copy the selections to system clipboard
 # - ctrl-e: edit the selections via $EDITOR
@@ -73,6 +80,9 @@ export FZF_DEFAULT_OPTS=" \
         `ctrl-w:toggle-wrap,`
         `alt-w:toggle-preview-wrap,`
         `ctrl-s:toggle,`
+        `alt-r:toggle-raw,`
+        `alt-j:down-match,`
+        `alt-k:up-match,`
         `ctrl-o:execute(open {+}),`
         `ctrl-y:execute-silent(echo -n {+} | pbcopy),`
         `ctrl-e:execute(\$EDITOR {+} < /dev/tty > /dev/tty 2>&1),`

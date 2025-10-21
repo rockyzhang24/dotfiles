@@ -702,7 +702,7 @@ vim.keymap.set('t', '<Leader><Esc>', '<C-\\><C-n>')
 
 -- Simulate <C-r> in insert mode for inserting the content of a register.
 -- Reference: http://vimcasts.org/episodes/neovim-terminal-paste/
-vim.keymap.set('t', '<M-r>', function()
+vim.keymap.set('t', '<Leader><C-r>', function()
     return '<C-\\><C-n>"' .. vim.fn.nr2char(vim.fn.getchar()) .. 'pi'
 end, { expr = true })
 

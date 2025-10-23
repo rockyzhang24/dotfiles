@@ -2,6 +2,7 @@
 
 volume=(
     padding_left=10
+    icon=" "
     script="$PLUGIN_DIR/volume.sh"
 )
 

@@ -1,4 +1,5 @@
 # vim: filetype=zsh
 
-# Create a directory and cd into it
+# Makes a directory and `cd`s inside
+
 [[ -n ${1} ]] && mkdir -p ${1} && builtin cd ${1}

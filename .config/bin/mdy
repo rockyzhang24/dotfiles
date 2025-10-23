@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+# Reference:
+# https://evanhahn.com/scripts-i-wrote-that-i-use-all-the-time/
+# https://codeberg.org/EvanHahn/dotfiles/src/branch/main/home/bin/bin/hoy
+#
+# It prints the current date like 10-22-2025.
+
+set -e
+set -u
+set -o pipefail
+
+echo -n "$(date '+%m-%d-%Y')"

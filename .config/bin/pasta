@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+# Reference:
+# https://evanhahn.com/scripts-i-wrote-that-i-use-all-the-time/
+# https://codeberg.org/EvanHahn/dotfiles/src/branch/main/home/bin/bin/pasta
+#
+# Usage:
+# 1. `paste > file_from_clipboard.txt`
+# 2. Open a file path from the clipboard: `nvim "$(pasta)"`
+# 3. Decode some base64 from the clipboard: `pasta | base64 --decode`
+
+set -e
+set -u
+
+if hash pbpaste 2>/dev/null; then
+    exec pbpaste
+elif hash xclip 2>/dev/null; then
+    exec xclip -selection clipboard -o
+elif [[ -e /tmp/clipboard ]]; then
+    exec cat /tmp/clipboard
+else
+    echo ''
+fi

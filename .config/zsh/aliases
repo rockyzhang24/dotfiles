@@ -33,7 +33,7 @@ alias wget="wget --continue --progress=bar --timestamping"
 alias curl="curl --continue-at - --location --progress-bar --remote-name --remote-time"
 alias aria="aria2c --max-connection-per-server=5 --continue"
 alias yd="yt-dlp --paths ~/Downloads"
-alias yda="yt-dlp --extract-audio --audio-format best --paths ~/Downloads"
+alias yda="yt-dlp -f bestaudio --paths ~/Downloads -o '%(title)s.%(ext)s'"
 
 # Vim
 # Use neovim for vimdiff if present

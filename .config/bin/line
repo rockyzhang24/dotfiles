@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+# Reference:
+# https://evanhahn.com/scripts-i-wrote-that-i-use-all-the-time/
+# https://codeberg.org/EvanHahn/dotfiles/src/branch/main/home/bin/bin/line
+#
+# `line 10` prints line 10 from stdin. For example, `cat some_big_file | line 10` prints line 10 of
+# a file.
+
+set -e
+set -u
+
+head -n "$1" | tail -n 1

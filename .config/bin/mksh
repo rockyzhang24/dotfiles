@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+# Reference:
+# https://evanhahn.com/scripts-i-wrote-that-i-use-all-the-time/
+# https://codeberg.org/EvanHahn/dotfiles/src/branch/main/home/bin/bin/mksh
+#
+# `mksh` makes it quick to create shell scripts. mksh foo.sh creates foo.sh, makes it executable
+# with chmod u+x, adds some nice Bash prefixes, and opens it with my editor (Neovim in my case).
+
+set -e
+set -u
+set -o pipefail
+
+if [ ! $# -eq 1 ]; then
+    echo 'mksh takes one argument' 1>&2
+    exit 1
+elif [ -e "$1" ]; then
+    echo "$1 already exists" 1>&2
+    exit 1
+fi
+
+echo '#!/usr/bin/env bash
+
+set -e
+set -u
+set -o pipefail
+
+' > "$1"
+
+chmod u+x "$1"
+
+"$EDITOR" "$1"

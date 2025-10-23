@@ -1,0 +1,31 @@
+# vim: filetype=zsh
+
+# Reference:
+# https://evanhahn.com/scripts-i-wrote-that-i-use-all-the-time/
+# https://codeberg.org/EvanHahn/dotfiles/src/branch/main/home/zsh/.config/zsh/aliases.zsh
+#
+# `tempcd` changes to a temporary directory. It’s basically cd "$(mktemp -d)". We can use this to
+# hop into a sandbox directory.
+#
+# Usage:
+# `tempcd [directory]`
+#
+# Some use case examples:
+#
+# 1. Download a file and extract it
+# tempcd
+# wget 'https://example.com/big_file.tar.xz'
+# tar -xf big_file.tar.xz
+#
+# 2. Write a quick throwaway script to try something out
+# tempcd
+# nvim foo.py
+# python3 foo.py
+
+cd "$(mktemp -d)"
+chmod -R 0700 .
+if [[ $# -eq 1 ]]; then
+    mkdir -p "$1"
+    cd "$1"
+    chmod -R 0700 .
+fi

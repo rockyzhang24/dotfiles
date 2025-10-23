@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+# Reference:
+# https://evanhahn.com/scripts-i-wrote-that-i-use-all-the-time/
+# https://codeberg.org/EvanHahn/dotfiles/src/branch/main/home/bin/bin/scratch
+#
+# It opens a temporary Vim buffer for quick text manipulation tasks, or to take a little throwaway
+# note. It’s basically an alias for `$EDITOR $(mktemp)`.
+
+set -e
+set -u
+set -o pipefail
+
+file="$(mktemp)"
+exec "$EDITOR" "$file"

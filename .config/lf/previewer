@@ -19,40 +19,20 @@ bat() {
 }
 
 image_previewer() {
-    #
-    # In Kitty, only lf running in normal terminal, not in tmux or Neovim's builtin terminal, could
-    # use kitty image protocal. In other situations, chafa could be used, however, lf running in
-    # tmux displays the image with abnormal colors.
-    #
-    # For Ghostty, since it uses the Kitty graphic protocol, we handle image preview in the same way
-    # as Kitty.
-    #
-    if [[ $KITTY_WINDOW_ID || $GHOSTTY_BIN_DIR ]]; then
-        # In Kitty or Ghostty
-        if [[ ! $TERM =~ "tmux" && -z $NVIM ]]; then
-            # Not in tmux and not in neovim's builtin terminal
+    # kitty's icat doesn't work well in tmux: images can be displayed but not be cleared, see
+    # https://github.com/kovidgoyal/kitty/commit/6347ea0210ac9dd913bfc540f5f46489fbc27a77.
+    # In neovim's builtin terminal, I cannot find an approach to preview images.
+    if [[ ! $TERM =~ "tmux" && -z $NVIM ]]; then
+        if [[ $KITTY_WINDOW_ID || $GHOSTTY_BIN_DIR ]]; then
             local place="${PV_WIDTH}x${PV_HEIGHT}@${HORIZONTAL_POS}x${VERTICAL_POS}"
             kitty icat --clear --transfer-mode memory --stdin no --align left --place "$place" "$1" < /dev/null > /dev/tty
-        elif [[ $TERM =~ "tmux" && -z $NVIM ]]; then
-            # In tmux but not in neovim's builtin terminal
-            printf "Preview is not supported here!\n"
-            printf "Instead, preview it in FZF (CTRL-F)."
-        else
-            printf "Use Chafa's symbols (ANSI art) format to preview images.\n"
-            chafa -f symbols -s "${PV_WIDTH}x${PV_HEIGHT}" --animate off --polite on "$1"
-        fi
-    elif [[ $WEZTERM_PANE || $ALACRITTY_WINDOW_ID ]]; then
-        # In Wezterm or Alacritty
-        if [[ ! $TERM =~ "tmux" && -z $NVIM ]]; then
+        elif [[ $WEZTERM_PANE || $ALACRITTY_WINDOW_ID ]]; then
             chafa -s "${PV_WIDTH}x${PV_HEIGHT}" --animate off --polite on "$1"
-        elif [[ $TERM =~ "tmux" && -z $NVIM ]]; then
-            printf "Preview is not supported here!\n"
-            printf "Instead, preview it in FZF (CTRL-F)."
         else
-            chafa -f symbols -s "${PV_WIDTH}x${PV_HEIGHT}" --animate off --polite on "$1"
+            printf "Image preview is not supported"
         fi
     else
-        printf "Preview is NOT supported!"
+        printf "Image preview is not supported"
     fi
 }
 

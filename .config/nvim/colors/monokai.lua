@@ -36,7 +36,8 @@ local gray6 = '#b3b3b1'
 local white = '#ffffff'
 local white2 = '#f8f8f2'
 local black = '#000000'
-local black2 = '#282923'
+-- local black2 = '#282923' -- offcial monokai background
+local black2 = '#191a16' -- I like darker background
 
 local norm_fg = white2 -- editor.foreground
 local norm_bg = black2 -- editor.background

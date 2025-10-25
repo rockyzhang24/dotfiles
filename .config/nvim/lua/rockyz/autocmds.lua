@@ -26,7 +26,8 @@ vim.api.nvim_create_autocmd('FileType', {
     group = vim.api.nvim_create_augroup('rockyz.overwrite_defaults', {}),
     pattern = '*',
     callback = function()
-        vim.opt.formatoptions:append('ron1l')
+        vim.opt.formatoptions:append('rn1l')
+        vim.opt.formatoptions:remove('o')
     end,
 })
 

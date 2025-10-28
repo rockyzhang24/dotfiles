@@ -1,27 +1,44 @@
+# Font configuration
 font-family = ""
-font-family = "JetBrains Mono"
+font-family = "Source Code Pro"
+font-style = "Medium"
+font-style-italic = "Medium Italic"
+font-style-bold = "Bold"
+font-style-bold-italic = "Bold Italic"
 font-size = 13
+adjust-cell-width = -5%
+adjust-cell-height = 20%
+adjust-underline-position = 6
+adjust-underline-thickness = 40%
+adjust-cursor-thickness = 150%
 
-window-title-font-family = "JetBrains Mono"
+window-title-font-family = "Source Code Pro Medium"
 
 # Disable ligatures
 font-feature = -calt
 font-feature = -liga
 font-feature = -dlig
 
+# Window
 window-padding-x = 2
 window-padding-y = 0
 window-decoration = false
 background-opacity = 1
 
+# Color theme
 theme = monokai
+# bold-color = bright
+
+# Cursor
+cursor-style-blink = false
+shell-integration-features = no-cursor
 
 # macOS specific
 macos-option-as-alt = left
-macos-titlebar-style = native
+macos-titlebar-style = tabs
 font-thicken = true
 mouse-hide-while-typing = true
-macos-window-shadow = false
+macos-window-shadow = true
 
 #
 # Keybindings

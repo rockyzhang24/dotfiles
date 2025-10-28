@@ -1,6 +1,6 @@
-# The classic Monokai color theme. Its offcial background color is #282923 but I'm now using
-# a darker one #191a16. Monokai has only 6 basic colors. I ask ChatGPT to give me the corresponding
-# bright ones.
+# The classic Monokai color theme.
+# Its offcial background color is #282923 but I'm now using a darker one #191a16. Monokai has only
+# 6 basic colors. I ask ChatGPT to give me the corresponding bright ones.
 
 palette = 0=#191a16
 palette = 1=#f92472

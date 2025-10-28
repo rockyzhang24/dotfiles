@@ -2,26 +2,24 @@ local notify = require('rockyz.utils.notify')
 
 vim.api.nvim_create_autocmd({ 'PackChanged' }, {
     group = vim.api.nvim_create_augroup('rockyz.pack', { clear = true }),
-    callback = function(args)
-        local kind = args.data.kind
-        local name = args.data.spec.name
+    callback = function(event)
+        local kind = event.data.kind
+        local name = event.data.spec.name
+        local active = event.data.active
         if kind == 'install' or kind == 'update' then
             -- saghen/blink.cmp
             if name == 'blink.cmp' then
-                local dir = vim.fn.stdpath("data") .. "/site/pack/core/opt/blink.cmp"
-                notify.info('[Pack] blink.cmp: building ...')
-                local obj = vim.system({ 'cargo', 'build', '--release' }, { cwd = dir }):wait()
-                if obj.code == 0 then
-                    notify.info('[Pack] blink.cmp: building done')
-                else
-                    notify.error('[Pack] blink.cmp: building failed')
+                if not active then
+                    vim.cmd.packadd('blink.cmp')
                 end
+                notify.info('[Pack] blink.cmp: building ...')
+                vim.cmd('BlinkCmp build')
+                notify.info('[Pack] blink.cmp: building done')
             end
             -- L3MON4D3/LuaSnip
             if name == 'LuaSnip' then
-                local dir = vim.fn.stdpath("data") .. "/site/pack/core/opt/LuaSnip"
                 notify.info('[Pack] LuaSnip: installing jsregexp')
-                local obj = vim.system({ 'make', 'install_jsregexp' }, { cwd = dir }):wait()
+                local obj = vim.system({ 'make', 'install_jsregexp' }, { cwd = event.data.path }):wait()
                 if obj.code == 0 then
                     notify.info('[Pack] LuaSnip: successfully to install jsregexp')
                 else
@@ -31,7 +29,9 @@ vim.api.nvim_create_autocmd({ 'PackChanged' }, {
         end
         -- nvim-treesitter/nvim-treesitter
         if kind == 'update' and name == 'nvim-treesitter' then
-            vim.cmd.packadd('nvim-treesitter')
+            if not active then
+                vim.cmd.packadd('nvim-treesitter')
+            end
             notify.info('[Pack] nvim-treesitter: updating installed parsers')
             vim.cmd('TSUpdate')
         end

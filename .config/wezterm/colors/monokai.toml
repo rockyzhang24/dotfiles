@@ -1,27 +1,31 @@
+# The classic Monokai color theme.
+# Its offcial background color is #282923 but I'm now using a darker one #191a16. Monokai has only
+# 6 basic colors. I ask ChatGPT to give me the corresponding bright ones.
+
 [colors]
 foreground = '#f8f8f2'
-background = '#282923'
+background = '#191a16'
 cursor_bg = '#e3e3dc'
 cursor_fg = '#000000'
 ansi = [
-    '#282923',
+    '#191a16',
     '#f92472',
     '#a6e22c',
     '#e7db74',
     '#67d8ef',
     '#ac80ff',
-    '#5fd7d7',
+    '#fd9621',
     '#d8d8d8',
 ]
 brights = [
-    '#4a4d48',
-    '#ff5a8f',
-    '#ccff66',
-    '#f3e58f',
-    '#92eaff',
-    '#c4a6ff',
-    '#a6f7f7',
-    '#f8f8f8',
+    '#35362f',
+    '#ff5c8a',
+    '#b7f65c',
+    '#fff9a3',
+    '#7eefff',
+    '#c8a0ff',
+    '#ffb45c',
+    '#f5f5f5',
 ]
 selection_fg = 'none'
 selection_bg = '#555449'

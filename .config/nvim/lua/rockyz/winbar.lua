@@ -2,10 +2,10 @@
 --
 -- Header | Path > Icon > Name [diagnostics and modified indicator] > Breadcrumbs
 -- ^          ^      ^     ^
--- |          |      |     |___ name_component()
--- |          |      |___ icon_component()
--- |          |____ path_component()
--- |___ header_component()
+-- |          |      |     |___ get_name()
+-- |          |      |___ get_icon()
+-- |          |____ get_path()
+-- |___ get_header()
 --
 
 local M = {}
@@ -18,7 +18,7 @@ local special_filetypes = require('rockyz.special_filetypes')
 local cached_hls = {}
 
 -- Header has the window number and the indicator of maximization
-local function header_component()
+local function get_header()
     local items = {}
     -- Window number
     local winnr = string.format('[%s]', vim.api.nvim_win_get_number(0))
@@ -66,7 +66,7 @@ local function special_ft_component(ft, winid)
 end
 
 -- Get the file path for the window with normal filetype
-local function path_component()
+local function get_path()
     local fullpath = vim.fn.expand('%')
     if fullpath == '' then
         return ''
@@ -80,7 +80,7 @@ local function path_component()
 end
 
 -- Get the filetype icon
-local function icon_component()
+local function get_icon()
     local ft = vim.bo.filetype
     local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
     if has_devicons then
@@ -97,7 +97,7 @@ local function icon_component()
 end
 
 -- Get the filename
-local function name_component()
+local function get_name()
     local filename = vim.fn.expand('%:t')
     if filename == '' then
         filename = '[No Name]'
@@ -105,11 +105,13 @@ local function name_component()
     return filename
 end
 
+local breadcrumbs = ''
+
 M.render = function()
     local ft = vim.bo.filetype
     local winid = vim.api.nvim_get_current_win()
 
-    local header = header_component()
+    local header = get_header()
 
     -- 1. Window with special filetype
 
@@ -123,14 +125,14 @@ M.render = function()
     table.insert(items, header)
 
     -- Path
-    local path = path_component()
+    local path = get_path()
     if path ~= '' then
         table.insert(items, path)
         table.insert(items, delimiter)
     end
 
     -- File icon
-    local icon = icon_component()
+    local icon = get_icon()
     table.insert(items, icon)
 
     local diag_cnt = vim.diagnostic.count(0)
@@ -139,7 +141,7 @@ M.render = function()
     local hl = error_cnt > 0 and 'WinbarError' or (warn_cnt > 0 and 'WinbarWarn' or 'WinbarFilename')
 
     -- Name
-    local name = name_component()
+    local name = get_name()
     table.insert(items, string.format('%%#%s#%s%%*', hl, name))
 
     -- Status
@@ -161,8 +163,75 @@ M.render = function()
         table.insert(items, status_str)
     end
 
+    -- Breadcrumbs
+    if breadcrumbs ~= '' then
+        table.insert(items, delimiter)
+        table.insert(items, breadcrumbs)
+    end
+
     return table.concat(items, ' ')
 end
+
+-- Breadcrumbs
+-- It get refreshed only on 'CursorHold'
+-- Reference: https://github.com/juniorsundar/nvim/blob/main/lua/config/lsp/breadcrumbs.lua
+
+-- Recursively find the path of symbols at the current cursor position
+local function find_symbol_path(symbols, bufnr, client, symbol_path_component)
+    if symbols == nil then
+        return
+    end
+    -- vim.pos and vim.range require Neovim 0.12
+    local cursor_pos = vim.pos.cursor(vim.api.nvim_win_get_cursor(0))
+    local cursor_range = vim.range(cursor_pos, cursor_pos)
+    for _, symbol in ipairs(symbols) do
+        local symbol_range = vim.range.lsp(bufnr, symbol.range, client.offset_encoding)
+        if vim.range.has(symbol_range, cursor_range) then
+            local kind = vim.lsp.protocol.SymbolKind[symbol.kind] or 'Unknown'
+            local icon = icons.symbol_kinds[kind]
+            local colored_icon = string.format('%%#SymbolKind%s#%s%%*', kind, icon)
+            table.insert(symbol_path_component, colored_icon .. ' ' .. symbol.name)
+            find_symbol_path(symbol.children, bufnr, client, symbol_path_component)
+            return
+        end
+    end
+end
+
+local function get_breadcrumbs()
+    local bufnr = vim.api.nvim_get_current_buf()
+    local params = { textDocument = vim.lsp.util.make_text_document_params(bufnr) }
+    local method = 'textDocument/documentSymbol'
+    local clients = vim.lsp.get_clients( { method = method, bufnr = bufnr })
+    if not next(clients) then
+        return
+    end
+
+    local winid = vim.api.nvim_get_current_win()
+    local cursor_pos = vim.pos.cursor(vim.api.nvim_win_get_cursor(winid))
+
+    for _, client in ipairs(clients) do
+        client:request(method, params, function(_, result, _)
+
+            local new_cursor_pos = vim.pos.cursor(vim.api.nvim_win_get_cursor(winid))
+            if new_cursor_pos ~= cursor_pos then
+                return
+            end
+
+            local symbol_path_components = {}
+            find_symbol_path(result, bufnr, client, symbol_path_components)
+            breadcrumbs = table.concat(symbol_path_components, ' ' .. delimiter .. ' ')
+            vim.cmd('redrawstatus')
+
+        end, bufnr)
+    end
+end
+
+vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
+    group = vim.api.nvim_create_augroup('rockyz.winbar.breadcrumbs', { clear = true }),
+    callback = function()
+        get_breadcrumbs()
+    end,
+})
 
 -- vim.o.winbar = "%{%v:lua.require('rockyz.winbar').render()%}"
 

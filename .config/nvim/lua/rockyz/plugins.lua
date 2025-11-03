@@ -81,10 +81,12 @@ vim.pack.add({
     -- LSP
     'https://github.com/smjonas/inc-rename.nvim',
     'https://github.com/b0o/SchemaStore.nvim',
-    'https://github.com/hedyhli/outline.nvim',
 
     -- Autocomplete
-    'https://github.com/saghen/blink.cmp',
+    {
+        src = 'https://github.com/saghen/blink.cmp',
+        version = vim.version.range('1.*')
+    },
 
     -- Snippets
     'https://github.com/L3MON4D3/LuaSnip',
@@ -106,5 +108,5 @@ vim.pack.add({
     {
         src = 'https://github.com/rockyzhang24/git-messenger.vim',
         version = 'dev',
-    }
+    },
 })

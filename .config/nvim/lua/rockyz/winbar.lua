@@ -185,7 +185,10 @@ local function find_symbol_path(symbols, bufnr, client, symbol_path_component)
     local cursor_pos = vim.pos.cursor(vim.api.nvim_win_get_cursor(0))
     local cursor_range = vim.range(cursor_pos, cursor_pos)
     for _, symbol in ipairs(symbols) do
-        local symbol_range = vim.range.lsp(bufnr, symbol.range, client.offset_encoding)
+        -- Some LSPs (e.g., bash) are still using the deprecated SymbolInformation[] as the response
+        -- of Document Symbols request. The symbol range is located at symbol.location.range instead
+        -- of symbol.range
+        local symbol_range = vim.range.lsp(bufnr, symbol.range or symbol.location.range, client.offset_encoding)
         if vim.range.has(symbol_range, cursor_range) then
             local kind = vim.lsp.protocol.SymbolKind[symbol.kind] or 'Unknown'
             local icon = icons.symbol_kinds[kind]

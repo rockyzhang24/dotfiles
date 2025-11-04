@@ -6,7 +6,7 @@ vim.filetype.add({
             if not path or not bufnr or vim.bo[bufnr].filetype == 'bigfile' then
                 return
             end
-            if path ~= vim.api.nvim_buf_get_name(bufnr) then
+            if path ~= vim.fs.normalize(vim.api.nvim_buf_get_name(bufnr)) then
                 return
             end
             local size = vim.fn.getfsize(path)

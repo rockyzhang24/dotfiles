@@ -1,23 +1,24 @@
 {
   "plugins": {
     "LuaSnip": {
-      "rev": "ccf25a5",
+      "rev": "3732756",
       "src": "https://github.com/L3MON4D3/LuaSnip"
     },
     "SchemaStore.nvim": {
-      "rev": "4341619",
+      "rev": "e5ca2c4",
       "src": "https://github.com/b0o/SchemaStore.nvim"
     },
     "blink.cmp": {
-      "rev": "312097b",
-      "src": "https://github.com/saghen/blink.cmp"
+      "rev": "327fff9",
+      "src": "https://github.com/saghen/blink.cmp",
+      "version": "1.0.0 - 2.0.0"
     },
     "ccc.nvim": {
       "rev": "9d1a256",
       "src": "https://github.com/uga-rosa/ccc.nvim"
     },
     "conform.nvim": {
-      "rev": "9fd3d5e",
+      "rev": "26c02e1",
       "src": "https://github.com/stevearc/conform.nvim"
     },
     "cscope_maps.nvim": {
@@ -66,16 +67,12 @@
       "src": "https://github.com/nvim-treesitter/nvim-treesitter-context"
     },
     "nvim-treesitter-textobjects": {
-      "rev": "a9742cb",
+      "rev": "5ca4aaa",
       "src": "https://github.com/nvim-treesitter/nvim-treesitter-textobjects"
     },
     "nvim-web-devicons": {
       "rev": "8dcb311",
       "src": "https://github.com/kyazdani42/nvim-web-devicons"
-    },
-    "outline.nvim": {
-      "rev": "6b62f73",
-      "src": "https://github.com/hedyhli/outline.nvim"
     },
     "quickfix-reflector.vim": {
       "rev": "6a6a9e2",

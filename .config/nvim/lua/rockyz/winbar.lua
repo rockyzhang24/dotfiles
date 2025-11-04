@@ -164,16 +164,15 @@ M.render = function()
     end
 
     -- Breadcrumbs
-    if breadcrumbs ~= '' then
+    if vim.w.breadcrumbs ~= '' then
         table.insert(items, delimiter)
-        table.insert(items, breadcrumbs)
     end
+    table.insert(items, vim.w.breadcrumbs)
 
     return table.concat(items, ' ')
 end
 
 -- Breadcrumbs
--- It get refreshed only on 'CursorHold'
 -- Reference: https://github.com/juniorsundar/nvim/blob/main/lua/config/lsp/breadcrumbs.lua
 
 -- Recursively find the path of symbols at the current cursor position
@@ -202,14 +201,15 @@ end
 
 local function get_breadcrumbs()
     local bufnr = vim.api.nvim_get_current_buf()
+    local winid = vim.api.nvim_get_current_win()
     local params = { textDocument = vim.lsp.util.make_text_document_params(bufnr) }
     local method = 'textDocument/documentSymbol'
     local clients = vim.lsp.get_clients( { method = method, bufnr = bufnr })
     if not next(clients) then
+        vim.w[winid].breadcrumbs = ''
         return
     end
 
-    local winid = vim.api.nvim_get_current_win()
     local cursor_pos = vim.pos.cursor(vim.api.nvim_win_get_cursor(winid))
 
     for _, client in ipairs(clients) do
@@ -222,14 +222,15 @@ local function get_breadcrumbs()
 
             local symbol_path_components = {}
             find_symbol_path(result, bufnr, client, symbol_path_components)
-            breadcrumbs = table.concat(symbol_path_components, ' ' .. delimiter .. ' ')
+            vim.w[winid].breadcrumbs = table.concat(symbol_path_components, ' ' .. delimiter .. ' ')
             vim.cmd('redrawstatus')
 
         end, bufnr)
     end
 end
 
-vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
+-- Refresh the breadcrumbs of the current window
+vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI', 'BufWinEnter' }, {
     group = vim.api.nvim_create_augroup('rockyz.winbar.breadcrumbs', { clear = true }),
     callback = function()
         get_breadcrumbs()

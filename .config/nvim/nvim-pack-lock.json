@@ -18,11 +18,11 @@
       "src": "https://github.com/uga-rosa/ccc.nvim"
     },
     "conform.nvim": {
-      "rev": "26c02e1",
+      "rev": "cde4da5",
       "src": "https://github.com/stevearc/conform.nvim"
     },
     "cscope_maps.nvim": {
-      "rev": "5a91d16",
+      "rev": "ad45590",
       "src": "https://github.com/dhananjaylatkar/cscope_maps.nvim"
     },
     "eregex.vim": {

@@ -196,7 +196,7 @@ local groups = {
     LspReferenceWrite = 'SelectionHighlightBackground',
     LspCodeLens = 'CodeLens',
     -- LspCodeLensSeparator = { }, -- color the seperator between two or more code lens.
-    LspSignatureActiveParameter = 'MatchedCharacters',
+    LspSignatureActiveParameter = { fg = matched_chars, bold = true },
     LspInlayHint = 'InlayHint',
     -- SnippetTabstop = {},
 

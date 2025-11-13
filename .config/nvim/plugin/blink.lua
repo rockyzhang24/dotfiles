@@ -49,7 +49,7 @@ require('blink.cmp').setup({
             border = vim.g.border_style,
             draw = {
                 columns = {
-                    { 'kind_icon' },
+                    { 'kind_icon', 'kind', gap = 1 },
                     { 'label', 'label_description', gap = 1 },
                 },
             },

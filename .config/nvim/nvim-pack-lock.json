@@ -5,7 +5,7 @@
       "src": "https://github.com/L3MON4D3/LuaSnip"
     },
     "SchemaStore.nvim": {
-      "rev": "e5ca2c4",
+      "rev": "229e7ec",
       "src": "https://github.com/b0o/SchemaStore.nvim"
     },
     "blink.cmp": {
@@ -43,7 +43,7 @@
       "src": "https://github.com/m-demare/hlargs.nvim"
     },
     "inc-rename.nvim": {
-      "rev": "7c79416",
+      "rev": "2597bcc",
       "src": "https://github.com/smjonas/inc-rename.nvim"
     },
     "iswap.nvim": {
@@ -63,7 +63,7 @@
       "src": "https://github.com/nvim-treesitter/nvim-treesitter"
     },
     "nvim-treesitter-context": {
-      "rev": "ec308c7",
+      "rev": "660861b",
       "src": "https://github.com/nvim-treesitter/nvim-treesitter-context"
     },
     "nvim-treesitter-textobjects": {

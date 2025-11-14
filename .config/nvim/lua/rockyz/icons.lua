@@ -140,6 +140,7 @@ icons.misc = {
     note = '',
     outline = '',
     page_previous = '󰮳',
+    pointer = '',
     quickfix = '',
     rocket = '',
     search = '',

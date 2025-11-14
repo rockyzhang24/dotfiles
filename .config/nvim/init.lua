@@ -49,6 +49,7 @@ local modules = {
     'leetcode',
     'yank',
     'terminal',
+    'outline',
 }
 
 for _, module in ipairs(modules) do

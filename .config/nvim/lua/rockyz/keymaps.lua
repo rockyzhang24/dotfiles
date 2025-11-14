@@ -125,7 +125,7 @@ vim.keymap.set('n', '\\l', function()
     end
 end)
 -- Toggle spell
-vim.keymap.set('n', '\\s', function()
+vim.keymap.set('n', '\\S', function()
     vim.wo.spell = not vim.wo.spell
 end)
 -- Toggle diffthis for each window in the current tab page

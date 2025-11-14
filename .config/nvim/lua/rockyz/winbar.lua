@@ -105,8 +105,6 @@ local function get_name()
     return filename
 end
 
-local breadcrumbs = ''
-
 M.render = function()
     local ft = vim.bo.filetype
     local winid = vim.api.nvim_get_current_win()
@@ -116,7 +114,14 @@ M.render = function()
     -- 1. Window with special filetype
 
     if is_special_ft(ft, winid) then
-        return header .. ' ' .. special_ft_component(ft, winid)
+        local winbar = header .. ' ' .. special_ft_component(ft, winid)
+        -- Show "follow cursor" indicator in outline window
+        if ft == 'outline' then
+            local follow_cursor_hl = vim.t.outline_follow_cursor and 'StlComponentOn' or 'StlComponentInactive'
+            local follow_cursor = string.format('[%%#%s#%s%%*]', follow_cursor_hl, icons.misc.pointer)
+            winbar = winbar .. ' ' .. follow_cursor
+        end
+        return winbar
     end
 
     -- 2. Window with normal filetype
@@ -214,6 +219,10 @@ local function get_breadcrumbs()
 
     for _, client in ipairs(clients) do
         client:request(method, params, function(_, result, _)
+
+            if not vim.api.nvim_win_is_valid(winid) then
+                return
+            end
 
             local new_cursor_pos = vim.pos.cursor(vim.api.nvim_win_get_cursor(winid))
             if new_cursor_pos ~= cursor_pos then

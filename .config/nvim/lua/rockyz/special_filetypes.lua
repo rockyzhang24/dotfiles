@@ -65,7 +65,7 @@ local special_filetypes = {
         icon = icons.misc.explorer,
         title = 'Oil',
     },
-    Outline = {
+    outline = {
         icon = icons.misc.outline,
         title = 'Outline',
     },

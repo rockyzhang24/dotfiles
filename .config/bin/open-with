@@ -1,0 +1,329 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# This script simulates Finder’s “Open With…” menu from the command line. It extends the macOS open
+# command with a command line menu selection of apps able to open the file you specify.
+
+# Usage: open-with [OPTIONS] FILE
+#   -l, --limit NUM                  Maximum number of apps to list
+#   -g, --gui GUI                    Menu tool to use (fzf|gum, default auto-detect)
+#   -h, --help                       Display this screen
+
+# The script alternatively accepts a single filename as input on STDIN, so you can pipe the results
+# of another command to it:
+# find . -type f | fzf | open-with -l 5 -g gum
+
+# Reference: https://brettterpstra.com/2025/11/17/a-cli-for-finders-open-with/
+
+# macOS Only
+# Requires duti, and either fzf or gum
+# [duti]: https://github.com/moretension/duti
+# [fzf]: https://github.com/junegunn/fzf "A command-line fuzzy finder"
+# [gum]: https://github.com/charmbracelet/gum "charmbracelet/gum:A tool for glamorous shell scripts"
+#
+# Save this script as open-with in your path and make it executable
+# $ chmod +x /path/to/open-with
+# $ brew install fzf duti
+# $ open-with -h
+#
+# Alternatively accepts a single filename as piped input
+#
+require 'optparse'
+
+class OpenWith
+  module Color
+    ATTRIBUTES = [
+      [ :reset              ,   0 ],
+      [ :bold               ,   1 ],
+      [ :dark               ,   2 ],
+      [ :italic             ,   3 ],
+      [ :underline          ,   4 ],
+      [ :blink              ,   5 ],
+      [ :negative           ,   7 ],
+      [ :concealed          ,   8 ],
+      [ :black              ,  30 ],
+      [ :red                ,  31 ],
+      [ :green              ,  32 ],
+      [ :yellow             ,  33 ],
+      [ :blue               ,  34 ],
+      [ :magenta            ,  35 ],
+      [ :cyan               ,  36 ],
+      [ :white              ,  37 ],
+      [ :on_black           ,  40 ],
+      [ :on_red             ,  41 ],
+      [ :on_green           ,  42 ],
+      [ :on_yellow          ,  43 ],
+      [ :on_blue            ,  44 ],
+      [ :on_magenta         ,  45 ],
+      [ :on_cyan            ,  46 ],
+      [ :on_white           ,  47 ],
+      [ :intense_black      ,  90 ],
+      [ :intense_red        ,  91 ],
+      [ :intense_green      ,  92 ],
+      [ :intense_yellow     ,  93 ],
+      [ :intense_blue       ,  94 ],
+      [ :intense_magenta    ,  95 ],
+      [ :intense_cyan       ,  96 ],
+      [ :intense_white      ,  97 ],
+      [ :on_intense_black   , 100 ],
+      [ :on_intense_red     , 101 ],
+      [ :on_intense_green   , 102 ],
+      [ :on_intense_yellow  , 103 ],
+      [ :on_intense_blue    , 104 ],
+      [ :on_intense_magenta , 105 ],
+      [ :on_intense_cyan    , 106 ],
+      [ :on_intense_white   , 107 ]
+    ]
+
+    ATTRIBUTE_NAMES = ATTRIBUTES.transpose.first
+
+    def support?(feature)
+      case feature
+      when :clear
+        !String.instance_methods(false).map(&:to_sym).include?(:clear)
+      end
+    end
+
+    def self.coloring?
+      @coloring
+    end
+
+    def self.coloring=(val)
+      @coloring = val
+    end
+    self.coloring = true
+
+    ATTRIBUTES.each do |c, v|
+      eval <<-EOT
+        def #{c}(string = nil)
+          result = ''
+          result << "\e[#{v}m" if Color.coloring?
+          if block_given?
+            result << yield
+          elsif string.respond_to?(:to_str)
+            result << string.to_str
+          elsif respond_to?(:to_str)
+            result << to_str
+          else
+            return result #only switch on
+          end
+          result << "\e[0m" if Color.coloring?
+          result
+        end
+      EOT
+    end
+
+    # Regular expression that is used to scan for ANSI-sequences while
+    # uncoloring strings.
+    COLORED_REGEXP = /\e\[(?:(?:[349]|10)[0-7]|[0-9])?m/
+
+    # Returns an uncolored version of the string, that is all
+    # ANSI-sequences are stripped from the string.
+    def uncolored(string = nil) # :yields:
+      if block_given?
+        yield.to_str.gsub(COLORED_REGEXP, '')
+      elsif string.respond_to?(:to_str)
+        string.to_str.gsub(COLORED_REGEXP, '')
+      elsif respond_to?(:to_str)
+        to_str.gsub(COLORED_REGEXP, '')
+      else
+        ''
+      end
+    end
+
+    module_function
+
+    def attributes
+      ATTRIBUTE_NAMES
+    end
+    extend self
+  end
+
+  module Which
+    class << self
+      def exist?(cmd)
+        !`which #{cmd}`.strip.empty?
+      end
+
+      def which(cmd)
+        `which #{cmd}`.strip
+      end
+    end
+  end
+end
+
+class OpenWith
+    attr_reader :file, :apps
+
+    attr_writer :gui
+
+    def initialize(file, limit: 0, gui: :fzf)
+        @c = Color
+        if Which.exist?('duti')
+            @duti = Which.which('duti')
+        else
+            puts [
+              @c.intense_red("duti not found. Please install with"),
+              @c.intense_white("`brew install duti`")
+            ].join(" ")
+            exit 1
+        end
+        @file = file
+        @limit = limit
+        @apps = apps
+        @gui = gui ? gui : find_gui
+    end
+
+    def find_gui
+      if Which.exist?('fzf')
+        return Which.which('fzf')
+      elsif Which.exist?('gum')
+        return Which.which('gum')
+      else
+        puts @c.intense_red("fzf or gum not found, please install one")
+        puts @c.intense_white("$ brew install fzf")
+        puts @c.white("# OR")
+        puts @c.intense_white("$ brew install gum")
+        exit 1
+      end
+    end
+
+    def uti
+        `mdls "#{@file}" -name "kMDItemContentType" -raw`.strip
+    end
+
+    def bids
+        `duti -l #{uti}`.strip.split("\n")
+    end
+
+    def apps
+        apps = []
+        ids = bids
+        ids = ids[0..@limit] if @limit.positive?
+
+        ids.each do |bid|
+            path = `mdfind kMDItemCFBundleIdentifier = "#{bid}"`.strip.split("\n").first
+            if path
+                name = File.basename(path, ".app")
+                apps.push({ name: name, path: path, bid: bid})
+            end
+        end
+        apps
+    end
+
+    def text_list(delimiter)
+      @apps.map do |app|
+        [
+          app[:name].to_s,
+          app[:path].to_s,
+          app[:bid].to_s
+        ].join(delimiter)
+      end.reject { |line| line.strip.empty? }
+        .join("\n")
+    end
+
+    def fzf_list
+      text_list("\t")
+    end
+
+    def gum_list
+      text_list(":")
+    end
+
+    def choose_app
+      if File.basename(@gui) == 'gum'
+        res = `echo "#{gum_list}" | #{@gui} choose --limit=1 --ordered --label-delimiter=":"`
+        return nil if res.strip == "nothing selected"
+
+        res = res.strip.split(":")
+        { name: File.basename(res[0], ".app"), path: res[0], bid: res[1] }
+      else
+        res = `echo "#{fzf_list}" | #{@gui} -n 1 --with-nth 1 -d "\t" --height=10 --prompt "Select an app: "`
+        return nil if res.strip.empty?
+
+        res = res.strip.split("\t")
+        { name: res[0], path: res[1], bid: res[2] }
+      end
+    end
+
+    def open_with(app)
+        if app
+            `open -b "#{app[:bid]}" "#{@file}"`
+        end
+    end
+
+    def open
+        app = choose_app
+        open_with(app) if app
+    end
+end
+
+c = OpenWith::Color
+c.coloring = $stdout.isatty
+
+unless %x{uname}.strip == "Darwin"
+  puts c.intense_red("This script only runs on macOS")
+  exit 1
+end
+
+options = {}
+optparse = OptionParser.new do|opts|
+  opts.banner = "#{c.yellow("Usage:")} #{c.intense_cyan(File.basename(__FILE__))} #{c.intense_white("[OPTIONS] FILE")}"
+
+  options[:limit] = 0
+  opts.on( '-l', '--limit NUM', 'Maximum number of apps to list' ) do |limit|
+    options[:limit] = limit.strip.to_i
+  end
+
+  options[:gui] = nil
+  opts.on('-g', '--gui GUI', 'Menu tool to use (fzf|gum, default auto-detect)') do |gui|
+    options[:gui] = case gui
+                    when /^g/
+                      OpenWith::Which.exist?('gum') && OpenWith::Which.which('gum')
+                    when /^f/
+                      OpenWith::Which.exist?('fzf') && OpenWith::Which.which('fzf')
+                    end
+  end
+
+  opts.on( '-h', '--help', 'Display this screen' ) do
+    puts opts
+    exit
+  end
+end
+
+optparse.parse!
+
+if ARGV.count != 1 && $stdin.tty?
+    puts c.intense_red("Wrong number of arguments")
+    puts optparse
+    exit 1
+end
+
+if $stdin.tty?
+  file = ARGV[0]
+else
+  file = $stdin.read.strip
+end
+
+unless file && File.exist?(file)
+    puts [c.intense_red("File not found: "), c.intense_white(file)].join(" ")
+    puts optparse
+    exit 1
+end
+
+ow = OpenWith.new(file, limit: options[:limit], gui: options[:gui])
+app = ow.choose_app
+
+unless app
+    puts c.red("Canceled")
+    exit 1
+end
+
+puts [
+    c.intense_yellow("Opening"),
+    c.intense_white(File.basename(file)),
+    c.intense_yellow("with"),
+    c.intense_white(app[:name])
+].join(" ")
+
+ow.open_with(app)

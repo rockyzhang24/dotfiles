@@ -249,6 +249,12 @@ function M.spell(trunc_width)
     return vim.o.spell and string.format('%%#StlComponentOn#%s%%*', icons.misc.check) or ''
 end
 
+-- The indicator for tpope/vim-obsession
+function M.obsession()
+    local fmt = '[%%#%s#%s%%*]'
+    return vim.fn.ObsessionStatus(string.format(fmt, 'StlComponentOn', '$'), string.format(fmt, 'StlComponentOff', 'S'))
+end
+
 -- Treesitter status
 -- Use different colors to denote whether it has a parser for the
 -- current file and whether the highlight is enabled:
@@ -359,6 +365,7 @@ function M.render()
         M.autoformat(120),
         M.spell(120),
         concat_components({
+            M.obsession(),
             M.treesitter(),
             M.indent(120),
             M.encoding(120),

@@ -48,6 +48,7 @@ require('blink.cmp').setup({
         menu = {
             border = vim.g.border_style,
             draw = {
+                align_to = 'cursor',
                 columns = {
                     { 'kind_icon', 'kind', gap = 1 },
                     { 'label', 'label_description', gap = 1 },

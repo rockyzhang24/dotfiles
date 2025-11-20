@@ -4,9 +4,11 @@ vim.o.breakindent = true
 vim.o.cindent = true
 vim.o.cmdheight = 1
 vim.o.completeopt = 'menuone,noselect,noinsert,fuzzy,popup'
+vim.opt.cpoptions:remove('_')
 vim.o.cursorline = true
 vim.opt.diffopt = {'algorithm:patience', 'closeoff', 'filler', 'inline:word', 'internal', 'linematch:60', 'vertical'}
 vim.o.expandtab = true
+vim.o.exrc = true
 vim.opt.fillchars = {
     fold = ' ',
     foldopen = icons.caret.down,
@@ -21,6 +23,7 @@ vim.o.foldlevel = 99
 vim.o.foldlevelstart = 99
 -- vim.opt.guicursor = "i:block" -- use block cursor in insert mode
 vim.o.ignorecase = true
+vim.o.inccommand = 'split'
 vim.opt.isfname:remove('=')
 vim.opt.jumpoptions:append('view')
 vim.o.laststatus = 3
@@ -43,6 +46,7 @@ vim.o.pumborder = vim.g.border_style
 vim.o.relativenumber = true
 vim.o.scrolloff = 3
 vim.opt.sessionoptions:append('globals,localoptions,winpos')
+vim.opt.sessionoptions:remove('blank')
 vim.o.shada = "!,'500,<50,s10,h"
 vim.o.shiftwidth = 4
 vim.o.shiftround = true

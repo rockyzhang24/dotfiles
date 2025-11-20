@@ -42,12 +42,21 @@ vim.pack.add({
     -- Misc
     'https://github.com/kyazdani42/nvim-web-devicons',
     'https://github.com/dstein64/vim-startuptime',
-    'https://github.com/tpope/vim-surround',
-    'https://github.com/tpope/vim-sleuth',
-    'https://github.com/tpope/vim-repeat',
     'https://github.com/godlygeek/tabular',
     'https://github.com/mbbill/undotree',
     'https://github.com/haya14busa/vim-asterisk',
+    'https://github.com/tpope/vim-surround',
+    'https://github.com/tpope/vim-sleuth',
+    'https://github.com/tpope/vim-repeat',
+    'https://github.com/tpope/vim-apathy',
+    'https://github.com/tpope/vim-dispatch', -- async build and text
+    'https://github.com/tpope/vim-projectionist',
+    'https://github.com/tpope/vim-obsession',
+
+    -- gof/goF: Go to the directory of the current file/working directory in the File manager (Finder on macOS)
+    -- got/goT: Go to the directory of the current file/working directory in the Terminal
+    'https://github.com/justinmk/vim-gtfo',
+    'https://github.com/justinmk/vim-sneak',
 
     'https://github.com/tommcdo/vim-exchange',
     -- It provides shortcuts:
@@ -74,7 +83,6 @@ vim.pack.add({
     'https://github.com/inkarkat/vim-ingo-library',
     'https://github.com/inkarkat/vim-mark',
 
-    'https://github.com/justinmk/vim-sneak',
     'https://github.com/uga-rosa/ccc.nvim',
     'https://github.com/stefandtw/quickfix-reflector.vim',
 

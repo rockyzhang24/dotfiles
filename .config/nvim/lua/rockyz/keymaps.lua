@@ -720,8 +720,8 @@ vim.cmd([[
 inoremap <silent> <C-G><C-T> <C-R>=repeat(complete(col('.'),map(["%Y-%m-%d %H:%M:%S","%a, %d %b %Y %H:%M:%S %z","%Y %b %d","%d-%b-%y","%a %b %d %T %Z %Y","%Y%m%d"],'strftime(v:val)')+[localtime()]),0)<CR>
 
 " Change directory (from @justinmk)
-nnoremap cdd  <cmd>lcd %:h<bar>pwd<cr>
-nnoremap cdg  :lcd <c-r>=luaeval('vim.fs.root(vim.fn.expand("%"), ".git")')<cr><bar>pwd<cr>
+nnoremap cd%  <cmd>lcd %:h<bar>pwd<cr>
+nnoremap cdd  :lcd <c-r>=luaeval('vim.fs.root(vim.fn.expand("%"), ".git")')<cr><bar>pwd<cr>
 nnoremap cdu   <cmd>lcd ..<bar>pwd<cr>
 nnoremap cd-   <cmd>lcd -<bar>pwd<cr>
 

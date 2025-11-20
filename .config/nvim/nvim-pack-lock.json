@@ -5,11 +5,11 @@
       "src": "https://github.com/L3MON4D3/LuaSnip"
     },
     "SchemaStore.nvim": {
-      "rev": "229e7ec",
+      "rev": "eed1834170f343c14a6768f085b26b3571a55302",
       "src": "https://github.com/b0o/SchemaStore.nvim"
     },
     "blink.cmp": {
-      "rev": "327fff9",
+      "rev": "b19413d214068f316c78978b08264ed1c41830ec",
       "src": "https://github.com/saghen/blink.cmp",
       "version": "1.0.0 - 2.0.0"
     },
@@ -18,7 +18,7 @@
       "src": "https://github.com/uga-rosa/ccc.nvim"
     },
     "conform.nvim": {
-      "rev": "cde4da5",
+      "rev": "1bf8b5b9caee51507aa51eaed3da5b0f2595c6b9",
       "src": "https://github.com/stevearc/conform.nvim"
     },
     "cscope_maps.nvim": {
@@ -35,7 +35,7 @@
       "version": "'dev'"
     },
     "gitsigns.nvim": {
-      "rev": "20ad441",
+      "rev": "cdafc320f03f2572c40ab93a4eecb733d4016d07",
       "src": "https://github.com/lewis6991/gitsigns.nvim"
     },
     "hlargs.nvim": {
@@ -102,9 +102,17 @@
       "rev": "7f52106",
       "src": "https://github.com/junegunn/vim-after-object"
     },
+    "vim-apathy": {
+      "rev": "27128a0f55189724c841843ba41cd33cf7186032",
+      "src": "https://github.com/tpope/vim-apathy"
+    },
     "vim-asterisk": {
       "rev": "77e9706",
       "src": "https://github.com/haya14busa/vim-asterisk"
+    },
+    "vim-dispatch": {
+      "rev": "a2ff28abdb2d89725192db5b8562977d392a4d3f",
+      "src": "https://github.com/tpope/vim-dispatch"
     },
     "vim-eunuch": {
       "rev": "e86bb79",
@@ -122,6 +130,10 @@
       "rev": "61b51c0",
       "src": "https://github.com/tpope/vim-fugitive"
     },
+    "vim-gtfo": {
+      "rev": "21a5e0292dabccba7363a6e508029d078a74504b",
+      "src": "https://github.com/justinmk/vim-gtfo"
+    },
     "vim-ingo-library": {
       "rev": "3ea510a",
       "src": "https://github.com/inkarkat/vim-ingo-library"
@@ -129,6 +141,14 @@
     "vim-mark": {
       "rev": "a613b06",
       "src": "https://github.com/inkarkat/vim-mark"
+    },
+    "vim-obsession": {
+      "rev": "ed9dfc7c2cc917ace8b24f4f9f80a91e05614b63",
+      "src": "https://github.com/tpope/vim-obsession"
+    },
+    "vim-projectionist": {
+      "rev": "5ff7bf79a6ef741036d2038a226bcb5f8b1cd296",
+      "src": "https://github.com/tpope/vim-projectionist"
     },
     "vim-repeat": {
       "rev": "6584602",
@@ -143,7 +163,7 @@
       "src": "https://github.com/tpope/vim-sleuth"
     },
     "vim-sneak": {
-      "rev": "18b1faf",
+      "rev": "ed9aff2df0d503f043269180bed03c0592ccdf4d",
       "src": "https://github.com/justinmk/vim-sneak"
     },
     "vim-startuptime": {

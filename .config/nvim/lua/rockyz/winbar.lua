@@ -13,6 +13,7 @@ local M = {}
 local icons  = require('rockyz.icons')
 local delimiter = icons.caret.right
 local special_filetypes = require('rockyz.special_filetypes')
+local api = require('rockyz.utils.api')
 
 -- Cache the highlight groups of filetype icons
 local cached_hls = {}
@@ -180,25 +181,62 @@ end
 -- Breadcrumbs
 -- Reference: https://github.com/juniorsundar/nvim/blob/main/lua/config/lsp/breadcrumbs.lua
 
--- Recursively find the path of symbols at the current cursor position
-local function find_symbol_path(symbols, bufnr, client, symbol_path_component)
+---Check if the cursor position (line, char) is inside a LSP range
+---TODO: later it can be implemented using vim.pos and vim.range, but they have bugs right now
+---(e.g., when pasting a large block of code at the end of the file, vim.pos.lsp will throw an
+---"index out of range" error)
+---@param range lsp.Range line and character inside are 0-indexed
+local function range_contains_cursor(bufnr, range, cursor_pos, offset_encoding)
+    local row = range['start'].line
+    local end_row = range['end'].line
+
+    local cursor_row = cursor_pos[1] - 1 -- make it 0-indexed
+    local cursor_col = cursor_pos[2] -- cursor's col defaults to be 0-indexed
+
+    if cursor_row < row or cursor_row > end_row then
+        return false
+    end
+
+    local col = range['start'].character
+    if col > 0 then
+        local line = api.get_lines(bufnr, { row })[row] or ''
+        col = vim.str_byteindex(line, offset_encoding, col, false)
+    end
+
+    if cursor_row == row and cursor_col < col then
+        return false
+    end
+
+    local end_col = range['end'].character
+    if end_col > 0 then
+        local end_line = api.get_lines(bufnr, { end_row })[end_row] or ''
+        end_col = vim.str_byteindex(end_line, offset_encoding, end_col, false)
+    end
+
+    if cursor_row == end_row and cursor_col > end_col then
+        return false
+    end
+
+    return true
+end
+
+---Recursively find the path of symbols at the current cursor position
+---@param symbols lsp.DocumentSymbol[]|lsp.SymbolInformation[]
+---@param cursor_pos table Cursor position, the result of vim.api.nvim_win_get_cursor(0)
+local function find_symbol_path(bufnr, symbols, client, cursor_pos, symbol_path_component)
     if symbols == nil then
         return
     end
-    -- vim.pos and vim.range require Neovim 0.12
-    local cursor_pos = vim.pos.cursor(vim.api.nvim_win_get_cursor(0))
-    local cursor_range = vim.range(cursor_pos, cursor_pos)
     for _, symbol in ipairs(symbols) do
         -- Some LSPs (e.g., bash) are still using the deprecated SymbolInformation[] as the response
         -- of Document Symbols request. The symbol range is located at symbol.location.range instead
         -- of symbol.range
-        local symbol_range = vim.range.lsp(bufnr, symbol.range or symbol.location.range, client.offset_encoding)
-        if vim.range.has(symbol_range, cursor_range) then
+        if range_contains_cursor(bufnr, symbol.range or symbol.location.range, cursor_pos, client.offset_encoding) then
             local kind = vim.lsp.protocol.SymbolKind[symbol.kind] or 'Unknown'
             local icon = icons.symbol_kinds[kind]
             local colored_icon = string.format('%%#SymbolKind%s#%s%%*', kind, icon)
             table.insert(symbol_path_component, colored_icon .. ' ' .. symbol.name)
-            find_symbol_path(symbol.children, bufnr, client, symbol_path_component)
+            find_symbol_path(symbol.children, client, cursor_pos, symbol_path_component)
             return
         end
     end
@@ -215,27 +253,30 @@ local function get_breadcrumbs()
         return
     end
 
-    local cursor_pos = vim.pos.cursor(vim.api.nvim_win_get_cursor(winid))
+    local cursor_pos = vim.api.nvim_win_get_cursor(winid)
 
-    for _, client in ipairs(clients) do
-        client:request(method, params, function(_, result, _)
-
-            if not vim.api.nvim_win_is_valid(winid) then
+    vim.lsp.buf_request_all(bufnr, method, params, function(results, _, _)
+        if not vim.api.nvim_win_is_valid(winid) then
+            return
+        end
+        local new_cursor_pos = vim.api.nvim_win_get_cursor(winid)
+        if new_cursor_pos[1] ~= cursor_pos[1] or new_cursor_pos[2] ~= cursor_pos[2] then
+            return
+        end
+        -- The structure of "results":
+        -- results[ctx.client_id] = { err = err, error = err, result = result, context = ctx }
+        for client_id, data in pairs(results) do
+            if data.err then
+                vim.notify('Error: failed to request document symbols for displaying breadcrumbs', vim.log.levels.WARN)
                 return
             end
-
-            local new_cursor_pos = vim.pos.cursor(vim.api.nvim_win_get_cursor(winid))
-            if new_cursor_pos ~= cursor_pos then
-                return
-            end
-
             local symbol_path_components = {}
-            find_symbol_path(result, bufnr, client, symbol_path_components)
+            local client = vim.lsp.get_client_by_id(client_id)
+            find_symbol_path(bufnr, data.result, client, cursor_pos, symbol_path_components)
             vim.w[winid].breadcrumbs = table.concat(symbol_path_components, ' ' .. delimiter .. ' ')
             vim.cmd('redrawstatus')
-
-        end, bufnr)
-    end
+        end
+    end)
 end
 
 -- Refresh the breadcrumbs of the current window

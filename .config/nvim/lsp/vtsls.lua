@@ -47,6 +47,12 @@ return {
         local root_markers = { 'package-lock.json', 'yarn.lock', 'pnpm-lock.yaml', 'bun.lockb', 'bun.lock' }
         -- Give the root markers equal priority by wrapping them in a table
         root_markers = { root_markers, { '.git' } }
+
+        -- Exclude deno
+        if vim.fs.root(bufnr, { 'deno.json', 'deno.jsonc', 'deno.lock' }) then
+            return
+        end
+
         -- We fallback to the current working directory if no project root is found
         local project_root = vim.fs.root(bufnr, root_markers) or vim.fn.getcwd()
 

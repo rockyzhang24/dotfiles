@@ -21,6 +21,21 @@ vim.api.nvim_create_autocmd('VimEnter', {
     end,
 })
 
+-- Karabiner Element maps CTRL-[ to ESC system wide except we're in Neovim. We need a variable to
+-- tell if we're in Neovim or not.
+vim.api.nvim_create_autocmd({ 'FocusGained' }, {
+    group = vim.api.nvim_create_augroup('rockyz.karabiner', { clear = true }),
+    callback = function()
+        vim.system({'/Library/Application Support/org.pqrs/Karabiner-Elements/bin/karabiner_cli', '--set-variables', '{"in_nvim":1}'})
+    end,
+})
+vim.api.nvim_create_autocmd({ 'FocusLost', 'VimLeave' }, {
+    group = 'rockyz.karabiner',
+    callback = function()
+        vim.system({'/Library/Application Support/org.pqrs/Karabiner-Elements/bin/karabiner_cli', '--set-variables', '{"in_nvim":0}'})
+    end,
+})
+
 -- Overwrite default settings in runtime/ftplugin
 vim.api.nvim_create_autocmd('FileType', {
     group = vim.api.nvim_create_augroup('rockyz.overwrite_defaults', {}),

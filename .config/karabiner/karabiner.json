@@ -38,13 +38,20 @@
                     {
                         "manipulators": [
                             {
-                                "description": "Map CTRL-[ to ESC",
+                                "description": "Map CTRL-[ to ESC except in Neovim",
                                 "from": {
                                     "key_code": "open_bracket",
                                     "modifiers": { "mandatory": ["left_control"] }
                                 },
                                 "to": [{ "key_code": "escape" }],
-                                "type": "basic"
+                                "type": "basic",
+                                "conditions": [
+                                    {
+                                        "type": "variable_if",
+                                        "name": "in_nvim",
+                                        "value": 0
+                                    }
+                                ]
                             }
                         ]
                     },

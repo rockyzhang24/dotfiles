@@ -13,9 +13,9 @@
 
 local M = {}
 
-local ok, icons = pcall(require, 'rockyz.icons')
+local icons = require('rockyz.icons')
 
-local term_icon = ok and icons.misc.term or ''
+local term_icon = icons.misc.term
 
 local state = {
     -- Terminal window
@@ -388,5 +388,53 @@ end
 vim.keymap.set({ 'n', 't' }, '<M-`>', function()
     require('rockyz.terminal').toggle()
 end)
+
+-- Terminal config
+
+-- Inspired by @justinmk
+local function config_term_esc()
+    vim.keymap.set('t', '<C-[>', [[<C-\><C-N>]])
+    -- Map ESC to ESC, so we have a way to send literal ESC.
+    vim.keymap.set('t', '<Esc>', '<Esc>')
+
+    -- In terminal-nested Nvim, we should map <C-[> back to <ESC>
+    if vim.env.NVIM then
+        local function parent_chan()
+            local ok, chan = pcall(vim.fn.sockconnect, 'pipe', vim.env.NVIM, {rpc=true})
+            if not ok then
+                vim.notify(('failed to create channel to $NVIM: %s'):format(chan))
+            end
+            return ok and chan or nil
+        end
+
+        local didset = false
+        local chan = assert(parent_chan())
+
+        local function map_parent(lhs)
+            -- Map `lhs` in the parent so it gets sent to the child (this) Nvim.
+            local map = vim.rpcrequest(chan, 'nvim_exec_lua', [[return vim.fn.maparg(..., 't', false, true)]], { lhs }) --[[@as table<string,any>]]
+            if map.rhs == [[<C-\><C-N>]] then
+                vim.rpcrequest(chan, 'nvim_exec_lua', [[vim.keymap.set('t', ..., '<Esc>', {buffer=0})]], { lhs })
+                didset = true
+            end
+        end
+        map_parent('<C-[>')
+        vim.fn.chanclose(chan)
+
+        -- Restore the mapping(s) on VimLeave.
+        if didset then
+            vim.api.nvim_create_autocmd({'VimLeave'}, {
+                group = vim.api.nvim_create_augroup('rockyz.terminal.config_esc', { clear = true }),
+                callback = function()
+                    local chan2 = assert(parent_chan())
+                    vim.rpcrequest(chan2, 'nvim_exec2', [=[
+                    tunmap <buffer> <C-[>
+                    ]=], {})
+                end,
+            })
+        end
+    end
+end
+config_term_esc()
 
 return M

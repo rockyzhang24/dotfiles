@@ -95,11 +95,11 @@ local function on_attach(client, bufnr)
     local opts = { buffer = bufnr }
     vim.keymap.set('n', 'gd', vim.lsp.buf.definition, opts)
     vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, opts)
-    vim.keymap.set('n', 'gy', vim.lsp.buf.type_definition, opts)
-    vim.keymap.set('n', 'gI', vim.lsp.buf.implementation, opts)
-    vim.keymap.set('n', 'gr', vim.lsp.buf.references, { buffer = bufnr, nowait = true })
+    vim.keymap.set('n', 'grt', vim.lsp.buf.type_definition, opts)
+    vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, opts)
+    vim.keymap.set('n', 'grr', vim.lsp.buf.references, { buffer = bufnr, nowait = true })
     vim.keymap.set('n', 'K', vim.lsp.buf.hover, opts)
-    vim.keymap.set('n', '<Leader>rn', vim.lsp.buf.rename, opts)
+    vim.keymap.set('n', 'grn', vim.lsp.buf.rename, opts)
     -- Code actions for the current line.
     -- In order to get the code actions only for the cursor position, the diagnostics overlap the
     -- cursor position could be passed as part of the parameter to vim.lsp.buf.code_action(). However,
@@ -108,10 +108,10 @@ local function on_attach(client, bufnr)
     --
     -- TODO: modify this keymap to only get the code actions for the current cursor position after the
     -- API is fixed.
-    vim.keymap.set({ 'n', 'x' }, '<Leader>la', vim.lsp.buf.code_action, opts)
+    vim.keymap.set({ 'n', 'x' }, 'gra', vim.lsp.buf.code_action, opts)
 
     -- Diagnostics
-    vim.keymap.set('n', 'go', vim.diagnostic.open_float, opts)
+    vim.keymap.set('n', 'gl', vim.diagnostic.open_float, opts)
     vim.keymap.set('n', '[d', function() -- previous
         vim.diagnostic.jump({ count = -vim.v.count1 })
     end, opts)
@@ -151,8 +151,8 @@ local function on_attach(client, bufnr)
     end, opts)
 
     -- Feed all diagnostics to quickfix list, or buffer diagnostics to location list
-    vim.keymap.set('n', '<Leader>dq', vim.diagnostic.setqflist, opts)
-    vim.keymap.set('n', '<Leader>dl', vim.diagnostic.setloclist, opts)
+    vim.keymap.set('n', 'grq', vim.diagnostic.setqflist, opts)
+    vim.keymap.set('n', 'grl', vim.diagnostic.setloclist, opts)
 
     -- Format
     -- vim.keymap.set({ 'n', 'x' }, '<leader>F', function()

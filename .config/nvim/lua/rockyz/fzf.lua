@@ -8,7 +8,7 @@
 -- <Leader>fo : Old files
 -- <Leader>f. : Files for my dotfiles
 -- <Leader>fb : Buffers
--- <C-s>  : Buffers and MRU
+-- <M-\>  : Buffers and MRU
 
 -- <Leader>f/ : Search history
 -- <Leader>f: : Command history
@@ -30,10 +30,10 @@
 -- <C-g>      : Live grep
 -- <Leader>gv : Live grep in my nvim config
 -- <Leader>g* : Grep for the current word/selection
--- <Leader>gb : Live grep in current buffer
+-- g/         : Live grep in current buffer
 
--- <Leader>ls : LSP document symbols
--- <Leader>lS : LSP workspace symbols
+-- gO         : LSP document symbols
+-- gr/        : LSP workspace symbols
 -- <Leader>ld : LSP definitions
 -- <Leader>lr : LSP references
 -- <Leader>li : LSP implementations
@@ -51,8 +51,8 @@
 -- ,fh        : Git stash
 -- ,ft        : Git worktrees
 
--- <Leader>fg : Tags (buffer)
--- <Leader>fG : Tags
+-- gO         : Tags (buffer)
+-- gr/        : Tags
 
 -- INSERT mode completion
 -- <C-x><C-f> : Complete paths
@@ -808,7 +808,7 @@ local function bufs_and_mru(from_resume)
     fzf(spec, handle_contents)
 end
 
-vim.keymap.set('n', '<C-s>', function()
+vim.keymap.set('n', '<M-\\>', function()
     run(bufs_and_mru)
 end)
 
@@ -2035,7 +2035,7 @@ local function live_grep_cur_buffer(from_resume)
     fzf(spec, nil, rg_cmd)
 end
 
-vim.keymap.set('n', '<Leader>gb', function()
+vim.keymap.set('n', 'g/', function()
     run(live_grep_cur_buffer)
 end)
 
@@ -2330,7 +2330,7 @@ local function lsp_symbols(method, params, title, symbol_query, from_resume)
 end
 
 -- LSP document symbols
-vim.keymap.set('n', '<Leader>ls', function()
+vim.keymap.set('n', 'gO', function()
     run(function(from_resume)
         local params = { textDocument = vim.lsp.util.make_text_document_params() }
         lsp_symbols('textDocument/documentSymbol', params, 'LSP Document Symbols', nil, from_resume)
@@ -2345,7 +2345,7 @@ local function workspace_symbols_resume(from_resume)
 end
 
 -- LSP workspace symbols
-vim.keymap.set('n', '<Leader>lS', function()
+vim.keymap.set('n', 'gr/', function()
     local symbol_query = vim.fn.input('Query: ')
     cached_symbol_query = symbol_query
     cached_finder = workspace_symbols_resume
@@ -3363,7 +3363,7 @@ local function tags(from_resume)
     fzf(spec, handle_contents)
 end
 
-vim.keymap.set('n', '<Leader>fG', function()
+vim.keymap.set('n', 'gr/', function()
     run(tags)
 end)
 
@@ -3459,7 +3459,7 @@ local function buffer_tags(from_resume)
     fzf(spec, handle_contents)
 end
 
-vim.keymap.set('n', '<Leader>fg', function()
+vim.keymap.set('n', 'gO', function()
     run(buffer_tags)
 end)
 

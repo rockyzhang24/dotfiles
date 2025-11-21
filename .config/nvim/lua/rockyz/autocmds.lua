@@ -31,8 +31,11 @@ vim.api.nvim_create_autocmd({ 'FocusGained' }, {
 })
 vim.api.nvim_create_autocmd({ 'FocusLost', 'VimLeave' }, {
     group = 'rockyz.karabiner',
-    callback = function()
-        vim.system({'/Library/Application Support/org.pqrs/Karabiner-Elements/bin/karabiner_cli', '--set-variables', '{"in_nvim":0}'})
+    callback = function(ev)
+        if ev.event ~= 'VimLeave' or not vim.env.NVIM then
+            -- If it occurs in VimLeave, ensure it's not the terminal nested nvim.
+            vim.system({'/Library/Application Support/org.pqrs/Karabiner-Elements/bin/karabiner_cli', '--set-variables', '{"in_nvim":0}'})
+        end
     end,
 })
 

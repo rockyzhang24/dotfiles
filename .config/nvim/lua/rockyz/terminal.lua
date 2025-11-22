@@ -42,7 +42,7 @@ local minimal_win_opts = {
     number = false,
     relativenumber = false,
     foldcolumn = '0',
-    signcolumn = 'no',
+    signcolumn = 'auto', -- may use signcolumn to show the start of each prompt by OSC 133
     statuscolumn = '',
     spell = false,
     list = false,
@@ -392,6 +392,8 @@ end)
 -- Terminal config
 
 -- Inspired by @justinmk
+-- In terminal, map <C-[> to <C-\><C-n> to go back to NORMAL. <ESC> can send literal ESC.
+-- In the terminal-nested nvim, map <C-[> back to <ESC>
 local function config_term_esc()
     vim.keymap.set('t', '<C-[>', [[<C-\><C-N>]])
     -- Map ESC to ESC, so we have a way to send literal ESC.
@@ -436,5 +438,50 @@ local function config_term_esc()
     end
 end
 config_term_esc()
+
+-- Inspired by @justinmk
+-- In terminal, mark the start of each prompt in signcolumn; change the current working directory of
+-- the terminal window to match the terminal's pwd.
+local function config_term()
+    vim.api.nvim_create_autocmd('TermOpen', {
+        callback = function()
+            vim.cmd[=[
+            " Enable prompt sign in :terminal buffers.
+            setlocal signcolumn=auto
+
+            nnoremap <silent><buffer> <cr> i<cr><c-\><c-n>
+            nnoremap <silent><buffer> <c-c> i<c-c><c-\><c-n>
+            ]=]
+        end
+    })
+    vim.api.nvim_create_autocmd('TermRequest', {
+        group = vim.api.nvim_create_augroup('rockyz.terminal.termrequest_osc', { clear = true }),
+        callback = function(ev)
+            if string.match(ev.data.sequence, '^\027]133;A') then
+                -- OSC 133: shell-prompt
+                local lnum = ev.data.cursor[1]
+                vim.api.nvim_buf_set_extmark(ev.buf, vim.api.nvim_create_namespace('my.terminal.prompt'), lnum - 1, 0, {
+                    sign_text = icons.caret.right_solid,
+                    -- sign_hl_group = 'SpecialChar',
+                })
+            end
+
+            local val, n = string.gsub(ev.data.sequence, '^\027]7;file://[^/]*', '')
+            if n > 0 then
+                -- OSC 7: dir-change
+                local dir = val
+                if vim.fn.isdirectory(dir) == 0 then
+                    vim.notify('invalid dir: '..dir)
+                    return
+                end
+                vim.b[ev.buf].osc7_dir = dir
+                if vim.api.nvim_get_current_buf() == ev.buf then
+                    vim.cmd.lcd(dir)
+                end
+            end
+        end,
+    })
+end
+config_term()
 
 return M

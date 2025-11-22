@@ -12,7 +12,7 @@ autoload -Uz ${autoload_functions_dir}/*(.:t)
 
 # Zimfw
 if [[ ${ZIM_HOME}/init.zsh -ot ${ZDOTDIR:-${HOME}}/.zimrc ]]; then
-  source ${ZIM_HOME}/zimfw.zsh init -q
+    source ${ZIM_HOME}/zimfw.zsh init -q
 fi
 source ${ZIM_HOME}/init.zsh
 
@@ -60,15 +60,15 @@ compdef _rg hg
 # Make ngl (~/.config/zsh/functions/ngl) support autocomplete as `git log`
 compdef _ngl ngl
 _ngl() {
-  (( $+functions[_git-log] )) || _git
-  _git-log
+    (( $+functions[_git-log] )) || _git
+    _git-log
 }
 
 # Make ngd (~/.config/zsh/functions/ngd) support autocomplete as `git difftool`
 compdef _ngd ngd
 _ngd() {
-  (( $+functions[_git-difftool] )) || _git
-  _git-difftool
+    (( $+functions[_git-difftool] )) || _git
+    _git-difftool
 }
 
 # Auto-cd if the command is a directory and can't be executed as a normal command
@@ -101,3 +101,22 @@ eval "$(zoxide init zsh)"
 
 # Starship
 eval "$(starship init zsh)"
+
+# Emit OSC 7 upon each pwd change
+# So when we change cwd in Neovim's builtin terminal, nvim's TermRequest event is triggere and we
+# can change the current directory of the terminal window to the directory pointed to by the OSC 7.
+function print_osc7() {
+    if [ "$ZSH_SUBSHELL" -eq 0 ] ; then
+        printf "\033]7;file://$HOST/$PWD\033\\"
+    fi
+}
+autoload -Uz add-zsh-hook
+add-zsh-hook -Uz chpwd print_osc7
+print_osc7
+
+# Emis OSC 133;A just before the prompt is printed
+# In Neovim we use it to mark where each prompt starts
+function print_osc133() {
+    printf "\e]133;A\a"
+}
+precmd_functions+=(print_osc133)

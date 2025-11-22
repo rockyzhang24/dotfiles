@@ -98,6 +98,7 @@ icons.caret = {
     down = '',
     left = '',
     right = '',
+    right_solid = '',
 }
 
 icons.access = {

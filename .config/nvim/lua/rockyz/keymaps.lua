@@ -363,7 +363,7 @@ vim.keymap.set('n', '<Leader>s*', ':%s/\\<<C-r><C-w>\\>//gI<Left><Left><Left>')
 vim.keymap.set('x', '<Leader>s/', function()
     vim.o.gdefault = true
     vim.api.nvim_create_autocmd('CmdlineLeave', {
-        group = vim.api.nvim_create_augroup('rockyz.reset_gdefault', { clear = true }),
+        group = vim.api.nvim_create_augroup('rockyz.keymap.reset_gdefault', { clear = true }),
         once = true,
         callback = vim.schedule_wrap(function()
             vim.o.gdefault = false
@@ -371,6 +371,36 @@ vim.keymap.set('x', '<Leader>s/', function()
     })
     return '<Esc>gv:s/\\%V'
 end, { silent = false, expr = true })
+
+-- Map ":'<,'>s/" to ":'<,'>s/\%V" (from @justinmk)
+local function visual_sub()
+    local skip = false
+    local augroup_visual_sub = vim.api.nvim_create_augroup('rockyz.keymap.visual_sub', { clear = true })
+
+    local function map_visual_sub()
+        local cmd = vim.fn.getcmdline()
+        local ok, rv = pcall(vim.api.nvim_parse_cmd, vim.fn.shellescape(cmd), {})
+        if ok and rv.cmd == 'substitute' and cmd:match("'<,'>s[^u ]") then
+            skip = true
+            vim.fn.setcmdline(cmd..[[\%V]])
+        end
+    end
+    vim.api.nvim_create_autocmd('CmdlineEnter', {
+        group = augroup_visual_sub,
+        callback = function()
+            skip = false
+        end
+    })
+    vim.api.nvim_create_autocmd('CmdlineChanged', {
+        group = augroup_visual_sub,
+        callback = function()
+            if not skip then
+                map_visual_sub()
+            end
+        end
+    })
+end
+visual_sub()
 
 --
 -- Buffer
@@ -697,8 +727,6 @@ vim.keymap.set('n', '\\m', require('rockyz.utils.win').win_maximize_toggle)
 --
 -- Terminal
 --
-
-vim.keymap.set('t', '<Leader><Esc>', '<C-\\><C-n>')
 
 -- Simulate <C-r> in insert mode for inserting the content of a register.
 -- Reference: http://vimcasts.org/episodes/neovim-terminal-paste/

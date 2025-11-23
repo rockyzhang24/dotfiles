@@ -5,7 +5,7 @@
       "src": "https://github.com/L3MON4D3/LuaSnip"
     },
     "SchemaStore.nvim": {
-      "rev": "eed1834170f343c14a6768f085b26b3571a55302",
+      "rev": "aa25399c48236b77af71d4b64cdf157d2ba4e990",
       "src": "https://github.com/b0o/SchemaStore.nvim"
     },
     "blink.cmp": {
@@ -18,7 +18,7 @@
       "src": "https://github.com/uga-rosa/ccc.nvim"
     },
     "conform.nvim": {
-      "rev": "1bf8b5b9caee51507aa51eaed3da5b0f2595c6b9",
+      "rev": "afce105eb47b0869dfafdac90d82f02ef2419d61",
       "src": "https://github.com/stevearc/conform.nvim"
     },
     "cscope_maps.nvim": {

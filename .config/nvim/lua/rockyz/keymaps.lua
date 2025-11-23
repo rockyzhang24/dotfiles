@@ -19,13 +19,15 @@ vim.keymap.set('n', 'g:', ':lua =')
 vim.keymap.set('n', 'z=', '<Cmd>setlocal spell<CR>z=')
 vim.keymap.set('x', 'x', '"_d') -- for copy and delete use v_d
 vim.keymap.set('n', 'z.', ':silent lockmarks update ++p<CR>') -- Preserve '[ '] on :write
+
 -- Move the current line or selections up and down with corresponding indentation
 -- vim.keymap.set('n', '<M-j>', ':m .+1<CR>==', { silent = true })
 -- vim.keymap.set('n', '<M-k>', ':m .-2<CR>==', { silent = true })
 vim.keymap.set('x', 'J', ":m '>+1<CR>gv=gv", { silent = true })
 vim.keymap.set('x', 'K', ":m '<-2<CR>gv=gv", { silent = true })
-vim.keymap.set('i', '<M-j>', '<Esc>:m .+1<CR>==a', { silent = true })
-vim.keymap.set('i', '<M-k>', '<Esc>:m .-2<CR>==a', { silent = true })
+-- vim.keymap.set('i', '<M-j>', '<Esc>:m .+1<CR>==a', { silent = true })
+-- vim.keymap.set('i', '<M-k>', '<Esc>:m .-2<CR>==a', { silent = true })
+
 -- Join lines but retain the cursor position
 vim.keymap.set('n', 'J', 'mzJ`z')
 -- Un-join (split) the current line at the cursor position
@@ -549,12 +551,6 @@ end)
 vim.keymap.set('n', ']b', function()
     cmd({ cmd = 'bnext', count = vim.v.count1 })
 end)
-vim.keymap.set('n', '<M-h>', function()
-    cmd({ cmd = 'bprevious', count = vim.v.count1 })
-end)
-vim.keymap.set('n', '<M-l>', function()
-    cmd({ cmd = 'bnext', count = vim.v.count1 })
-end)
 vim.keymap.set('n', '[B', function()
     if vim.v.count ~= 0 then
         cmd({ cmd = 'buffer', count = vim.v.count })
@@ -574,12 +570,6 @@ vim.keymap.set('n', '[q', function()
     cmd({ cmd = 'cprevious', count = vim.v.count1 })
 end)
 vim.keymap.set('n', ']q', function()
-    cmd({ cmd = 'cnext', count = vim.v.count1 })
-end)
-vim.keymap.set('n', '<M-k>', function()
-    cmd({ cmd = 'cprevious', count = vim.v.count1 })
-end)
-vim.keymap.set('n', '<M-j>', function()
     cmd({ cmd = 'cnext', count = vim.v.count1 })
 end)
 vim.keymap.set('n', '[Q', function()
@@ -680,10 +670,11 @@ end
 --
 
 -- Move cursor to one of the windows in four directions
-vim.keymap.set('n', '<C-h>', '<C-w>h')
-vim.keymap.set('n', '<C-j>', '<C-w>j')
-vim.keymap.set('n', '<C-k>', '<C-w>k')
-vim.keymap.set('n', '<C-l>', '<C-w>l')
+vim.keymap.set({ 'n', 'i', 't' }, '<M-h>', '<C-\\><C-n><C-w>h')
+vim.keymap.set({ 'n', 'i', 't' }, '<M-j>', '<C-\\><C-n><C-w>j')
+vim.keymap.set({ 'n', 'i', 't' }, '<M-k>', '<C-\\><C-n><C-w>k')
+vim.keymap.set({ 'n', 'i', 't' }, '<M-l>', '<C-\\><C-n><C-w>l')
+
 -- Move cursor to the window 1 to 9
 for i = 1, 9 do
     vim.keymap.set('n', '<Leader>' .. i, '<Cmd>' .. i .. 'wincmd w<CR>')

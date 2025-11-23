@@ -3,8 +3,8 @@
 -- <M-n>: new a terminal
 -- <M-d>: delete the current terminal
 -- <M-o>: delete all terminals but the current one
--- <M-j>: jump to the next terminal
--- <M-k>: jump to the previous terminal
+-- <M-=>: jump to the next terminal
+-- <M-->: jump to the previous terminal
 -- <M-1> ... <M-9>: jump to terminal #i
 -- <M-Enter>: rename the current terminal
 -- <M-,>: move the current terminal backwards
@@ -151,10 +151,10 @@ local function set_buf_keymaps()
     end)
 
     -- Jump to the next or previous
-    map({ 'n', 't' }, '<M-j>', function()
+    map({ 'n', 't' }, '<M-=>', function()
         require('rockyz.terminal').jump(1)
     end)
-    map({ 'n', 't' }, '<M-k>', function()
+    map({ 'n', 't' }, '<M-->', function()
         require('rockyz.terminal').jump(-1)
     end)
 
@@ -396,8 +396,14 @@ end)
 -- In the terminal-nested nvim, map <C-[> back to <ESC>
 local function config_term_esc()
     vim.keymap.set('t', '<C-[>', [[<C-\><C-N>]])
-    -- Map ESC to ESC, so we have a way to send literal ESC.
-    vim.keymap.set('t', '<Esc>', '<Esc>')
+
+    -- Send literal ESC
+    if vim.env.TERM:match('tmux') then
+        -- Neovim running in tmux treats <C-[> and <ESC> the same
+        vim.keymap.set('t', '<Leader><Esc>', '<Esc>')
+    else
+        vim.keymap.set('t', '<Esc>', '<Esc>')
+    end
 
     -- In terminal-nested Nvim, we should map <C-[> back to <ESC>
     if vim.env.NVIM then

@@ -46,8 +46,8 @@ monokai="`
 # Keybindings:
 # - ctrl-j: down
 # - ctrl-k: up
-# - alt-j: down match
-# - alt-k: up match
+# - alt-n: down match
+# - alt-p: up match
 # - ctrl-n: next history
 # - ctrl-p: previous history
 # - ctrl-d: move cursor half page down
@@ -80,8 +80,8 @@ export FZF_DEFAULT_OPTS=" \
         `alt-w:toggle-preview-wrap,`
         `ctrl-s:toggle,`
         `alt-r:toggle-raw,`
-        `alt-j:down-match,`
-        `alt-k:up-match,`
+        `alt-n:down-match,`
+        `alt-p:up-match,`
         `ctrl-o:execute(open {+}),`
         `ctrl-y:execute-silent(echo -n {+} | pbcopy),`
         `ctrl-e:execute(\$EDITOR {+} < /dev/tty > /dev/tty 2>&1),`
@@ -130,15 +130,15 @@ export FZF_CTRL_R_OPTS=" \
 # CTRL-J to cd into the selected dir
 # - ALT-/: toggle listing dirs under HOME and CWD
 # - ALT-R: list dirs under system root
-# - ALT-P: list dirs under cwd's parent
+# - ALT-.: list dirs under cwd's parent
 bindkey '^j' fzf-cd-widget
 export FZF_ALT_C_COMMAND="$FD --type d"
 export FZF_ALT_C_OPTS=" \
     --preview '[[ \$(command -v eza) ]] && eza -la --color=always --icons -g --group-directories-first {} || tree -C {} | head -200' \
-    --header ':: ALT-/ (toggle HOME/CWD), ALT-R (Root), ALT-P (Parent)' \
+    --header ':: ALT-/ (toggle HOME/CWD), ALT-R (Root), ALT-. (Parent)' \
     --prompt 'SubDirs [Current]> ' \
     --bind 'alt-r:reload($FD --type d . /)+change-prompt(SubDirs [Root]> )' \
-    --bind 'alt-p:reload(print-parent-dirs)+change-prompt(SubDirs [Parent]> )' \
+    --bind 'alt-.:reload(print-parent-dirs)+change-prompt(SubDirs [Parent]> )' \
     --bind 'alt-/:transform: \
         [[ ! \$FZF_PROMPT =~ HOME ]] && { \
             echo \"reload($FD --type d . $HOME)+change-prompt(SubDirs [HOME]> )\"; \

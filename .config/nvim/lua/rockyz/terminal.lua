@@ -398,12 +398,7 @@ local function config_term_esc()
     vim.keymap.set('t', '<C-[>', [[<C-\><C-N>]])
 
     -- Send literal ESC
-    if vim.env.TERM:match('tmux') then
-        -- Neovim running in tmux treats <C-[> and <ESC> the same
-        vim.keymap.set('t', '<Leader><Esc>', '<Esc>')
-    else
-        vim.keymap.set('t', '<Esc>', '<Esc>')
-    end
+    vim.keymap.set('t', '<Leader><C-[>', '<Esc>')
 
     -- In terminal-nested Nvim, we should map <C-[> back to <ESC>
     if vim.env.NVIM then
@@ -460,16 +455,37 @@ local function config_term()
             ]=]
         end
     })
+    local ns = vim.api.nvim_create_namespace('rockyz.terminal.osc133')
     vim.api.nvim_create_autocmd('TermRequest', {
         group = vim.api.nvim_create_augroup('rockyz.terminal.termrequest_osc', { clear = true }),
         callback = function(ev)
             if string.match(ev.data.sequence, '^\027]133;A') then
                 -- OSC 133: shell-prompt
+                local extmarks = vim.b[ev.buf].osc133_extmarks or {}
                 local lnum = ev.data.cursor[1]
-                vim.api.nvim_buf_set_extmark(ev.buf, vim.api.nvim_create_namespace('my.terminal.prompt'), lnum - 1, 0, {
-                    sign_text = icons.caret.right_solid,
+
+                for id, l in pairs(extmarks) do
+                    if l < lnum then
+                        vim.api.nvim_buf_set_extmark(ev.buf, ns, l, 0, {
+                            id = id,
+                            sign_text = icons.misc.circle_filled,
+                        })
+                    end
+                end
+
+                local new_id = vim.api.nvim_buf_set_extmark(ev.buf, ns, lnum, 0, {
+                    sign_text = icons.misc.circle,
                     -- sign_hl_group = 'SpecialChar',
                 })
+
+                extmarks[new_id] = lnum
+                vim.b[ev.buf].osc133_extmarks = extmarks
+
+                for id, l in pairs(extmarks) do
+                    if l > lnum then
+                        vim.api.nvim_buf_del_extmark(ev.buf, ns, id)
+                    end
+                end
             end
 
             local val, n = string.gsub(ev.data.sequence, '^\027]7;file://[^/]*', '')

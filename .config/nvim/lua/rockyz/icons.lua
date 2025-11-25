@@ -116,6 +116,7 @@ icons.tree = {
 icons.misc = {
     book = '',
     check = '󰓆',
+    circle = '',
     circle_filled = '',
     code = '',
     color = '',

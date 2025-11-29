@@ -409,7 +409,7 @@ visual_sub()
 --
 
 -- Switch to the alternate buffer or the first available file in MRU list
-vim.keymap.set('n', '<Tab>', require('rockyz.utils.buf').switch_last_buf)
+vim.keymap.set('n', '<Leader><Tab>', require('rockyz.utils.buf').switch_last_buf)
 -- Delete the current buffer and switch back to the previous one
 vim.keymap.set('n', '<Leader>bd', require('rockyz.utils.buf').bufdelete)
 -- Delete all the other unmodified buffers

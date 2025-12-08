@@ -112,6 +112,6 @@ function M.toggle()
     end
 end
 
-vim.keymap.set('n', '<C-_>', function()
+vim.keymap.set('n', '_', function()
     M.toggle()
 end)

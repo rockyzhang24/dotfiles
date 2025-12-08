@@ -1,21 +1,35 @@
---
 -- <M-`>: toggle
 -- <M-n>: new a terminal
 -- <M-d>: delete the current terminal
 -- <M-o>: delete all terminals but the current one
 -- <M-=>: jump to the next terminal
 -- <M-->: jump to the previous terminal
--- <M-1> ... <M-9>: jump to terminal #i
+-- <M-1> to <M-9>: jump to terminal #i
 -- <M-Enter>: rename the current terminal
 -- <M-,>: move the current terminal backwards
 -- <M-.>: move the current terminal forwards
---
+-- <M-t>: send the terminal to a new tabpage
+-- <M-p>: send the terminal to the panel
 
 local M = {}
 
 local icons = require('rockyz.icons')
-
 local term_icon = icons.misc.term
+
+---@class rocky.terminal.Terminal
+---@field jobid integer
+---@field bufnr integer The bufnr of the terminal buffer
+
+---@class rockyz.terminal.State
+---@field term_buf integer|nil The bufnr of the current terminal buffer
+---@field term_win integer|nil The winid of the window having the terminal buffer
+---@field term_height integer
+---@field panel_buf integer|nil The bufnr of the side panel
+---@field panel_win integer|nil The winid of the window having the side panel buffer
+---@field panel_width integer
+---@field terminals rocky.terminal.Terminal[]
+---@field cur_index integer|nil The index of the current terminal
+---@field count_to_delete integer
 
 local state = {
     -- Terminal window
@@ -35,10 +49,10 @@ local state = {
     -- When we delete terminals in batch, we don't need to update the side panel and switch to the
     -- alternative terminal upon each deletion as we do when deleting a single terminal. Instead, we
     -- just need to update the side panel once and there's no need to switch terminal.
-    count_to_delete = nil,
+    count_to_delete = 0,
 }
 
-local minimal_win_opts = {
+local win_opts = {
     number = false,
     relativenumber = false,
     foldcolumn = '0',
@@ -46,7 +60,41 @@ local minimal_win_opts = {
     statuscolumn = '',
     spell = false,
     list = false,
+    wrap = false,
 }
+
+local keymaps = {
+    -- Keymaps defined in the terminal buffer
+    term = {
+        ['<M-n>'] = 'new',
+        ['<M-d>'] = 'delete',
+        ['<M-o>'] = 'only',
+        ['<M-=>'] = 'next',
+        ['<M-->'] = 'prev',
+        ['<M-Enter>'] = 'rename',
+        ['<M-.>'] = 'move_next',
+        ['<M-,>'] = 'move_prev',
+        ['<M-t>'] = 'to_tab',
+        ['<M-1>'] = 'switch_1',
+        ['<M-2>'] = 'switch_2',
+        ['<M-3>'] = 'switch_3',
+        ['<M-4>'] = 'switch_4',
+        ['<M-5>'] = 'switch_5',
+        ['<M-6>'] = 'switch_6',
+        ['<M-7>'] = 'switch_7',
+        ['<M-8>'] = 'switch_8',
+        ['<M-9>'] = 'switch_9',
+        ['<M-0>'] = 'switch_10',
+    },
+    global = {
+        ['<M-`>'] = 'toggle',
+        ['<M-p>'] = 'to_panel',
+    },
+}
+
+---@class rockyz.terminal.new.Opts
+---@field index? integer The index where the new terminal is created. Defaults to the last.
+---@field name? string The name of the terminal. Defaults to 'Terminal'.
 
 local function close_win(winid)
     if winid and vim.api.nvim_win_is_valid(winid) then
@@ -60,11 +108,14 @@ local function delete_buf(bufnr)
     end
 end
 
--- Delete all buffers and windows, reset state
-local function reset()
+---Delete all buffers and windows, reset state
+---@param keep_term_buf? boolean Whether keep (don't delete) the terminal buffer
+local function reset(keep_term_buf)
     close_win(state.term_win)
     close_win(state.panel_win)
-    delete_buf(state.term_buf)
+    if not keep_term_buf then
+        delete_buf(state.term_buf)
+    end
     delete_buf(state.panel_buf)
     state.term_win = nil
     state.term_buf = nil
@@ -81,6 +132,14 @@ local function list_swap(list, i, j)
     end
 end
 
+local function get_index_by_jobid(jobid)
+    for i, term in ipairs(state.terminals) do
+        if term.jobid == jobid then
+            return i
+        end
+    end
+end
+
 -- Swap any two lines in the side panel
 local function panel_lines_swap(i, j)
     local i_line = vim.api.nvim_buf_get_lines(state.panel_buf, i - 1, i, false)[1]
@@ -91,194 +150,166 @@ local function panel_lines_swap(i, j)
     vim.api.nvim_buf_set_lines(state.panel_buf, j - 1, j, false, { i_line })
 end
 
-local function get_index_by_jobid(jobid)
-    for i, term in ipairs(state.terminals) do
-        if term.jobid == jobid then
-            return i
-        end
-    end
-end
-
-local function set_autocmd()
-    vim.api.nvim_create_augroup('rockyz.terminal', { clear = true })
-    -- Remember its size if terminal window gets resized
-    vim.api.nvim_create_autocmd('WinResized', {
-        group = 'rockyz.terminal',
-        callback = function()
-            for _, win in ipairs(vim.v.event.windows) do
-                if win == state.term_win then
-                    state.term_height = vim.api.nvim_win_get_height(state.term_win)
-                end
-                if win == state.panel_win then
-                    state.panel_width = vim.api.nvim_win_get_width(state.panel_win)
-                end
-            end
-        end,
-    })
-    -- Make the terminal window and the side panel can be closed together
-    vim.api.nvim_create_autocmd('WinClosed', {
-        group = 'rockyz.terminal',
-        pattern = table.concat({ state.term_win, state.panel_win }, ','),
-        callback = function(args)
-            local closed_win = tonumber(args.match)
-            if closed_win == state.term_win then
-                close_win(state.panel_win)
-            elseif closed_win == state.panel_win then
-                close_win(state.term_win)
-            end
-        end,
-    })
-end
-
-local function set_buf_keymaps()
-    local function map(mode, lhs, rhs)
-        vim.keymap.set(mode, lhs, rhs, { buffer = state.term_buf })
-    end
-
-    -- New terminal
-    map({ 'n', 't' }, '<M-n>', function()
-        require('rockyz.terminal').new()
-    end)
-
-    -- Delete the current terminal
-    map({ 'n', 't' }, '<M-d>', function()
-        require('rockyz.terminal').delete()
-    end)
-
-    -- Delete all terminals but the current one
-    map({ 'n', 't' }, '<M-o>', function()
-        require('rockyz.terminal').only()
-    end)
-
-    -- Jump to the next or previous
-    map({ 'n', 't' }, '<M-=>', function()
-        require('rockyz.terminal').jump(1)
-    end)
-    map({ 'n', 't' }, '<M-->', function()
-        require('rockyz.terminal').jump(-1)
-    end)
-
-    -- Jump to terminal #i
-    for i = 1, 10 do
-        local lhs = '<M-' .. i .. '>'
-        map({ 'n', 't' }, lhs, function()
-            require('rockyz.terminal').switch(i)
+---@param index integer The position at which to insert the entry
+---@param name string The terminal name in this entry
+local function insert_entry_in_side_panel(index, name)
+    local lines = vim.api.nvim_buf_get_lines(state.panel_buf, index - 1, -1, false)
+    for i, line in ipairs(lines) do
+        lines[i] = line:gsub('^%[(%d+)%]', function(num)
+            return '[' .. tostring(tonumber(num) + 1) .. ']'
         end)
     end
+    local entry = string.format('[%s] %s %s', index, term_icon, name)
+    vim.api.nvim_buf_set_lines(state.panel_buf, index , -1, false, lines)
+    vim.api.nvim_buf_set_lines(state.panel_buf, index - 1, index, false, { entry })
+end
 
-    -- Rename
-    map({ 'n', 't' }, '<M-Enter>', function()
-        require('rockyz.terminal').rename()
-    end)
+---@param index integer
+local function delete_entry_in_side_panel(index)
+    local lines = vim.api.nvim_buf_get_lines(state.panel_buf, index, -1, false)
+    for i, line in ipairs(lines) do
+        lines[i] = line:gsub('^%[(%d+)%]', function(num)
+            return '[' .. tostring(tonumber(num) - 1) .. ']'
+        end)
+    end
+    vim.api.nvim_buf_set_lines(state.panel_buf, index - 1, -2, false, lines)
+    vim.api.nvim_buf_set_lines(state.panel_buf, -2, -1, false, {})
+end
 
-    -- Move the current terminal backwards or forwards
-    map({ 'n', 't' }, '<M-,>', function()
-        require('rockyz.terminal').move(-1)
-    end)
-    map({ 'n', 't' }, '<M-.>', function()
-        require('rockyz.terminal').move(1)
-    end)
+---Delete the terminal given by its index
+---@param index integer The index of the terminal to be removed
+---@param keep_term_buf? boolean Whether keep the terminal buffer. If true, the terminal buffer
+---won't be deleted, but it will be removed from the terminal list. It's useful when we move the
+---terminal to a new tabpage.
+local function delete_terminal(index, keep_term_buf)
+    local bufnr = state.terminals[index].bufnr
+    if #state.terminals == 1 then
+        reset(keep_term_buf)
+        return
+    end
+
+    table.remove(state.terminals, index)
+
+    -- Remove the entry from the side panel
+    delete_entry_in_side_panel(index)
+
+    -- If the position of the deleted terminal is before the current one, we need to update the
+    -- cursor line in side panel: move it up by one. If the deleted terminal is the current one,
+    -- switch to the next terminal.
+    if index < state.cur_index then
+        state.cur_index = state.cur_index - 1
+        vim.api.nvim_win_set_cursor(state.panel_win, { state.cur_index, 0 })
+    elseif index == state.cur_index then
+        local new_index = index > #state.terminals and index - 1 or index
+        M.switch(new_index)
+    end
+
+    if not keep_term_buf then
+        delete_buf(bufnr)
+    end
+end
+
+local function set_term_keymaps()
+    for key, action in pairs(keymaps.term) do
+        vim.keymap.set({ 'n', 't' }, key, function()
+            M[action]()
+        end, { buffer = state.term_buf })
+    end
+end
+
+local function delete_term_keymaps()
+    for key, _ in pairs(keymaps.term) do
+        vim.keymap.del({ 'n', 't' }, key, { buffer = state.term_buf })
+    end
 end
 
 -- Set the window to minimal style
-local function set_win_minimal(winid)
-    for option, value in pairs(minimal_win_opts) do
+local function set_win_options(winid)
+    for option, value in pairs(win_opts) do
         vim.wo[winid][0][option] = value
     end
 end
 
-local function create_terminal()
+local function on_exit(jobid)
+    local index = get_index_by_jobid(jobid)
+
+    -- If the terminal is one that was previously sent from the panel to the tabpage, exit directly.
+    if not index then
+        return
+    end
+
+    local bufnr = state.terminals[index].bufnr
+
+    -- If deleting terminals in batch, e.g., M.only(), we only update the side panel
+    -- once instead of deleting an entry each time.
+    if state.count_to_delete > 0 then
+        delete_buf(bufnr)
+        state.count_to_delete = state.count_to_delete - 1
+        if state.count_to_delete == 0 then
+            state.terminals = { state.terminals[state.cur_index] }
+            state.cur_index = 1
+            state.count_to_delete = 0
+
+            -- Update the side panel: keep only the current entry and remove all the others
+            local line = vim.api.nvim_buf_get_lines(state.panel_buf, state.cur_index - 1, state.cur_index, false)[1]
+            line = line:gsub('^%[%d+%]', '[1]')
+            vim.api.nvim_buf_set_lines(state.panel_buf, 0, -1, false, {})
+            vim.api.nvim_buf_set_lines(state.panel_buf, 0, 1, false, { line })
+        end
+        return
+    end
+
+    -- If deleting a single terminal, e.g., M.delete() or shell's <C-d>, we need to
+    -- update the side panel upon each deletion and switch to alternative terminal if
+    -- necessary.
+    delete_terminal(index)
+end
+
+---Create term buffer and add the entry to side panel
+---@param opts? rockyz.terminal.new.Opts
+local function create_terminal(opts)
+    opts = opts or {}
+    local index = opts.index
+    local name = opts.name or 'Terminal'
+
     state.term_buf = vim.api.nvim_create_buf(false, true)
     vim.api.nvim_buf_call(state.term_buf, function()
         local jobid = vim.fn.jobstart(vim.o.shell, {
             term = true,
-            on_exit = function(jobid)
-                local index = get_index_by_jobid(jobid)
-                local bufnr = state.terminals[index].bufnr
-
-                --
-                -- If deleting terminals in batch, e.g., M.only(), we only update the side panel
-                -- once.
-                --
-
-                if state.count_to_delete then
-                    delete_buf(bufnr)
-                    state.count_to_delete = state.count_to_delete - 1
-                    if state.count_to_delete == 0 then
-                        state.terminals = { state.terminals[state.cur_index] }
-                        state.cur_index = 1
-                        state.count_to_delete = nil
-                    end
-                    return
-                end
-
-                --
-                -- If deleting a single terminal, e.g., M.delete() or shell's <C-d>, we need to
-                -- update the side panel upon each deletion and switch to alternative terminal if
-                -- necessary.
-                --
-
-                if #state.terminals == 1 then
-                    reset()
-                    return
-                end
-                -- Update the side panel
-                local lines = vim.api.nvim_buf_get_lines(state.panel_buf, index, -1, false)
-                for i, line in ipairs(lines) do
-                    lines[i] = line:gsub('^%[(%d+)%]', function(num)
-                        return '[' .. tostring(tonumber(num) - 1) .. ']'
-                    end)
-                end
-                vim.api.nvim_buf_set_lines(state.panel_buf, index - 1, -2, false, lines)
-                vim.api.nvim_buf_set_lines(state.panel_buf, -2, -1, false, {})
-
-                table.remove(state.terminals, index)
-
-                if index < state.cur_index then
-                    state.cur_index = state.cur_index - 1
-                    vim.api.nvim_win_set_cursor(state.panel_win, { state.cur_index, 0 })
-                elseif index == state.cur_index then
-                    local target_index = index > #state.terminals and index - 1 or index
-                    M.switch(target_index)
-                end
-
-                delete_buf(bufnr)
-            end,
+            on_exit = on_exit,
         })
-        state.terminals[#state.terminals + 1] = {
+        table.insert(state.terminals, index or #state.terminals + 1, {
             jobid = jobid,
             bufnr = state.term_buf
-        }
-        state.cur_index = #state.terminals
-        set_buf_keymaps()
+        })
+        state.cur_index = index or #state.terminals
+        set_term_keymaps()
     end)
     vim.api.nvim_win_set_buf(state.term_win, state.term_buf)
-    set_win_minimal(state.term_win)
-    -- Update the panel
-    local count = #state.terminals
-    vim.api.nvim_buf_set_lines(
-        state.panel_buf,
-        count - 1,
-        count,
-        false,
-        { '[' .. count .. '] ' .. term_icon .. ' Terminal'}
-    )
+    set_win_options(state.term_win)
+
+    -- Add the entry to the side panel
+    index = index or #state.terminals
+    insert_entry_in_side_panel(index, name)
 end
 
-local function open_wins()
-    -- Window for terminal
-    vim.cmd('botright ' .. state.term_height .. 'split')
-    state.term_win = vim.api.nvim_get_current_win()
-    -- Window for panel
-    vim.cmd(state.panel_width .. 'vsplit')
-    state.panel_win = vim.api.nvim_get_current_win()
+local function create_panel_buffer()
     if not state.panel_buf or not vim.api.nvim_buf_is_valid(state.panel_buf) then
         state.panel_buf = vim.api.nvim_create_buf(false, true)
         vim.bo[state.panel_buf].filetype = 'TerminalPanel'
     end
     vim.api.nvim_win_set_buf(state.panel_win, state.panel_buf)
+    set_win_options(state.panel_win)
+end
 
-    set_win_minimal(state.panel_win)
+-- Open two split wins, one for terminal and another for the side panel
+local function open_wins()
+    -- Open terminal window
+    vim.cmd('botright ' .. state.term_height .. 'split')
+    state.term_win = vim.api.nvim_get_current_win()
+    -- Open side panel window and create its buffer
+    vim.cmd(state.panel_width .. 'vsplit')
+    state.panel_win = vim.api.nvim_get_current_win()
     vim.api.nvim_set_current_win(state.term_win)
 end
 
@@ -286,17 +317,23 @@ local function is_opened()
     return state.term_win and vim.api.nvim_win_is_valid(state.term_win)
 end
 
--- Create a new terminal
-M.new = function()
+---Create a new terminal
+---@param opts? rockyz.terminal.new.Opts
+M.new = function(opts)
+    opts = opts or {}
+    local index = opts.index
+
     if not is_opened() then
         open_wins()
+        create_panel_buffer()
     end
-    create_terminal()
-    vim.api.nvim_win_set_cursor(state.panel_win, { #state.terminals, 0 })
+    create_terminal(opts)
+    vim.api.nvim_win_set_cursor(state.panel_win, { index or #state.terminals, 0 })
     vim.api.nvim_set_current_win(state.term_win)
 end
 
--- Delete the given terminal
+---Delete the given terminal
+---@param index? integer The index of the terminal to delete. Defaults to the current one.
 M.delete = function(index)
     index = index or state.cur_index
     local jobid = state.terminals[index].jobid
@@ -311,15 +348,13 @@ M.only = function()
             M.delete(idx)
         end
     end
-    -- Update the side panel
-    local line = vim.api.nvim_buf_get_lines(state.panel_buf, state.cur_index - 1, state.cur_index, false)[1]
-    line = line:gsub('^%[%d+%]', '[1]')
-    vim.api.nvim_buf_set_lines(state.panel_buf, 0, -1, false, {})
-    vim.api.nvim_buf_set_lines(state.panel_buf, 0, 1, false, { line })
 end
 
 -- Switch to the i-th terminal
 M.switch = function(index)
+    if index > #state.terminals then
+        return
+    end
     local bufnr = state.terminals[index].bufnr
     state.term_buf = bufnr
     state.cur_index = index
@@ -327,14 +362,32 @@ M.switch = function(index)
     vim.api.nvim_win_set_cursor(state.panel_win, { index, 0 })
 end
 
--- Jump to the previous or next terminal
-M.jump = function(direction)
+local function generate_switch_func()
+    for i = 1, 10 do
+        M['switch_' .. i] = function()
+            M.switch(i)
+        end
+    end
+end
+generate_switch_func()
+
+---Jump to the previous or next terminal
+---@param direction integer 1 for forwards and -1 for backwards
+local function jump(direction)
     local cur_index = state.cur_index
     if direction == -1 and cur_index ~= 1 then
         M.switch(cur_index - 1)
     elseif direction == 1 and cur_index ~= vim.tbl_count(state.terminals) then
         M.switch(cur_index + 1)
     end
+end
+
+M.prev = function()
+    jump(-1)
+end
+
+M.next = function()
+    jump(1)
 end
 
 -- Rename the current terminal
@@ -347,163 +400,136 @@ M.rename = function()
     end)
 end
 
--- Move the current terminal to the previous or next position in the list
-M.move = function(direction)
-    local target_index = state.cur_index + direction
-    if target_index > #state.terminals or target_index < 1 then
+---Move the current terminal to the previous or next position in the list
+---@param direction integer -1 or 1
+local function move(direction)
+    local new_index = state.cur_index + direction
+    if new_index > #state.terminals or new_index < 1 then
         return
     end
-    panel_lines_swap(state.cur_index, target_index)
-    list_swap(state.terminals, state.cur_index, target_index)
-    state.cur_index = target_index
-    M.switch(target_index)
+    panel_lines_swap(state.cur_index, new_index)
+    list_swap(state.terminals, state.cur_index, new_index)
+    state.cur_index = new_index
+    M.switch(new_index)
+end
+
+M.move_prev = function()
+    move(-1)
+end
+
+M.move_next = function()
+    move(1)
+end
+
+local function set_autocmd()
+    vim.api.nvim_create_augroup('rockyz.terminal', { clear = true })
+    -- Remember its size if terminal window gets resized
+    vim.api.nvim_create_autocmd({ 'WinResized' }, {
+        group = 'rockyz.terminal',
+        callback = function()
+            for _, win in ipairs(vim.v.event.windows) do
+                if win == state.term_win then
+                    state.term_height = vim.api.nvim_win_get_height(state.term_win)
+                end
+                if win == state.panel_win then
+                    state.panel_width = vim.api.nvim_win_get_width(state.panel_win)
+                end
+            end
+        end,
+    })
+    -- Make the terminal window and the side panel can be closed together
+    vim.api.nvim_create_autocmd({ 'WinClosed' }, {
+        group = 'rockyz.terminal',
+        pattern = table.concat({ state.term_win, state.panel_win }, ','),
+        callback = function(args)
+            local closed_win = tonumber(args.match)
+            if closed_win == state.term_win then
+                close_win(state.panel_win)
+            elseif closed_win == state.panel_win then
+                close_win(state.term_win)
+            end
+        end,
+    })
+end
+
+-- Send current terminal to a new tabpage
+M.to_tab = function()
+    vim.cmd('tab split')
+    delete_term_keymaps()
+    delete_terminal(state.cur_index, true)
 end
 
 -- Close the terminal window along with the side panel
 M.close = function()
     close_win(state.term_win)
     close_win(state.panel_win)
-    vim.api.nvim_clear_autocmds({ group = 'rockyz.terminal' })
 end
 
 M.open = function()
+    if is_opened() then
+        return
+    end
     open_wins()
+    create_panel_buffer()
     if not state.term_buf or not vim.api.nvim_buf_is_valid(state.term_buf) then
         create_terminal()
     else
         vim.api.nvim_win_set_buf(state.term_win, state.term_buf)
     end
-    set_autocmd()
 end
 
 M.toggle = function()
     if is_opened() then
-        M.close()
+        if vim.api.nvim_win_get_tabpage(state.term_win) ~= vim.api.nvim_get_current_tabpage() then
+            -- If the terminal is already open in a different tabpage, open it in the current one.
+            M.close()
+            M.open()
+        else
+            M.close()
+            vim.api.nvim_clear_autocmds({ group = 'rockyz.terminal' })
+        end
     else
         M.open()
+        set_autocmd()
     end
 end
 
--- Toggle
-vim.keymap.set({ 'n', 't' }, '<M-`>', function()
-    require('rockyz.terminal').toggle()
-end)
+M.to_panel = function()
+    if vim.bo.buftype ~= 'terminal' then
+        return
+    end
+    local jobid = vim.bo.channel
+    local bufnr = vim.api.nvim_get_current_buf()
+    table.insert(state.terminals, {
+        jobid = jobid,
+        bufnr = bufnr,
+    })
+    state.cur_index = #state.terminals
+    state.term_buf = bufnr
+    set_term_keymaps()
 
--- Terminal config
+    vim.cmd('tabclose')
 
--- Inspired by @justinmk
--- In terminal, map <C-[> to <C-\><C-n> to go back to NORMAL. <ESC> can send literal ESC.
--- In the terminal-nested nvim, map <C-[> back to <ESC>
-local function config_term_esc()
-    vim.keymap.set('t', '<C-[>', [[<C-\><C-N>]])
+    if not is_opened() then
+        open_wins()
+        create_panel_buffer()
+        set_autocmd()
+    end
 
-    -- Send literal ESC
-    vim.keymap.set('t', '<Leader><C-[>', '<Esc>')
+    vim.api.nvim_win_set_buf(state.term_win, state.term_buf)
+    set_win_options(state.term_win)
 
-    -- In terminal-nested Nvim, we should map <C-[> back to <ESC>
-    if vim.env.NVIM then
-        local function parent_chan()
-            local ok, chan = pcall(vim.fn.sockconnect, 'pipe', vim.env.NVIM, {rpc=true})
-            if not ok then
-                vim.notify(('failed to create channel to $NVIM: %s'):format(chan))
-            end
-            return ok and chan or nil
-        end
+    insert_entry_in_side_panel(#state.terminals, 'Terminal')
+    vim.api.nvim_win_set_cursor(state.panel_win, { #state.terminals, 0 })
+end
 
-        local didset = false
-        local chan = assert(parent_chan())
-
-        local function map_parent(lhs)
-            -- Map `lhs` in the parent so it gets sent to the child (this) Nvim.
-            local map = vim.rpcrequest(chan, 'nvim_exec_lua', [[return vim.fn.maparg(..., 't', false, true)]], { lhs }) --[[@as table<string,any>]]
-            if map.rhs == [[<C-\><C-N>]] then
-                vim.rpcrequest(chan, 'nvim_exec_lua', [[vim.keymap.set('t', ..., '<Esc>', {buffer=0})]], { lhs })
-                didset = true
-            end
-        end
-        map_parent('<C-[>')
-        vim.fn.chanclose(chan)
-
-        -- Restore the mapping(s) on VimLeave.
-        if didset then
-            vim.api.nvim_create_autocmd({'VimLeave'}, {
-                group = vim.api.nvim_create_augroup('rockyz.terminal.config_esc', { clear = true }),
-                callback = function()
-                    local chan2 = assert(parent_chan())
-                    vim.rpcrequest(chan2, 'nvim_exec2', [=[
-                    tunmap <buffer> <C-[>
-                    ]=], {})
-                end,
-            })
-        end
+local function set_global_keymaps()
+    for key, action in pairs(keymaps.global) do
+        vim.keymap.set({ 'n', 't' }, key, function()
+            M[action]()
+        end)
     end
 end
-config_term_esc()
-
--- Inspired by @justinmk
--- In terminal, mark the start of each prompt in signcolumn; change the current working directory of
--- the terminal window to match the terminal's pwd.
-local function config_term()
-    vim.api.nvim_create_autocmd('TermOpen', {
-        callback = function()
-            vim.cmd[=[
-            " Enable prompt sign in :terminal buffers.
-            setlocal signcolumn=auto
-
-            nnoremap <silent><buffer> <cr> i<cr><c-\><c-n>
-            nnoremap <silent><buffer> <c-c> i<c-c><c-\><c-n>
-            ]=]
-        end
-    })
-    local ns = vim.api.nvim_create_namespace('rockyz.terminal.osc133')
-    vim.api.nvim_create_autocmd('TermRequest', {
-        group = vim.api.nvim_create_augroup('rockyz.terminal.termrequest_osc', { clear = true }),
-        callback = function(ev)
-            if string.match(ev.data.sequence, '^\027]133;A') then
-                -- OSC 133: shell-prompt
-                local extmarks = vim.b[ev.buf].osc133_extmarks or {}
-                local lnum = ev.data.cursor[1]
-
-                for id, l in pairs(extmarks) do
-                    if l < lnum then
-                        vim.api.nvim_buf_set_extmark(ev.buf, ns, l, 0, {
-                            id = id,
-                            sign_text = icons.misc.circle_filled,
-                        })
-                    end
-                end
-
-                local new_id = vim.api.nvim_buf_set_extmark(ev.buf, ns, lnum, 0, {
-                    sign_text = icons.misc.circle,
-                    -- sign_hl_group = 'SpecialChar',
-                })
-
-                extmarks[new_id] = lnum
-                vim.b[ev.buf].osc133_extmarks = extmarks
-
-                for id, l in pairs(extmarks) do
-                    if l > lnum then
-                        vim.api.nvim_buf_del_extmark(ev.buf, ns, id)
-                    end
-                end
-            end
-
-            local val, n = string.gsub(ev.data.sequence, '^\027]7;file://[^/]*', '')
-            if n > 0 then
-                -- OSC 7: dir-change
-                local dir = val
-                if vim.fn.isdirectory(dir) == 0 then
-                    vim.notify('invalid dir: '..dir)
-                    return
-                end
-                vim.b[ev.buf].osc7_dir = dir
-                if vim.api.nvim_get_current_buf() == ev.buf then
-                    vim.cmd.lcd(dir)
-                end
-            end
-        end,
-    })
-end
-config_term()
+set_global_keymaps()
 
 return M

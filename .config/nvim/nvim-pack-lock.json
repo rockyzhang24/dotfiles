@@ -5,7 +5,7 @@
       "src": "https://github.com/L3MON4D3/LuaSnip"
     },
     "SchemaStore.nvim": {
-      "rev": "aa25399c48236b77af71d4b64cdf157d2ba4e990",
+      "rev": "21645280ad06fce01ef109e82d76302dcbe62756",
       "src": "https://github.com/b0o/SchemaStore.nvim"
     },
     "blink.cmp": {
@@ -18,11 +18,11 @@
       "src": "https://github.com/uga-rosa/ccc.nvim"
     },
     "conform.nvim": {
-      "rev": "afce105eb47b0869dfafdac90d82f02ef2419d61",
+      "rev": "ffe26e8df8115c9665d24231f8a49fadb2d611ce",
       "src": "https://github.com/stevearc/conform.nvim"
     },
     "cscope_maps.nvim": {
-      "rev": "ad45590",
+      "rev": "128cd94d72b299154cfaf3c0d25a53b7f0ac7e3c",
       "src": "https://github.com/dhananjaylatkar/cscope_maps.nvim"
     },
     "eregex.vim": {
@@ -35,7 +35,7 @@
       "version": "'dev'"
     },
     "gitsigns.nvim": {
-      "rev": "cdafc320f03f2572c40ab93a4eecb733d4016d07",
+      "rev": "5813e4878748805f1518cee7abb50fd7205a3a48",
       "src": "https://github.com/lewis6991/gitsigns.nvim"
     },
     "hlargs.nvim": {
@@ -51,7 +51,7 @@
       "src": "https://github.com/mizlan/iswap.nvim"
     },
     "linediff.vim": {
-      "rev": "ddae71e",
+      "rev": "29fa617fc10307a1e0ae82a8761114e465d17b06",
       "src": "https://github.com/AndrewRadev/linediff.vim"
     },
     "neogen": {
@@ -63,7 +63,7 @@
       "src": "https://github.com/nvim-treesitter/nvim-treesitter"
     },
     "nvim-treesitter-context": {
-      "rev": "660861b",
+      "rev": "64dd4cf3f6fd0ab17622c5ce15c91fc539c3f24a",
       "src": "https://github.com/nvim-treesitter/nvim-treesitter-context"
     },
     "nvim-treesitter-textobjects": {
@@ -163,7 +163,7 @@
       "src": "https://github.com/tpope/vim-sleuth"
     },
     "vim-sneak": {
-      "rev": "ed9aff2df0d503f043269180bed03c0592ccdf4d",
+      "rev": "feea86adcfbf8e6b5e71fdd5f4f5736fd8819fdb",
       "src": "https://github.com/justinmk/vim-sneak"
     },
     "vim-startuptime": {

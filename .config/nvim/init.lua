@@ -28,7 +28,7 @@ vim.loader.enable()
 require('rockyz.globals')
 
 local modules = {
-    'options',
+    'settings',
     'keymaps',
     'plugins',
     'color',

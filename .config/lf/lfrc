@@ -23,6 +23,7 @@ set shell bash
 set shellopts '-eu'
 set smartcase
 set tabstop 4
+set preload
 
 setlocal ~/Downloads sortby "atime"
 setlocal ~/Downloads reverse

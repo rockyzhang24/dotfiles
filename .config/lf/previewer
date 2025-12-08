@@ -8,6 +8,22 @@ PV_WIDTH="${2}"
 PV_HEIGHT="${3}"
 HORIZONTAL_POS="${4}"
 VERTICAL_POS="${5}"
+MODE="${6}" # "preview" or "preload"
+
+# Cache image before previewing by lf's preload feature
+# Reference: https://github.com/gokcehan/lf/pull/2206
+CACHE_DIR=$HOME/.cache/lf
+
+cache() {
+    local hash
+    hash=$(gstat --printf '%n\0%i\0%Y' "$1" | sha256sum | cut -d' ' -f1)
+    echo "$CACHE_DIR/$hash.jpg"
+}
+
+preload() {
+    mkdir -p "$CACHE_DIR"
+    ffmpeg -i "$1" -vframes 1 "$(cache "${2:-$1}")"
+}
 
 bat() {
     command bat \
@@ -40,42 +56,42 @@ handle_extension() {
     case "${FILE_EXTENSION_LOWER}" in
         # Markdown
         md)
-            glow -s dark --width "${PV_WIDTH}" -- "${FILE_PATH}" && exit 1;;
+            glow -s dark --width "${PV_WIDTH}" -- "${FILE_PATH}" && exit 0;;
         # Archive
         bz2|gz|lz|tar|xz|zip)
-            atool --list -- "${FILE_PATH}" && exit 1;;
+            atool --list -- "${FILE_PATH}" && exit 0;;
         rar)
-            unrar lt -p- -- "${FILE_PATH}" && exit 1;;
+            unrar lt -p- -- "${FILE_PATH}" && exit 0;;
         7z)
-            7z l -p -- "${FILE_PATH}" && exit 1;;
+            7z l -p -- "${FILE_PATH}" && exit 0;;
         # PDF
         pdf)
-            pdftotext -l 10 -nopgbrk -q -- "${FILE_PATH}" - | fmt -w "${PV_WIDTH}" && exit 1;;
+            pdftotext -l 10 -nopgbrk -q -- "${FILE_PATH}" - | fmt -w "${PV_WIDTH}" && exit 0;;
         # OpenDocument
         odt|sxw|ods|odp)
-            odt2txt "${FILE_PATH}" && exit 1;;
+            odt2txt "${FILE_PATH}" && exit 0;;
         # XLSX
         xlsx)
-            xlsx2csv -- "${FILE_PATH}" | head -n 500 && exit 1;;
+            xlsx2csv -- "${FILE_PATH}" | head -n 500 && exit 0;;
         # JSON
         json)
-            jq --color-output . "${FILE_PATH}" && exit1 ;;
+            jq --color-output . "${FILE_PATH}" && exit 0;;
         # BitTorrent
         torrent)
-            transmission-show -- "${FILE_PATH}" && exit 1;;
+            transmission-show -- "${FILE_PATH}" && exit 0;;
         # Dmg
         dmg)
-            hdiutil imageinfo "${FILE_PATH}" | bat -l yaml && exit 1;;
+            hdiutil imageinfo "${FILE_PATH}" | bat -l yaml && exit 0;;
         # CSV and TSV
         csv|tsv)
-            mlr --icsv --opprint -C --key-color darkcyan --value-color grey70 head -n 500 "${FILE_PATH}" && exit 1;;
+            mlr --icsv --opprint -C --key-color darkcyan --value-color grey70 head -n 500 "${FILE_PATH}" && exit 0;;
         # Sqlite3 and sqlite
         sqlite3 | sqlite)
-            sqlite3 "${FILE_PATH}" .schema | sed "s/;/;\n/g" | bat -l sql && exit 1;;
+            sqlite3 "${FILE_PATH}" .schema | sed "s/;/;\n/g" | bat -l sql && exit 0;;
         # so and dylib
         so|dylib)
-            nm "${FILE_PATH}" && exit 1
-            nm -D "${FILE_PATH}" && exit 1
+            nm "${FILE_PATH}" && exit 0
+            nm -D "${FILE_PATH}" && exit 0
     esac
 }
 
@@ -84,23 +100,35 @@ handle_mime() {
     case "${mimetype}" in
         # DOCX, ePub, FB2
         *wordprocessingml.document|*/epub+zip|*/x-fictionbook+xml)
-            pandoc -s -t markdown -- "${FILE_PATH}" | glow -s dark --width "${PV_WIDTH}" && exit 1;;
+            pandoc -s -t markdown -- "${FILE_PATH}" | glow -s dark --width "${PV_WIDTH}" && exit 0;;
         # Image
         image/*)
-            image_previewer "${FILE_PATH}"
-            exit 1;;
+            if [[ $MODE == "preload" ]]; then
+                preload "$FILE_PATH"
+                exit 1
+            else
+                image_previewer "$(cache "$FILE_PATH")"
+                exit 0
+            fi
+            ;;
         # Video
         video/*)
-            local thumbnail
-            thumbnail=$("$XDG_CONFIG_HOME"/lf/vidthumb "${FILE_PATH}")
-            image_previewer "$thumbnail"
-            exit 1;;
+            if [[ $MODE == "preload" ]]; then
+                local thumbnail
+                thumbnail=$("$XDG_CONFIG_HOME"/lf/vidthumb "${FILE_PATH}")
+                preload "$thumbnail" "$FILE_PATH"
+                exit 1
+            else
+                image_previewer "$(cache "$FILE_PATH")"
+                exit 0
+            fi
+            ;;
         # Text
         text/* | */xml)
             (bat --style=numbers,changes -- "${FILE_PATH}" \
             || highlight --out-format truecolor --style darkplus --force \
                     --line-numbers --line-range=1-"${PV_HEIGHT}" -- "${FILE_PATH}" \
-            || cat -- "${FILE_PATH}") && exit 1;;
+            || cat -- "${FILE_PATH}") && exit 0;;
     esac
 }
 
@@ -108,8 +136,8 @@ handle_fallback() {
     # Use file command as the fallback. It outputs the file properties, separated by comma, in a
     # single lone line. In order to fit the width of the preview window, replace each comma with a
     # line break, but leave the commas inside square brackets unchanged.
-    file --dereference --brief -- "${FILE_PATH}" | gsed -r ':a; s/(\[[^][]*),([^][]*\])/\1TTEEMMPP\2/g; ta; s/, /\n/g; s/TTEEMMPP/,/g' && exit 1
-    exit 1
+    file --dereference --brief -- "${FILE_PATH}" | gsed -r ':a; s/(\[[^][]*),([^][]*\])/\1TTEEMMPP\2/g; ta; s/, /\n/g; s/TTEEMMPP/,/g' && exit 0
+    exit 0
 }
 
 MIMETYPE="$( file --dereference --brief --mime-type -- "${FILE_PATH}" )"

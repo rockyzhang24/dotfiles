@@ -69,7 +69,7 @@ end
 
 return {
     cmd = {
-        'clangd',
+        [[/opt/homebrew/opt/llvm/bin/clangd]],
         '--clang-tidy',
         '--header-insertion=iwyu',
         '--completion-style=detailed',

@@ -1,15 +1,15 @@
 -- <M-`>: toggle
--- <M-n>: new a terminal
--- <M-d>: delete the current terminal
--- <M-o>: delete all terminals but the current one
+-- <Leader><M-n>: new a terminal
+-- <Leader><M-d>: delete the current terminal
+-- <Leader><M-o>: delete all terminals but the current one
 -- <M-=>: jump to the next terminal
 -- <M-->: jump to the previous terminal
 -- <M-1> to <M-9>: jump to terminal #i
--- <M-Enter>: rename the current terminal
+-- <Leader><M-Enter>: rename the current terminal
 -- <M-,>: move the current terminal backwards
 -- <M-.>: move the current terminal forwards
--- <M-t>: send the terminal to a new tabpage
--- <M-p>: send the terminal to the panel
+-- <Leader><M-t>: send the terminal to a new tabpage
+-- <Leader><M-p>: send the terminal to the panel
 
 local M = {}
 
@@ -66,15 +66,15 @@ local win_opts = {
 local keymaps = {
     -- Keymaps defined in the terminal buffer
     term = {
-        ['<M-n>'] = 'new',
-        ['<M-d>'] = 'delete',
-        ['<M-o>'] = 'only',
+        ['<Leader><M-n>'] = 'new',
+        ['<Leader><M-d>'] = 'delete',
+        ['<Leader><M-o>'] = 'only',
         ['<M-=>'] = 'next',
         ['<M-->'] = 'prev',
-        ['<M-Enter>'] = 'rename',
+        ['<Leader><M-Enter>'] = 'rename',
         ['<M-.>'] = 'move_next',
         ['<M-,>'] = 'move_prev',
-        ['<M-t>'] = 'to_tab',
+        ['<Leader><M-t>'] = 'to_tab',
         ['<M-1>'] = 'switch_1',
         ['<M-2>'] = 'switch_2',
         ['<M-3>'] = 'switch_3',
@@ -88,7 +88,7 @@ local keymaps = {
     },
     global = {
         ['<M-`>'] = 'toggle',
-        ['<M-p>'] = 'to_panel',
+        ['<Leader><M-p>'] = 'to_panel',
     },
 }
 

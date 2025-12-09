@@ -10,6 +10,7 @@
 -- <M-.>: move the current terminal forwards
 -- <Leader><M-t>: send the terminal to a new tabpage
 -- <Leader><M-p>: send the terminal to the panel
+-- <Leader><M-m>: toggle maximize
 
 local M = {}
 
@@ -30,6 +31,7 @@ local term_icon = icons.misc.term
 ---@field terminals rocky.terminal.Terminal[]
 ---@field cur_index integer|nil The index of the current terminal
 ---@field count_to_delete integer
+---@field maximized boolean
 
 local state = {
     -- Terminal window
@@ -50,6 +52,8 @@ local state = {
     -- alternative terminal upon each deletion as we do when deleting a single terminal. Instead, we
     -- just need to update the side panel once and there's no need to switch terminal.
     count_to_delete = 0,
+
+    maximized = false,
 }
 
 local win_opts = {
@@ -75,6 +79,7 @@ local keymaps = {
         ['<M-.>'] = 'move_next',
         ['<M-,>'] = 'move_prev',
         ['<Leader><M-t>'] = 'to_tab',
+        ['<Leader><M-m>'] = 'toggle_maximize',
         ['<M-1>'] = 'switch_1',
         ['<M-2>'] = 'switch_2',
         ['<M-3>'] = 'switch_3',
@@ -123,6 +128,7 @@ local function reset(keep_term_buf)
     state.panel_buf = nil
     state.terminals = {}
     state.count_to_delete = nil
+    state.maximized = false
 end
 
 -- Swap any two items in a list
@@ -521,6 +527,17 @@ M.to_panel = function()
 
     insert_entry_in_side_panel(#state.terminals, 'Terminal')
     vim.api.nvim_win_set_cursor(state.panel_win, { #state.terminals, 0 })
+end
+
+M.toggle_maximize = function()
+    if not state.maximized then
+        state.prev_height = state.term_height
+        vim.api.nvim_win_set_height(state.term_win, vim.o.lines)
+    else
+        vim.api.nvim_win_set_height(state.term_win, state.prev_height)
+    end
+    state.maximized = not state.maximized
+    state.term_height = vim.api.nvim_win_get_height(state.term_win)
 end
 
 local function set_global_keymaps()

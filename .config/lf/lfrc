@@ -309,7 +309,7 @@ nmap T trash
 nmap U !printf "\n"; du -csh *
 nmap <c-t> fzf-toggle-select
 nmap <c-f> fzf-file
-nmap <c-j> fzf-cd
+nmap <c-z> fzf-cd
 # give a name and then make a directory
 nmap <c-n> push :mkdir<space>
 nmap <a-n> new-folder-with-selection

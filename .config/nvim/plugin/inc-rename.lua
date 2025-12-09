@@ -1,3 +1,3 @@
 require('inc_rename').setup({})
 
-vim.keymap.set('n', '<Leader>rN', ':IncRename ')
+vim.keymap.set('n', '<Leader>rn', ':IncRename ')

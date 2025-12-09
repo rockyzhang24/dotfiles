@@ -44,7 +44,7 @@ function M.bufdelete(opts)
 
     -- Check if the buffer is modified
     if vim.bo[bufnr].modified and not opts.force then
-        local ok, choice = pcall(vim.fn.confirm, ("Save changes to %q?"):format(vim.fn.bufname()), "&Yes\n&No\n&Cancel")
+        local ok, choice = pcall(vim.fn.confirm, ("Save changes to %q?"):format(vim.fn.bufname(bufnr)), "&Yes\n&No\n&Cancel")
         if not ok or choice == 0 or choice == 3 then -- 0 for <Esc>/<C-c> and 3 for Cancel
             return
         elseif choice == 1 then -- yes

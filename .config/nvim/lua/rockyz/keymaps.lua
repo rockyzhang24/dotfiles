@@ -20,6 +20,13 @@ vim.keymap.set('n', 'z=', '<Cmd>setlocal spell<CR>z=')
 vim.keymap.set('x', 'x', '"_d') -- for copy and delete use v_d
 vim.keymap.set('n', 'z.', ':silent lockmarks update ++p<CR>') -- Preserve '[ '] on :write
 
+vim.keymap.set('n', 'zt', function()
+    vim.cmd('normal! ' .. (vim.v.count > 0 and vim.v.count or '') .. 'zt')
+end)
+vim.keymap.set('n', 'zb', function()
+    vim.cmd('normal! ' .. (vim.v.count > 0 and vim.v.count or '') .. 'zb')
+end)
+
 -- Move the current line or selections up and down with corresponding indentation
 -- vim.keymap.set('n', '<M-j>', ':m .+1<CR>==', { silent = true })
 -- vim.keymap.set('n', '<M-k>', ':m .-2<CR>==', { silent = true })
@@ -41,8 +48,6 @@ vim.keymap.set('n', 'zh', '10zh')
 vim.keymap.set('n', 'zl', '10zl')
 -- Visual select all
 vim.keymap.set('n', '<M-a>', 'VggoG')
--- Restart nvim
-vim.keymap.set('n', '<Leader>R', '<Cmd>restart<CR>')
 
 -- Smart jk
 local function smart_jk(jk)
@@ -108,24 +113,6 @@ vim.keymap.set('n', 'U', "<Cmd>execute 'earlier ' .. vim.v.count1 .. 'f'<CR>")
 vim.keymap.set('n', '<M-r>', "<Cmd>execute 'later ' .. vim.v.count1 .. 'f'<CR>")
 -- Format the whole buffer and preserve the cursor position
 vim.keymap.set('n', 'gQ', 'mzgggqG`z<Cmd>delmarks z<CR>')
--- Toggle the quickfix window
-vim.keymap.set('n', '\\q', function()
-    if vim.fn.getqflist({ winid = 0 }).winid ~= 0 then
-        vim.cmd.cclose()
-    elseif #vim.fn.getqflist() > 0 then
-        vim.cmd.copen()
-        vim.cmd.wincmd('p')
-    end
-end)
--- Toggle the location list window
-vim.keymap.set('n', '\\l', function()
-    if vim.fn.getloclist(0, { winid = 0 }).winid ~= 0 then
-        vim.cmd.lclose()
-    elseif #vim.fn.getloclist(0) > 0 then
-        vim.cmd.lopen()
-        vim.cmd.wincmd('p')
-    end
-end)
 -- Toggle spell
 vim.keymap.set('n', '\\S', function()
     vim.wo.spell = not vim.wo.spell
@@ -174,9 +161,9 @@ vim.keymap.set('n', '\\z', function()
         vim.w.shallow_outline_enabled = false
     else
         vim.w.shallow_outline_prev_opts = {
-            foldmethod = vim.wo.foldmethod,
-            foldnestmax = vim.wo.foldnestmax,
-            foldlevel = vim.wo.foldlevel
+            vim.wo.foldmethod,
+            vim.wo.foldnestmax,
+            vim.wo.foldlevel
         }
         vim.wo.foldmethod, vim.wo.foldnestmax, vim.wo.foldlevel = 'indent', 2, 0
         vim.w.shallow_outline_enabled = true
@@ -299,6 +286,36 @@ end)
 -- end)
 
 --
+-- Quickfix
+--
+
+-- Toggle the quickfix window
+vim.keymap.set('n', '\\q', function()
+    if vim.fn.getqflist({ winid = 0 }).winid ~= 0 then
+        vim.cmd.cclose()
+    elseif #vim.fn.getqflist() > 0 then
+        vim.cmd.copen()
+        vim.cmd.wincmd('p')
+    end
+end)
+
+-- Toggle the location list window
+vim.keymap.set('n', '\\l', function()
+    if vim.fn.getloclist(0, { winid = 0 }).winid ~= 0 then
+        vim.cmd.lclose()
+    elseif #vim.fn.getloclist(0) > 0 then
+        vim.cmd.lopen()
+        vim.cmd.wincmd('p')
+    end
+end)
+
+-- Toggle between quickfix and location list
+vim.cmd([[
+nnoremap <silent><expr> <M-q> '@_:'.(&bt!=#'quickfix'<bar><bar>!empty(getloclist(0))?'lclose<bar>botright copen':'cclose<bar>botright lopen')
+    \.(v:count ? '<bar>wincmd L' : '').'<CR>'
+]])
+
+--
 -- Quit/Close
 --
 
@@ -320,6 +337,7 @@ local function is_search_cmd()
     return cmdtype == '/' or cmdtype == '?'
 end
 
+-- Mark position before search
 vim.keymap.set('n', '/', 'ms/')
 vim.keymap.set('n', '?', 'ms?')
 
@@ -349,6 +367,11 @@ vim.keymap.set('c', '<BS>', function()
         return '<BS>'
     end
 end, { expr = true })
+
+-- Hit <Space> to match multiline whitespaces
+vim.keymap.set('c', '<Space>', function()
+    return is_search_cmd() and '\\_s\\+' or '<Space>'
+end, { expr = true, remap = true }) -- Without remap, <Space> won't trigger abbreviations
 
 --
 -- Substitute
@@ -403,6 +426,47 @@ local function visual_sub()
     })
 end
 visual_sub()
+
+-- Replace operator (inspired by @justinmk)
+local rr_reg = '"'
+local function set_reg(reg_name)
+    rr_reg = reg_name
+end
+function _G.replace_without_yank(type)
+    local rr_orig = vim.fn.getreg(rr_reg, 1) -- save registers and types to restore later
+    local rr_type = vim.fn.getregtype(rr_reg)
+    local sel_save = vim.o.selection
+    vim.o.selection = 'inclusive'
+    local replace_curlin = vim.fn.col("'[") == 1
+        and (vim.fn.col('$') == 1 or vim.fn.col('$') == vim.fn.col("']") + 1)
+        and vim.fn.line("'[") == vim.fn.line("']")
+    if type == 'line' and replace_curlin then
+        vim.cmd("keepjumps normal! '[V']\"" .. rr_reg .. 'P')
+    elseif type == 'block' then
+        vim.cmd("keepjumps normal! `[\\<C-V>`]\"" .. rr_reg .. 'P')
+    else
+        -- DWIM: if pasting linewise contents in a _characterwise_ motion, trim surrounding
+        -- whitespace from the content to be pasted.
+        if rr_type == 'V' then
+            vim.fn.setreg(rr_reg, vim.trim(rr_orig), 'v')
+        end
+        vim.cmd("keepjumps normal! `[v`]\"" .. rr_reg .. 'P')
+    end
+
+    vim.o.selection = sel_save
+    vim.fn.setreg(rr_reg, rr_orig, rr_type)
+end
+vim.keymap.set('n', 'dr', function()
+    set_reg(vim.v.register)
+    vim.o.opfunc = "v:lua.replace_without_yank"
+    vim.api.nvim_feedkeys('g@', 'n', true)
+end)
+vim.keymap.set('n', 'drr', function()
+    set_reg(vim.v.register)
+    vim.cmd('normal! 0')
+    vim.o.opfunc = "v:lua.replace_without_yank"
+    vim.api.nvim_feedkeys('g@$', 'n', true)
+end)
 
 --
 -- Buffer
@@ -658,9 +722,6 @@ vim.keymap.set('n', '<M-.>', function()
     return '<Cmd>tabmove ' .. (vim.v.count ~= 0 and vim.v.count or '+1') .. '<CR>'
 end, { expr = true })
 
--- Open current buffer in new tab
-vim.keymap.set('n', '<M-t>', '<Cmd>tab split<CR>')
-
 for i = 1, 9 do
     vim.keymap.set('n', ',' .. i , i .. 'gt')
 end
@@ -684,13 +745,17 @@ end
 vim.keymap.set('n', '<M-Tab>', function()
     require('rockyz.mru_win').goto_recent()
 end)
--- Split
+-- Split (use [count] to set the width or height)
 vim.keymap.set('n', '<Leader>-', require('rockyz.utils.win').split)
 vim.keymap.set('n', '<Leader><BSlash>', require('rockyz.utils.win').vsplit)
--- Move current window to new tab
-vim.keymap.set('n', '<Leader>wt', '<C-w>T')
--- Duplicate the current window in a new tab
-vim.keymap.set('n', '<Leader>wT', ':tab split<CR>', { silent = true })
+-- Open current window in a new tabpage (use [count] to close the current window)
+vim.keymap.set('n', '<M-t>', function()
+    if vim.v.count ~= 0 then
+        return '<C-w>T'
+    else
+        return '<Cmd>tab split<CR>'
+    end
+end, { expr = true })
 -- Resize
 vim.keymap.set('n', '<C-Down>', '<C-w>5-')
 vim.keymap.set('n', '<C-Up>', '<C-w>5+')
@@ -702,7 +767,8 @@ vim.keymap.set('t', '<C-Left>', '<C-\\><C-n><C-w>5<i')
 vim.keymap.set('t', '<C-Right>', '<C-\\><C-n><C-w>5>i')
 -- Balance size
 vim.keymap.set('n', '<Leader>w=', '<C-w>=')
--- Close windows by giving the window numbers
+-- Close windows by giving the window numbers (e.g., :CloseWin 2 3)
+-- To close a single window say window #5, :5q works as well
 vim.keymap.set('n', '<Leader>wq', ':CloseWin<Space>')
 -- Switch the layout (horizontal and vertical) of the TWO windows
 vim.keymap.set('n', '<Leader>wl', require('rockyz.utils.win').switch_layout)
@@ -733,7 +799,7 @@ end)
 -- Vimscript goes here
 --
 
-vim.cmd([[
+vim.cmd([==[
 
 " Insert formatted datetime (from @tpope vimrc)
 inoremap <silent> <C-G><C-T> <C-R>=repeat(complete(col('.'),map(["%Y-%m-%d %H:%M:%S","%a, %d %b %Y %H:%M:%S %z","%Y %b %d","%d-%b-%y","%a %b %d %T %Z %Y","%Y%m%d"],'strftime(v:val)')+[localtime()]),0)<CR>
@@ -744,4 +810,10 @@ nnoremap cdd  :lcd <c-r>=luaeval('vim.fs.root(vim.fn.expand("%"), ".git")')<cr><
 nnoremap cdu   <cmd>lcd ..<bar>pwd<cr>
 nnoremap cd-   <cmd>lcd -<bar>pwd<cr>
 
-]])
+" Show the last 40 :messages
+nnoremap g> :set nomore<bar>echo repeat("\n",&cmdheight)<bar>40messages<bar>set more<CR>
+
+" Toggle between ignoring and showing all whitespac changes in diff (e.g., it's very useful in :DiffOrig if we want to check all changes without whitespaces)
+nnoremap \<space> :set <C-R>=(&diffopt =~# 'iwhiteall') ? 'diffopt-=iwhiteall' : 'diffopt+=iwhiteall'<CR><CR>
+
+]==])

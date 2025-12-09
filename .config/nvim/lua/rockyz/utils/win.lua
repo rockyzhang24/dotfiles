@@ -138,7 +138,7 @@ end
 local function close_float_and_new(cmd)
     local winnr = vim.api.nvim_get_current_win()
     local config = vim.api.nvim_win_get_config(winnr)
-    vim.cmd(cmd)
+    vim.cmd(vim.v.count ~= 0 and vim.v.count .. cmd or cmd)
     if config.relative and config.relative ~= '' then
         vim.api.nvim_win_close(winnr, true)
     end

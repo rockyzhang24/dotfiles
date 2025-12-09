@@ -1,6 +1,7 @@
 vim.g.mw_no_mappings = 1
 
-vim.keymap.set({ 'n', 'x' }, 'm*', '<Plug>MarkSet')
+vim.keymap.set('n', 'm*', '<Plug>MarkSet')
+vim.keymap.set('x', 'm*', '<Plug>MarkIWhiteSet')
 vim.keymap.set('n', 'm?', '<Plug>MarkToggle')
 vim.keymap.set('n', 'm<BS>', '<Plug>MarkClear')
 

@@ -1,8 +1,9 @@
--- Use <C-/> to toggle lf
+-- Use _ to toggle lf
 -- Use lf's builtin q to quit
 -- <C-x>, <C-v>, <C-t> to open the selected files in split, vsplit or tab
 -- <M-Enter> to open the files in the previous window
 -- <C-q> to change nvim's cwd to the current directory of lf
+-- q in NORMAL to close lf window
 
 local M = {}
 
@@ -52,6 +53,8 @@ local function create_keymaps()
             notify.info('Current directory is changed to ' .. path)
         end, 100)
     end, { buffer = term.bufnr })
+
+    vim.keymap.set('n', 'q', '<Cmd>q<CR>', { buffer = term.bufnr, nowait = true })
 end
 
 local function calculate_win_pos()

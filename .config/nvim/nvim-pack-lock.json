@@ -162,10 +162,6 @@
       "rev": "be69bff",
       "src": "https://github.com/tpope/vim-sleuth"
     },
-    "vim-sneak": {
-      "rev": "feea86adcfbf8e6b5e71fdd5f4f5736fd8819fdb",
-      "src": "https://github.com/justinmk/vim-sneak"
-    },
     "vim-startuptime": {
       "rev": "b6f0d93",
       "src": "https://github.com/dstein64/vim-startuptime"

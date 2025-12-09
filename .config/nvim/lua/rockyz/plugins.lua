@@ -56,7 +56,6 @@ vim.pack.add({
     -- gof/goF: Go to the directory of the current file/working directory in the File manager (Finder on macOS)
     -- got/goT: Go to the directory of the current file/working directory in the Terminal
     'https://github.com/justinmk/vim-gtfo',
-    'https://github.com/justinmk/vim-sneak',
 
     'https://github.com/tommcdo/vim-exchange',
     -- It provides shortcuts:

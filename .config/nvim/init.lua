@@ -50,6 +50,7 @@ local modules = {
     'yank',
     'terminal',
     'outline',
+    'easymotion',
 }
 
 for _, module in ipairs(modules) do

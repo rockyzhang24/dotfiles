@@ -12,6 +12,7 @@
 -- <Leader><M-p>: send the terminal to the panel
 -- <Leader><M-m>: toggle maximize
 -- <Leader>ts: send the current line in NORMAL or selected lines in VISUAL to terminal
+-- <Leader>tr: open a terminal running REPL based on the filetype
 
 local M = {}
 
@@ -99,12 +100,22 @@ local keymaps = {
             n = 'send_line',
             x = 'send_selection',
         },
+        ['<Leader>tr'] = {
+            n = 'repl',
+        },
     },
+}
+
+---@type table<string, string> Map from filetype to its corresponding REPL program
+local repls = {
+    python = 'python3',
+    lua = 'lua',
 }
 
 ---@class rockyz.terminal.new.Opts
 ---@field index? integer The index where the new terminal is created. Defaults to the last.
 ---@field name? string The name of the terminal. Defaults to 'Terminal'.
+---@field cmd? string The shell command to be run on launching the terminal
 
 local function close_win(winid)
     if winid and vim.api.nvim_win_is_valid(winid) then
@@ -282,10 +293,11 @@ local function create_terminal(opts)
     opts = opts or {}
     local index = opts.index
     local name = opts.name or 'Terminal'
+    local cmd = opts.cmd or vim.env.SHELL or 'sh'
 
     state.term_buf = vim.api.nvim_create_buf(false, true)
     vim.api.nvim_buf_call(state.term_buf, function()
-        local jobid = vim.fn.jobstart(vim.o.shell, {
+        local jobid = vim.fn.jobstart(cmd, {
             term = true,
             on_exit = on_exit,
         })
@@ -476,31 +488,32 @@ M.close = function()
     close_win(state.panel_win)
 end
 
-M.open = function()
+-- Open the window with a terminal executing command cmd
+M.open = function(cmd)
     if is_opened() then
         return
     end
     open_wins()
     create_panel_buffer()
     if not state.term_buf or not vim.api.nvim_buf_is_valid(state.term_buf) then
-        create_terminal()
+        create_terminal({ cmd = cmd })
     else
         vim.api.nvim_win_set_buf(state.term_win, state.term_buf)
     end
 end
 
-M.toggle = function()
+M.toggle = function(cmd)
     if is_opened() then
         if vim.api.nvim_win_get_tabpage(state.term_win) ~= vim.api.nvim_get_current_tabpage() then
             -- If the terminal is already open in a different tabpage, open it in the current one.
             M.close()
-            M.open()
+            M.open(cmd)
         else
             M.close()
             vim.api.nvim_clear_autocmds({ group = 'rockyz.terminal' })
         end
     else
-        M.open()
+        M.open(cmd)
         set_autocmd()
     end
 end
@@ -584,6 +597,15 @@ M.send_selection = function()
             vim.fn.chansend(jobid, line:sub(indent) .. '\n')
         end
     end)
+end
+
+M.repl = function()
+    local cmd = repls[vim.bo.filetype]
+    if not is_opened() then
+        M.open(cmd)
+    else
+        M.new({ cmd = cmd })
+    end
 end
 
 local function set_global_keymaps()

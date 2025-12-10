@@ -11,6 +11,7 @@
 -- <Leader><M-t>: send the terminal to a new tabpage
 -- <Leader><M-p>: send the terminal to the panel
 -- <Leader><M-m>: toggle maximize
+-- <Leader>ts: send the current line in NORMAL or selected lines in VISUAL to terminal
 
 local M = {}
 
@@ -94,6 +95,10 @@ local keymaps = {
     global = {
         ['<M-`>'] = 'toggle',
         ['<Leader><M-p>'] = 'to_panel',
+        ['<Leader>ts'] = {
+            n = 'send_line',
+            x = 'send_selection',
+        },
     },
 }
 
@@ -127,7 +132,7 @@ local function reset(keep_term_buf)
     state.panel_win = nil
     state.panel_buf = nil
     state.terminals = {}
-    state.count_to_delete = nil
+    state.count_to_delete = 0
     state.maximized = false
 end
 
@@ -540,11 +545,60 @@ M.toggle_maximize = function()
     state.term_height = vim.api.nvim_win_get_height(state.term_win)
 end
 
+-- In NORMAL mode, send the current line to terminal
+M.send_line = function()
+    local line = vim.fn.getline('.')
+    if not is_opened() then
+        M.open()
+    end
+    local jobid = state.terminals[state.cur_index].jobid
+    vim.api.nvim_chan_send(jobid, line .. '\n')
+end
+
+-- In VISUAL mode, send the selected lines to terminal
+M.send_selection = function()
+    vim.api.nvim_feedkeys(
+        vim.api.nvim_replace_termcodes('<Esc>', true, false, true),
+        'n',
+        false
+    )
+    vim.schedule(function()
+        local pos1 = vim.fn.getpos("'<")
+        local pos2 = vim.fn.getpos("'>")
+        local type = vim.fn.visualmode()
+        if type == 'V' then
+            pos2[3] = #vim.fn.getline(pos2[2])
+        end
+        local lines = vim.fn.getregion(pos1, pos2, { type = type })
+        local indent = math.huge
+        for _, line in ipairs(lines) do
+            indent = math.min(line:find("[^ ]") or math.huge, indent)
+        end
+        indent = indent == math.huge and 0 or indent
+
+        if not is_opened() then
+            M.open()
+        end
+        local jobid = state.terminals[state.cur_index].jobid
+        for _, line in ipairs(lines) do
+            vim.fn.chansend(jobid, line:sub(indent) .. '\n')
+        end
+    end)
+end
+
 local function set_global_keymaps()
     for key, action in pairs(keymaps.global) do
-        vim.keymap.set({ 'n', 't' }, key, function()
-            M[action]()
-        end)
+        if type(action) == 'table' then
+            for _mode, _action in pairs(action) do
+                vim.keymap.set(_mode, key, function()
+                    M[_action]()
+                end)
+            end
+        else
+            vim.keymap.set({ 'n', 't' }, key, function()
+                M[action]()
+            end)
+        end
     end
 end
 set_global_keymaps()

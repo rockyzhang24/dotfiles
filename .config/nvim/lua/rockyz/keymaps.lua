@@ -791,10 +791,6 @@ vim.keymap.set('t', '<Leader><C-r>', function()
     return '<C-\\><C-n>"' .. vim.fn.nr2char(vim.fn.getchar()) .. 'pi'
 end, { expr = true })
 
-vim.keymap.set('n', '<Leader>x', function()
-    require('rockyz.utils.term').run()
-end)
-
 --
 -- Vimscript goes here
 --

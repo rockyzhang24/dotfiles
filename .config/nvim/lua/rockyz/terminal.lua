@@ -13,13 +13,14 @@
 -- <Leader><M-m>: toggle maximize
 -- <Leader>ts: send the current line in NORMAL or selected lines in VISUAL to terminal
 -- <Leader>tr: open a terminal running REPL based on the filetype
+-- <Leader>x: compile and run the current file
 
 local M = {}
 
 local icons = require('rockyz.icons')
 local term_icon = icons.misc.term
 
----@class rocky.terminal.Terminal
+---@class rocky.terminal.TerminalInfo
 ---@field jobid integer
 ---@field bufnr integer The bufnr of the terminal buffer
 
@@ -30,7 +31,7 @@ local term_icon = icons.misc.term
 ---@field panel_buf integer|nil The bufnr of the side panel
 ---@field panel_win integer|nil The winid of the window having the side panel buffer
 ---@field panel_width integer
----@field terminals rocky.terminal.Terminal[]
+---@field terminals table<integer, rocky.terminal.TerminalInfo> Map from terminal index to its info
 ---@field cur_index integer|nil The index of the current terminal
 ---@field count_to_delete integer
 ---@field maximized boolean
@@ -103,6 +104,9 @@ local keymaps = {
         ['<Leader>tr'] = {
             n = 'repl',
         },
+        ['<Leader>x'] = {
+            n = 'run_file',
+        },
     },
 }
 
@@ -115,7 +119,8 @@ local repls = {
 ---@class rockyz.terminal.new.Opts
 ---@field index? integer The index where the new terminal is created. Defaults to the last.
 ---@field name? string The name of the terminal. Defaults to 'Terminal'.
----@field cmd? string The shell command to be run on launching the terminal
+---@field cmd? string|string[] The shell command to be run on launching the terminal, same as cmd in
+---vim.fn.jobstart()
 
 local function close_win(winid)
     if winid and vim.api.nvim_win_is_valid(winid) then
@@ -252,6 +257,37 @@ local function set_win_options(winid)
     end
 end
 
+local function set_termwin_autocmds()
+    vim.api.nvim_create_augroup('rockyz.terminal', { clear = true })
+    -- Remember its size if terminal window gets resized
+    vim.api.nvim_create_autocmd({ 'WinResized' }, {
+        group = 'rockyz.terminal',
+        callback = function()
+            for _, win in ipairs(vim.v.event.windows) do
+                if win == state.term_win then
+                    state.term_height = vim.api.nvim_win_get_height(state.term_win)
+                end
+                if win == state.panel_win then
+                    state.panel_width = vim.api.nvim_win_get_width(state.panel_win)
+                end
+            end
+        end,
+    })
+    -- Make the terminal window and the side panel can be closed together
+    vim.api.nvim_create_autocmd({ 'WinClosed' }, {
+        group = 'rockyz.terminal',
+        pattern = table.concat({ state.term_win, state.panel_win }, ','),
+        callback = function(args)
+            local closed_win = tonumber(args.match)
+            if closed_win == state.term_win then
+                close_win(state.panel_win)
+            elseif closed_win == state.panel_win then
+                close_win(state.term_win)
+            end
+        end,
+    })
+end
+
 local function on_exit(jobid)
     local index = get_index_by_jobid(jobid)
 
@@ -262,9 +298,9 @@ local function on_exit(jobid)
 
     local bufnr = state.terminals[index].bufnr
 
-    -- If deleting terminals in batch, e.g., M.only(), we only update the side panel
-    -- once instead of deleting an entry each time.
     if state.count_to_delete > 0 then
+        -- If deleting terminals in batch, e.g., M.only(), we only update the side panel
+        -- once instead of deleting an entry each time.
         delete_buf(bufnr)
         state.count_to_delete = state.count_to_delete - 1
         if state.count_to_delete == 0 then
@@ -278,13 +314,12 @@ local function on_exit(jobid)
             vim.api.nvim_buf_set_lines(state.panel_buf, 0, -1, false, {})
             vim.api.nvim_buf_set_lines(state.panel_buf, 0, 1, false, { line })
         end
-        return
+    else
+        -- If deleting a single terminal, e.g., M.delete() or shell's <C-d>, we need to
+        -- update the side panel upon each deletion and switch to alternative terminal if
+        -- necessary.
+        delete_terminal(index)
     end
-
-    -- If deleting a single terminal, e.g., M.delete() or shell's <C-d>, we need to
-    -- update the side panel upon each deletion and switch to alternative terminal if
-    -- necessary.
-    delete_terminal(index)
 end
 
 ---Create term buffer and add the entry to side panel
@@ -334,6 +369,7 @@ local function open_wins()
     vim.cmd(state.panel_width .. 'vsplit')
     state.panel_win = vim.api.nvim_get_current_win()
     vim.api.nvim_set_current_win(state.term_win)
+    set_termwin_autocmds()
 end
 
 local function is_opened()
@@ -444,37 +480,6 @@ M.move_next = function()
     move(1)
 end
 
-local function set_autocmd()
-    vim.api.nvim_create_augroup('rockyz.terminal', { clear = true })
-    -- Remember its size if terminal window gets resized
-    vim.api.nvim_create_autocmd({ 'WinResized' }, {
-        group = 'rockyz.terminal',
-        callback = function()
-            for _, win in ipairs(vim.v.event.windows) do
-                if win == state.term_win then
-                    state.term_height = vim.api.nvim_win_get_height(state.term_win)
-                end
-                if win == state.panel_win then
-                    state.panel_width = vim.api.nvim_win_get_width(state.panel_win)
-                end
-            end
-        end,
-    })
-    -- Make the terminal window and the side panel can be closed together
-    vim.api.nvim_create_autocmd({ 'WinClosed' }, {
-        group = 'rockyz.terminal',
-        pattern = table.concat({ state.term_win, state.panel_win }, ','),
-        callback = function(args)
-            local closed_win = tonumber(args.match)
-            if closed_win == state.term_win then
-                close_win(state.panel_win)
-            elseif closed_win == state.panel_win then
-                close_win(state.term_win)
-            end
-        end,
-    })
-end
-
 -- Send current terminal to a new tabpage
 M.to_tab = function()
     vim.cmd('tab split')
@@ -514,7 +519,6 @@ M.toggle = function(cmd)
         end
     else
         M.open(cmd)
-        set_autocmd()
     end
 end
 
@@ -537,7 +541,6 @@ M.to_panel = function()
     if not is_opened() then
         open_wins()
         create_panel_buffer()
-        set_autocmd()
     end
 
     vim.api.nvim_win_set_buf(state.term_win, state.term_buf)
@@ -558,9 +561,10 @@ M.toggle_maximize = function()
     state.term_height = vim.api.nvim_win_get_height(state.term_win)
 end
 
--- In NORMAL mode, send the current line to terminal
-M.send_line = function()
-    local line = vim.fn.getline('.')
+---In NORMAL mode, send the given line or the cursor line to terminal and run it.
+---@param line string|nil
+M.send_line = function(line)
+    line = line or vim.fn.getline('.')
     if not is_opened() then
         M.open()
     end
@@ -599,13 +603,63 @@ M.send_selection = function()
     end)
 end
 
-M.repl = function()
-    local cmd = repls[vim.bo.filetype]
+---Execute the shell command in a new terminal
+---@param cmd string|string[] See cmd in vim.fn.jobstart()
+local function execute_cmd(cmd)
     if not is_opened() then
         M.open(cmd)
     else
         M.new({ cmd = cmd })
     end
+end
+
+M.repl = function()
+    local cmd = repls[vim.bo.filetype]
+    execute_cmd(cmd)
+end
+
+-- Run the current file
+M.run_file = function()
+    local filepath = vim.api.nvim_buf_get_name(0)
+    local lines = vim.api.nvim_buf_get_lines(0, 0, 1, true)
+    local cmd = filepath
+    local filetype = vim.bo.filetype
+    local skipchmod = false
+    if not vim.startswith(lines[1], '#!/usr/bin/env') then
+        skipchmod = true
+        if filetype == 'cpp' then
+            -- C++: compile, run and remove the executable
+            local fname = vim.fn.fnamemodify(filepath, ':t:r')
+            cmd = string.format('clang++ -std=c++20 -o %s %s && ./%s; [[ -e %s ]] && rm %s', fname, filepath, fname, fname, fname)
+        elseif filetype == 'lua' then
+            -- Lua
+            cmd = 'luajit ' .. filepath
+        elseif filetype == 'python' then
+            -- Python
+            cmd = 'python3 ' .. filetype
+        elseif filetype == 'sh' then
+            -- Bash
+            cmd = 'bash ' .. filepath
+        elseif filetype == 'zig' then
+            -- Zig
+            cmd = 'zig run ' .. filepath
+        else
+            skipchmod = false
+            local choice = vim.fn.confirm('File has no shebang, sure you want to execute it?', '&Yes\n&No')
+            if choice ~= 1 then
+                return
+            end
+        end
+    end
+    local stat = vim.uv.fs_stat(filepath)
+    if stat and not skipchmod then
+        local user_execute = tonumber('00100', 8) -- 100 means user executable
+        if bit.band(stat.mode, user_execute) ~= user_execute then
+            local newmode = bit.bor(stat.mode, user_execute)
+            vim.uv.fs_chmod(filepath, newmode)
+        end
+    end
+    M.send_line(cmd)
 end
 
 local function set_global_keymaps()

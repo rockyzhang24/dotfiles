@@ -101,4 +101,6 @@ I implemented a series of fuzzy finders based on fzf.vim instead of using ready-
 
 ### Terminal ([config](./lua/rockyz/terminal.lua))
 
+It supports creating, deleting, and renaming terminals. We can also send a terminal to its own separate tabpage, and send terminal running in a tabpage back to the panel. Furthermore, it allows opening the corresponding REPL for different filetypes, sending selected lines to the terminal for execution, or directly running the current file in the terminal.
+
 https://github.com/user-attachments/assets/37acb4f1-002c-418f-8c01-d2c5ecb44626

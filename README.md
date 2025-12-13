@@ -13,7 +13,7 @@ My dotfiles for `macOS` and `Linux`. Just cherry pick the piece of code you tota
 
 ### 🔥 Text Editor
 
-* [Neovim](https://neovim.io) ([config](./.config/nvim/))
+* [Neovim](https://neovim.io) ([config](./.config/nvim/) and [README](./.config/nvim#readme))
 
 ### 🐚 Shell
 

@@ -51,6 +51,7 @@ local modules = {
     'terminal',
     'outline',
     'easymotion',
+    'scrollbar',
 }
 
 for _, module in ipairs(modules) do

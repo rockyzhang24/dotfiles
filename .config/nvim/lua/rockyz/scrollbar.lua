@@ -133,7 +133,9 @@ vim.api.nvim_create_autocmd({ 'BufEnter', 'WinScrolled', 'WinResized' }, {
     group = vim.api.nvim_create_augroup('rockyz.scrollbar', { clear = true }),
     callback = function()
         for _, winid in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
-            require('rockyz.scrollbar').show(winid)
+            vim.api.nvim_win_call(winid, function()
+                require('rockyz.scrollbar').show(winid)
+            end)
         end
     end,
 })

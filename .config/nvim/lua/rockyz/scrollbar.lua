@@ -1,4 +1,7 @@
--- Reference: https://github.com/Xuyuanp/scrollbar.nvim
+-- Display scrollbar in each window.
+-- The scrollbar gutter is implemented using a floating window and the thumb is drawn by extmarks.
+--
+-- Inspired by https://github.com/Xuyuanp/scrollbar.nvim
 
 local M = {}
 
@@ -8,34 +11,36 @@ local config = {
     width = 1,
     right_offset = 0,
     winblend = 20,
+    hl_group = 'ScrollbarSlider',
     exclude_filetypes = {
     },
 }
 
+---The state of the scrollbar in the current window
 ---@class rockyz.scrollbar.State
----@field winid integer
----@field bufnr integer
----@field size integer
+---@field winid integer The winid of the scrollbar's floating window
+---@field bufnr integer The bufnr of the scrollbar's buffer
+---@field size integer The size (i.e., the height) of the scrollbar
+---@field offset integer The offset of the scrollbar based on the top of the window
 
-local function gen_bar_lines(size)
-    local lines = {}
-    for _ = 1, size do
-        table.insert(lines, ' ')
-    end
-    return lines
-end
+local ns = vim.api.nvim_create_namespace('rockyz.scrollbar')
 
 local function fix_size(size)
     return math.max(config.min_size, math.min(config.max_size, size))
 end
 
-local function create_scrollbar_buffer(lines)
+local function create_scrollbar_buffer(line_count)
     local bufnr = vim.api.nvim_create_buf(false, true)
     vim.bo[bufnr].filetype = 'scrollbar'
+    local lines = {}
+    for _ = 1, line_count do
+        lines[#lines + 1] = ' '
+    end
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
     return bufnr
 end
 
+---@param winid? integer The winid of the window in which the scrollbar resides
 function M.show(winid)
     if not vim.g.scrollbar_enabled then
         return
@@ -56,12 +61,12 @@ function M.show(winid)
     local win_height = vim.api.nvim_win_get_height(winid) - vim.o.cmdheight
 
     if total <= win_height then
-        M.clear()
+        M.clear_extmarks(winid)
         return
     end
 
-    -- Use viewport as scroll anchor
     local curr_line = vim.fn.line('w$') - win_height
+    -- Use viewport as scroll anchor
     local rel_total = total - win_height
 
     local bar_size = math.ceil(win_height * win_height / rel_total)
@@ -69,25 +74,28 @@ function M.show(winid)
 
     local width = vim.api.nvim_win_get_width(winid)
     local col = width - config.width - config.right_offset
-    local row = math.floor((win_height - bar_size) * (curr_line / rel_total))
 
-    local opts = {
+    local win_opts = {
         style = 'minimal',
         relative = 'win',
         win = winid,
         width = config.width,
-        height = bar_size,
-        row = row,
+        height = win_height,
+        row = 0,
         col = col,
         focusable = false,
         zindex = 1,
         border = 'none',
     }
 
+    ---@type rockyz.scrollbar.State
     local state = vim.w[winid].scrollbar_state or {}
+
+    state.size = bar_size
+    state.offset = math.floor((win_height - bar_size) * (curr_line / rel_total))
+
     if not state.bufnr then
-        local bar_lines = gen_bar_lines(bar_size)
-        state.bufnr = create_scrollbar_buffer(bar_lines)
+        state.bufnr = create_scrollbar_buffer(win_height)
         vim.api.nvim_create_autocmd({ 'WinClosed' }, {
             pattern = '' .. winid,
             once = true,
@@ -97,39 +105,40 @@ function M.show(winid)
         })
     end
 
-    if state.winid and vim.api.nvim_win_is_valid(state.winid) then
-        if state.size ~= bar_size then
-            vim.api.nvim_buf_set_lines(state.bufnr, 0, -1, false, {})
-            local bar_lines = gen_bar_lines(bar_size)
-            vim.api.nvim_buf_set_lines(state.bufnr, 0, -1, false, bar_lines)
-            state.size = bar_size
-        end
-        vim.api.nvim_win_set_config(state.winid, opts)
-    else
-        state.winid = vim.api.nvim_open_win(state.bufnr, false, opts)
-        vim.wo[state.winid].winhighlight = 'Normal:ScrollbarSlider'
+    if not state.winid or not vim.api.nvim_win_is_valid(state.winid) then
+        state.winid = vim.api.nvim_open_win(state.bufnr, false, win_opts)
         vim.wo[state.winid].winblend = config.winblend
+    else
+        vim.api.nvim_win_set_config(state.winid, win_opts)
     end
 
     vim.w[winid].scrollbar_state = state
+
+    M.clear_extmarks(winid)
+    M.set_extmarks(winid)
 end
 
-function M.clear(winid)
+function M.clear_extmarks(winid)
     winid = winid or vim.api.nvim_get_current_win()
     local state = vim.w[winid].scrollbar_state
-    if not state or not state.winid then
+    if not state or not state.bufnr then
         return
     end
-    if vim.api.nvim_win_is_valid(state.winid) then
-        vim.api.nvim_win_hide(state.winid)
-    end
-    vim.w[winid].scrollbar_state = {
-        size = state.size,
-        bufnr = state.bufnr,
-    }
+    vim.api.nvim_buf_clear_namespace(state.bufnr, ns, 0, -1)
 end
 
-vim.api.nvim_create_autocmd({ 'BufEnter', 'WinScrolled', 'WinResized' }, {
+function M.set_extmarks(winid)
+    winid = winid or vim.api.nvim_get_current_win()
+    local state = vim.w[winid].scrollbar_state
+    for l = state.offset, state.offset + state.size - 1 do
+        vim.api.nvim_buf_set_extmark(state.bufnr, ns, l, 0, {
+            end_col = 1,
+            hl_group = config.hl_group,
+        })
+    end
+end
+
+vim.api.nvim_create_autocmd({ 'BufEnter', 'WinScrolled', 'WinResized', 'CursorHold', 'CursorHoldI' }, {
     group = vim.api.nvim_create_augroup('rockyz.scrollbar', { clear = true }),
     callback = function()
         for _, winid in ipairs(vim.api.nvim_tabpage_list_wins(0)) do

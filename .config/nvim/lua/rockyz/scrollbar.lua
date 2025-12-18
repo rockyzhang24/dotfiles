@@ -23,20 +23,25 @@ local config = {
 ---@field size integer The size (i.e., the height) of the scrollbar
 ---@field offset integer The offset of the scrollbar based on the top of the window
 
-local ns = vim.api.nvim_create_namespace('rockyz.scrollbar')
+local thumb_ns = vim.api.nvim_create_namespace('rockyz.scrollbar.thumb')
 
 local function fix_size(size)
     return math.max(config.min_size, math.min(config.max_size, size))
 end
 
+-- extmarks can't be set on an empty cell, so we put whitespaces on each line.
+local function ensure_valid_buffer(bufnr, line_count)
+    local lines = {}
+    for _ = 1, line_count do
+        lines[#lines + 1] = string.rep(' ', config.width)
+    end
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+end
+
 local function create_scrollbar_buffer(line_count)
     local bufnr = vim.api.nvim_create_buf(false, true)
     vim.bo[bufnr].filetype = 'scrollbar'
-    local lines = {}
-    for _ = 1, line_count do
-        lines[#lines + 1] = ' '
-    end
-    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+    ensure_valid_buffer(bufnr, line_count)
     return bufnr
 end
 
@@ -109,6 +114,9 @@ function M.show(winid)
         state.winid = vim.api.nvim_open_win(state.bufnr, false, win_opts)
         vim.wo[state.winid].winblend = config.winblend
     else
+        if vim.api.nvim_win_get_height(state.winid) < win_height then
+            ensure_valid_buffer(state.bufnr, win_height)
+        end
         vim.api.nvim_win_set_config(state.winid, win_opts)
     end
 
@@ -131,8 +139,8 @@ function M.set_extmarks(winid)
     winid = winid or vim.api.nvim_get_current_win()
     local state = vim.w[winid].scrollbar_state
     for l = state.offset, state.offset + state.size - 1 do
-        vim.api.nvim_buf_set_extmark(state.bufnr, ns, l, 0, {
-            end_col = 1,
+        vim.api.nvim_buf_set_extmark(state.bufnr, thumb_ns, l, 0, {
+            end_col = config.width,
             hl_group = config.hl_group,
         })
     end

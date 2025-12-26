@@ -154,6 +154,7 @@ icons.misc = {
     thumbsup = '',
     thumbsdown = '',
     tree = '󰐅',
+    vertical_rectangle ='▮', -- unicode U+25AE
 }
 
 icons.emoji = {

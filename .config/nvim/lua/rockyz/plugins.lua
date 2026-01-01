@@ -99,9 +99,15 @@ vim.pack.add({
     'https://github.com/L3MON4D3/LuaSnip',
 
     -- Treesitter
-    'https://github.com/nvim-treesitter/nvim-treesitter',
+    {
+        src = 'https://github.com/nvim-treesitter/nvim-treesitter',
+        version = 'master',
+    },
     'https://github.com/nvim-treesitter/nvim-treesitter-context',
-    'https://github.com/nvim-treesitter/nvim-treesitter-textobjects',
+    {
+        src = 'https://github.com/nvim-treesitter/nvim-treesitter-textobjects',
+        version = 'master',
+    },
     'https://github.com/mizlan/iswap.nvim',
     'https://github.com/m-demare/hlargs.nvim',
 

@@ -1,18 +1,12 @@
 # Font configuration
 font-family = ""
-font-family = "Source Code Pro"
-font-style = "Medium"
-font-style-italic = "Medium Italic"
-font-style-bold = "Bold"
-font-style-bold-italic = "Bold Italic"
-font-size = 13
-adjust-cell-width = -5%
-adjust-cell-height = 20%
-adjust-underline-position = 6
-adjust-underline-thickness = 40%
-adjust-cursor-thickness = 150%
+font-family = "Iosevka Term"
+font-size = 14
+adjust-cell-height = 15%
+adjust-underline-position = 5
+adjust-underline-thickness = 50%
 
-window-title-font-family = "Source Code Pro Medium"
+window-title-font-family = "Iosevka Term"
 
 # Disable ligatures
 font-feature = -calt
@@ -22,7 +16,7 @@ font-feature = -dlig
 # Window
 window-padding-x = 2
 window-padding-y = 0
-window-decoration = false
+window-decoration = auto
 background-opacity = 1
 
 # Color theme

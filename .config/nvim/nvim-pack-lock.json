@@ -5,7 +5,7 @@
       "src": "https://github.com/L3MON4D3/LuaSnip"
     },
     "SchemaStore.nvim": {
-      "rev": "21645280ad06fce01ef109e82d76302dcbe62756",
+      "rev": "60f1b3d1bde39396cdfb1362dd207970ec57e731",
       "src": "https://github.com/b0o/SchemaStore.nvim"
     },
     "blink.cmp": {
@@ -18,7 +18,7 @@
       "src": "https://github.com/uga-rosa/ccc.nvim"
     },
     "conform.nvim": {
-      "rev": "ffe26e8df8115c9665d24231f8a49fadb2d611ce",
+      "rev": "5420c4b5ea0aeb99c09cfbd4fd0b70d257b44f25",
       "src": "https://github.com/stevearc/conform.nvim"
     },
     "cscope_maps.nvim": {
@@ -35,7 +35,7 @@
       "version": "'dev'"
     },
     "gitsigns.nvim": {
-      "rev": "5813e4878748805f1518cee7abb50fd7205a3a48",
+      "rev": "130beacf8a51f00aede9c31064c749136679a321",
       "src": "https://github.com/lewis6991/gitsigns.nvim"
     },
     "hlargs.nvim": {
@@ -60,7 +60,8 @@
     },
     "nvim-treesitter": {
       "rev": "42fc28ba",
-      "src": "https://github.com/nvim-treesitter/nvim-treesitter"
+      "src": "https://github.com/nvim-treesitter/nvim-treesitter",
+      "version": "'master'"
     },
     "nvim-treesitter-context": {
       "rev": "64dd4cf3f6fd0ab17622c5ce15c91fc539c3f24a",
@@ -68,10 +69,11 @@
     },
     "nvim-treesitter-textobjects": {
       "rev": "5ca4aaa",
-      "src": "https://github.com/nvim-treesitter/nvim-treesitter-textobjects"
+      "src": "https://github.com/nvim-treesitter/nvim-treesitter-textobjects",
+      "version": "'master'"
     },
     "nvim-web-devicons": {
-      "rev": "8dcb311",
+      "rev": "6788013bb9cb784e606ada44206b0e755e4323d7",
       "src": "https://github.com/kyazdani42/nvim-web-devicons"
     },
     "quickfix-reflector.vim": {
@@ -91,11 +93,11 @@
       "src": "https://github.com/wellle/targets.vim"
     },
     "treesj": {
-      "rev": "4770492",
+      "rev": "186084dee5e9c8eec40f6e39481c723dd567cb05",
       "src": "https://github.com/Wansmer/treesj"
     },
     "undotree": {
-      "rev": "0f1c981",
+      "rev": "178d19e00a643f825ea11d581b1684745d0c4eda",
       "src": "https://github.com/mbbill/undotree"
     },
     "vim-after-object": {

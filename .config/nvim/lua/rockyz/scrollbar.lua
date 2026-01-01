@@ -1,6 +1,53 @@
 -- Display scrollbar in each window.
 -- The scrollbar gutter is implemented using a floating window and the thumb is drawn by extmarks.
 
+---NOTE: To implement scrollbar correctly, we should use screen lines, not buffer lines, because
+---scrolling is done in units of screen lines, not buffer lines. When wrap is enabled, a single
+---buffer line may correspond to multiple screen lines; similarly, folds affect screen lines rather
+---than buffer lines; virtual text may also insert additional screen lines.
+
+-- How to calculate the scrollbar's size and position?
+--
+-- First, let's calculate two necessary metrics, viewport_heigth and buf_content_height.
+-- (1). viewport_height = win_height - winbar_height. Viewport height is the number of screen lines that display
+-- the actual content in the current window.
+-- (2). buf_content_height. Buffer content height is the total number of screen lines of the whole
+-- buffer.
+--
+-- We use the following proportional relationship to calculate the thumb size:
+-- thumb_size / viewport_heigth = viewport_heigth / buf_content_height
+-- ==> thumb_size = (viewport_height / buf_content_height) * viewport_heigth
+--
+-- Next, let's calculate the scrollbar's position (i.e., the line number in the viewport where the
+-- top of the scrollbar is located). We need another three metrics, max_thumb_move, max_scroll and
+-- top_screen_line.
+-- (1). max_thumb_move = viewport_height - thumb_size, it is the maximum screen lines the thumb can move.
+-- (2). max_scroll = buf_content_height - viewport_height, it it the maximum screen lines the whole
+-- buffer can scroll.
+-- (3). top_screen_line, it is the screen line of the top line in the current viewport.
+--
+-- We have this proportional relationship:
+-- position / max_thumb_move = top_screen_line / max_scroll. So we can get position by
+-- position = (max_thumb_move / max_scroll) * top_screen_line
+--
+-- We need to simplify it. Let's set V = viewport_height, B = buf_content_height, S = thumb_size. So
+-- thumb_size = V^2 / B, max_thumb_move = V - V^2 / B, max_scroll = B - V. So
+-- position = (V - V^2 / B) / (B - V) * top_screen_line
+--          = V / B * top_screen_line
+-- That is,
+-- position = (viewport_heigth / buf_content_height) * top_screen_line
+--
+-- How to calculate the position of a diagnostic?
+--
+-- First, we should get the screen line of a given diagnostic. Then, just like calculating the
+-- scrollbar's position, we use the following proportional relationship:
+-- position / max_thumb_move = diagnostic_screen_line / max_scroll. So we can calculate the
+-- diagnostic's position by
+-- position = (max_thumb_move / max_scroll) * diagnostic_screen_line
+--
+-- Similarly, the simplified result is
+-- position = (viewport_heigth / buf_content_height) * diagnostic_screen_line
+
 local icons = require('rockyz.icons')
 local M = {}
 
@@ -20,11 +67,6 @@ local config = {
 ---@class rockyz.scrollbar.State
 ---@field winid integer The winid of the scrollbar's floating window
 ---@field bufnr integer The bufnr of the scrollbar's buffer
----@field max_thumb_move integer The maximum distance (screen lines) the thumb can move
----@field max_scroll integer The maximum distance (screen lines) the whole buffer can scroll
----@field size integer The size (i.e., the height) of the scrollbar's thumb
----@field position integer The position of the scrollbar's thumb, i.e., the row of the gutter where
----the top of the thumb is
 
 local thumb_ns = vim.api.nvim_create_namespace('rockyz.scrollbar.thumb')
 local diagnostic_ns = vim.api.nvim_create_namespace('rocky.scrollbar.diagnostics')
@@ -72,10 +114,6 @@ local function get_screen_line_height(winid, range)
     return text_height.all
 end
 
----NOTE: To implement scrollbar correctly, we should use screen lines, not buffer lines, because
----scrolling is done in units of screen lines, not buffer lines. When wrap is enabled, a single
----buffer line may correspond to multiple screen lines; similarly, folds affect screen lines rather
----than buffer lines; virtual text may also insert additional screen lines.
 ---@param winid? integer The winid of the window in which the scrollbar resides
 function M.render_scrollbar(winid)
     winid = winid or vim.api.nvim_get_current_win()
@@ -92,41 +130,28 @@ function M.render_scrollbar(winid)
     ---@type rockyz.scrollbar.State
     local state = vim.w[winid].scrollbar_state or {}
 
-    -- Now let's calculate the scrollbar'size and position
-
-    local buf_content_height = get_screen_line_height(winid, {}) -- The number of screen lines of the whole buffer
+    local buf_content_height = get_screen_line_height(winid, {})
     local viewport_height = get_viewport_height(winid)
 
-    -- (1). Calculate the scrollbar's thumb size
-    -- We have this proportional relationship:
-    -- thumb_size / viewport_height = viewport_height / buf_content_height
+    -- Calculate the scrollbar's thumb size
     local thumb_size = math.ceil(viewport_height * viewport_height / buf_content_height)
     thumb_size = fix_size(thumb_size, winid)
 
-    state.size = thumb_size
-
-    -- (2). Calculate the scrollbar's position
+    -- Calculate the scrollbar's position
     local wininfo = vim.fn.getwininfo(winid)[1]
-    local buffer_topline = wininfo.topline -- The top buffer line in the window
-    local screen_topline = get_screen_line_height(winid, { -- Get the top screen line
+    local top_buffer_line = wininfo.topline -- The top buffer line in the viewport
+    local top_screen_line = get_screen_line_height(winid, { -- Get its screen line
         start_row = 0,
-        end_row = buffer_topline - 1
+        end_row = top_buffer_line - 1
     })
 
-    local position -- range [0, ...]
-    local max_thumb_move = viewport_height - thumb_size -- The maximum distance the thumb can move
-    local max_scroll = math.max(buf_content_height - viewport_height, 0) -- The maximum distance the whole buffer can scroll
-    if max_scroll == 0 then
+    local position -- 0-indexed, range [0, ...]
+    if viewport_height >= buf_content_height then
         position = 0
     else
-        -- We have this proportional relationship:
-        -- thumb_position / max_thumb_move = screen_topline / max_scroll
-        position = math.floor((screen_topline / max_scroll) * max_thumb_move)
+        position = math.floor(viewport_height / buf_content_height * top_screen_line)
+        position = math.min(position, viewport_height - thumb_size - 1)
     end
-
-    state.max_thumb_move = max_thumb_move
-    state.max_scroll = max_scroll
-    state.position = position
 
     if not state.bufnr then
         state.bufnr = create_scrollbar_buffer(viewport_height)
@@ -170,7 +195,7 @@ function M.render_scrollbar(winid)
     M.clear_extmarks(winid, thumb_ns)
 
     -- Set extmarks
-    for l = state.position, state.position + state.size - 1 do
+    for l = position, position + thumb_size - 1 do
         M.set_extmark(winid, thumb_ns, l, 0, string.rep(' ', scrollbar_width), config.thumb_hl)
     end
 end
@@ -200,14 +225,14 @@ local diagnostic_levels = { 'Error', 'Warn', 'Info', 'Hint' }
 
 function M.render_diagnostics(winid)
     winid = winid or vim.api.nvim_get_current_win()
-    local state = vim.w[winid].scrollbar_state or {}
 
     local bufnr = vim.api.nvim_win_get_buf(winid)
     local diagnostics = vim.diagnostic.get(bufnr)
 
-    local max_thumb_move = state.max_thumb_move
-    local max_scroll = state.max_scroll
     local buf_line_count = vim.api.nvim_buf_line_count(bufnr)
+
+    local viewport_height = get_viewport_height(winid)
+    local buf_content_height = get_screen_line_height(winid, {})
 
     -- On each position only display the diagnostic with the lowest severity
     local filtered = {}
@@ -222,13 +247,11 @@ function M.render_diagnostics(winid)
             end_row = d.lnum >= buf_line_count and buf_line_count - 1 or d.lnum,
         })
 
-        local position -- 0-indexed, range [0, n - 1] where n is the last line in the current viewport
-        if max_scroll == 0 then
-            position = diagnostic_screen_line - 1
+        local position -- 1-indexed, range [1, n] where n is the viewport_height
+        if viewport_height >= buf_content_height then
+            position = diagnostic_screen_line
         else
-            -- We have this proportional relationship:
-            -- position / max_thumb_move = diagnostic_screen_line / max_scroll
-            position = math.floor(diagnostic_screen_line / max_scroll * max_thumb_move)
+            position = math.ceil(viewport_height / buf_content_height * diagnostic_screen_line)
         end
 
         if not filtered[position] or d.severity < filtered[position] then
@@ -240,7 +263,7 @@ function M.render_diagnostics(winid)
 
     -- Set extmarks
     for line, severity in pairs(filtered) do
-        M.set_extmark(winid, diagnostic_ns, line, 2, config.diagnostic.symbol, 'Diagnostic' .. diagnostic_levels[severity])
+        M.set_extmark(winid, diagnostic_ns, line - 1, 2, config.diagnostic.symbol, 'Diagnostic' .. diagnostic_levels[severity])
     end
 end
 

@@ -251,7 +251,7 @@ function M.render_diagnostics(winid)
         if viewport_height >= buf_content_height then
             position = diagnostic_screen_line
         else
-            position = math.ceil(viewport_height / buf_content_height * diagnostic_screen_line)
+            position = math.ceil(diagnostic_screen_line * viewport_height / buf_content_height)
         end
 
         if not filtered[position] or d.severity < filtered[position] then

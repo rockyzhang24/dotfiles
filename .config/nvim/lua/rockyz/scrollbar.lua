@@ -1,54 +1,64 @@
 -- Display scrollbar in each window.
 -- The scrollbar gutter is implemented using a floating window and the thumb is drawn by extmarks.
 
----NOTE: To implement scrollbar correctly, we should use screen lines, not buffer lines, because
----scrolling is done in units of screen lines, not buffer lines. When wrap is enabled, a single
----buffer line may correspond to multiple screen lines; similarly, folds affect screen lines rather
----than buffer lines; virtual text may also insert additional screen lines.
+-- NOTE:
+-- To make scrollbar rendering as accurate as possible, we should use screen lines, not buffer
+-- lines, because scrolling is done in units of screen lines, not buffer lines. When wrap is
+-- enabled, a single buffer line may correspond to multiple screen lines; similarly, folds affect
+-- screen lines rather than buffer lines; virtual text may also insert additional screen lines.
+--
+-- However, the API to obtaining the screen line, vim.api.nvim_win_text_height, has poor
+-- performance, as each retrieval requires iterating over every line within the range. Therefore, in
+-- pursuit of maximum performance, a compromise is made by using buffer lines instead.
 
 -- How to calculate the scrollbar's size and position?
 --
 -- First, let's calculate two necessary metrics, viewport_heigth and buf_content_height.
--- (1). viewport_height = win_height - winbar_height. Viewport height is the number of screen lines that display
--- the actual content in the current window.
--- (2). buf_content_height. Buffer content height is the total number of screen lines of the whole
--- buffer.
+-- (1). viewport_height = win_height - winbar_height. Viewport height is the number of lines that
+-- display the actual content in the current window.
+-- (2). buf_line_count. It is the total number of lines in the whole buffer.
 --
 -- We use the following proportional relationship to calculate the thumb size:
--- thumb_size / viewport_heigth = viewport_heigth / buf_content_height
--- ==> thumb_size = (viewport_height / buf_content_height) * viewport_heigth
+-- thumb_size / viewport_heigth = viewport_heigth / buf_line_count
+-- ==> thumb_size = (viewport_height / buf_line_count) * viewport_heigth
 --
 -- Next, let's calculate the scrollbar's position (i.e., the line number in the viewport where the
 -- top of the scrollbar is located). We need another three metrics, max_thumb_move, max_scroll and
--- top_screen_line.
--- (1). max_thumb_move = viewport_height - thumb_size, it is the maximum screen lines the thumb can move.
--- (2). max_scroll = buf_content_height - viewport_height, it it the maximum screen lines the whole
--- buffer can scroll.
--- (3). top_screen_line, it is the screen line of the top line in the current viewport.
+-- top_buffer_line.
+-- (1). max_thumb_move = viewport_height - thumb_size, it is the maximum lines the thumb can move.
+-- (2). max_scroll = buf_line_count - viewport_height, it it the maximum lines the whole buffer can
+-- scroll.
+-- (3). top_buffer_line, it is the first buffer line in the current viewport.
 --
 -- We have this proportional relationship:
--- position / max_thumb_move = top_screen_line / max_scroll. So we can get position by
--- position = (max_thumb_move / max_scroll) * top_screen_line
+-- position / max_thumb_move = top_buffer_line / max_scroll. So we can get position by
+-- position = (max_thumb_move / max_scroll) * top_buffer_line
 --
--- We need to simplify it. Let's set V = viewport_height, B = buf_content_height, S = thumb_size. So
+-- We need to simplify it. Let's set V = viewport_height, B = buf_line_count, S = thumb_size. So
 -- thumb_size = V^2 / B, max_thumb_move = V - V^2 / B, max_scroll = B - V. So
--- position = (V - V^2 / B) / (B - V) * top_screen_line
---          = V / B * top_screen_line
+-- position = (V - V^2 / B) / (B - V) * top_buffer_line
+--          = V / B * top_buffer_line
 -- That is,
--- position = (viewport_heigth / buf_content_height) * top_screen_line
+-- position = (viewport_heigth / buf_line_count) * top_buffer_line
 --
 -- How to calculate the position of a diagnostic?
 --
 -- First, we should get the screen line of a given diagnostic. Then, just like calculating the
 -- scrollbar's position, we use the following proportional relationship:
--- position / max_thumb_move = diagnostic_screen_line / max_scroll. So we can calculate the
--- diagnostic's position by
--- position = (max_thumb_move / max_scroll) * diagnostic_screen_line
+-- position / max_thumb_move = diagnostic_lnum / max_scroll. So we can calculate the diagnostic's
+-- position by
+-- position = (max_thumb_move / max_scroll) * diagnostic_lnum
 --
 -- Similarly, the simplified result is
--- position = (viewport_heigth / buf_content_height) * diagnostic_screen_line
+-- position = (viewport_heigth / buf_line_count) * diagnostic_lnum
+--
+-- How to calculate the position of a gitdiff?
+--
+-- Similarly, position = (viewport_heigth / buf_line_count) * gitdiff_lnum
 
 local icons = require('rockyz.icons')
+local gitsigns = require('gitsigns')
+
 local M = {}
 
 local config = {
@@ -59,17 +69,34 @@ local config = {
     exclude_filetypes = {
     },
     diagnostic = {
-        symbol = icons.misc.vertical_rectangle
-    }
+        symbol = icons.lines.vertical_heavy,
+        hl = {
+            'DiagnosticError',
+            'DiagnosticWarn',
+            'DiagnosticInfo',
+            'DiagnosticHint',
+        },
+    },
+    gitdiff = {
+        symbol = icons.lines.vertical_heavy,
+        hl = {
+            add = 'GutterGitAdded',
+            change = 'GutterGitModified',
+            delete = 'GutterGitDeleted',
+        },
+    },
 }
 
 ---The state of the scrollbar in the current window
 ---@class rockyz.scrollbar.State
 ---@field winid integer The winid of the scrollbar's floating window
 ---@field bufnr integer The bufnr of the scrollbar's buffer
+---@field last_viewport_height integer Cached viewport_height
+---@field last_win_col integer Cached col of the scrollbar's floating window
 
 local thumb_ns = vim.api.nvim_create_namespace('rockyz.scrollbar.thumb')
-local diagnostic_ns = vim.api.nvim_create_namespace('rocky.scrollbar.diagnostics')
+local diagnostic_ns = vim.api.nvim_create_namespace('rockyz.scrollbar.diagnostics')
+local gitdiff_ns = vim.api.nvim_create_namespace('rockyz.scrollbar.gitdiff')
 local scrollbar_width = 3
 
 -- Get the number of screen lines that can be displayed
@@ -108,10 +135,13 @@ local function create_scrollbar_buffer(line_count)
     return bufnr
 end
 
--- Get the total number of screen lines by giving a range of buffer lines in a given window
-local function get_screen_line_height(winid, range)
-    local text_height = vim.api.nvim_win_text_height(winid, range)
-    return text_height.all
+local function clear_extmarks(winid, ns)
+    winid = winid or vim.api.nvim_get_current_win()
+    local state = vim.w[winid].scrollbar_state
+    if not state or not state.bufnr then
+        return
+    end
+    vim.api.nvim_buf_clear_namespace(state.bufnr, ns, 0, -1)
 end
 
 ---@param winid? integer The winid of the window in which the scrollbar resides
@@ -130,27 +160,23 @@ function M.render_scrollbar(winid)
     ---@type rockyz.scrollbar.State
     local state = vim.w[winid].scrollbar_state or {}
 
-    local buf_content_height = get_screen_line_height(winid, {})
+    local bufnr = vim.api.nvim_win_get_buf(winid)
+    local buf_line_count = vim.api.nvim_buf_line_count(bufnr)
     local viewport_height = get_viewport_height(winid)
 
     -- Calculate the scrollbar's thumb size
-    local thumb_size = math.ceil(viewport_height * viewport_height / buf_content_height)
+    local thumb_size = math.ceil(viewport_height * viewport_height / buf_line_count)
     thumb_size = fix_size(thumb_size, winid)
 
     -- Calculate the scrollbar's position
-    local wininfo = vim.fn.getwininfo(winid)[1]
-    local top_buffer_line = wininfo.topline -- The top buffer line in the viewport
-    local top_screen_line = get_screen_line_height(winid, { -- Get its screen line
-        start_row = 0,
-        end_row = top_buffer_line - 1
-    })
+    local top_buffer_line = vim.fn.line('w0', winid) -- The top buffer line in the viewport
 
     local position -- 0-indexed, range [0, ...]
-    if viewport_height >= buf_content_height then
+    if viewport_height >= buf_line_count then
         position = 0
     else
-        position = math.floor(viewport_height / buf_content_height * top_screen_line)
-        position = math.min(position, viewport_height - thumb_size - 1)
+        position = math.floor(top_buffer_line * viewport_height / buf_line_count)
+        position = math.min(position, viewport_height - thumb_size)
     end
 
     if not state.bufnr then
@@ -187,41 +213,25 @@ function M.render_scrollbar(winid)
         if vim.api.nvim_win_get_height(state.winid) < viewport_height then
             ensure_valid_buffer(state.bufnr, viewport_height)
         end
-        vim.api.nvim_win_set_config(state.winid, win_opts)
+        if viewport_height ~= state.last_viewport_height or col ~= state.last_win_col then
+            vim.api.nvim_win_set_config(state.winid, win_opts)
+        end
     end
 
+    state.last_viewport_height = viewport_height
+    state.last_win_col = col
     vim.w[winid].scrollbar_state = state
 
-    M.clear_extmarks(winid, thumb_ns)
+    clear_extmarks(winid, thumb_ns)
 
-    -- Set extmarks
-    for l = position, position + thumb_size - 1 do
-        M.set_extmark(winid, thumb_ns, l, 0, string.rep(' ', scrollbar_width), config.thumb_hl)
-    end
-end
-
-function M.clear_extmarks(winid, ns)
-    winid = winid or vim.api.nvim_get_current_win()
-    local state = vim.w[winid].scrollbar_state
-    if not state or not state.bufnr then
-        return
-    end
-    vim.api.nvim_buf_clear_namespace(state.bufnr, ns, 0, -1)
-end
-
-function M.set_extmark(winid, ns, lnum, col, text, highlight)
-    winid = winid or vim.api.nvim_get_current_win()
-    local state = vim.w[winid].scrollbar_state
-    vim.api.nvim_buf_set_extmark(state.bufnr, ns, lnum, col, {
-        virt_text = {
-            { text, highlight },
-        },
+    vim.api.nvim_buf_set_extmark(state.bufnr, thumb_ns, position, 0, {
+        end_row = position + thumb_size,
+        virt_text = { { string.rep(' ', scrollbar_width), config.thumb_hl } },
         virt_text_pos = 'overlay',
-        hl_mode = 'combine',
+        hl_group = config.thumb_hl,
+        priority = 10,
     })
 end
-
-local diagnostic_levels = { 'Error', 'Warn', 'Info', 'Hint' }
 
 function M.render_diagnostics(winid)
     winid = winid or vim.api.nvim_get_current_win()
@@ -229,42 +239,137 @@ function M.render_diagnostics(winid)
     local bufnr = vim.api.nvim_win_get_buf(winid)
     local diagnostics = vim.diagnostic.get(bufnr)
 
+    local viewport_height = get_viewport_height(winid)
     local buf_line_count = vim.api.nvim_buf_line_count(bufnr)
 
-    local viewport_height = get_viewport_height(winid)
-    local buf_content_height = get_screen_line_height(winid, {})
-
-    -- On each position only display the diagnostic with the lowest severity
-    local filtered = {}
+    ---On each position only display the diagnostic with the lowest severity
+    ---@type table<integer, integer> position -> severity
+    local marks = {}
     for _, d in ipairs(diagnostics) do
-        -- The screen line number of the diagnostic
-        local diagnostic_screen_line = get_screen_line_height(winid, {
-            start_row = 0,
-            -- Sometimes d.lnum exceeds the buffer line count, and I don’t know why.
-            -- For example, earlier when editing a Go file, I deleted all the contents and left only
-            -- the first comment line. I then got an error, but since d.lnum is 0-indexed, it should
-            -- have been 0, yet it was 2.
-            end_row = d.lnum >= buf_line_count and buf_line_count - 1 or d.lnum,
-        })
-
         local position -- 1-indexed, range [1, n] where n is the viewport_height
-        if viewport_height >= buf_content_height then
-            position = diagnostic_screen_line
+        if viewport_height >= buf_line_count then
+            position = d.lnum
         else
-            position = math.ceil(diagnostic_screen_line * viewport_height / buf_content_height)
+            position = math.floor(d.lnum * viewport_height / buf_line_count)
         end
 
-        if not filtered[position] or d.severity < filtered[position] then
-            filtered[position] = d.severity
+        if not marks[position] or d.severity < marks[position] then
+            marks[position] = d.severity
         end
     end
 
-    M.clear_extmarks(winid, diagnostic_ns)
+    clear_extmarks(winid, diagnostic_ns)
 
-    -- Set extmarks
-    for line, severity in pairs(filtered) do
-        M.set_extmark(winid, diagnostic_ns, line - 1, 2, config.diagnostic.symbol, 'Diagnostic' .. diagnostic_levels[severity])
+    local state = vim.w[winid].scrollbar_state
+    for line, severity in pairs(marks) do
+        vim.api.nvim_buf_set_extmark(state.bufnr, diagnostic_ns, line, 2, {
+            virt_text = { { config.diagnostic.symbol, config.diagnostic.hl[severity] } },
+            virt_text_pos = 'overlay',
+            hl_mode = 'combine',
+            priority = 20,
+        })
     end
+end
+
+local gitdiff_priority = { add = 1, change = 2, delete = 3 }
+
+function M.render_gitdiffs(winid)
+    winid = winid or vim.api.nvim_get_current_win()
+    local bufnr = vim.api.nvim_win_get_buf(winid)
+    local hunks = gitsigns.get_hunks(bufnr)
+    if not hunks or vim.tbl_isempty(hunks) then
+        return
+    end
+
+    ---@type table<integer, integer> position -> type
+    local marks = {}
+
+    ---@param lnum integer 1-indexed
+    local function get_marks(lnum, type)
+        local viewport_height = get_viewport_height(winid)
+        local buf_line_count = vim.api.nvim_buf_line_count(bufnr)
+
+        local position -- 1-indexed
+        if viewport_height >= buf_line_count then
+            position = lnum
+        else
+            position = math.ceil(lnum * viewport_height / buf_line_count)
+        end
+
+        if not marks[position] or gitdiff_priority[marks[position]] < gitdiff_priority[type] then
+            marks[position] = type
+        end
+    end
+
+    for _, h in ipairs(hunks or {}) do
+        if h.type == 'add' or h.type == 'change' then
+            for i = 0, h.added.count - 1 do
+                local lnum = h.added.start + i
+                get_marks(lnum, h.type)
+            end
+        elseif h.type == 'delete' then
+            local lnum = math.max(h.removed.start - 1, 1)
+            get_marks(lnum, h.type)
+        end
+    end
+
+    clear_extmarks(winid, gitdiff_ns)
+
+    local state = vim.w[winid].scrollbar_state
+    for line, type in pairs(marks) do
+        vim.api.nvim_buf_set_extmark(state.bufnr, gitdiff_ns, line - 1, 0, {
+            virt_text = { { config.gitdiff.symbol, config.gitdiff.hl[type] } },
+            virt_text_pos = 'overlay',
+            hl_mode = 'combine',
+            priority = 20,
+        })
+    end
+end
+
+local dirty = {
+    thumb = {},
+    diagnostic = {},
+    git = {},
+}
+
+local timer = vim.uv.new_timer()
+local debounce_ms = 30
+
+-- Debounce
+local function schedule_flush()
+    timer:stop()
+    timer:start(debounce_ms, 0, function()
+        vim.schedule(function()
+            if not next(dirty.thumb) and not next(dirty.diagnostic) and not next(dirty.git) then
+                return
+            end
+            require('rockyz.scrollbar').flush()
+        end)
+    end)
+end
+
+function M.flush()
+    for winid, _ in pairs(dirty.thumb) do
+        if vim.api.nvim_win_is_valid(winid) then
+            M.render_scrollbar(winid)
+        end
+    end
+
+    for winid, _ in pairs(dirty.diagnostic) do
+        if vim.api.nvim_win_is_valid(winid) then
+            M.render_diagnostics(winid)
+        end
+    end
+
+    for winid, _ in pairs(dirty.git) do
+        if vim.api.nvim_win_is_valid(winid) then
+            M.render_gitdiffs(winid)
+        end
+    end
+
+    dirty.thumb = {}
+    dirty.diagnostic = {}
+    dirty.git = {}
 end
 
 local group = vim.api.nvim_create_augroup('rockyz.scrollbar', { clear = true })
@@ -272,26 +377,33 @@ local group = vim.api.nvim_create_augroup('rockyz.scrollbar', { clear = true })
 vim.api.nvim_create_autocmd({ 'WinScrolled' }, {
     group = group,
     callback = function(args)
-        require('rockyz.scrollbar').render_scrollbar(tonumber(args.match))
+        dirty.thumb[tonumber(args.match)] = true
+        schedule_flush()
     end,
 })
 
-vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
-    group = group,
-    callback = function()
-        require('rockyz.scrollbar').render_scrollbar()
-    end,
-})
-
-vim.api.nvim_create_autocmd({ 'BufEnter', 'WinResized' }, {
+vim.api.nvim_create_autocmd({ 'WinResized', 'BufWinEnter' }, {
     group = group,
     callback = function()
         for _, winid in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
-            vim.api.nvim_win_call(winid, function()
-                require('rockyz.scrollbar').render_scrollbar(winid)
-                require('rockyz.scrollbar').render_diagnostics(winid)
-            end)
+            if vim.api.nvim_win_get_config(winid).relative == '' then
+                dirty.thumb[winid] = true
+                dirty.diagnostic[winid] = true
+                dirty.git[winid] = true
+            end
         end
+        schedule_flush()
+    end,
+})
+
+vim.api.nvim_create_autocmd({ 'TextChanged', 'TextChangedI' }, {
+    group = group,
+    callback = function(args)
+        local wins = vim.fn.win_findbuf(args.buf)
+        for _, winid in ipairs(wins) do
+            dirty.thumb[winid] = true
+        end
+        schedule_flush()
     end,
 })
 
@@ -300,8 +412,25 @@ vim.api.nvim_create_autocmd({ 'DiagnosticChanged' }, {
     callback = function(args)
         local wins = vim.fn.win_findbuf(args.buf)
         for _, winid in ipairs(wins) do
-            require('rockyz.scrollbar').render_diagnostics(winid)
+            dirty.diagnostic[winid] = true
         end
+        schedule_flush()
+    end,
+})
+
+vim.api.nvim_create_autocmd({ 'User' }, {
+    group = group,
+    pattern = 'GitSignsUpdate',
+    callback = function(args)
+        local bufnr = args.data and args.data.buffer
+        if not bufnr then
+            return
+        end
+        local wins = vim.fn.win_findbuf(args.data.buffer)
+        for _, winid in ipairs(wins) do
+            dirty.git[winid] = true
+        end
+        schedule_flush()
     end,
 })
 

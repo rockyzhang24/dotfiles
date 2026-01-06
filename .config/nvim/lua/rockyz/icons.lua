@@ -50,6 +50,7 @@ icons.symbol_kinds = {
 
 icons.lines = {
     vertical = '|',
+    vertical_heavy = '┃', -- unicode U+2503
     double_dash_vertical = '╎',
     triple_dash_vertical = '┆',
     quadruple_dash_vertical = '┊',

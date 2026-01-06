@@ -69,7 +69,7 @@ local config = {
     exclude_filetypes = {
     },
     diagnostic = {
-        symbol = icons.lines.vertical_heavy,
+        symbol = icons.misc.vertical_rectangle,
         hl = {
             'DiagnosticError',
             'DiagnosticWarn',
@@ -95,9 +95,9 @@ local config = {
 ---@field last_win_col integer Cached col of the scrollbar's floating window
 
 local thumb_ns = vim.api.nvim_create_namespace('rockyz.scrollbar.thumb')
-local diagnostic_ns = vim.api.nvim_create_namespace('rockyz.scrollbar.diagnostics')
+local diagnostic_ns = vim.api.nvim_create_namespace('rockyz.scrollbar.diagnostic')
 local gitdiff_ns = vim.api.nvim_create_namespace('rockyz.scrollbar.gitdiff')
-local scrollbar_width = 3
+local scrollbar_width = 2
 
 -- Get the number of screen lines that can be displayed
 local function get_viewport_height(winid)
@@ -262,7 +262,7 @@ function M.render_diagnostics(winid)
 
     local state = vim.w[winid].scrollbar_state
     for line, severity in pairs(marks) do
-        vim.api.nvim_buf_set_extmark(state.bufnr, diagnostic_ns, line, 2, {
+        vim.api.nvim_buf_set_extmark(state.bufnr, diagnostic_ns, line, 1, {
             virt_text = { { config.diagnostic.symbol, config.diagnostic.hl[severity] } },
             virt_text_pos = 'overlay',
             hl_mode = 'combine',

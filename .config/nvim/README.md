@@ -12,58 +12,62 @@ Always a WIP 🏗️
 
 # ✨ Features
 
-I'm a minimalist, adhering to the KISS principle and embracing the philosophy of "do one thing and do it better". I only install the plugins that are absolutely essential, avoiding all-in-one solutions. I favor plugins that enhance Vim’s native functionality while steering clear of those that alter its original behavior. For features that are straightforward to implement, I prefer to create them myself, maximizing reliability and control.
+I'm a minimalist, adhering to the KISS principle and embracing the philosophy of "do one thing and do it well". I only install the plugins that are absolutely essential, avoiding all-in-one solutions, and favor plugins that enhance Vim’s native capabilities while steering clear of those that alter its original behavior. For features that are straightforward to implement, I prefer to build them myself, prioritizing reliability, clarity and full control.
 
 Functionalities I implemented:
 
-* Comprehensive and aesthetic statusline: [Statusline](./lua/rockyz/statusline.lua) ([showcase](#statusline-config))
-* Concise LSP progress message in bottom right: [LSP progress](./lua/rockyz/lsp/progress.lua) ([showcase](#lsp-progress-message-config))
-* Lightbulb with VSCode-style: [Lightbulb](./lua/rockyz/lsp/lightbulb.lua) ([showcase](#lightbulb-config))
-* Minimalist indent guide built on `listchars`: [Indent guide](./lua/rockyz/indentline.lua)
-* Neat indent scope display with support for motions and text objects: [Indent scope](./lua/rockyz/indentscope.lua) ([showcase](#indent-scope-config))
-* Appealing winbar showing file path and diagnostics: [Winbar](./lua/rockyz/winbar.lua) ([showcase](#winbar-config))
+* Feature-rich and aesthetic statusline: [Statusline](./lua/rockyz/statusline.lua) ([showcase](#statusline-config))
+* Concise LSP progress message in the bottom right: [LSP progress](./lua/rockyz/lsp/progress.lua) ([showcase](#lsp-progress-message-config))
+* Subtle LSP lightbulb indicator for code actions: [Lightbulb](./lua/rockyz/lsp/lightbulb.lua) ([showcase](#lightbulb-config))
+* Minimalist indent guide using `listchars`: [Indent guide](./lua/rockyz/indentline.lua)
+* Neat indent scope display with motions and text objects support: [Indent scope](./lua/rockyz/indentscope.lua) ([showcase](#indent-scope-config))
+* Appealing winbar with file path and diagnostics: [Winbar](./lua/rockyz/winbar.lua) ([showcase](#winbar-config))
 * Elegant tabline: [Tabline](./lua/rockyz/tabline.lua) ([showcase](#tabline-config))
 * Simple yet efficient statuscolumn: [Statuscolumn](./lua/rockyz/statuscolumn.lua)
 * Clean and visually pleasing quickfix window: [Quickfix window](./lua/rockyz/quickfix.lua) ([showcase](#quickfix-list-config))
-* Comprehensive set of lightning-fast fuzzy finders: [Fuzzy finders](./lua/rockyz/fzf.lua) ([showcase](#fuzzy-finders-config))
+* Extensive set of lightning-fast fuzzy finders: [Fuzzy finders](./lua/rockyz/fzf.lua) ([showcase](#fuzzy-finders-config))
 * Handy togglable popup for lf file manager: [lf](./lua/rockyz/lf.lua) ([showcase](#lf-file-manager-config))
 * Minimal but fully featured terminal: [Terminal](./lua/rockyz/terminal.lua) ([showcase](#terminal-config))
+* High-performance scrollbar with diagnostics, git and search integration: [Scrollbar](./lua/rockyz/scrollbar.lua) ([showcase](#scrollbar-config))
 
 Plugins essential to my setup:
 
-* Treesitter support [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter)
-* Ultra-fast auto-completion backed by [blink.cmp](https://github.com/Saghen/blink.cmp)
-* Fully Git integration with [vim-fugitive](https://github.com/tpope/vim-fugitive), [gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim), [vim-flog](https://github.com/rbong/vim-flog), etc
+* Treesitter support via [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter)
+* Ultra-fast auto-completion powered by [blink.cmp](https://github.com/Saghen/blink.cmp)
+* Full Git integration with [vim-fugitive](https://github.com/tpope/vim-fugitive), [gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim), [vim-flog](https://github.com/rbong/vim-flog), etc
 * Consolidated code formatting via [conform.nvim](https://github.com/stevearc/conform.nvim)
-* Snippet engine [LuaSnip](https://github.com/L3MON4D3/LuaSnip)
+* Snippet engine powered by [LuaSnip](https://github.com/L3MON4D3/LuaSnip)
 * Undo history visualizer with [undotree](https://github.com/mbbill/undotree)
 * Improved code search via [vim-grepper](https://github.com/mhinz/vim-grepper), [vim-asterisk](https://github.com/haya14busa/vim-asterisk), etc
 * Enhanced text objects with [targets.vim](https://github.com/wellle/targets.vim), etc
-* Symbol outline and tags with [outline.nvim](https://github.com/hedyhli/outline.nvim) and [tagbar](https://github.com/preservim/tagbar)
 
-I use the built-in plugin manager `vim.pack` to manage my plugins. Check out the list of plugins I use [here](./lua/rockyz/plugins.lua) and their configs [here](./plugin/).
+I use the built-in plugin manager `vim.pack` to manage my plugins.
+
+See the full list of plugins [here](./lua/rockyz/plugins.lua) and their configurations [here](./plugin/).
 
 # 🚀 Key mappings
 
-I assign the key mappings rationally aiming to make them efficient and easy to remember.
+I assign key mappings deliberately, aiming for efficiency and ease of recall.
 
 * Multiple leader keys
 
-  Besides using `<Space>` as the primary leader key, `,` serves as the leader key for Git-related keymaps, and `\` is designated for toggling.
+  In addition to using `<Space>` as the primary leader key, `,` serves as the leader key for Git-related keymaps, while `\` is designated for toggles.
 
 * Mnemonic
 
-  Key bindings are organized using mnemonic prefixes like `<Leader>b` for buffer, `<Leader>f` for fuzzy finder, `<Leader>w` for window, and so forth.
+  Key bindings are organized using mnemonic prefixes like `<Leader>b` for buffer, `<Leader>f` for fuzzy finder, `<Leader>w` for window, and so on.
 
 * Consistent
 
-  Similar functionalities have the same key binding throughout my dotfiles. For example, `,` and `.` for moving tabs in both kitty and Neovim.
+  Similar functionalities share the same key bindings across my dotfiles. For example, `,` and `.` are used for moving tabs in both Kitty and Neovim.
 
 # 🎪 Showcases
 
 ### Fuzzy finders ([config](./lua/rockyz/fzf.lua))
 
-I implemented a series of fuzzy finders based on fzf.vim instead of using ready-made fuzzy finder plugins because I find them bloated and slower in extreme environments. Additionally, I prefer full control and not having to worry about essential plugins becoming unmaintained.
+I implemented a set of fuzzy finders built around `fzf`, instead of relying on full-fledged fuzzy finder plugins.
+
+This approach keeps the implementation lightweight, predictable, and fully under my control, while remaining responsive even in constrained environments.
 
 ![fuzzy-finders](https://github.com/user-attachments/assets/0459ae54-b0bd-4187-8760-d19f5fc1731c)
 
@@ -101,6 +105,14 @@ I implemented a series of fuzzy finders based on fzf.vim instead of using ready-
 
 ### Terminal ([config](./lua/rockyz/terminal.lua))
 
-It supports creating, deleting, and renaming terminals. We can also send a terminal to its own separate tabpage, and send terminal running in a tabpage back to the panel. Furthermore, it allows opening the corresponding REPL for different filetypes, sending selected lines to the terminal for execution, or directly running the current file in the terminal.
+Supports creating, deleting, and renaming terminals.
+
+Terminals can be moved into their own tabpages and later restored back to the panel.
+
+It also supports opening filetype-specific REPLs, sending selected lines for execution, and running the current file directly in a terminal.
 
 https://github.com/user-attachments/assets/37acb4f1-002c-418f-8c01-d2c5ecb44626
+
+### Scrollbar ([config](./lua/rockyz/scrollbar.lua))
+
+![scrollbar](https://github.com/user-attachments/assets/40402934-1849-47e1-96b7-caacd28a092d)

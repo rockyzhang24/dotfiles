@@ -52,9 +52,9 @@
 -- Similarly, the simplified result is
 -- position = (viewport_heigth / buf_line_count) * diagnostic_lnum
 --
--- How to calculate the position of a gitdiff?
+-- How to calculate the position of a gitdiff or search result
 --
--- Similarly, position = (viewport_heigth / buf_line_count) * gitdiff_lnum
+-- Similarly, position = (viewport_heigth / buf_line_count) * lnum
 
 local icons = require('rockyz.icons')
 local gitsigns = require('gitsigns')
@@ -85,6 +85,10 @@ local config = {
             delete = 'GutterGitDeleted',
         },
     },
+    search = {
+        symbol = icons.misc.vertical_rectangle,
+        hl = 'ScrollbarSearch',
+    },
 }
 
 ---The state of the scrollbar in the current window
@@ -97,7 +101,8 @@ local config = {
 local thumb_ns = vim.api.nvim_create_namespace('rockyz.scrollbar.thumb')
 local diagnostic_ns = vim.api.nvim_create_namespace('rockyz.scrollbar.diagnostic')
 local gitdiff_ns = vim.api.nvim_create_namespace('rockyz.scrollbar.gitdiff')
-local scrollbar_width = 2
+local search_ns = vim.api.nvim_create_namespace('rockyz.scrollbar.search')
+local scrollbar_width = 3
 
 -- Get the number of screen lines that can be displayed
 local function get_viewport_height(winid)
@@ -262,7 +267,7 @@ function M.render_diagnostics(winid)
 
     local state = vim.w[winid].scrollbar_state
     for line, severity in pairs(marks) do
-        vim.api.nvim_buf_set_extmark(state.bufnr, diagnostic_ns, line, 1, {
+        vim.api.nvim_buf_set_extmark(state.bufnr, diagnostic_ns, line, 2, {
             virt_text = { { config.diagnostic.symbol, config.diagnostic.hl[severity] } },
             virt_text_pos = 'overlay',
             hl_mode = 'combine',
@@ -277,9 +282,6 @@ function M.render_gitdiffs(winid)
     winid = winid or vim.api.nvim_get_current_win()
     local bufnr = vim.api.nvim_win_get_buf(winid)
     local hunks = gitsigns.get_hunks(bufnr)
-    if not hunks or vim.tbl_isempty(hunks) then
-        return
-    end
 
     ---@type table<integer, integer> position -> type
     local marks = {}
@@ -326,21 +328,83 @@ function M.render_gitdiffs(winid)
     end
 end
 
+function M.render_search(winid)
+    local bufnr = vim.api.nvim_win_get_buf(winid)
+    local pat = vim.fn.getreg('/')
+    if pat == '' or vim.v.hlsearch == 0 then
+        return
+    end
+    local viewport_height = get_viewport_height(winid)
+    local buf_line_count = vim.api.nvim_buf_line_count(bufnr)
+    local lnums = {}
+    local save = vim.fn.getpos('.')
+    vim.api.nvim_win_call(winid, function()
+        vim.fn.cursor(1, 1)
+        while vim.fn.search(pat, 'W') ~= 0 do
+            local lnum = vim.fn.line('.') -- 1-indexed
+            lnums[lnum] = true
+        end
+    end)
+    vim.fn.setpos('.', save)
+
+    clear_extmarks(winid, search_ns)
+
+    local state = vim.w[winid].scrollbar_state
+    for lnum, _ in pairs(lnums) do
+        local position -- 1-indexed
+        if viewport_height >= buf_line_count then
+            position = lnum
+        else
+            position = math.ceil(lnum * viewport_height / buf_line_count)
+        end
+        vim.api.nvim_buf_set_extmark(state.bufnr, search_ns, position - 1, 1, {
+            virt_text = { { config.search.symbol, config.search.hl } },
+            virt_text_pos = 'overlay',
+            hl_mode = 'combine',
+            priority = 20,
+        })
+    end
+end
+
+-- Bind this to a keymap to clear the search marks
+function M.clear_search()
+    local bufnr = vim.api.nvim_get_current_buf()
+    local wins = vim.fn.win_findbuf(bufnr)
+    for _, winid in ipairs(wins) do
+        clear_extmarks(winid, search_ns)
+    end
+end
+
+-- Record all windows whose scrollbars need update
 local dirty = {
     thumb = {},
     diagnostic = {},
     git = {},
+    search = {},
 }
 
-local timer = vim.uv.new_timer()
+local timer
 local debounce_ms = 30
+
+local function ensure_timer()
+    if timer and not timer:is_closing() then
+        return
+    end
+    timer = vim.uv.new_timer()
+end
 
 -- Debounce
 local function schedule_flush()
+    ensure_timer()
     timer:stop()
     timer:start(debounce_ms, 0, function()
         vim.schedule(function()
-            if not next(dirty.thumb) and not next(dirty.diagnostic) and not next(dirty.git) then
+            if
+                not next(dirty.thumb)
+                and not next(dirty.diagnostic)
+                and not next(dirty.git)
+                and not next(dirty.search)
+            then
                 return
             end
             require('rockyz.scrollbar').flush()
@@ -367,9 +431,16 @@ function M.flush()
         end
     end
 
+    for winid, _ in pairs(dirty.search) do
+        if vim.api.nvim_win_is_valid(winid) then
+            M.render_search(winid)
+        end
+    end
+
     dirty.thumb = {}
     dirty.diagnostic = {}
     dirty.git = {}
+    dirty.search = {}
 end
 
 local group = vim.api.nvim_create_augroup('rockyz.scrollbar', { clear = true })
@@ -390,6 +461,7 @@ vim.api.nvim_create_autocmd({ 'WinResized', 'BufWinEnter' }, {
                 dirty.thumb[winid] = true
                 dirty.diagnostic[winid] = true
                 dirty.git[winid] = true
+                dirty.search[winid] = true
             end
         end
         schedule_flush()
@@ -433,5 +505,39 @@ vim.api.nvim_create_autocmd({ 'User' }, {
         schedule_flush()
     end,
 })
+
+vim.api.nvim_create_autocmd({ 'CmdlineLeave' }, {
+    group = group,
+    callback = function(args)
+        local t = vim.fn.getcmdtype()
+        if t ~= '/' and t ~= '?' then
+            return
+        end
+        local wins = vim.fn.win_findbuf(args.buf)
+        for _, winid in ipairs(wins) do
+            dirty.search[winid] = true
+            schedule_flush()
+        end
+    end,
+})
+
+-- Handle normal-mode * and #
+local on_key_search_cursor_word = vim.api.nvim_create_namespace('rockyz.scrollbar.on_key.search_cursor_word')
+vim.on_key(function(key)
+    if key ~= '*' and key ~= '#' then
+        return
+    end
+    -- defer: let Neovim finish updating @/ and v:hlsearch
+    vim.schedule(function()
+        if vim.v.hlsearch == 1 then
+            local bufnr = vim.api.nvim_get_current_buf()
+            local wins = vim.fn.win_findbuf(bufnr)
+            for _, winid in ipairs(wins) do
+                dirty.search[winid] = true
+                schedule_flush()
+            end
+        end
+    end)
+end, on_key_search_cursor_word)
 
 return M

@@ -342,7 +342,7 @@ vim.keymap.set('n', '?', 'ms?')
 -- Clean search highlighting and update diff if needed
 vim.keymap.set('n', '<Esc>', function()
     if vim.v.hlsearch then
-        return ":<C-u>nohlsearch<C-R>=has('diff')?'<Bar>diffupdate':''<CR><CR>"
+        return ":<C-u>nohlsearch<C-R>=has('diff')?'<Bar>diffupdate':''<CR><CR>:lua require('rockyz.scrollbar').clear_search()<CR>"
     else
         return '<Esc>'
     end

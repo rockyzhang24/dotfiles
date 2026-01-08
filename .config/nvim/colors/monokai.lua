@@ -1021,6 +1021,12 @@ local groups = {
 
     GitStatusStaged = { fg = green },
     GitStatusUnstaged = { fg = red },
+
+    --
+    -- Scrollbar
+    --
+
+    ScrollbarSearch = { fg = '#9e6a03' },
 }
 
 for k, v in pairs(groups) do

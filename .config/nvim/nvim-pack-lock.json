@@ -5,7 +5,7 @@
       "src": "https://github.com/L3MON4D3/LuaSnip"
     },
     "SchemaStore.nvim": {
-      "rev": "b0ed552048541cf1452c7ca08b1d372768f059b9",
+      "rev": "d5687736d15cfc3c1ac943485cad7808ba487d2b",
       "src": "https://github.com/b0o/SchemaStore.nvim"
     },
     "blink.cmp": {
@@ -35,7 +35,7 @@
       "version": "'dev'"
     },
     "gitsigns.nvim": {
-      "rev": "6bd29494e3f79ff08be1d35bc1926ed23c22ed9a",
+      "rev": "30e5c516f03e0a0a4f71300c52abad481ee90337",
       "src": "https://github.com/lewis6991/gitsigns.nvim"
     },
     "hlargs.nvim": {

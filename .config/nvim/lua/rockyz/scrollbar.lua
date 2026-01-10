@@ -337,15 +337,15 @@ function M.render_search(winid)
     local viewport_height = get_viewport_height(winid)
     local buf_line_count = vim.api.nvim_buf_line_count(bufnr)
     local lnums = {}
-    local save = vim.fn.getpos('.')
     vim.api.nvim_win_call(winid, function()
+        local save = vim.fn.getpos('.')
         vim.fn.cursor(1, 1)
         while vim.fn.search(pat, 'W') ~= 0 do
             local lnum = vim.fn.line('.') -- 1-indexed
             lnums[lnum] = true
         end
+        vim.fn.setpos('.', save)
     end)
-    vim.fn.setpos('.', save)
 
     clear_extmarks(winid, search_ns)
 

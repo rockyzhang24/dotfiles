@@ -66,7 +66,7 @@ local config = {
     right_offset = 0,
     winblend = 20,
     thumb_hl = 'ScrollbarSlider',
-    exclude_filetypes = {
+    exclude_filetypes = { -- e.g., outline = true
     },
     diagnostic = {
         symbol = icons.misc.vertical_rectangle,
@@ -91,18 +91,36 @@ local config = {
     },
 }
 
----The state of the scrollbar in the current window
+---Scrollbar state associated with a specific window
 ---@class rockyz.scrollbar.State
 ---@field winid integer The winid of the scrollbar's floating window
 ---@field bufnr integer The bufnr of the scrollbar's buffer
----@field last_viewport_height integer Cached viewport_height
----@field last_win_col integer Cached col of the scrollbar's floating window
+---@field last_viewport_height integer Cached viewport height
+---@field last_win_col integer Cached column of the scrollbar's floating window
+---@field is_enabled boolean Whether the scrollbar is enabled for this window
 
 local thumb_ns = vim.api.nvim_create_namespace('rockyz.scrollbar.thumb')
 local diagnostic_ns = vim.api.nvim_create_namespace('rockyz.scrollbar.diagnostic')
 local gitdiff_ns = vim.api.nvim_create_namespace('rockyz.scrollbar.gitdiff')
 local search_ns = vim.api.nvim_create_namespace('rockyz.scrollbar.search')
+
 local scrollbar_width = 3
+
+local function should_render(winid)
+    local state = vim.w[winid].scrollbar_state
+    if state and not state.is_enabled then
+        return false
+    end
+    local win_config = vim.api.nvim_win_get_config(winid)
+    if win_config.relative ~= '' then
+        return false
+    end
+    local bufnr = vim.api.nvim_win_get_buf(winid)
+    if config.exclude_filetypes[vim.bo[bufnr].filetype] then
+        return false
+    end
+    return true
+end
 
 -- Get the number of screen lines that can be displayed
 local function get_viewport_height(winid)
@@ -149,8 +167,14 @@ local function clear_extmarks(winid, ns)
     vim.api.nvim_buf_clear_namespace(state.bufnr, ns, 0, -1)
 end
 
----@param winid? integer The winid of the window in which the scrollbar resides
-function M.render_scrollbar(winid)
+---Ensure the scrollbar floating window exists and is up-to-date.
+---This function creates the scrollbar buffer and floating window if they do not exist, or updates
+---the window geometry (height and col) when the viewport changes.
+---After this function returns, the scrollbar window is guaranteed to be valid and correctly
+---positioned. Other components (e.g., thumb, diagnostics, git, search matches, etc) can then be
+---rendered their content into the scrollbar buffer via extmarks.
+---@param winid? integer The winid of the floating window where the scrollbar resides
+local function ensure_scrollbar(winid)
     winid = winid or vim.api.nvim_get_current_win()
     local win_config = vim.api.nvim_win_get_config(winid)
     -- Ignore floating window
@@ -158,31 +182,10 @@ function M.render_scrollbar(winid)
         return
     end
 
-    if vim.tbl_contains(config.exclude_filetypes, vim.bo.filetype) then
-        return
-    end
-
     ---@type rockyz.scrollbar.State
     local state = vim.w[winid].scrollbar_state or {}
 
-    local bufnr = vim.api.nvim_win_get_buf(winid)
-    local buf_line_count = vim.api.nvim_buf_line_count(bufnr)
     local viewport_height = get_viewport_height(winid)
-
-    -- Calculate the scrollbar's thumb size
-    local thumb_size = math.ceil(viewport_height * viewport_height / buf_line_count)
-    thumb_size = fix_size(thumb_size, winid)
-
-    -- Calculate the scrollbar's position
-    local top_buffer_line = vim.fn.line('w0', winid) -- The top buffer line in the viewport
-
-    local position -- 0-indexed, range [0, ...]
-    if viewport_height >= buf_line_count then
-        position = 0
-    else
-        position = math.floor(top_buffer_line * viewport_height / buf_line_count)
-        position = math.min(position, viewport_height - thumb_size)
-    end
 
     if not state.bufnr then
         state.bufnr = create_scrollbar_buffer(viewport_height)
@@ -225,7 +228,32 @@ function M.render_scrollbar(winid)
 
     state.last_viewport_height = viewport_height
     state.last_win_col = col
+    state.is_enabled = true
     vim.w[winid].scrollbar_state = state
+end
+
+function M.render_thumb(winid)
+    winid = winid or vim.api.nvim_get_current_win()
+    local state = vim.w[winid].scrollbar_state
+
+    local bufnr = vim.api.nvim_win_get_buf(winid)
+    local buf_line_count = vim.api.nvim_buf_line_count(bufnr)
+    local viewport_height = get_viewport_height(winid)
+
+    -- Calculate the scrollbar's thumb size
+    local thumb_size = math.ceil(viewport_height * viewport_height / buf_line_count)
+    thumb_size = fix_size(thumb_size, winid)
+
+    -- Calculate the scrollbar's position
+    local top_buffer_line = vim.fn.line('w0', winid) -- The top buffer line in the viewport
+
+    local position -- 0-indexed, range [0, ...]
+    if viewport_height >= buf_line_count then
+        position = 0
+    else
+        position = math.floor(top_buffer_line * viewport_height / buf_line_count)
+        position = math.min(position, viewport_height - thumb_size)
+    end
 
     clear_extmarks(winid, thumb_ns)
 
@@ -278,7 +306,7 @@ end
 
 local gitdiff_priority = { add = 1, change = 2, delete = 3 }
 
-function M.render_gitdiffs(winid)
+function M.render_git(winid)
     winid = winid or vim.api.nvim_get_current_win()
     local bufnr = vim.api.nvim_win_get_buf(winid)
     local hunks = gitsigns.get_hunks(bufnr)
@@ -329,6 +357,7 @@ function M.render_gitdiffs(winid)
 end
 
 function M.render_search(winid)
+    winid = winid or vim.api.nvim_get_current_win()
     local bufnr = vim.api.nvim_win_get_buf(winid)
     local pat = vim.fn.getreg('/')
     if pat == '' or vim.v.hlsearch == 0 then
@@ -375,12 +404,20 @@ function M.clear_search()
     end
 end
 
--- Record all windows whose scrollbars need update
+-- Per-component sets of windows (i.e., winids) that require scrollbar updates
 local dirty = {
     thumb = {},
     diagnostic = {},
     git = {},
     search = {},
+}
+
+-- Mapping from scrollbar components to their render functions
+local renders = {
+    thumb = M.render_thumb,
+    diagnostic = M.render_diagnostics,
+    git = M.render_git,
+    search = M.render_search,
 }
 
 local timer
@@ -413,27 +450,17 @@ local function schedule_flush()
 end
 
 function M.flush()
-    for winid, _ in pairs(dirty.thumb) do
-        if vim.api.nvim_win_is_valid(winid) then
-            M.render_scrollbar(winid)
-        end
-    end
-
-    for winid, _ in pairs(dirty.diagnostic) do
-        if vim.api.nvim_win_is_valid(winid) then
-            M.render_diagnostics(winid)
-        end
-    end
-
-    for winid, _ in pairs(dirty.git) do
-        if vim.api.nvim_win_is_valid(winid) then
-            M.render_gitdiffs(winid)
-        end
-    end
-
-    for winid, _ in pairs(dirty.search) do
-        if vim.api.nvim_win_is_valid(winid) then
-            M.render_search(winid)
+    for component, wins in pairs(dirty) do
+        local render = renders[component]
+        if render then
+            for winid, _ in pairs(wins) do
+                if vim.api.nvim_win_is_valid(winid) and should_render(winid) then
+                    -- Ensure the scrollbar's buffer and floating window exist and are correctly sized
+                    -- before rendering other components on it.
+                    ensure_scrollbar(winid)
+                    render(winid)
+                end
+            end
         end
     end
 
@@ -443,15 +470,40 @@ function M.flush()
     dirty.search = {}
 end
 
-local group = vim.api.nvim_create_augroup('rockyz.scrollbar', { clear = true })
+-- Disable the scrollbar of the given window
+function M.disable(winid)
+    winid = winid or vim.api.nvim_get_current_win()
+    if not vim.api.nvim_win_is_valid(winid) then
+        return
+    end
+    local state = vim.w[winid].scrollbar_state
+    vim.api.nvim_win_close(state.winid, true)
+    vim.api.nvim_buf_delete(state.bufnr, { force = true })
+    state.is_enabled = false
+    state.winid = nil
+    state.bufnr = nil
+    vim.w[winid].scrollbar_state = state
+end
 
-vim.api.nvim_create_autocmd({ 'WinScrolled' }, {
-    group = group,
-    callback = function(args)
-        dirty.thumb[tonumber(args.match)] = true
-        schedule_flush()
-    end,
-})
+-- Enable the scrollbar of the given window
+function M.enable(winid)
+    winid = winid or vim.api.nvim_get_current_win()
+    local state = vim.w[winid].scrollbar_state
+    if state == nil or state.is_enabled then
+        return
+    end
+    state.is_enabled = true
+    vim.w[winid].scrollbar_state = state
+
+    dirty.thumb[winid] = true
+    dirty.diagnostic[winid] = true
+    dirty.git[winid] = true
+    dirty.search[winid] = true
+
+    schedule_flush()
+end
+
+local group = vim.api.nvim_create_augroup('rockyz.scrollbar', { clear = true })
 
 vim.api.nvim_create_autocmd({ 'WinResized', 'BufWinEnter' }, {
     group = group,
@@ -464,6 +516,14 @@ vim.api.nvim_create_autocmd({ 'WinResized', 'BufWinEnter' }, {
                 dirty.search[winid] = true
             end
         end
+        schedule_flush()
+    end,
+})
+
+vim.api.nvim_create_autocmd({ 'WinScrolled' }, {
+    group = group,
+    callback = function(args)
+        dirty.thumb[tonumber(args.match)] = true
         schedule_flush()
     end,
 })

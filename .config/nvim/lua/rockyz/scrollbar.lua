@@ -210,7 +210,7 @@ local function ensure_scrollbar(winid)
         row = 0,
         col = col,
         focusable = false,
-        zindex = 1,
+        zindex = 100,
         border = 'none',
     }
 

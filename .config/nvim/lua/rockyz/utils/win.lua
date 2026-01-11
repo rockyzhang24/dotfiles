@@ -86,16 +86,23 @@ end
 --
 
 local function win_maximize()
+    local cur_win = vim.api.nvim_get_current_win()
     vim.t.maximizer_sizes = {
         before = vim.fn.winrestcmd(),
     }
-    vim.cmd('vert resize | resize')
-    vim.t.maximizer_sizes.after = vim.fn.winrestcmd()
+    vim.cmd('wincmd |')
+    vim.cmd('wincmd _')
     vim.cmd('normal! ze')
     -- Record whetehr the current window is maximized. This is used to display the "maximized"
     -- status in winbar.
     vim.w.maximized = 1
-    vim.t.maximized_win = vim.api.nvim_get_current_win()
+    vim.t.maximized_win = cur_win
+    -- Disable scrollbars of other windows
+    for _, winid in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+        if winid ~= cur_win and vim.api.nvim_win_is_valid(winid) and vim.api.nvim_win_get_config(winid).relative == '' then
+            require('rockyz.scrollbar').disable(winid)
+        end
+    end
 end
 
 local function win_restore()
@@ -107,6 +114,13 @@ local function win_restore()
         vim.t.maximizer_sizes = nil
         vim.cmd('normal! ze')
         vim.w[vim.t.maximized_win].maximized = 0
+        -- Enable scrollbars of other windows
+        local cur_win = vim.api.nvim_get_current_win()
+        for _, winid in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+            if winid ~= cur_win and vim.api.nvim_win_is_valid(winid) and vim.api.nvim_win_get_config(winid).relative == '' then
+                require('rockyz.scrollbar').enable(winid)
+            end
+        end
     end
 end
 

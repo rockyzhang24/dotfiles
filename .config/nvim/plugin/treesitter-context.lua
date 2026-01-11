@@ -3,4 +3,5 @@ require('treesitter-context').setup({
     multiline_threshold = 1,
     trim_scope = 'inner',
     mode = 'topline',
+    zindex = 10,
 })

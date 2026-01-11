@@ -290,6 +290,7 @@ local function show_message(client)
                 style = 'minimal',
                 noautocmd = true,
                 border = vim.g.border_style,
+                zindex = 30,
             })
         end)
         if not success then

@@ -581,6 +581,15 @@ vim.api.nvim_create_autocmd({ 'CmdlineLeave' }, {
     end,
 })
 
+local function mark_search_dirty()
+    local bufnr = vim.api.nvim_get_current_buf()
+    local wins = vim.fn.win_findbuf(bufnr)
+    for _, winid in ipairs(wins) do
+        dirty.search[winid] = true
+    end
+    schedule_flush()
+end
+
 -- Handle normal-mode * and #
 local on_key_search_cursor_word = vim.api.nvim_create_namespace('rockyz.scrollbar.on_key.search_cursor_word')
 vim.on_key(function(key)
@@ -588,16 +597,17 @@ vim.on_key(function(key)
         return
     end
     -- defer: let Neovim finish updating @/ and v:hlsearch
-    vim.schedule(function()
-        if vim.v.hlsearch == 1 then
-            local bufnr = vim.api.nvim_get_current_buf()
-            local wins = vim.fn.win_findbuf(bufnr)
-            for _, winid in ipairs(wins) do
-                dirty.search[winid] = true
-                schedule_flush()
-            end
-        end
-    end)
+    vim.schedule(mark_search_dirty)
 end, on_key_search_cursor_word)
+
+-- Handle n and N
+vim.api.nvim_create_autocmd({ 'CursorMoved' }, {
+    group = group,
+    callback = function()
+        if vim.v.hlsearch == 1 and vim.fn.getreg('/') ~= '' then
+            mark_search_dirty()
+        end
+    end,
+})
 
 return M

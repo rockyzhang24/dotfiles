@@ -46,6 +46,9 @@ icons.symbol_kinds = {
     Package = '',
     -- Specials
     Unknown = '',
+    -- For ctags
+    Chapter = '󰂺',
+    Subsection = '',
 }
 
 icons.lines = {

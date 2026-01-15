@@ -1,11 +1,12 @@
 local icons = require('rockyz.icons')
+
 local M = {}
 
 ---@type integer The tabid of the current tabpage
 local tab
 
 ---Store the state of the outline in the current tabpage
----@class TabOutlineState
+---@class rockyz.outline.OutlineStatePerTab
 ---@field bufnr integer|nil The bufnr of the outline buffer
 ---@field win integer|nil The winid of the outline window
 ---@field source_bufnr integer|nil The bufnr of the source buffer
@@ -13,11 +14,273 @@ local tab
 ---@field highlights table Information to highlight the icon and detail by extmarks
 ---@field jumps table Information for jump operations
 ---@field follow_cursor boolean Whether "follow cursor" is enabled
----@field prev_source_buftype string The buftype of previous buffer
+---@field prev_source_buftype string The buftype of previous source buffer
+---@field provider string Can be "lsp" or "ctags"
 
 ---Store per-tab outline state, indexed by tabid
----@type table<integer, TabOutlineState>
+---@type table<integer, rockyz.outline.OutlineStatePerTab>
 local states = {}
+
+local config = {
+    toggle = '\\s',
+    keymaps = {
+        -- Local keymaps available only in outline buffer
+        ['local'] = {
+            ['<Enter>'] = 'jump', -- jump to the symbol in source window
+            p = 'peek',
+            ['<C-k>'] = 'peek_prev',
+            ['<C-j>'] = 'peek_next',
+        },
+        -- Available in both normal buffer and outline buffer
+        global = {
+            gs = 'reveal', -- reveal the symbol in outline buffer
+            ['\\c'] = 'toggle_follow', -- follow cursor
+            ['<Leader>sr'] = 'update', -- update outline
+            ['<Leader>st'] = 'switch_to_ctags', -- switch to ctags provider
+            ['<Leader>sl'] = 'switch_to_lsp', -- switch to LSP provider
+        },
+    }
+
+}
+
+-- Configurations for ctags provider
+local ctags_config = {
+    -- Delimiter in tag.scope, e.g., scope = "fzf.revision" for golang that means this tag is
+    -- a child of tag "revision" that is the child of tag "fzf".
+    -- For most languages the delimiter is '.', but for C, C++ it's '::'
+    scope_sep = '.',
+    -- Maps from ctags kind to LSP symbol kind (maybe not accurate)
+    kinds = {
+        const = 'Constant',
+        constructor = 'Constructor',
+        enum = 'Enum',
+        func = 'Function',
+        member = 'Field',
+        var = 'Variable',
+    },
+    filetypes = {
+        cpp = {
+            scope_sep = '::',
+            kinds = {
+                enumerator = 'EnumMember',
+                header = 'File',
+                macro = 'Constant',
+                partition = 'Namespace',
+                typedef = 'TypeParameter',
+                union = 'Struct',
+            },
+        },
+        cmake = {
+            kinds = {
+                macro = 'Function',
+                option = 'Variable',
+                project = 'Module',
+                target = 'Class',
+            },
+        },
+        css = {
+            kinds = {
+                id = 'Key',
+                selector = 'Object',
+            },
+        },
+        clojure = {
+            kinds = {
+                unknown = 'Variable',
+            },
+        },
+        diff = {
+            kinds = {
+                deletedFile = 'File',
+                hunk = 'Namespace',
+                modifiedFile = 'File',
+                newFile = 'File',
+            },
+        },
+        elixir = {
+            kinds = {
+                callback = 'Function',
+                delegate = 'Function',
+                exception = 'Class',
+                guard = 'Function',
+                implementation = 'Interface',
+                macro = 'Function',
+                protocol = 'Interface',
+                record = 'Struct',
+                test = 'Function',
+                type = 'TypeAlies',
+            },
+        },
+        erlang = {
+            kinds = {
+                macro = 'Function',
+                record = 'Struct',
+                type = 'TypeAlies',
+            },
+        },
+        go = {
+            kinds = {
+                anonMember = 'Field',
+                methodSpec = 'Method',
+                package = 'Namespace',
+                packageName = 'Namespace',
+                talias = 'TypeAlies',
+                type = 'Class',
+                unknown = 'Null',
+            },
+        },
+        html = {
+            kinds = {
+                anchor = 'Field',
+                heading1 = 'Class',
+                heading2 = 'Class',
+                heading3 = 'Class',
+                id = 'Field',
+                script = 'File',
+                stylesheet = 'File',
+                title = 'Module',
+            },
+        },
+        haskell = {
+            kinds = {
+                type = 'TypeParameter',
+            },
+        },
+        java = {
+            kinds = {
+                annotation = 'Class',
+                enumConstant = 'EnumMember',
+                ['local'] = 'Variable',
+                package = 'Module',
+            },
+        },
+        javascript = {
+            kinds = {
+                getter = 'Method',
+                setter = 'Method',
+                generator = 'Function',
+            },
+        },
+        lisp = {
+            kinds = {
+                generic = 'Function',
+                unknown = 'Variable',
+                macro = 'Function',
+                parameter = 'Variable',
+                type = 'TypeParameter',
+            },
+        },
+        make = {
+            kinds = {
+                makefile = 'File',
+                macro = 'Function',
+                target = 'Method',
+            },
+        },
+        man = {
+            kinds = {
+                subsection = 'Namespace',
+                section = 'Module',
+                title = 'Module',
+            },
+        },
+        md = {
+            kinds = {
+                chapter = 'Module',
+                footnote = 'Object',
+                hashtag = 'Key',
+                l4subsection = 'Namespace',
+                l5subsection = 'Namespace',
+                section = 'Module',
+                subsection = 'Namespace',
+                subsubsection = 'Namespace',
+            },
+        },
+        ocaml = {
+            kinds = {
+                Exception = 'Class',
+                RecordField = 'Field',
+                type = 'TypeParameter',
+                val = 'Variable',
+            },
+        },
+        py = {
+            kinds = {
+                member = 'Field',
+                namespace = 'Module',
+                unknown = 'Variable',
+            },
+        },
+        rust = {
+            kinds = {
+                enumerator = 'EnumMember',
+                implementation = 'Class',
+                macro = 'Function',
+                typedef = 'TypeParameter',
+            },
+        },
+        scss = {
+            kinds = {
+                id = 'Field',
+                mixin = 'Function',
+                parameter = 'Variable',
+                placeholder = 'Class',
+            },
+        },
+        sql = {
+            kinds = {
+                ccflag = 'Constant',
+                cursor = 'Variable',
+                database = 'Module',
+                domain = 'TypeParameter',
+                index = 'Key',
+                label = 'Variable',
+                mlconn = 'Module',
+                mlprop = 'Property',
+                mltable = 'Struct',
+                package = 'Module',
+                procedure = 'Function',
+                publication = 'Module',
+                service = 'Module',
+                schema = 'Module',
+                subtype = 'TypeParameter',
+                synonym = 'Module',
+                table = 'Struct',
+                trigger = 'Event',
+                view = 'Module',
+            },
+        },
+        sh = {
+            kinds = {
+                alias = 'Variable',
+                heredoc = 'Variable',
+                script = 'File',
+            },
+        },
+        typescript = {
+            kinds = {
+                alias = 'TypeParameter',
+                enumerator = 'EnumMember',
+                generator = 'Function',
+            },
+        },
+        vim = {
+            kinds = {
+                augroup = 'Module',
+                command = 'Function',
+                filename = 'File',
+                map = 'Variable',
+            },
+        },
+        zsh = {
+            kinds = {
+                alias = 'Variable',
+                heredoc = 'Variable',
+                script = 'File',
+            },
+        },
+    },
+}
 
 local function create_outline_buffer()
     local state = states[tab]
@@ -27,20 +290,30 @@ local function create_outline_buffer()
     end
 end
 
+---@param symbols lsp.DocumentSymbol[]
+---@param ctx? table LSP provider should provide this
 local function format_symbols(symbols, ctx)
     if symbols == nil then
         return
     end
-    local client = vim.lsp.get_client_by_id(ctx.client_id)
-    if not client then
-        return
+    local offset_encoding = 'utf-8'
+    if ctx then
+        local client = vim.lsp.get_client_by_id(ctx.client_id)
+        if not client then
+            return
+        end
+        offset_encoding = client.offset_encoding
     end
     local state = states[tab]
-    local offset_encoding = client.offset_encoding
 
     local function _format_symbols(_symbols, prefix)
         for _, symbol in ipairs(_symbols) do
-            local kind = vim.lsp.protocol.SymbolKind[symbol.kind] or 'Unknown'
+            local kind
+            if state.provider == 'lsp' then
+                kind = vim.lsp.protocol.SymbolKind[symbol.kind] or 'Unknown'
+            else
+                kind = symbol.kind or 'Unknown'
+            end
             local icon = icons.symbol_kinds[kind]
 
             -- Line that will be displayed in the outline buffer
@@ -109,7 +382,7 @@ local function set_contents(contents)
     vim.bo[state.bufnr].modifiable = false
 end
 
-local function request(bufnr)
+local function lsp_request(bufnr)
     local method = 'textDocument/documentSymbol'
     local filename = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(bufnr), ':t')
     filename = filename ~= '' and filename or '[No Name]'
@@ -122,30 +395,166 @@ local function request(bufnr)
         set_contents({ string.format("Loading document symbols for '%s'%s", filename, icons.misc.ellipsis) })
     end
     local params = { textDocument = vim.lsp.util.make_text_document_params(bufnr) }
-    local state = states[tab]
-    state.contents, state.highlights, state.jumps = {}, {}, {}
-    vim.lsp.buf_request_all(bufnr, method, params, function(results, _, _)
-        -- The structure of "results":
-        -- results[ctx.client_id] = { err = err, error = err, result = result, context = ctx }
-        for _, data in pairs(results) do
-            if data.err then
-                set_contents({ string.format("Error: failed to request document symbols for '%s'", filename) })
-                return
-            end
-            -- During the callback, if the outline window is not valid or switching to a different
-            -- source buffer, terminate the callback execution.
+    states[tab].contents, states[tab].highlights, states[tab].jumps = {}, {}, {}
+
+    local remaining = #clients
+    for _, client in ipairs(clients) do
+        client:request(method, params, function(_, result, ctx)
+            local state = states[tab]
+            -- Abort if the source buffer or provider changes
             if
                 not state.win
                 or not vim.api.nvim_win_is_valid(state.win)
-                or state.source_bufnr ~= data.context.bufnr
+                or state.source_bufnr ~= ctx.bufnr
+                or state.provider ~= 'lsp'
             then
                 return
             end
-            format_symbols(data.result, data.context)
-        end
-        set_contents(state.contents)
-        apply_highlights()
+            format_symbols(result, ctx)
+            remaining = remaining - 1
+            if remaining == 0 then
+                set_contents(state.contents)
+                apply_highlights()
+                vim.t[tab].outline_provider = 'LSP' -- used by winbar
+            end
+        end)
+    end
+end
+
+-- Convert the tag (entry in the JSON) to LSP symbol
+-- symbol = {
+--     name,
+--     kind,
+--     detail,
+--     range,
+--     selectionRange,
+--     children,
+-- }
+---@param text string The output (JSON array) of command `ctags --output-format=json "--fields=*" {file}`
+local function ctags_convert_symbols(text)
+    local state = states[tab]
+    local ft = vim.bo[state.source_bufnr].filetype
+    local ctags_ft_config = ctags_config.filetypes[ft] or {}
+    local symbols = {}
+    local tags = {}
+    for line in vim.gsplit(text, '\n', { plain = true, trimempty = true }) do
+        local tag = vim.json.decode(line)
+        table.insert(tags, tag)
+    end
+    -- Sort tags by position
+    table.sort(tags, function(t1, t2)
+        return t1.line < t2.line
     end)
+
+    local function ensure_child(children, name)
+        for _, child in ipairs(children) do
+            if child.name == name then
+                return child
+            end
+        end
+        local new = { name = name, children = {} }
+        table.insert(children, new)
+        return new
+    end
+
+    for _, tag in ipairs(tags) do
+
+        -- Use tag.scope to build the hierarchical structure, i.e., the "children" field in each
+        -- symbol
+        local children = symbols
+        if tag.scope and #tag.scope > 0 then
+            local scope_parts = vim.split(tag.scope, ctags_ft_config.scope_sep or ctags_config.scope_sep, { plain = true, trimempty = true })
+            for i, part in ipairs(scope_parts) do
+                local child = ensure_child(children, part)
+                children = child.children
+                if i == #scope_parts and not child.kind then
+                    child.kind = tag.scopeKind
+                end
+            end
+        end
+
+        local symbol = ensure_child(children, tag.name)
+
+        -- Kind
+        local lsp_kind = 'Unknown' -- default to LSP symbol kind 'Text'
+        if tag.kind then
+            local kind = tag.kind
+            lsp_kind = ctags_ft_config.kinds and ctags_ft_config.kinds[kind]
+                or ctags_config.kinds[kind]
+                or (kind:sub(1, 1):upper() .. kind:sub(2))
+        end
+        symbol.kind = lsp_kind
+
+        -- Range and selectionRange
+        local range = {
+            -- Both line and character (i.e., column) are 0-indexed
+            start = { line = tag.line - 1, character = 0 },
+            ['end'] = { line = tag.line - 1, character = 10000 },
+        }
+        if tag['end'] then
+            range['end'].line = tag['end'] - 1
+        end
+        symbol.range = range
+        symbol.selectionRange = range
+
+        symbol.access = tag.access  -- optional
+
+        -- Detail
+        local details = {}
+        if tag.typeref then
+            local type = string.gsub(tag.typeref, 'typename:', '', 1)
+            table.insert(details, type)
+        end
+        if tag.signature then
+            table.insert(details, tag.signature)
+        end
+        symbol.detail = #details > 0 and table.concat(details, ' ') or nil
+    end
+
+    return symbols
+end
+
+local function ctags_request(bufnr)
+    local on_exit = vim.schedule_wrap(function(obj)
+        local state = states[tab]
+        -- Abort if the source buffer or provider changes
+        if
+            not state.win
+            or not vim.api.nvim_win_is_valid(state.win)
+            or bufnr ~= state.source_bufnr
+            or state.provider ~= 'ctags'
+        then
+            return
+        end
+        if obj.code ~= 0 then
+            local filename = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(bufnr), ':t')
+            set_contents({ string.format("Error: failed to run ctags for '%s'", filename) })
+            return
+        end
+        local symbols = ctags_convert_symbols(obj.stdout)
+        format_symbols(symbols)
+        set_contents(states[tab].contents)
+        apply_highlights()
+        vim.t[tab].outline_provider = 'Ctags' -- used by winbar
+    end)
+
+    local state = states[tab]
+    state.contents, state.highlights, state.jumps = {}, {}, {}
+    vim.system({
+        'ctags',
+        '--output-format=json',
+        '--fields=*',
+        vim.api.nvim_buf_get_name(bufnr),
+    }, { text = true }, on_exit)
+end
+
+local function request(bufnr)
+    local state = states[tab]
+    if state.provider == 'lsp' then
+        lsp_request(bufnr)
+    elseif state.provider == 'ctags' then
+        ctags_request(bufnr)
+    end
 end
 
 -- The foldexpr set to the outline window
@@ -211,89 +620,41 @@ local function enable_follow_cursor()
     })
 end
 
-local keymaps = {
-    -- Outline buffer local keymaps
-    ['local'] = {
-        -- Jump to the symbol in source window
-        ['<Enter>'] = function()
-            select({ focus = true })
-        end,
-        -- Peak
-        ['p'] = function()
-            select({ focus = false })
-        end,
-        -- Peak prev
-        ['<C-k>'] = function()
-            local cur = vim.api.nvim_win_get_cursor(0)
-            cur[1] = cur[1] - 1
-            pcall(vim.api.nvim_win_set_cursor, 0, cur)
-            select({ focus = false })
-        end,
-        -- Peak next
-        ['<C-j>'] = function()
-            local cur = vim.api.nvim_win_get_cursor(0)
-            cur[1] = cur[1] + 1
-            pcall(vim.api.nvim_win_set_cursor, 0, cur)
-            select({ focus = false })
-        end,
-    },
-    -- Global keymaps
-    global = {
-        -- Toggle "follow cursor"
-        -- vim.t.outline_follow_cursor can be used to check "follow cursor" status in statusline and
-        -- winbar
-        ['\\c'] = function()
-            local state = states[tab]
-            if state.follow_cursor then
-                disable_follow_cursor()
-                vim.t[tab].outline_follow_cursor = false
-            else
-                enable_follow_cursor()
-                vim.t[tab].outline_follow_cursor = true
-            end
-            state.follow_cursor = not state.follow_cursor
-            -- Update the statusline and winbar
-            vim.api.nvim__redraw({ win = state.win, winbar = true })
-        end,
-        -- Refresh outline
-        ['<Leader>sr'] = function()
-            request(states[tab].source_bufnr)
-        end,
-        -- In the outline reveal the symbol that is under the cursor of the source buffer
-        -- It's available in both source buffer and outline buffer
-        gs = function()
-            local source_win = vim.fn.bufwinid(states[tab].source_bufnr)
-            vim.api.nvim_win_call(source_win, function()
-                reveal_symbol()
-            end)
-        end,
-    },
-}
-
 local function set_keymaps()
-    for key, action in pairs(keymaps['local']) do
-        vim.keymap.set('n', key, action, { buffer = states[tab].bufnr })
+    for key, action in pairs(config.keymaps['local']) do
+        vim.keymap.set('n', key, function()
+            M[action]()
+        end, { buffer = states[tab].bufnr })
     end
-    for key, action in pairs(keymaps.global) do
-        vim.keymap.set('n', key, action)
+    for key, action in pairs(config.keymaps.global) do
+        vim.keymap.set('n', key, function()
+            M[action]()
+        end)
     end
 end
 
 local function del_keymaps()
-    for key, _ in pairs(keymaps.global) do
+    for key, _ in pairs(config.keymaps.global) do
         vim.keymap.del('n', key)
     end
 end
 
-local function debounce(fn, ms)
-    local timer = vim.uv.new_timer()
-    return function(...)
-        local args = { ... }
-        timer:stop()
-        timer:start(ms, 0, vim.schedule_wrap(function()
-            fn(unpack(args))
-        end))
+local timer
+local debounce_ms = 100
+
+local function ensure_timer()
+    if timer and not timer:is_closing() then
+        return
     end
+    timer = vim.uv.new_timer()
+end
+
+local function debounce_request(bufnr)
+    ensure_timer()
+    timer:stop()
+    timer:start(debounce_ms, 0, vim.schedule_wrap(function()
+        request(bufnr)
+    end))
 end
 
 local function del_autocmd()
@@ -309,20 +670,17 @@ local function set_autocmd()
             local state = states[tab]
             if state.win and vim.api.nvim_win_is_valid(state.win) and vim.bo[event.buf].buftype == '' then
                 state.source_bufnr = event.buf
-                -- No need to update outline if the current buffer was switched from a special
-                -- buffer and hasn't been modified
-                if state.prev_source_buftype ~= '' and vim.b[event.buf].last_changedtick == vim.b[event.buf].changedtick then
+                -- Within the same tab, no need to update outline if the current buffer was switched
+                -- from a special buffer and hasn't been modified. (prev_source_buftype will be
+                -- reset to nil upon TabEnter)
+                if state.prev_source_buftype and state.prev_source_buftype ~= '' and vim.b[event.buf].last_changedtick == vim.b[event.buf].changedtick then
                     return
                 end
-                -- Bash LS returns empty result without using this defer_fn wrapper. I don't know why!
-                -- Should I debounce request for 'BufWinEnter'?
-                vim.defer_fn(function()
-                    create_outline_buffer()
-                    request(event.buf)
-                    if state.follow_cursor then
-                        enable_follow_cursor()
-                    end
-                end, 0)
+                create_outline_buffer()
+                debounce_request(event.buf)
+                if state.follow_cursor then
+                    enable_follow_cursor()
+                end
             end
         end,
     })
@@ -339,9 +697,9 @@ local function set_autocmd()
     vim.api.nvim_create_autocmd({ 'TextChanged' }, {
         group = group,
         buffer = states[tab].source_bufnr,
-        callback = debounce(function(event)
-            request(event.buf)
-        end, 1000)
+        callback = function(event)
+            debounce_request(event.buf)
+        end,
     })
 
     vim.api.nvim_create_autocmd({ 'WinClosed' }, {
@@ -368,13 +726,18 @@ local function open()
         win = -1,
         style = 'minimal',
     })
-    vim.wo[win].list = true
-    vim.wo[win].wrap = false
-    vim.wo[win].foldcolumn = '1'
-    vim.wo[win].statuscolumn = '%C '
-    vim.wo[win].cursorline = true
-    vim.wo[win].foldmethod = 'expr'
-    vim.wo[win].foldexpr = 'v:lua.require("rockyz.outline").get_fold()'
+    local win_options = {
+        list = true,
+        wrap = false,
+        foldcolumn = '1',
+        statuscolumn = '%C ',
+        cursorline = true,
+        foldmethod = 'expr',
+        foldexpr = 'v:lua.require("rockyz.outline").get_fold()',
+    }
+    for option, value in pairs(win_options) do
+        vim.wo[option] = value
+    end
     states[tab].win = win
     states[tab].source_bufnr = bufnr
     vim.cmd('wincmd p')
@@ -390,7 +753,66 @@ local function close()
     end
 end
 
-local function toggle_outline_window()
+function M.jump()
+    select({ focus = true })
+end
+
+function M.peek()
+    select({ focus = false })
+end
+
+function M.peek_prev()
+    local cur = vim.api.nvim_win_get_cursor(0)
+    cur[1] = cur[1] - 1
+    pcall(vim.api.nvim_win_set_cursor, 0, cur)
+    select({ focus = false })
+end
+
+function M.peek_next()
+    local cur = vim.api.nvim_win_get_cursor(0)
+    cur[1] = cur[1] + 1
+    pcall(vim.api.nvim_win_set_cursor, 0, cur)
+    select({ focus = false })
+end
+
+function M.reveal()
+    local source_win = vim.fn.bufwinid(states[tab].source_bufnr)
+    vim.api.nvim_win_call(source_win, function()
+        reveal_symbol()
+    end)
+end
+
+function M.toggle_follow()
+    local state = states[tab]
+    if state.follow_cursor then
+        disable_follow_cursor()
+        vim.t[tab].is_outline_follow_cursor_enabled = false
+    else
+        enable_follow_cursor()
+        vim.t[tab].is_outline_follow_cursor_enabled = true
+    end
+    state.follow_cursor = not state.follow_cursor
+    -- Update the statusline and winbar
+    vim.api.nvim__redraw({ win = state.win, winbar = true })
+end
+
+function M.update()
+    debounce_request(states[tab].source_bufnr)
+end
+
+function M.switch_to_ctags()
+    local state = states[tab]
+    state.provider = 'ctags'
+    debounce_request(state.source_bufnr)
+end
+
+function M.switch_to_lsp()
+    local state = states[tab]
+    state.provider = 'lsp'
+    debounce_request(state.source_bufnr)
+end
+
+function M.toggle_outline_window()
     if is_opened() then
         close()
     else
@@ -398,8 +820,8 @@ local function toggle_outline_window()
     end
 end
 
-vim.keymap.set('n', '\\s', function()
-    toggle_outline_window()
+vim.keymap.set('n', config.toggle, function()
+    M.toggle_outline_window()
 end)
 
 vim.api.nvim_create_autocmd({ 'VimEnter', 'TabEnter' }, {
@@ -414,8 +836,11 @@ vim.api.nvim_create_autocmd({ 'VimEnter', 'TabEnter' }, {
                 highlights = {},
                 jumps = {},
                 follow_cursor = false,
+                provider = 'lsp', -- default to lsp provider
             }
         end
+        -- Reset it upon entering a tab
+        states[tab].prev_source_buftype = nil
     end,
 })
 

@@ -1,6 +1,9 @@
 vim.wo.colorcolumn = ''
 vim.wo.statusline = ''
 
+-- Avoid opening other buffers in the quickfix window
+vim.wo.winfixbuf = true
+
 -- Add the cfilter plugin (see :Cfilter)
 vim.cmd.packadd('cfilter')
 

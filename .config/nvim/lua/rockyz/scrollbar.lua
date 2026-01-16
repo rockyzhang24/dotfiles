@@ -67,6 +67,7 @@ local config = {
     winblend = 20,
     thumb_hl = 'ScrollbarSlider',
     exclude_filetypes = { -- e.g., outline = true
+        term = true,
     },
     diagnostic = {
         symbol = icons.misc.vertical_rectangle,
@@ -434,19 +435,17 @@ end
 local function schedule_flush()
     ensure_timer()
     timer:stop()
-    timer:start(debounce_ms, 0, function()
-        vim.schedule(function()
-            if
-                not next(dirty.thumb)
-                and not next(dirty.diagnostic)
-                and not next(dirty.git)
-                and not next(dirty.search)
-            then
-                return
-            end
-            require('rockyz.scrollbar').flush()
-        end)
-    end)
+    timer:start(debounce_ms, 0, vim.schedule_wrap(function()
+        if
+            not next(dirty.thumb)
+            and not next(dirty.diagnostic)
+            and not next(dirty.git)
+            and not next(dirty.search)
+        then
+            return
+        end
+        require('rockyz.scrollbar').flush()
+    end))
 end
 
 function M.flush()

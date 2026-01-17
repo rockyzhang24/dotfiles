@@ -280,11 +280,15 @@ function M.render_diagnostics(winid)
     ---@type table<integer, integer> position -> severity
     local marks = {}
     for _, d in ipairs(diagnostics) do
-        local position -- 1-indexed, range [1, n] where n is the viewport_height
+        local position -- 0-indexed
         if viewport_height >= buf_line_count then
             position = d.lnum
         else
             position = math.floor(d.lnum * viewport_height / buf_line_count)
+            -- Sometimes when a diagnostic is on the last line, d.lnum is buf_line_count. It should be
+            -- buf_line_count - 1, but I don’t know why. As a result, position ends up being equal
+            -- to viewport_height instead of viewport_height - 1.
+            position = math.min(position, viewport_height - 1)
         end
 
         if not marks[position] or d.severity < marks[position] then

@@ -118,11 +118,14 @@ M.render = function()
         local winbar = header .. ' ' .. special_ft_component(ft, winid)
         -- Show "follow cursor" indicator in outline window
         if ft == 'outline' then
-            local follow_cursor_hl = vim.t.is_outline_follow_cursor_enabled and 'StlComponentOn' or 'StlComponentInactive'
-            local follow_cursor = string.format('[%%#%s#%s%%*]', follow_cursor_hl, icons.misc.pointer)
-            winbar = winbar .. ' ' .. follow_cursor
             local provider = string.format('[%s]', vim.t.outline_provider)
             winbar = winbar .. ' ' .. provider
+            local filter_kinds_hl = vim.t.filter_on and 'WinbarComponentOn' or 'WinbarComponentInactive'
+            local filter_kinds = string.format('[%%#%s#%s%%*]', filter_kinds_hl, icons.misc.filter)
+            winbar = winbar .. ' ' .. filter_kinds
+            local follow_cursor_hl = vim.t.is_outline_follow_cursor_enabled and 'WinbarComponentOn' or 'WinbarComponentInactive'
+            local follow_cursor = string.format('[%%#%s#%s%%*]', follow_cursor_hl, icons.misc.pointer)
+            winbar = winbar .. ' ' .. follow_cursor
         end
         return winbar
     end

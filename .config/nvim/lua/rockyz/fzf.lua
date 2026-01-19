@@ -3571,3 +3571,45 @@ local function select(items, opts, on_choice)
 end
 
 vim.ui.select = select
+
+--
+-- APIs
+--
+
+local M = {}
+
+function M.ansi(str, highlight)
+    return ansi_string(str, highlight)
+end
+
+---@param entries string[]
+---@param actions table<string, function> A map from a key that fzf supports to an action
+---@param opts string[], fzf options
+function M.fzf(entries, actions, opts)
+    local keys = {}
+    for key, _ in pairs(actions) do
+        table.insert(keys, key)
+    end
+    local spec = {
+        ['sink*'] = function(lines)
+            local key = lines[1]
+            local selections = {}
+            for i = 2, #lines do
+                selections[#selections + 1] = lines[i]
+            end
+            actions[key](selections)
+        end,
+        options = get_fzf_opts(false, vim.list_extend({
+            '--expect',
+            expect_keys(keys, true),
+        }, opts)),
+    }
+
+    local function handle_contents()
+        write(entries)
+    end
+
+    fzf(spec, handle_contents)
+end
+
+return M

@@ -130,6 +130,7 @@ icons.misc = {
     explorer = '',
     file = '',
     file_code = '',
+    filter = '',
     folder = '󰉋',
     format = '',
     graph = '',

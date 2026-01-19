@@ -159,6 +159,9 @@ local groups = {
     WinbarError = { fg = error_list, bg = norm_bg }, -- the filename color if the current buffer has errors
     WinbarWarn = { fg = warn_list, bg = norm_bg }, -- the filename color if the current buffer has warnings
     WinbarQuickfixTitle = { fg = orange }, -- the title of the quickfix
+    WinbarComponentInactive = { fg = stl_inactive, bg = norm_bg },
+    WinbarComponentOn = { fg = stl_on, bg = norm_bg },
+    WinbarComponentOff = { fg = stl_off, bg = norm_bg },
     -- Tabline
     TabDefaultIcon = { fg = icon_fg, bg = tab_inactive_bg }, -- icon for special filetype on inactive tab
     TabDefaultIconActive = { fg = icon_fg, bg = tab_active_bg }, -- icon for special filetype on active tab

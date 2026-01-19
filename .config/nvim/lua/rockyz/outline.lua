@@ -1,4 +1,5 @@
 local icons = require('rockyz.icons')
+local fzf = require('rockyz.fzf')
 
 local M = {}
 
@@ -10,12 +11,15 @@ local tab
 ---@field bufnr integer|nil The bufnr of the outline buffer
 ---@field win integer|nil The winid of the outline window
 ---@field source_bufnr integer|nil The bufnr of the source buffer
+---@field kinds table<string, boolean> A set to contain unique kinds
 ---@field contents string[] Contents that will be displayed in outline
 ---@field highlights table Information to highlight the icon and detail by extmarks
 ---@field jumps table Information for jump operations
 ---@field follow_cursor boolean Whether "follow cursor" is enabled
 ---@field prev_source_buftype string The buftype of previous source buffer
 ---@field provider string Can be "lsp" or "ctags"
+---@field lsp_filter_kinds string[]
+---@field ctags_filter_kinds string[]
 
 ---Store per-tab outline state, indexed by tabid
 ---@type table<integer, rockyz.outline.OutlineStatePerTab>
@@ -35,9 +39,11 @@ local config = {
         global = {
             gs = 'reveal', -- reveal the symbol in outline buffer
             ['\\c'] = 'toggle_follow', -- follow cursor
-            ['<Leader>sr'] = 'update', -- update outline
+            ['<Leader>sr'] = 'refresh', -- update outline
             ['<Leader>st'] = 'switch_to_ctags', -- switch to ctags provider
             ['<Leader>sl'] = 'switch_to_lsp', -- switch to LSP provider
+            ['<Leader>sf'] = 'filter_kinds',
+            ['<Leader>sc'] = 'clear_filter',
         },
     }
 
@@ -305,6 +311,8 @@ local function format_symbols(symbols, ctx)
         offset_encoding = client.offset_encoding
     end
     local state = states[tab]
+    local provider = state.provider
+    local filter_kinds = state[provider .. '_filter_kinds']
 
     local function _format_symbols(_symbols, prefix)
         for _, symbol in ipairs(_symbols) do
@@ -314,45 +322,50 @@ local function format_symbols(symbols, ctx)
             else
                 kind = symbol.kind or 'Unknown'
             end
-            local icon = icons.symbol_kinds[kind]
 
-            -- Line that will be displayed in the outline buffer
-            local line = {}
-            table.insert(line, icon)
-            table.insert(line, symbol.name)
-            local detail
-            if symbol.detail and symbol.detail ~= '' then
-                detail = string.gsub(symbol.detail, '\n', '')
-                table.insert(line, detail)
-            end
-            table.insert(state.contents, prefix .. table.concat(line, ' '))
 
-            -- Necessary information to highlight the icon and symbol detail by extmarks
-            local icon_col = #prefix
-            local highlight = {}
-            highlight.icon = {
-                kind = kind,
-                col = icon_col,
-                end_col = icon_col + #icon,
-            }
-            if detail then
-                local detail_col = #prefix + #icon + #symbol.name + 2
-                highlight.detail = {
-                    col = detail_col,
-                    end_col = detail_col + #detail,
+            if filter_kinds == nil or vim.list_contains(filter_kinds or {}, kind) then
+                local icon = icons.symbol_kinds[kind]
+                state.kinds[kind] = true
+
+                -- Line that will be displayed in the outline buffer
+                local line = {}
+                table.insert(line, icon)
+                table.insert(line, symbol.name)
+                local detail
+                if symbol.detail and symbol.detail ~= '' then
+                    detail = string.gsub(symbol.detail, '\n', '')
+                    table.insert(line, detail)
+                end
+                table.insert(state.contents, prefix .. table.concat(line, ' '))
+
+                -- Necessary information to highlight the icon and symbol detail by extmarks
+                local icon_col = #prefix
+                local highlight = {}
+                highlight.icon = {
+                    kind = kind,
+                    col = icon_col,
+                    end_col = icon_col + #icon,
                 }
-            end
-            table.insert(state.highlights, highlight)
+                if detail then
+                    local detail_col = #prefix + #icon + #symbol.name + 2
+                    highlight.detail = {
+                        col = detail_col,
+                        end_col = detail_col + #detail,
+                    }
+                end
+                table.insert(state.highlights, highlight)
 
-            -- Necessary information for jump operations.
-            -- * jump to the symbol in source buffer by vim.lsp.util.show_document(location, offset_encoding)
-            -- * follow cursor (i.e., auto jump to the symbol in outline)
-            -- * reveal (i.e., jump to the symbol in outline by a keymap)
-            table.insert(state.jumps, {
-                range = symbol.range,
-                selection_range = symbol.selectionRange,
-                offset_encoding = offset_encoding,
-            })
+                -- Necessary information for jump operations.
+                -- * jump to the symbol in source buffer by vim.lsp.util.show_document(location, offset_encoding)
+                -- * follow cursor (i.e., auto jump to the symbol in outline)
+                -- * reveal (i.e., jump to the symbol in outline by a keymap)
+                table.insert(state.jumps, {
+                    range = symbol.range,
+                    selection_range = symbol.selectionRange,
+                    offset_encoding = offset_encoding,
+                })
+            end
 
             if symbol.children then
                 _format_symbols(symbol.children, prefix .. string.rep(' ', 4))
@@ -395,7 +408,6 @@ local function lsp_request(bufnr)
         set_contents({ string.format("Loading document symbols for '%s'%s", filename, icons.misc.ellipsis) })
     end
     local params = { textDocument = vim.lsp.util.make_text_document_params(bufnr) }
-    states[tab].contents, states[tab].highlights, states[tab].jumps = {}, {}, {}
 
     local remaining = #clients
     for _, client in ipairs(clients) do
@@ -550,6 +562,7 @@ end
 
 local function request(bufnr)
     local state = states[tab]
+    states[tab].kinds, states[tab].contents, states[tab].highlights, states[tab].jumps = {}, {}, {}, {}
     if state.provider == 'lsp' then
         lsp_request(bufnr)
     elseif state.provider == 'ctags' then
@@ -796,7 +809,7 @@ function M.toggle_follow()
     vim.api.nvim__redraw({ win = state.win, winbar = true })
 end
 
-function M.update()
+function M.refresh()
     debounce_request(states[tab].source_bufnr)
 end
 
@@ -810,6 +823,43 @@ function M.switch_to_lsp()
     local state = states[tab]
     state.provider = 'lsp'
     debounce_request(state.source_bufnr)
+end
+
+function M.filter_kinds()
+    local state = states[tab]
+
+    local function filter(selections)
+        local provider = state.provider
+        state[provider .. '_filter_kinds'] = selections
+        debounce_request(state.source_bufnr)
+        vim.t[tab].filter_on = true
+    end
+
+    local kinds = {}
+    for kind, _ in pairs(state.kinds) do
+        local icon = icons.symbol_kinds[kind]
+        table.insert(kinds, fzf.ansi(icon, 'SymbolKind' .. kind) .. ' ' .. kind)
+    end
+    fzf.fzf(kinds, {
+        enter = filter,
+    }, {
+        '--prompt',
+        '[Outline] Filter Kinds> ',
+        '--preview-window',
+        'hidden',
+        '--bind',
+        'ctrl-/:ignore',
+        '--accept-nth',
+        '2',
+    })
+end
+
+function M.clear_filter()
+    local state = states[tab]
+    local provider = state.provider
+    state[provider .. '_filter_kinds'] = nil
+    debounce_request(state.source_bufnr)
+    vim.t[tab].filter_on = false
 end
 
 function M.toggle_outline_window()
@@ -832,6 +882,7 @@ vim.api.nvim_create_autocmd({ 'VimEnter', 'TabEnter' }, {
                 bufnr = nil,
                 win = nil,
                 source_bufnr = nil,
+                kinds = {},
                 contents = {},
                 highlights = {},
                 jumps = {},

@@ -25,33 +25,16 @@
     navigate = true
     hyperlinks = true
     features = side-by-side line-numbers decorations interactive
-    syntax-theme = Monokai Extended
-    plus-style = syntax "#374026" ; diff line added
-    plus-emph-style = syntax "#495e21" ; diff text added
-    minus-style = syntax "#432f31" ; diff line deleted
-    minus-emph-stype = syntax "#642f3e" ; diff text deleted
-    ; For git's "--color-moved" feature. Ref: https://dandavison.github.io/delta/color-moved-support.html
-    map-styles = \
-        bold purple => syntax "#330f29", \
-        bold blue => syntax "#271344", \
-        bold cyan => syntax "#0d3531", \
-        bold yellow => syntax "#222f14"
+    syntax-theme = Coldark-Cold
 [delta "line-numbers"]
     line-numbers = true
-    line-numbers-zero-style = "#90908a" ; line number
-    line-numbers-minus-style = "#f85149" ; gutter git added
-    line-numbers-plus-style = "#2ea043" ; gutter git deleted
-    line-numbers-left-style = "#636361" ; separator, 60% darken than the fg color #f8f8f2
-    line-numbers-right-style = "#636361" ; separator
 [delta "decorations"]
-    file-style = "#fd9621" bold ul
     file-decoration-style = none
     file-added-label = [+]
     file-copied-label = [==]
     file-modified-label = [*]
     file-removed-label = [-]
     file-renamed-label = [->]
-    hunk-header-decoration-style = "#636361" box ul ; separator
 [delta "interactive"]
     keep-plus-minus-markers = false
 [filter "lfs"]
@@ -64,6 +47,7 @@
 ; Use neovim as git diff and merge tool
 [diff]
     tool = nvimdiff
+    ; For git's "--color-moved" feature. Ref: https://dandavison.github.io/delta/color-moved-support.html
     colorMoved = plain
     algorithm = histogram
     renames = true

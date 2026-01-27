@@ -155,6 +155,7 @@ local config = {
         },
         border = 'rounded',
         preview_window = 'nohidden',
+        label_pos = 'preview',
         get_select_ui_layout = function(n)
             return {
                 window = {
@@ -213,7 +214,7 @@ local bat_prefix = 'bat --color=always --paging=never --style=numbers'
 local fd_prefix = 'fd --hidden --follow --color=never --type f --type l ' .. fd_exclude
 -- A script to preview various types of files (text, image, etc)
 local fzf_previewer = '~/.config/fzf/fzf-previewer.sh'
-local diff_pager = '| delta --width $FZF_PREVIEW_COLUMNS'
+local diff_pager = '| delta --width $FZF_PREVIEW_COLUMNS' .. vim.env.DELTA_OPTS
 
 ---Get the command to decorate input lines, e.g., prepend a devicon to the filename. This command
 ---gets input through a pipe.

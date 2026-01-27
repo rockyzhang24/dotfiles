@@ -14,13 +14,13 @@ font-feature = -liga
 font-feature = -dlig
 
 # Window
-window-padding-x = 2
+window-padding-x = 3
 window-padding-y = 0
 window-decoration = auto
 background-opacity = 1
 
 # Color theme
-theme = monokai
+theme = nvim-default-light
 # bold-color = bright
 
 # Cursor

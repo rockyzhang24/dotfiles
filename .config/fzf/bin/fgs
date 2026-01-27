@@ -30,7 +30,7 @@ cleaner() {
 
 # This script file is also used for fzf preview by passing in the current entry
 if [[ $# -eq 1 ]]; then
-    delta_cmd="delta --width ${FZF_PREVIEW_COLUMNS:-$COLUMNS} --file-style omit"
+    delta_cmd="delta --width ${FZF_PREVIEW_COLUMNS:-$COLUMNS} --file-style omit ${DELTA_OPTS}"
     file=$(echo "$1" | cleaner)
     if ($git_cmd status -s -uall -- "$file" | grep '^??') &>/dev/null; then
         # (1). Untracked file or folder

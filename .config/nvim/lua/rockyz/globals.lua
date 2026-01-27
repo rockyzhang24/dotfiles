@@ -1,4 +1,4 @@
-vim.g.colorscheme = 'monokai'
+vim.g.colorscheme = 'better_default_light'
 vim.g.transparent = false
 vim.g.border_enabled = true
 vim.g.border_style = vim.g.border_enabled and 'rounded' or 'none'
@@ -14,4 +14,4 @@ vim.g.bigfile_size = 1024 * 1024 * 1.5 -- 1.5 MB
 vim.g.bigfile_line_length = 1000
 
 -- Can be 'default', 'ivy'
-vim.g.fzf_theme = 'ivy'
+vim.g.fzf_theme = 'default'

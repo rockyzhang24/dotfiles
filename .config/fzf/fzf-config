@@ -42,6 +42,20 @@ monokai="`
 `header:#f9ae28:underline:bold \
 "
 
+nvim_default_light="`
+`light,`
+`fg:-1,bg:-1,`
+`bg+:#9b9ea4,`
+`hl:#8f6a00:bold,`
+`hl+:#8f6a00:bold,`
+`query:-1,`
+`disabled:#590008:strikethrough,`
+`border:-1,`
+`separator:-1,`
+`label:-1:bold,`
+`header:-1:underline:bold \
+"
+
 # Config the default options when running fzf
 # Keybindings:
 # - ctrl-j: down
@@ -68,6 +82,7 @@ export FZF_DEFAULT_OPTS=" \
     --reverse \
     --height 85% \
     --multi \
+    --scrollbar ┃ \
     --history /tmp/fzfhistory \
     --prompt 'FZF> ' \
     --tabstop=4 \
@@ -90,7 +105,7 @@ export FZF_DEFAULT_OPTS=" \
     --bind 'focus:transform-preview-label:echo ┨ {} ┠' \
     --preview '~/.config/fzf/fzf-previewer.sh {}' \
     --preview-window 'right,60%,nowrap' \
-    --color=$monokai \
+    --color=$nvim_default_light \
 "
 
 # Use fd for FZF completion

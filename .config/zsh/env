@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 # Color theme for fzf, bat, etc
-# Options: arctic, monokai
-export COLOR_THEME="monokai"
+# Options: arctic, monokai, nvim-default-light
+export COLOR_THEME="nvim-default-light"
 
 # Terminal backgroud is transparent or not
 export TRANSPARENT=false
@@ -17,14 +17,14 @@ export GOPATH=$HOME/go
 
 # PATH
 export PATH=$HOME/Development/apache-maven-3.6.1/bin:$PATH
-export PATH=$HOME/.emacs.d/bin:$PATH  # Doom Emacs
+export PATH=$HOME/.emacs.d/bin:$PATH    # Doom Emacs
 export PATH=$HOME/Library/Python/2.7/bin:$PATH  # pip, pip2, pip2.7
-export PATH=/opt/local/bin:/opt/local/sbin:$PATH  # MacPorts
+export PATH=/opt/local/bin:/opt/local/sbin:$PATH    # MacPorts
 export PATH=$(/opt/homebrew/bin/gfind $HOME/.config/bin -type d -printf "%p:")$PATH # my own scripts under ~/.config/bin/
 export PATH=$HOME/.config/fzf/bin:$PATH # fzf scripts
-export PATH=$GOPATH/bin:$PATH   # Golong programs
+export PATH=$GOPATH/bin:$PATH       # Golong programs
 export PATH=$HOME/gitrepos/diff-so-fancy:$PATH  # diff-so-fancy
-export PATH=/opt/homebrew/opt/llvm/bin:$PATH  # Use the latest llvm instead of macOS builtin
+export PATH=/opt/homebrew/opt/llvm/bin:$PATH    # Use the latest llvm instead of macOS builtin
 export PATH="/Applications/Sublime Text.app/Contents/SharedSupport/bin:$PATH" # sublime text
 
 # Use Neovim as "preferred editor aaaa"
@@ -57,7 +57,7 @@ export RANGER_LOAD_DEFAULT_RC=FALSE
 export SSL_CERT_FILE=$HOME/.config/misc/cacert.pem
 
 # ls colors
-source $HOME/.config/zsh/lscolors.sh # GNU ls
+export LS_COLORS="$(vivid generate ~/.config/vivid/nvim-default-light)"
 # BSD (vanilla ls in macOS)
 export CLICOLOR=1
 export LSCOLORS='ExfxcxdxbxGxDxabagacad'
@@ -65,6 +65,7 @@ export LSCOLORS='ExfxcxdxbxGxDxabagacad'
 # Bat
 [[ $COLOR_THEME == 'monokai' ]] && export BAT_THEME='Monokai Extended Origin'
 [[ $COLOR_THEME == 'arctic' ]] && export BAT_THEME='arctic'
+[[ $COLOR_THEME == 'nvim-default-light' ]] && export BAT_THEME='Coldark-Cold'
 
 # Ripgrep
 export RIPGREP_CONFIG_PATH=$HOME/.config/ripgrep/ripgreprc
@@ -76,6 +77,16 @@ export EZA_ICON_SPACING=2
 # Rust
 . "$HOME/.cargo/env"
 
+# Delta
+# Options based on different terminal color theme that can used directly when we run delta command
+if [[ $COLOR_THEME == 'monokai' ]]; then
+    export DELTA_OPTS=' --dark --syntax-theme "Monokai Extended"'
+elif [[ $COLOR_THEME == 'arctic' ]]; then
+    export DELTA_OPTS=' --dark --syntax-theme "Visual Studio Dark+"'
+elif [[ $COLOR_THEME == 'nvim-default-light' ]]; then
+    export DELTA_OPTS=' --light --syntax-theme Coldark-Cold'
+fi
+
 #
 # User-defined
 #
@@ -86,10 +97,10 @@ export EXCLUDE=".git,.Trash,.vscode,.cache,.local,.DS_Store,Library,Music,Movies
 FD_EXCLUDE=""
 RG_EXCLUDE=""
 while IFS=',' read -d ',' item; do
-  # Build --exclude options for fd (i.e., --exclude .git --exclude .Trash --exclude ...)
-  FD_EXCLUDE+="--exclude '$item' "
-  # Build -g options for rg (i.e., -g !.git -g !.Trash -g ...)
-  RG_EXCLUDE+="-g '!$item' "
+    # Build --exclude options for fd (i.e., --exclude .git --exclude .Trash --exclude ...)
+    FD_EXCLUDE+="--exclude '$item' "
+    # Build -g options for rg (i.e., -g !.git -g !.Trash -g ...)
+    RG_EXCLUDE+="-g '!$item' "
 done <<< "$EXCLUDE,"
 export FD_EXCLUDE=${FD_EXCLUDE% } # trim trailing space
 export RG_EXCLUDE=${RG_EXCLUDE% }
@@ -100,21 +111,21 @@ export RG_EXCLUDE=${RG_EXCLUDE% }
 
 # Colors
 if (( terminfo[colors] >= 8 )); then
-  # grep colours
-  if (( ! ${+GREP_COLOR} )) export GREP_COLOR='37;45'               #BSD
-  if (( ! ${+GREP_COLORS} )) export GREP_COLORS="mt=${GREP_COLOR}"  #GNU
+    # grep colours
+    if (( ! ${+GREP_COLOR} )) export GREP_COLOR='37;45'                             #BSD
+    if (( ! ${+GREP_COLORS} )) export GREP_COLORS="mt=${GREP_COLOR}"    #GNU
 
-  # less colours
-  if (( ${+commands[less]} )); then
-    if (( ! ${+LESS_TERMCAP_mb} )) export LESS_TERMCAP_mb=$'\E[1;31m'   # Begins blinking.
-    if (( ! ${+LESS_TERMCAP_md} )) export LESS_TERMCAP_md=$'\E[1;31m'   # Begins bold.
-    if (( ! ${+LESS_TERMCAP_me} )) export LESS_TERMCAP_me=$'\E[0m'      # Ends mode.
-    if (( ! ${+LESS_TERMCAP_se} )) export LESS_TERMCAP_se=$'\E[27m'     # Ends standout-mode.
-    if (( ! ${+LESS_TERMCAP_so} )) export LESS_TERMCAP_so=$'\E[7m'      # Begins standout-mode.
-    if (( ! ${+LESS_TERMCAP_ue} )) export LESS_TERMCAP_ue=$'\E[0m'      # Ends underline.
-    if (( ! ${+LESS_TERMCAP_us} )) export LESS_TERMCAP_us=$'\E[1;32m'   # Begins underline.
-  fi
+    # less colours
+    if (( ${+commands[less]} )); then
+        if (( ! ${+LESS_TERMCAP_mb} )) export LESS_TERMCAP_mb=$'\E[1;31m'       # Begins blinking.
+        if (( ! ${+LESS_TERMCAP_md} )) export LESS_TERMCAP_md=$'\E[1;31m'       # Begins bold.
+        if (( ! ${+LESS_TERMCAP_me} )) export LESS_TERMCAP_me=$'\E[0m'          # Ends mode.
+        if (( ! ${+LESS_TERMCAP_se} )) export LESS_TERMCAP_se=$'\E[27m'         # Ends standout-mode.
+        if (( ! ${+LESS_TERMCAP_so} )) export LESS_TERMCAP_so=$'\E[7m'          # Begins standout-mode.
+        if (( ! ${+LESS_TERMCAP_ue} )) export LESS_TERMCAP_ue=$'\E[0m'          # Ends underline.
+        if (( ! ${+LESS_TERMCAP_us} )) export LESS_TERMCAP_us=$'\E[1;32m'       # Begins underline.
+    fi
 else
-  # See https://no-color.org
-  export NO_COLOR=1
+    # See https://no-color.org
+    export NO_COLOR=1
 fi

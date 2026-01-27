@@ -193,19 +193,19 @@ vim.api.nvim_create_autocmd('QuitPre', {
 })
 
 -- Show colorcolumn in INSERT mode
-vim.api.nvim_create_augroup('rockyz.colorcol', {})
-vim.api.nvim_create_autocmd('InsertEnter', {
-    group = 'rockyz.colorcol',
-    callback = function()
-        vim.o.colorcolumn = '80,120'
-    end,
-})
-vim.api.nvim_create_autocmd('InsertLeave', {
-    group = 'rockyz.colorcol',
-    callback = function()
-        vim.o.colorcolumn = ''
-    end,
-})
+-- vim.api.nvim_create_augroup('rockyz.colorcol', {})
+-- vim.api.nvim_create_autocmd('InsertEnter', {
+--     group = 'rockyz.colorcol',
+--     callback = function()
+--         vim.o.colorcolumn = '80,120'
+--     end,
+-- })
+-- vim.api.nvim_create_autocmd('InsertLeave', {
+--     group = 'rockyz.colorcol',
+--     callback = function()
+--         vim.o.colorcolumn = ''
+--     end,
+-- })
 
 -- Set CursorLine of not-current windows
 vim.api.nvim_create_augroup('rockyz.cursorlinenc', {})

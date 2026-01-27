@@ -10,12 +10,12 @@ vim.opt.diffopt = {'algorithm:patience', 'closeoff', 'filler', 'inline:word', 'i
 vim.o.expandtab = true
 vim.o.exrc = true
 vim.opt.fillchars = {
+    eob = ' ',
     fold = ' ',
     foldopen = icons.caret.down,
     foldclose = icons.caret.right,
     foldsep = ' ',
     foldinner = ' ',
-    eob = ' ',
     msgsep = '‾',
 }
 vim.o.foldcolumn = '1'

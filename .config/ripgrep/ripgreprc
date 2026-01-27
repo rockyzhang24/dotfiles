@@ -15,15 +15,29 @@
 
 # monokai theme
 
+# --colors
+# # #67d8ef
+# path:fg:103,216,239
+# --colors
+# # Number (#ac80ff)
+# line:fg:172,128,255
+# --colors
+# # Number (#a6e22c)
+# column:fg:166,226,44
+# --colors
+# # #f92472
+# match:fg:249,36,114
+
+# nvim-default-light theme
 --colors
-# #67d8ef
-path:fg:103,216,239
+# #004c73
+path:fg:0,76,115
 --colors
-# Number (#ac80ff)
-line:fg:172,128,255
+# #005523
+line:fg:0,85,35
 --colors
-# Number (#a6e22c)
-column:fg:166,226,44
+# #007373
+column:fg:0,115,115
 --colors
-# #f92472
-match:fg:249,36,114
+# #590008
+match:fg:89,0,8

@@ -22,7 +22,7 @@ Functionalities I implemented:
 * Minimalist indent guide using `listchars`: [Indent guide](./lua/rockyz/indentline.lua)
 * Neat indent scope display with motions and text objects support: [Indent scope](./lua/rockyz/indentscope.lua) ([showcase](#indent-scope-config))
 * Appealing winbar with file path and diagnostics: [Winbar](./lua/rockyz/winbar.lua) ([showcase](#winbar-config))
-* Elegant tabline: [Tabline](./lua/rockyz/tabline.lua) ([showcase](#tabline-config))
+* Elegant scrollable tabline: [Tabline](./lua/rockyz/tabline.lua) ([showcase](#tabline-config))
 * Simple yet efficient statuscolumn: [Statuscolumn](./lua/rockyz/statuscolumn.lua)
 * Clean and visually pleasing quickfix window: [Quickfix window](./lua/rockyz/quickfix.lua) ([showcase](#quickfix-list-config))
 * Extensive set of lightning-fast fuzzy finders: [Fuzzy finders](./lua/rockyz/fzf.lua) ([showcase](#fuzzy-finders-config))

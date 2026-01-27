@@ -1,11 +1,11 @@
 {
   "plugins": {
     "LuaSnip": {
-      "rev": "3732756",
+      "rev": "dae4f5aaa3574bd0c2b9dd20fb9542a02c10471c",
       "src": "https://github.com/L3MON4D3/LuaSnip"
     },
     "SchemaStore.nvim": {
-      "rev": "f35b7747d4d536fba96aa098a4144e5c85252828",
+      "rev": "55874e697fd70ce1064eb96ff5c53c9bd6172324",
       "src": "https://github.com/b0o/SchemaStore.nvim"
     },
     "blink.cmp": {
@@ -18,7 +18,7 @@
       "src": "https://github.com/uga-rosa/ccc.nvim"
     },
     "conform.nvim": {
-      "rev": "8314f4c9e205e7f30b62147069729f9a1227d8bf",
+      "rev": "c2526f1cde528a66e086ab1668e996d162c75f4f",
       "src": "https://github.com/stevearc/conform.nvim"
     },
     "cscope_maps.nvim": {
@@ -35,12 +35,8 @@
       "version": "'dev'"
     },
     "gitsigns.nvim": {
-      "rev": "42d6aed4e94e0f0bbced16bbdcc42f57673bd75e",
+      "rev": "abf82a65f185bd54adc0679f74b7d6e1ada690c9",
       "src": "https://github.com/lewis6991/gitsigns.nvim"
-    },
-    "hlargs.nvim": {
-      "rev": "0b29317",
-      "src": "https://github.com/m-demare/hlargs.nvim"
     },
     "inc-rename.nvim": {
       "rev": "2597bcc",

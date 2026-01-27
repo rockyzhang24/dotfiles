@@ -109,7 +109,6 @@ vim.pack.add({
         version = 'master',
     },
     'https://github.com/mizlan/iswap.nvim',
-    'https://github.com/m-demare/hlargs.nvim',
 
     -- Git
     'https://github.com/lewis6991/gitsigns.nvim',

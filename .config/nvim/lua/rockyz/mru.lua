@@ -102,7 +102,13 @@ vim.api.nvim_create_augroup('rockyz.mru', { clear = true })
 vim.api.nvim_create_autocmd({ 'BufEnter', 'FocusGained' }, {
     group = 'rockyz.mru',
     callback = function(args)
-        require('rockyz.mru').store_buf(args.buf)
+        local bufnr = args.buf
+        vim.api.nvim_buf_call(bufnr, vim.schedule_wrap(function()
+            local winid = vim.api.nvim_get_current_win()
+            if not vim.wo[winid].diff then
+                require('rockyz.mru').store_buf(bufnr)
+            end
+        end))
     end,
 })
 vim.api.nvim_create_autocmd('VimLeavePre', {

@@ -1,16 +1,21 @@
+local root_markers1 = {
+    '.emmyrc.json',
+    '.luarc.json',
+    '.luarc.jsonc',
+}
+local root_markers2 = {
+    '.luacheckrc',
+    '.stylua.toml',
+    'stylua.toml',
+    'selene.toml',
+    'selene.yml',
+}
+
+---@type vim.lsp.Config
 return {
     cmd = { 'lua-language-server' },
     filetypes = { 'lua' },
-    root_markers = {
-        '.luarc.json',
-        '.luarc.jsonc',
-        '.luacheckrc',
-        '.stylua.toml',
-        'stylua.toml',
-        'selene.toml',
-        'selene.yml',
-        '.git',
-    },
+    root_markers = { root_markers1, root_markers2, { '.git' } },
     on_init = function(client)
         local path = client.workspace_folders
         and client.workspace_folders[1]

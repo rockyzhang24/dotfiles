@@ -39,7 +39,7 @@ local function create_keymaps()
         end, { buffer = term.bufnr })
     end
 
-    vim.keymap.set('t', '<C-_>', function()
+    vim.keymap.set('t', '_', function()
         M.close()
     end, { buffer = term.bufnr })
 
@@ -96,6 +96,7 @@ function M.open()
     end
 
     term.winid = vim.api.nvim_open_win(term.bufnr, true, calculate_win_pos())
+    vim.cmd.startinsert()
 
     create_keymaps()
 end

@@ -296,16 +296,27 @@ function M.render_diagnostics(winid)
         end
     end
 
+    -- Abort rendering if the buffer has changed since diagnostics were produced to avoid drawing
+    -- stale or out-of-range extmarks.
+    if vim.b[bufnr].scrollbar_diagnostic_changedtick ~= vim.api.nvim_buf_get_changedtick(bufnr) then
+        return
+    end
+
     clear_extmarks(winid, diagnostic_ns)
 
     local state = vim.w[winid].scrollbar_state
+    local sb_lines = vim.api.nvim_buf_line_count(state.bufnr)
     for line, severity in pairs(marks) do
-        vim.api.nvim_buf_set_extmark(state.bufnr, diagnostic_ns, line, 2, {
-            virt_text = { { config.diagnostic.symbol, config.diagnostic.hl[severity] } },
-            virt_text_pos = 'overlay',
-            hl_mode = 'combine',
-            priority = 20,
-        })
+        -- Ensure extmarks never exceed the scrollbar buffer when the buffer shrinks during setting
+        -- them.
+        if line >= 0 and line < sb_lines then
+            vim.api.nvim_buf_set_extmark(state.bufnr, diagnostic_ns, line, 2, {
+                virt_text = { { config.diagnostic.symbol, config.diagnostic.hl[severity] } },
+                virt_text_pos = 'overlay',
+                hl_mode = 'combine',
+                priority = 20,
+            })
+        end
     end
 end
 
@@ -348,16 +359,27 @@ function M.render_git(winid)
         end
     end
 
+    -- Abort if the buffer has changed since git diffs were update (stale hunk data)
+    if vim.b[bufnr].scrollbar_git_changedtick ~= vim.api.nvim_buf_get_changedtick(bufnr) then
+        return
+    end
+
     clear_extmarks(winid, gitdiff_ns)
 
     local state = vim.w[winid].scrollbar_state
+    local sb_lines = vim.api.nvim_buf_line_count(state.bufnr)
     for line, type in pairs(marks) do
-        vim.api.nvim_buf_set_extmark(state.bufnr, gitdiff_ns, line - 1, 0, {
-            virt_text = { { config.gitdiff.symbol, config.gitdiff.hl[type] } },
-            virt_text_pos = 'overlay',
-            hl_mode = 'combine',
-            priority = 20,
-        })
+        local row = line - 1
+        -- Ensure extmarks never exceed the scrollbar buffer when the buffer shrinks during setting
+        -- them.
+        if row >=0 and row < sb_lines then
+            vim.api.nvim_buf_set_extmark(state.bufnr, gitdiff_ns, row, 0, {
+                virt_text = { { config.gitdiff.symbol, config.gitdiff.hl[type] } },
+                virt_text_pos = 'overlay',
+                hl_mode = 'combine',
+                priority = 20,
+            })
+        end
     end
 end
 
@@ -384,6 +406,7 @@ function M.render_search(winid)
     clear_extmarks(winid, search_ns)
 
     local state = vim.w[winid].scrollbar_state
+    local sb_lines = vim.api.nvim_buf_line_count(state.bufnr)
     for lnum, _ in pairs(lnums) do
         local position -- 1-indexed
         if viewport_height >= buf_line_count then
@@ -391,12 +414,15 @@ function M.render_search(winid)
         else
             position = math.ceil(lnum * viewport_height / buf_line_count)
         end
-        vim.api.nvim_buf_set_extmark(state.bufnr, search_ns, position - 1, 1, {
-            virt_text = { { config.search.symbol, config.search.hl } },
-            virt_text_pos = 'overlay',
-            hl_mode = 'combine',
-            priority = 20,
-        })
+        local row = position - 1
+        if row >= 0 and row < sb_lines then
+            vim.api.nvim_buf_set_extmark(state.bufnr, search_ns, row, 1, {
+                virt_text = { { config.search.symbol, config.search.hl } },
+                virt_text_pos = 'overlay',
+                hl_mode = 'combine',
+                priority = 20,
+            })
+        end
     end
 end
 
@@ -545,7 +571,11 @@ vim.api.nvim_create_autocmd({ 'TextChanged', 'TextChangedI' }, {
 vim.api.nvim_create_autocmd({ 'DiagnosticChanged' }, {
     group = group,
     callback = function(args)
-        local wins = vim.fn.win_findbuf(args.buf)
+        local bufnr = args.buf
+        -- Record the buffer changedtick at the moment diagnostics are updated.
+        -- Used to ensure we only render diagnostics for the same buffer state.
+        vim.b[bufnr].scrollbar_diagnostic_changedtick = vim.api.nvim_buf_get_changedtick(bufnr)
+        local wins = vim.fn.win_findbuf(bufnr)
         for _, winid in ipairs(wins) do
             dirty.diagnostic[winid] = true
         end
@@ -561,6 +591,9 @@ vim.api.nvim_create_autocmd({ 'User' }, {
         if not bufnr then
             return
         end
+        -- Record the buffer changedtick at the moment the git diffs are updated.
+        -- Used to ensure we only render git diffs for the same buffer state.
+        vim.b[bufnr].scrollbar_git_changedtick = vim.api.nvim_buf_get_changedtick(bufnr)
         local wins = vim.fn.win_findbuf(args.data.buffer)
         for _, winid in ipairs(wins) do
             dirty.git[winid] = true

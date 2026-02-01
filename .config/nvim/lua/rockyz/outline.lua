@@ -400,6 +400,8 @@ local function set_contents(contents)
     vim.bo[state.bufnr].modifiable = false
 end
 
+-- Lsp provider
+
 local function lsp_request(bufnr)
     local method = 'textDocument/documentSymbol'
     local filename = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(bufnr), ':t')
@@ -437,6 +439,8 @@ local function lsp_request(bufnr)
         end)
     end
 end
+
+-- Ctags provider
 
 -- Convert the tag (entry in the JSON) to LSP symbol (lsp.DocumentSymbol)
 -- symbol = {
@@ -565,6 +569,8 @@ local function ctags_request(bufnr)
         vim.api.nvim_buf_get_name(bufnr),
     }, { text = true }, on_exit)
 end
+
+-- Man page provider
 
 ---@param lines string[] The text lines in the man page
 local function man_convert_symbols(lines)

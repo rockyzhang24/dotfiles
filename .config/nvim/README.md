@@ -19,6 +19,7 @@ Functionalities I implemented:
 * Feature-rich and aesthetic statusline: [Statusline](./lua/rockyz/statusline.lua) ([showcase](#statusline-config))
 * Concise LSP progress message in the bottom right: [LSP progress](./lua/rockyz/lsp/progress.lua) ([showcase](#lsp-progress-message-config))
 * Subtle LSP lightbulb indicator for code actions: [Lightbulb](./lua/rockyz/lsp/lightbulb.lua) ([showcase](#lightbulb-config))
+* Versatile outline sidebar with LSP, Ctags and man providers, plus fzf-based filtering: [Outline](./lua/rockyz/outline.lua) ([showcase](#outline-config))
 * Minimalist indent guide using `listchars`: [Indent guide](./lua/rockyz/indentline.lua)
 * Neat indent scope display with motions and text objects support: [Indent scope](./lua/rockyz/indentscope.lua) ([showcase](#indent-scope-config))
 * Appealing winbar with file path and diagnostics: [Winbar](./lua/rockyz/winbar.lua) ([showcase](#winbar-config))
@@ -116,3 +117,13 @@ https://github.com/user-attachments/assets/37acb4f1-002c-418f-8c01-d2c5ecb44626
 ### Scrollbar ([config](./lua/rockyz/scrollbar.lua))
 
 ![scrollbar](https://github.com/user-attachments/assets/40402934-1849-47e1-96b7-caacd28a092d)
+
+### Outline ([config](./lua/rockyz/outline.lua))
+
+Provides a toggleable outline sidebar for structural navigation.
+
+Supports multiple providers, including LSP, Ctags and man (for man page specifically).
+
+Symbols can be interactively filtered by kind using fzf.
+
+![outline](https://github.com/user-attachments/assets/5caf9204-fb46-49aa-80d6-c729a017adcc)

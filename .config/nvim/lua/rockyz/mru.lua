@@ -90,25 +90,30 @@ function M.store_buf(bufnr)
     if vim.list_contains(ignored_filetypes, filetype) then
         return
     end
-    table.insert(bufs, bufnr)
-    last_bufnr = bufnr
-    count = (count + 1) % 10
-    if count == 0 then
-        M.list()
-    end
+
+    -- Store the buffer only if it's not in a diff window
+    -- E.g., don't store buffers opened by my own `ngd` shell command
+    vim.api.nvim_buf_call(bufnr, function()
+        local winid = vim.api.nvim_get_current_win()
+        -- It seems 'diff' setting is delayed so I have to use `vim.schedule` to make it work
+        vim.schedule(function()
+            if not vim.wo[winid].diff then
+                table.insert(bufs, bufnr)
+                last_bufnr = bufnr
+                count = (count + 1) % 10
+                if count == 0 then
+                    M.list()
+                end
+            end
+        end)
+    end)
 end
 
 vim.api.nvim_create_augroup('rockyz.mru', { clear = true })
 vim.api.nvim_create_autocmd({ 'BufEnter', 'FocusGained' }, {
     group = 'rockyz.mru',
     callback = function(args)
-        local bufnr = args.buf
-        vim.api.nvim_buf_call(bufnr, vim.schedule_wrap(function()
-            local winid = vim.api.nvim_get_current_win()
-            if not vim.wo[winid].diff then
-                require('rockyz.mru').store_buf(bufnr)
-            end
-        end))
+        require('rockyz.mru').store_buf(args.buf)
     end,
 })
 vim.api.nvim_create_autocmd('VimLeavePre', {

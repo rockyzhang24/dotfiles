@@ -30,8 +30,8 @@ require('rockyz.globals')
 local modules = {
     'settings',
     'keymaps',
-    'plugins',
     'color',
+    'plugins',
     'autocmds',
     'commands',
     'abbreviations',

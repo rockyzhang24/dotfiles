@@ -16,8 +16,9 @@ local tab
 ---@field highlights table Information to highlight the icon and detail by extmarks
 ---@field jumps table Information for jump operations
 ---@field follow_cursor boolean Whether "follow cursor" is enabled
----@field prev_source_buftype string The buftype of previous source buffer
----@field provider string Can be "lsp" or "ctags"
+---@field prev_buf_state table The info of the previous buffer (e.g., its buftype, filetype, etc)
+---@field provider string Can be "lsp", "ctags" or "man"
+---@field prev_provider string The provider of the previous normal buffer for later restore
 ---@field lsp_filter_kinds string[]
 ---@field ctags_filter_kinds string[]
 
@@ -46,7 +47,6 @@ local config = {
             ['<Leader>sc'] = 'clear_filter',
         },
     }
-
 }
 
 -- Configurations for ctags provider
@@ -288,6 +288,12 @@ local ctags_config = {
     },
 }
 
+---@type table<string, string> Map from the filetype of a special buffer (i.e., buftype ~= '') to
+---its provider name
+local special_provider = {
+    man = 'man',
+}
+
 local function create_outline_buffer()
     local state = states[tab]
     if not state.bufnr or not vim.api.nvim_buf_is_valid(state.bufnr) then
@@ -323,9 +329,8 @@ local function format_symbols(symbols, ctx)
                 kind = symbol.kind or 'Unknown'
             end
 
-
             if filter_kinds == nil or vim.list_contains(filter_kinds or {}, kind) then
-                local icon = icons.symbol_kinds[kind]
+                local icon = icons.symbol_kinds[kind] or icons.symbol_kinds['Unknown']
                 state.kinds[kind] = true
 
                 -- Line that will be displayed in the outline buffer
@@ -433,7 +438,7 @@ local function lsp_request(bufnr)
     end
 end
 
--- Convert the tag (entry in the JSON) to LSP symbol
+-- Convert the tag (entry in the JSON) to LSP symbol (lsp.DocumentSymbol)
 -- symbol = {
 --     name,
 --     kind,
@@ -447,6 +452,7 @@ local function ctags_convert_symbols(text)
     local state = states[tab]
     local ft = vim.bo[state.source_bufnr].filetype
     local ctags_ft_config = ctags_config.filetypes[ft] or {}
+    ---@type lsp.DocumentSymbol[]
     local symbols = {}
     local tags = {}
     for line in vim.gsplit(text, '\n', { plain = true, trimempty = true }) do
@@ -560,6 +566,73 @@ local function ctags_request(bufnr)
     }, { text = true }, on_exit)
 end
 
+---@param lines string[] The text lines in the man page
+local function man_convert_symbols(lines)
+    ---@type lsp.DocumentSymbol[]
+    local symbols = {}
+
+    local last_header
+    local prev_lnum = 0
+    local prev_line = ''
+
+    local function finalize_header()
+        if last_header then
+            last_header.range['end'].line = prev_lnum - 1
+            last_header.range['end'].character = prev_line:len()
+        end
+    end
+
+    for lnum, line in ipairs(lines) do
+        local header = line:match('^[A-Z].+')
+        local padding, arg = line:match('^(%s+)(-.+)')
+        if header and lnum > 1 then
+            finalize_header()
+            local symbol = {
+                name = header,
+                kind = 'Interface',
+                range = {
+                    start = { line = lnum - 1, character = 0 },
+                    ['end'] = { line = lnum - 1, character = 10000 },
+                },
+            }
+            symbol.selectionRange = symbol.range
+            last_header = symbol
+            table.insert(symbols, symbol)
+        elseif arg then
+            local symbol = {
+                name = arg,
+                kind = 'Interface',
+                range = {
+                    start = { line = lnum - 1, character = padding:len() },
+                    ['end'] = { line = lnum - 1, character = line:len() },
+                },
+            }
+            symbol.selectionRange = symbol.range
+            if last_header then
+                last_header.children = last_header.children or {}
+                table.insert(last_header.children, symbol)
+            else
+                table.insert(symbols, symbol)
+            end
+        end
+        prev_lnum = lnum
+        prev_line = line
+    end
+    finalize_header()
+    return symbols
+end
+
+local function handle_man(bufnr)
+    local state = states[tab]
+    state.contents, state.highlights, state.jumps = {}, {}, {}
+    local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, true)
+    local symbols = man_convert_symbols(lines)
+    format_symbols(symbols)
+    set_contents(states[tab].contents)
+    apply_highlights()
+    vim.t[tab].outline_provider = 'Man' -- used by winbar
+end
+
 local function request(bufnr)
     local state = states[tab]
     states[tab].kinds, states[tab].contents, states[tab].highlights, states[tab].jumps = {}, {}, {}, {}
@@ -567,6 +640,8 @@ local function request(bufnr)
         lsp_request(bufnr)
     elseif state.provider == 'ctags' then
         ctags_request(bufnr)
+    elseif state.provider == 'man' then
+        handle_man(bufnr)
     end
 end
 
@@ -677,23 +752,51 @@ end
 local function set_autocmd()
     local group = vim.api.nvim_create_augroup('rockyz.outline', { clear = true })
 
+    -- Refresh the outline if switching to a normal buffer, or a special buffer that has a specific
+    -- provider.
     vim.api.nvim_create_autocmd({ 'LspAttach', 'BufEnter' }, {
         group = group,
         callback = function(event)
+            local bufnr = event.buf
             local state = states[tab]
-            if state.win and vim.api.nvim_win_is_valid(state.win) and vim.bo[event.buf].buftype == '' then
-                state.source_bufnr = event.buf
-                -- Within the same tab, no need to update outline if the current buffer was switched
-                -- from a special buffer and hasn't been modified. (prev_source_buftype will be
-                -- reset to nil upon TabEnter)
-                if state.prev_source_buftype and state.prev_source_buftype ~= '' and vim.b[event.buf].last_changedtick == vim.b[event.buf].changedtick then
-                    return
-                end
-                create_outline_buffer()
-                debounce_request(event.buf)
-                if state.follow_cursor then
-                    enable_follow_cursor()
-                end
+            if not state.win or not vim.api.nvim_win_is_valid(state.win) then
+                return
+            end
+            -- Skip refreshing outline if the source buffer is a special buffer and it does not have
+            -- a specific provider
+            local cur_filetype = vim.bo[bufnr].filetype
+            local cur_buftype = vim.bo[bufnr].buftype
+            local sp_provider = special_provider[cur_filetype]
+            if cur_buftype ~= '' and sp_provider == nil then
+                return
+            end
+            -- Skip refreshing outline if the source buffer was switched back from a special buffer
+            -- that has no specific provider and hasn't been modified. (prev_buf_state will be reset
+            -- to nil upon TabEnter)
+            local prev_buf_state = state.prev_buf_state or {}
+            local prev_filetype, prev_buftype = prev_buf_state.filetype, prev_buf_state.buftype
+            if
+                next(prev_buf_state) ~= nil
+                and prev_buftype ~= ''
+                and special_provider[prev_filetype] == nil
+                and vim.b[bufnr].last_changedtick == vim.b[bufnr].changedtick
+            then
+                return
+            end
+
+            -- If switching from a normal buffer to a special buffer that has its specific provider,
+            -- store the provider of the normal buffer later restore.
+            if prev_buftype == '' and sp_provider ~= nil then
+                state.prev_provider = state.provider
+            end
+
+            state.provider = sp_provider or state.prev_provider
+
+            state.source_bufnr = bufnr
+            create_outline_buffer()
+            debounce_request(bufnr)
+            if state.follow_cursor then
+                enable_follow_cursor()
             end
         end,
     })
@@ -701,8 +804,15 @@ local function set_autocmd()
     vim.api.nvim_create_autocmd({ 'BufLeave' }, {
         group = group,
         callback = function(event)
-            vim.b[event.buf].last_changedtick = vim.b[event.buf].changedtick
-            states[tab].prev_source_buftype = vim.bo[event.buf].buftype
+            local bufnr = event.buf
+            -- Before switching to another buffer, record the state of the current buffer.
+            -- It's used to determine whether to refresh the outline after switching buffer. See
+            -- BufEnter autocmd above.
+            vim.b[bufnr].last_changedtick = vim.b[bufnr].changedtick
+            states[tab].prev_buf_state = {
+                filetype = vim.bo[bufnr].filetype,
+                buftype = vim.bo[bufnr].buftype,
+            }
         end,
     })
 
@@ -890,8 +1000,11 @@ vim.api.nvim_create_autocmd({ 'VimEnter', 'TabEnter' }, {
                 provider = 'lsp', -- default to lsp provider
             }
         end
+        if vim.bo.filetype == 'man' then
+            states[tab].provider = 'man'
+        end
         -- Reset it upon entering a tab
-        states[tab].prev_source_buftype = nil
+        states[tab].prev_buf_state = nil
     end,
 })
 

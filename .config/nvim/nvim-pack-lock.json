@@ -5,8 +5,12 @@
       "src": "https://github.com/L3MON4D3/LuaSnip"
     },
     "SchemaStore.nvim": {
-      "rev": "55874e697fd70ce1064eb96ff5c53c9bd6172324",
+      "rev": "9b6a3ab14cecc7da9f3aa4fa0ae2a7390748aca5",
       "src": "https://github.com/b0o/SchemaStore.nvim"
+    },
+    "aerial.nvim": {
+      "rev": "7a6a42791eb2b54a7115c7db4488981f93471770",
+      "src": "https://github.com/stevearc/aerial.nvim"
     },
     "blink.cmp": {
       "rev": "b19413d214068f316c78978b08264ed1c41830ec",
@@ -72,6 +76,10 @@
       "rev": "803353450c374192393f5387b6a0176d0972b848",
       "src": "https://github.com/kyazdani42/nvim-web-devicons"
     },
+    "outline.nvim": {
+      "rev": "ead1820d49c8e79ce89cab1c2c318981b695c9d2",
+      "src": "https://github.com/hedyhli/outline.nvim"
+    },
     "quickfix-reflector.vim": {
       "rev": "6a6a9e2",
       "src": "https://github.com/stefandtw/quickfix-reflector.vim"
@@ -93,7 +101,7 @@
       "src": "https://github.com/Wansmer/treesj"
     },
     "undotree": {
-      "rev": "178d19e00a643f825ea11d581b1684745d0c4eda",
+      "rev": "fc28931fbfba66ab75d9af23fe46ffbbb9de6e8c",
       "src": "https://github.com/mbbill/undotree"
     },
     "vim-after-object": {

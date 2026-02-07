@@ -1,66 +1,8 @@
------------------------------------
--- The support finders are as below
------------------------------------
+-- 1. To see all the supported finders and default keymaps, check keymaps below
+-- 2. INSERT mode completion: use <C-x><C-f> to complete paths
+-- 3. Supports vim.ui.select
 
--- <Leader>fr : Resume
-
--- <Leader>ff : Files
--- <Leader>fo : Old files
--- <Leader>f. : Files for my dotfiles
--- <Leader>fb : Buffers
--- <C-/> (i.e., <C-_>) : Buffers and MRU
-
--- <Leader>f/ : Search history
--- <Leader>f: : Command history
-
--- <Leader>fm : Marks
--- <Leader>ft : Tabs
--- <Leader>fa : Argument list
--- <Leader>fh : Helptags
--- <Leader>fc : Commands
--- <Leader>f" : Registers
-
--- <Leader>fz : Zoxide
-
--- <Leader>fq : Quickfix list items
--- <Leader>fl : Location list items
--- <Leader>fQ : Quickfix list history
--- <Leader>fL : Location list history
-
--- <C-g>      : Live grep
--- <Leader>gv : Live grep in my nvim config
--- <Leader>g* : Grep for the current word/selection
--- g/         : Live grep in current buffer
-
--- gO         : LSP document symbols
--- gr/        : LSP workspace symbols
--- <Leader>ld : LSP definitions
--- <Leader>lr : LSP references
--- <Leader>li : LSP implementations
--- <Leader>lD : LSP declarations
--- <Leader>lt : LSP type definitions
-
--- <Leader>fd : Diagnostics (document)
--- <Leader>fD : Diagnostics (workspace)
-
--- <C-p>      : Git files
--- ,fs        : Git status
--- ,fb        : Git branches
--- ,fc        : Git commits (buffer)
--- ,fC        : Git commits
--- ,fh        : Git stash
--- ,ft        : Git worktrees
-
--- gO         : Tags (buffer)
--- gr/        : Tags
-
--- INSERT mode completion
--- <C-x><C-f> : Complete paths
-
--- vim.ui.select
-
---
--- Template to add a new finder
+-- Steps to add a new finder:
 --
 -- 1. Use Lua table as fzf's input
 --
@@ -102,13 +44,17 @@
 --     fzf(spec, nil, bash_cmd)
 -- end
 --
--- To bind it to a keymap:
+-- 3. Expose an API
 --
--- vim.keymap.set('n', '<Leader>ff', function()
+-- function M.demo_finder()
 --     run(demo_finder)
--- end)
+-- end
 --
--- Now, this finder can be brought up by the keymap and also it supports resume by <Leader>fr
+-- 4. Set a keymap: add a new entry to the keymaps table
+--
+-- ['<Leader>ff'] = 'demo_finder'
+--
+-- Now, this new finder can be brought up by the keymap, or by the API.
 --
 
 local qf = require('rockyz.quickfix')
@@ -121,6 +67,8 @@ local ui = require('rockyz.utils.ui')
 local api = require('rockyz.utils.api')
 local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
 local mru = require('rockyz.mru')
+
+local M = {}
 
 local theme = vim.g.fzf_theme or 'default'
 
@@ -187,6 +135,66 @@ local config = {
             }
         end,
     },
+}
+
+local keymaps = {
+    fr = 'resume',
+
+    ['<Leader>ff'] = 'files',
+    ['<Leader>fo'] = 'old_files',
+    ['<Leader>f.'] = 'dotfiles',
+    ['<Leader>fb'] = 'buffers',
+    ['<C-_>'] = 'mru', -- i.e., <C-/>
+
+    ['<Leader>f/'] = 'search_history',
+    ['<Leader>f:'] = 'command_history',
+
+    ['<Leader>fm'] = 'marks',
+    ['<Leader>ft'] = 'tabs',
+    ['<Leader>fa'] = 'arglist',
+    ['<Leader>fh'] = 'helptags',
+    ['<Leader>fc'] = 'commands',
+    ['<Leader>f"'] = 'registers',
+
+    ['<Leader>fz'] = 'zoxide',
+
+    ['<Leader>fq'] = 'quickfix_list_items',
+    ['<Leader>fl'] = 'location_list_items',
+    ['<Leader>fQ'] = 'quickfix_list_history',
+    ['<Leader>fL'] = 'location_list_history',
+
+    ['<C-g><C-g>'] = 'live_grep',
+    ['<C-g>v'] = 'live_grep_nvim_config',
+    ['<C-g>*'] = {
+        mode = { 'n', 'x' },
+        action = 'grep_current_word',
+    },
+    ['<C-g>/'] = 'live_grep_current_buffer',
+
+    ['<C-l>s'] = 'lsp_document_symbol',
+    ['<C-l>S'] = 'lsp_workspace_symbol',
+    ['<C-l>d'] = 'lsp_definition',
+    ['<C-l>r'] = 'lsp_references',
+    ['<C-l>i'] = 'lsp_implementation',
+    ['<C-l>D'] = 'lsp_declaration',
+    ['<C-l>t'] = 'lsp_type_definition',
+
+    ['<Leader>fd'] = 'document_diagnostics',
+    ['<Leader>fD'] = 'workspace_diagnostics',
+
+    ['<C-p>'] = 'git_files',
+    [',fs'] = 'git_status',
+    [',fb'] = 'git_branches',
+    [',fc'] = {
+        mode = { 'n', 'x' },
+        action = 'git_buffer_commits',
+    },
+    [',fC'] = 'git_commits',
+    [',fh'] = 'git_stash',
+    [',ft'] = 'git_worktrees',
+
+    ['<Leader>fg'] = 'buffer_tags',
+    ['<Leader>fG'] = 'tags',
 }
 
 vim.g.fzf_layout = config[theme].layout
@@ -431,13 +439,13 @@ local function run(finder, from_resume)
 end
 
 -- Resume
-vim.keymap.set('n', '<Leader>fr', function()
+function M.resume()
     if not cached_finder then
         notify.warn('No resume finder available!')
         return
     end
     run(cached_finder, true)
-end)
+end
 
 -- Helper function for sink* to handle selected files
 -- ENTER/CTRL-X/CTRL-V/CTRL-T to open files
@@ -489,9 +497,9 @@ local function files(from_resume)
     fzf(spec, nil, fd_cwd)
 end
 
-vim.keymap.set('n', '<Leader>ff', function()
+function M.files()
     run(files)
-end)
+end
 
 -- Old files
 local function old_files(from_resume)
@@ -533,9 +541,9 @@ local function old_files(from_resume)
     fzf(spec, handle_contents)
 end
 
-vim.keymap.set('n', '<Leader>fo', function()
+function M.old_files()
     run(old_files)
-end)
+end
 
 -- Find files for my dotfiles
 local function dot_files(from_resume)
@@ -574,9 +582,9 @@ local function dot_files(from_resume)
     fzf(spec, nil, git_cmd)
 end
 
-vim.keymap.set('n', '<Leader>f.', function()
+function M.dotfiles()
     run(dot_files)
-end)
+end
 
 -- Buffers
 local function buffers(from_resume)
@@ -683,9 +691,9 @@ local function buffers(from_resume)
     fzf(spec, handle_contents)
 end
 
-vim.keymap.set('n', '<Leader>fb', function()
+function M.buffers()
     run(buffers)
-end)
+end
 
 -- Buffers and MRU
 -- (Shout out to @kevinhwang91)
@@ -809,9 +817,9 @@ local function bufs_and_mru(from_resume)
     fzf(spec, handle_contents)
 end
 
-vim.keymap.set('n', '<C-_>', function()
+function M.mru()
     run(bufs_and_mru)
-end)
+end
 
 ---Helper function to get history
 local function get_history(name)
@@ -869,9 +877,9 @@ local function search_history(from_resume)
     fzf(spec, handle_contents)
 end
 
-vim.keymap.set('n', '<Leader>f/', function()
+function M.search_history()
     run(search_history)
-end)
+end
 
 -- Command history
 local function command_history(from_resume)
@@ -912,9 +920,9 @@ local function command_history(from_resume)
     fzf(spec, handle_contents)
 end
 
-vim.keymap.set('n', '<Leader>f:', function()
+function M.command_history()
     run(command_history)
-end)
+end
 
 -- Marks
 local function marks(from_resume)
@@ -1027,9 +1035,9 @@ local function marks(from_resume)
     fzf(spec, handle_contents)
 end
 
-vim.keymap.set('n', '<Leader>fm', function()
+function M.marks()
     run(marks)
-end)
+end
 
 -- Tabs
 local function tabs(from_resume)
@@ -1122,9 +1130,9 @@ local function tabs(from_resume)
     fzf(spec, handle_contents)
 end
 
-vim.keymap.set('n', '<Leader>ft', function()
+function M.tabs()
     run(tabs)
-end)
+end
 
 -- Argument list
 local function args(from_resume)
@@ -1194,9 +1202,9 @@ local function args(from_resume)
     fzf(spec, handle_contents)
 end
 
-vim.keymap.set('n', '<Leader>fa', function()
+function M.arglist()
     run(args)
-end)
+end
 
 -- Helptags
 local function helptags(from_resume)
@@ -1313,9 +1321,9 @@ local function helptags(from_resume)
     fzf(spec, handle_contents)
 end
 
-vim.keymap.set('n', '<Leader>fh', function()
+function M.helptags()
     run(helptags)
-end)
+end
 
 -- Commands
 local function commands(from_resume)
@@ -1436,9 +1444,9 @@ local function commands(from_resume)
     fzf(spec, handle_contents)
 end
 
-vim.keymap.set('n', '<Leader>fc', function()
+function M.commands()
     run(commands)
-end)
+end
 
 -- Registers
 local function registers(from_resume)
@@ -1508,9 +1516,9 @@ local function registers(from_resume)
     fzf(spec, handle_contents)
 end
 
-vim.keymap.set('n', '<Leader>f"', function()
+function M.registers()
     run(registers)
-end)
+end
 
 -- Zoxide
 local function zoxide(from_resume)
@@ -1567,9 +1575,9 @@ local function zoxide(from_resume)
     fzf(spec, handle_contents)
 end
 
-vim.keymap.set('n', '<Leader>fz', function()
+function M.zoxide()
     run(zoxide)
-end)
+end
 
 --
 -- Find entries in quickfix and location list
@@ -1716,14 +1724,14 @@ local function loclist_items(from_resume)
 end
 
 -- Quickfix list
-vim.keymap.set('n', '<Leader>fq', function()
+function M.quickfix_list_items()
     run(quickfix_items)
-end)
+end
 
 -- Location list
-vim.keymap.set('n', '<Leader>fl', function()
+function M.location_list_items()
     run(loclist_items)
-end)
+end
 
 --
 -- Quickfix list history and location list history
@@ -1819,14 +1827,14 @@ local function loclist_history(from_resume)
 end
 
 -- List all the quickfix lists and switch to the selected one
-vim.keymap.set('n', '<Leader>fQ', function()
+function M.quickfix_list_history()
     run(quickfix_history)
-end)
+end
 
 -- List all the location lists for the current window and switch to the selected one
-vim.keymap.set('n', '<Leader>fL', function()
+function M.location_list_history()
     run(loclist_history)
-end)
+end
 
 --
 -- Grep
@@ -1994,9 +2002,9 @@ local function live_grep(from_resume)
     fzf(spec, nil, rg_cmd)
 end
 
-vim.keymap.set('n', '<C-g>', function()
+function M.live_grep()
     run(live_grep)
-end)
+end
 
 -- Live grep in Neovim config
 local function live_grep_nvim_config(from_resume)
@@ -2012,9 +2020,9 @@ local function live_grep_nvim_config(from_resume)
     fzf(spec, nil, rg_cmd)
 end
 
-vim.keymap.set('n', '<Leader>gv', function()
+function M.live_grep_nvim_config()
     run(live_grep_nvim_config)
-end)
+end
 
 -- Live grep for current buffer
 local function live_grep_cur_buffer(from_resume)
@@ -2036,9 +2044,9 @@ local function live_grep_cur_buffer(from_resume)
     fzf(spec, nil, rg_cmd)
 end
 
-vim.keymap.set('n', 'g/', function()
+function M.live_grep_current_buffer()
     run(live_grep_cur_buffer)
-end)
+end
 
 -- Grep for current word or VISUAL selection
 local cached_grep_word_rg_query = '' -- cache rg query for fzf resume
@@ -2090,9 +2098,9 @@ local function grep_cur_word(from_resume)
     fzf(spec, nil, rg_cmd)
 end
 
-vim.keymap.set({ 'n', 'x' }, '<Leader>g*', function()
+function M.grep_current_word()
     run(grep_cur_word)
-end)
+end
 
 --
 -- LSP
@@ -2331,12 +2339,12 @@ local function lsp_symbols(method, params, title, symbol_query, from_resume)
 end
 
 -- LSP document symbols
-vim.keymap.set('n', 'gO', function()
+function M.lsp_document_symbol()
     run(function(from_resume)
         local params = { textDocument = vim.lsp.util.make_text_document_params() }
         lsp_symbols('textDocument/documentSymbol', params, 'LSP Document Symbols', nil, from_resume)
     end)
-end)
+end
 
 -- Resume of workspace_symbols finder needs the predefined symbol query
 local cached_symbol_query = ''
@@ -2346,13 +2354,13 @@ local function workspace_symbols_resume(from_resume)
 end
 
 -- LSP workspace symbols
-vim.keymap.set('n', 'gr/', function()
+function M.lsp_workspace_symbol()
     local symbol_query = vim.fn.input('Query: ')
     cached_symbol_query = symbol_query
     cached_finder = workspace_symbols_resume
     local params = { query = symbol_query }
     lsp_symbols('workspace/symbol', params, 'LSP Workspace Symbols', symbol_query)
-end)
+end
 
 --
 -- LSP definitions, references, implementations, declarations, type definitions
@@ -2476,35 +2484,35 @@ local function lsp_locations(method, title, from_resume)
 end
 
 -- LSP definitions
-vim.keymap.set('n', '<Leader>ld', function()
+function M.lsp_definition()
     run(function(from_resume)
         lsp_locations('textDocument/definition', 'LSP Definitions', from_resume)
     end)
-end)
+end
 -- LSP references
-vim.keymap.set('n', '<Leader>lr', function()
+function M.lsp_references()
     run(function(from_resume)
         lsp_locations('textDocument/references', 'LSP References', from_resume)
     end)
-end)
+end
 -- LSP implementations
-vim.keymap.set('n', '<Leader>li', function()
+function M.lsp_implementation()
     run(function(from_resume)
         lsp_locations('textDocument/implementation', 'LSP Implementations', from_resume)
     end)
-end)
+end
 -- LSP declarations
-vim.keymap.set('n', '<Leader>lD', function()
+function M.lsp_declaration()
     run(function(from_resume)
         lsp_locations('textDocument/declaration', 'LSP Declarations', from_resume)
     end)
-end)
+end
 -- LSP type definitions
-vim.keymap.set('n', '<Leader>lt', function()
+function M.lsp_type_definition()
     run(function(from_resume)
         lsp_locations('textDocument/typeDefinition', 'LSP Type Definitions', from_resume)
     end)
-end)
+end
 
 --
 -- Diagnostics
@@ -2635,17 +2643,17 @@ local function diagnostics(from_resume, opts)
 end
 
 -- Diagnostics (document)
-vim.keymap.set('n', '<Leader>fd', function()
+function M.document_diagnostics()
     run(function(from_resume)
         diagnostics(from_resume)
     end)
-end)
+end
 -- Diagnostics (workspace)
-vim.keymap.set('n', '<Leader>fD', function()
+function M.workspace_diagnostics()
     run(function(from_resume)
         diagnostics(from_resume, { all = true })
     end)
-end)
+end
 
 --
 -- Git
@@ -2715,9 +2723,9 @@ local function git_files(from_resume)
     fzf(spec, nil, git_cmd)
 end
 
-vim.keymap.set('n', '<C-p>', function()
+function M.git_files()
     run(git_files)
-end)
+end
 
 -- Git status
 local function git_status(from_resume)
@@ -2827,9 +2835,9 @@ local function git_status(from_resume)
     fzf(spec, nil, git_cmd)
 end
 
-vim.keymap.set('n', ',fs', function()
+function M.git_status()
     run(git_status)
-end)
+end
 
 -- Git branches
 local function git_branches(from_resume)
@@ -2929,9 +2937,9 @@ local function git_branches(from_resume)
     fzf(spec, handle_contents)
 end
 
-vim.keymap.set('n', ',fb', function()
+function M.git_branches()
     run(git_branches)
-end)
+end
 
 -- Git commits
 
@@ -3052,9 +3060,9 @@ local function git_commits(from_resume)
     fzf(spec, nil, git_cmd)
 end
 
-vim.keymap.set('n', ',fC', function()
+function M.git_commits()
     run(git_commits)
-end)
+end
 
 -- Git commit (buffer)
 local function git_buf_commit(from_resume)
@@ -3114,9 +3122,9 @@ local function git_buf_commit(from_resume)
     fzf(spec, nil, git_cmd)
 end
 
-vim.keymap.set({ 'n', 'x' }, ',fc', function()
+function M.git_buffer_commits()
     run(git_buf_commit)
-end)
+end
 
 -- Git stash
 local function git_stash(from_resume)
@@ -3206,9 +3214,9 @@ local function git_stash(from_resume)
     fzf(spec, handle_contents)
 end
 
-vim.keymap.set('n', ',fh', function()
+function M.git_stash()
     run(git_stash)
-end)
+end
 
 -- Git worktrees
 local function git_worktrees(from_resume)
@@ -3255,9 +3263,9 @@ local function git_worktrees(from_resume)
     fzf(spec, nil, git_cmd)
 end
 
-vim.keymap.set('n', ',ft', function()
+function M.git_worktrees()
     run(git_worktrees)
-end)
+end
 
 -- In each line of a tag file, the tagname may contain whitespaces and \t is the delimiter to
 -- separate fields. So we need a special string (different from whitespace and \t) as fzf's
@@ -3364,9 +3372,9 @@ local function tags(from_resume)
     fzf(spec, handle_contents)
 end
 
-vim.keymap.set('n', 'gr/', function()
+function M.tags()
     run(tags)
-end)
+end
 
 -- Buffer tags
 local function buffer_tags(from_resume)
@@ -3460,9 +3468,26 @@ local function buffer_tags(from_resume)
     fzf(spec, handle_contents)
 end
 
-vim.keymap.set('n', 'gO', function()
+function M.buffer_tags()
     run(buffer_tags)
-end)
+end
+
+local function set_keymaps()
+    for key, finder in pairs(keymaps) do
+        if type(finder) == 'string' then
+            vim.keymap.set('n', key, function()
+                M[finder]()
+            end)
+        elseif type(finder) == 'table' then
+            local mode = finder.mode
+            local action = finder.action
+            vim.keymap.set(mode, key, function()
+                M[action]()
+            end)
+        end
+    end
+end
+set_keymaps()
 
 --
 -- INSERT mode completion
@@ -3576,8 +3601,6 @@ vim.ui.select = select
 --
 -- APIs
 --
-
-local M = {}
 
 function M.ansi(str, highlight)
     return ansi_string(str, highlight)

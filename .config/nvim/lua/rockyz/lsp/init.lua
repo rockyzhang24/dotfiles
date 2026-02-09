@@ -93,22 +93,51 @@ local function on_attach(client, bufnr)
     --
 
     local opts = { buffer = bufnr }
-    vim.keymap.set('n', 'gd', vim.lsp.buf.definition, opts)
-    vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, opts)
-    vim.keymap.set('n', 'grt', vim.lsp.buf.type_definition, opts)
-    vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, opts)
-    vim.keymap.set('n', 'grr', vim.lsp.buf.references, { buffer = bufnr, nowait = true })
+
+    if client:supports_method('textDocument/references') then
+        vim.keymap.set('n', 'grr', '<Cmd>lua require("rockyz.fzf").lsp_references()<CR>', opts)
+    end
+
+    if client:supports_method('textDocument/typeDefinition') then
+        vim.keymap.set('n', 'gy', '<Cmd>lua require("rockyz.fzf").lsp_type_definition()<CR>', opts)
+    end
+
+    if client:supports_method('textDocument/definition') then
+        vim.keymap.set('n', 'gd', '<Cmd>lua require("rockyz.fzf").lsp_definition()<CR>', opts)
+    end
+
+    if client:supports_method('textDocument/declaration') then
+        vim.keymap.set('n', 'gD', '<Cmd>lua require("rockyz.fzf").lsp_declaration()<CR>', opts)
+    end
+
+    if client:supports_method('textDocument/implementation') then
+        vim.keymap.set('n', 'gi', '<Cmd>lua require("rockyz.fzf").lsp_implementation()<CR>', opts)
+    end
+
+    if client:supports_method('textDocument/signatureHelp') then
+        vim.keymap.set('i', '<C-s>', function()
+            -- Close the completion menu first (if open) that may overlap the signature window
+            if require('blink.cmp.completion.windows.menu').win:is_open() then
+                require('blink.cmp').hide()
+            end
+            vim.lsp.buf.signature_help()
+        end, opts)
+    end
+
     vim.keymap.set('n', 'K', vim.lsp.buf.hover, opts)
     vim.keymap.set('n', 'grn', vim.lsp.buf.rename, opts)
-    -- Code actions for the current line.
-    -- In order to get the code actions only for the cursor position, the diagnostics overlap the
-    -- cursor position could be passed as part of the parameter to vim.lsp.buf.code_action(). However,
-    -- currently the code action function doesn't offer a way to extract per client diagnostics, i.e.,
-    -- all the diagnostics at the cursor position will be sent to each server.
-    --
-    -- TODO: modify this keymap to only get the code actions for the current cursor position after the
-    -- API is fixed.
-    vim.keymap.set({ 'n', 'x' }, 'gra', vim.lsp.buf.code_action, opts)
+
+    if client:supports_method('textDocument/codeAction') then
+        -- Code actions for the current line.
+        -- In order to get the code actions only for the cursor position, the diagnostics overlap the
+        -- cursor position could be passed as part of the parameter to vim.lsp.buf.code_action(). However,
+        -- currently the code action function doesn't offer a way to extract per client diagnostics, i.e.,
+        -- all the diagnostics at the cursor position will be sent to each server.
+        --
+        -- TODO: modify this keymap to only get the code actions for the current cursor position after the
+        -- API is fixed.
+        vim.keymap.set({ 'n', 'x' }, 'gra', vim.lsp.buf.code_action, opts)
+    end
 
     -- Diagnostics
     vim.keymap.set('n', 'gl', vim.diagnostic.open_float, opts)
@@ -160,30 +189,45 @@ local function on_attach(client, bufnr)
     -- end, opts)
 
     -- Inlay hints
-    if vim.g.inlay_hint_enabled then
-        vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
+    if client:supports_method('textDocument/inlayHint') then
+        if vim.g.inlay_hint_enabled then
+            vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
+        end
+        -- Toggle inlay hints
+        -- (1). Buffer locally
+        vim.keymap.set('n', '\\h', function()
+            local is_enabled = vim.lsp.inlay_hint.is_enabled({ bufnr = 0 })
+            vim.b.inlay_hint_enabled = not is_enabled
+            vim.lsp.inlay_hint.enable(vim.b.inlay_hint_enabled, { bufnr = 0 })
+            vim.notify(
+                string.format(
+                    'Inlay hints (buffer-local) is %s',
+                    vim.b.inlay_hint_enabled and 'enabled' or 'disabled'
+                ),
+                vim.log.levels.INFO
+            )
+        end, opts)
+        -- (2). Globally
+        vim.keymap.set('n', '\\H', function()
+            vim.g.inlay_hint_enabled = not vim.g.inlay_hint_enabled
+            vim.lsp.inlay_hint.enable(vim.g.inlay_hint_enabled)
+            vim.notify(
+                string.format(
+                    'Inlay hints (global) is %s',
+                    vim.g.inlay_hint_enabled and 'enabled' or 'disabled'
+                ),
+                vim.log.levels.INFO
+            )
+        end, opts)
     end
-    -- Toggle inlay hints
-    -- (1). Buffer locally
-    vim.keymap.set('n', '\\h', function()
-        local is_enabled = vim.lsp.inlay_hint.is_enabled({ bufnr = 0 })
-        vim.b.inlay_hint_enabled = not is_enabled
-        vim.lsp.inlay_hint.enable(vim.b.inlay_hint_enabled, { bufnr = 0 })
-
-        vim.notify(string.format('Inlay hints (buffer-local) is %s', vim.b.inlay_hint_enabled and 'enabled' or 'disabled'), vim.log.levels.INFO)
-    end, opts)
-    -- (2). Globally
-    vim.keymap.set('n', '\\H', function()
-        vim.g.inlay_hint_enabled = not vim.g.inlay_hint_enabled
-        vim.lsp.inlay_hint.enable(vim.g.inlay_hint_enabled)
-        vim.notify(string.format('Inlay hints (global) is %s', vim.g.inlay_hint_enabled and 'enabled' or 'disabled'), vim.log.levels.INFO)
-    end, opts)
 
     -- Lsp progress
     require('rockyz.lsp.progress')
 
-    -- Show a lightbulb when code actions are available under the cursor
-    require('rockyz.lsp.lightbulb')
+    -- Lightbulb
+    if client:supports_method('textDocument/codeAction') then
+        require('rockyz.lsp.lightbulb')
+    end
 
     -- Code lens
     -- if client:supports_method('textDocument/codeAction') then

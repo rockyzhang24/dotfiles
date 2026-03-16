@@ -229,27 +229,13 @@ local function on_attach(client, bufnr)
         require('rockyz.lsp.lightbulb')
     end
 
-    -- Code lens
-    -- if client:supports_method('textDocument/codeAction') then
-    --     local codelens_group = vim.api.nvim_create_augroup('rockyz.lsp.codelens', { clear = true })
-    --     vim.api.nvim_create_autocmd("LspProgress", {
-    --         group = codelens_group,
-    --         pattern = { 'begin', 'end' },
-    --         callback = function(ev)
-    --             if ev.buf == bufnr then
-    --                 vim.lsp.codelens.refresh({ bufnr = bufnr })
-    --             end
-    --         end,
-    --     })
-    --     vim.api.nvim_create_autocmd({ "BufEnter", "TextChanged", "InsertLeave" }, {
-    --         group = codelens_group,
-    --         buffer = bufnr,
-    --         callback = function()
-    --             vim.lsp.codelens.refresh({ bufnr = bufnr })
-    --         end,
-    --     })
-    --     vim.lsp.codelens.refresh({ bufnr = bufnr })
-    -- end
+    if client:supports_method('textDocument/codeLens') then
+        vim.lsp.codelens.enable()
+        -- Toggle codelens
+        vim.keymap.set('n', '\\cl', function()
+            vim.lsp.codelens.enable(not vim.lsp.codelens.is_enabled())
+        end, opts)
+    end
 
     -- Document highlight
     if client:supports_method('textDocument/documentHighlight') then

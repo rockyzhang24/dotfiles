@@ -27,7 +27,7 @@ local tab
 local states = {}
 
 local config = {
-    toggle = '\\s',
+    toggle = '\\ss',
     keymaps = {
         -- Local keymaps available only in outline buffer
         ['local'] = {
@@ -39,7 +39,7 @@ local config = {
         -- Available in both normal buffer and outline buffer
         global = {
             gs = 'reveal', -- reveal the symbol in outline buffer
-            ['\\c'] = 'toggle_follow', -- follow cursor
+            ['\\sc'] = 'toggle_follow', -- follow cursor
             ['<Leader>sr'] = 'refresh', -- update outline
             ['<Leader>st'] = 'switch_to_ctags', -- switch to ctags provider
             ['<Leader>sl'] = 'switch_to_lsp', -- switch to LSP provider

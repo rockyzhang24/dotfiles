@@ -18,6 +18,18 @@ vim.keymap.set('n', 'z=', '<Cmd>setlocal spell<CR>z=')
 vim.keymap.set('x', 'x', '"_d') -- for copy and delete use v_d
 vim.keymap.set('n', 'z.', ':silent lockmarks update ++p<CR>') -- Preserve '[ '] on :write
 
+-- Argument list
+-- Reference: https://jkrl.me/vim/2025/05/28/nvim-arglist.html
+vim.keymap.set('n', '<Leader>al', '<C-l><Cmd>args<CR>') -- list files in arglist
+vim.keymap.set('n', '<Leader>ag', function() -- jump to the [count]th file, or the current one without [count]
+    local count = vim.v.count
+    local prefix = count > 0 and tostring(count) or ''
+    return ':<C-u>' .. prefix .. 'argu|args<CR><Esc>'
+end, { expr = true })
+vim.keymap.set('n', '<Leader>aa', '<Cmd>$arge %<bar>argded<bar>args<CR>') -- add current file to arglist
+vim.keymap.set('n', '<Leader>ad', '<Cmd>argd %<bar>args<CR>') -- delete
+vim.keymap.set('n', '<Leader>ac', '<Cmd>%argd<CR><C-l>') -- clear (i.e., delete all)
+
 vim.keymap.set('n', 'zt', function()
     vim.cmd('normal! ' .. (vim.v.count > 0 and vim.v.count or '') .. 'zt')
 end)
@@ -586,25 +598,35 @@ end
 -- TODO: count doesn't work with some commands such as :next, :tprevious, etc. See #30641
 
 -- Argument list
+
+-- Make arglist navigation support wrapping
+local function nav_arglist(count)
+    local arglen = vim.fn.argc()
+    if arglen == 0 then
+        return
+    end
+    local next = (vim.fn.argidx() + count) % arglen
+    if next < 0 then
+        next = next + arglen
+    end
+    vim.cmd((math.floor(next + 1)) .. 'argu')
+end
+
 vim.keymap.set('n', '[a', function()
-    cmd({ cmd = 'previous', count = vim.v.count1 })
+    nav_arglist(vim.v.count1 * -1)
+    vim.cmd('args')
 end)
 vim.keymap.set('n', ']a', function()
-    cmd({ cmd = 'next', range = { vim.v.count1 } })
+    nav_arglist(vim.v.count1)
+    vim.cmd('args')
 end)
 vim.keymap.set('n', '[A', function()
-    if vim.v.count ~= 0 then
-        cmd({ cmd = 'argument', count = vim.v.count })
-    else
-        cmd({ cmd = 'first' })
-    end
+    vim.cmd('first')
+    vim.cmd('args')
 end)
 vim.keymap.set('n', ']A', function()
-    if vim.v.count ~= 0 then
-        cmd({ cmd = 'argument', count = vim.v.count })
-    else
-        cmd({ cmd = 'last' })
-    end
+    vim.cmd('last')
+    vim.cmd('args')
 end)
 -- Buffers
 vim.keymap.set('n', '[b', function()

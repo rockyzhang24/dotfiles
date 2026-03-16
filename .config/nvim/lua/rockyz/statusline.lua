@@ -190,6 +190,10 @@ function M.filename()
     return name .. size .. (#symbols > 0 and table.concat(symbols, '') or '')
 end
 
+function M.arglist()
+    return '%-13a'
+end
+
 ----------------
 -- Right section
 ----------------
@@ -359,6 +363,7 @@ function M.render()
         M.cscope(120),
         '%=',
         M.filename(),
+        M.arglist(),
         '%=',
         M.search(),
         M.diagnostic(),

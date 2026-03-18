@@ -583,6 +583,15 @@ vim.api.nvim_create_autocmd({ 'DiagnosticChanged' }, {
     end,
 })
 
+-- After open a buffer in a window, clear the diagnostic marks. 'DiagnosticChanged' event won't be
+-- triggered to clear the marks if the buffer has no diagnostics.
+vim.api.nvim_create_autocmd({ 'BufWinEnter' }, {
+    group = group,
+    callback = function()
+        clear_extmarks(0, diagnostic_ns)
+    end,
+})
+
 vim.api.nvim_create_autocmd({ 'User' }, {
     group = group,
     pattern = 'GitSignsUpdate',

@@ -28,7 +28,7 @@ vim.api.nvim_create_autocmd({ 'PackChanged' }, {
             end
         end
         -- nvim-treesitter/nvim-treesitter
-        if kind == 'update' and name == 'nvim-treesitter' then
+        if name == 'nvim-treesitter' and kind == 'update' then
             if not active then
                 vim.cmd.packadd('nvim-treesitter')
             end

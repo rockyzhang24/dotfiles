@@ -163,7 +163,7 @@ local keymaps = {
     ['<Leader>fQ'] = 'quickfix_list_history',
     ['<Leader>fL'] = 'location_list_history',
 
-    ['<C-g><C-g>'] = 'live_grep',
+    ['<C-g>g'] = 'live_grep',
     ['<C-g>v'] = 'live_grep_nvim_config',
     ['<C-g>*'] = {
         mode = { 'n', 'x' },
@@ -337,7 +337,7 @@ end
 
 ---@param label string The label or a shell command to generate the label
 local function set_label(label)
-    return string.format('focus:transform-%s-label:echo ┨ %s ┠', config[theme].label_pos, label)
+    return string.format('load,focus:transform-%s-label:echo ┨ %s ┠', config[theme].label_pos, label)
 end
 
 ---Bash command to replace $HOME with tilde
@@ -2474,6 +2474,10 @@ local function lsp_locations(method, title, from_resume)
                 locations_to_entries_and_items(result or {}, ctx, all_entries, all_items)
                 remaining = remaining - 1
                 if remaining == 0 then
+                    if next(all_entries) == nil then
+                        notify.warn('[FZF LSP] No Available Results!')
+                        return
+                    end
                     write(all_entries)
                 end
             end, bufnr)

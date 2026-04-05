@@ -17,16 +17,15 @@ local tab
 ---@field jumps table Information for jump operations
 ---@field follow_cursor boolean Whether "follow cursor" is enabled
 ---@field prev_buf_state table The info of the previous buffer (e.g., its buftype, filetype, etc)
----@field provider string Can be "lsp", "ctags" or "man"
+---@field provider string Can be "lsp", "treesitter", "ctags" or "man" (specific for man page)
 ---@field prev_provider string The provider of the previous normal buffer for later restore
----@field lsp_filter_kinds string[]
----@field ctags_filter_kinds string[]
 
 ---Store per-tab outline state, indexed by tabid
 ---@type table<integer, rockyz.outline.OutlineStatePerTab>
 local states = {}
 
 local config = {
+    default_provider = 'lsp',
     toggle = '\\ss',
     keymaps = {
         -- Local keymaps available only in outline buffer
@@ -41,8 +40,9 @@ local config = {
             gs = 'reveal', -- reveal the symbol in outline buffer
             ['\\sc'] = 'toggle_follow', -- follow cursor
             ['<Leader>sr'] = 'refresh', -- update outline
-            ['<Leader>st'] = 'switch_to_ctags', -- switch to ctags provider
+            ['<Leader>sg'] = 'switch_to_ctags', -- switch to ctags provider
             ['<Leader>sl'] = 'switch_to_lsp', -- switch to LSP provider
+            ['<Leader>st'] = 'switch_to_treesitter',
             ['<Leader>sf'] = 'filter_kinds',
             ['<Leader>sc'] = 'clear_filter',
         },
@@ -290,8 +290,9 @@ local ctags_config = {
 
 ---@type table<string, string> Map from the filetype of a special buffer (i.e., buftype ~= '') to
 ---its provider name
-local special_provider = {
+local special_filetype_providers = {
     man = 'man',
+    help = 'treesitter',
 }
 
 local function create_outline_buffer()
@@ -400,7 +401,7 @@ local function set_contents(contents)
     vim.bo[state.bufnr].modifiable = false
 end
 
--- Lsp provider
+-- LSP provider
 
 local function lsp_request(bufnr)
     local method = 'textDocument/documentSymbol'
@@ -409,7 +410,7 @@ local function lsp_request(bufnr)
 
     local clients = vim.lsp.get_clients({ method = method, bufnr = bufnr })
     if not next(clients) then
-        set_contents({ string.format("No symbols found in document '%s'", filename) })
+        set_contents({ string.format("No LSP symbols found in document '%s'", filename) })
         return
     else
         set_contents({ string.format("Loading document symbols for '%s'%s", filename, icons.misc.ellipsis) })
@@ -438,6 +439,358 @@ local function lsp_request(bufnr)
             end
         end)
     end
+end
+
+-- Treesitter provider
+-- Highly inspired by aerial.nvim
+-- (https://github.com/stevearc/aerial.nvim/tree/master/lua/aerial/backends/treesitter)
+
+local function range_from_nodes(start_node, end_node)
+    local sr, sc = start_node:start()
+    local er, ec = end_node:end_()
+    return {
+        start = { line = sr, character = sc },
+        ['end'] = { line = er, character = ec },
+    }
+end
+
+local function node_from_match(match, path)
+    local ret = ((match or {})[path] or {}).node
+    if path == 'symbol' and not ret then
+        -- Backwards compatibility for old @type capture
+        ret = ((match or {}).type or {}).node
+    end
+    return ret
+end
+
+local get_parent_funcs = {
+    default = function(stack, match, node)
+        for i = #stack, 1, -1 do
+            local last_node = stack[i].node
+            if last_node == node or vim.treesitter.is_ancestor(last_node, node) then
+                return stack[i].symbol, last_node, i
+            else
+                table.remove(stack, i)
+            end
+        end
+        return nil, nil, 0
+    end,
+    help = function(stack, match, node)
+        local function get_level(_node)
+            local level_str = _node:type():match("^h(%d+)$")
+            if level_str then
+                return tonumber(level_str)
+            else
+                return 99
+            end
+        end
+        -- Fix the symbol nesting
+        local level = get_level(node)
+        for i = #stack, 1, -1 do
+            local last = stack[i]
+            if get_level(last.node) < level then
+                return last.symbol, last.node, i
+            else
+                table.remove(stack, i)
+            end
+        end
+        return nil, nil, 0
+    end,
+    markdown = function(stack, match, node)
+        local level_node = assert(node_from_match(match, "level"))
+        -- Parse the level out of e.g. atx_h1_marker
+        local level = tonumber(string.match(level_node:type(), '%d')) - 1
+        for i = #stack, 1, -1 do
+            if stack[i].symbol.level < level or stack[i].node == node then
+                return stack[i].symbol, stack[i].node, level
+            else
+                table.remove(stack, i)
+            end
+        end
+        return nil, nil, level
+    end,
+}
+get_parent_funcs.vimdoc = get_parent_funcs.help
+get_parent_funcs.tsx = get_parent_funcs.typescript
+
+local postprocess_funcs = {
+    c = function(bufnr, symbol, match)
+        local root = node_from_match(match, "root")
+        if root then
+            while
+                root
+                and not vim.tbl_contains({
+                    "identifier",
+                    "field_identifier",
+                    "qualified_identifier",
+                    "destructor_name",
+                    "operator_name",
+                }, root:type())
+            do
+                -- Search the declarator downwards until you hit the identifier
+                local next = root:field("declarator")[1]
+                if next ~= nil then
+                    root = next
+                else
+                    break
+                end
+            end
+            symbol.name = vim.treesitter.get_node_text(root, bufnr) or "<parse error>"
+            if not symbol.selection_range then
+                symbol.selection_range = range_from_nodes(root, root)
+            end
+        end
+    end,
+    cpp = function(bufnr, symbol, match)
+        if symbol.kind ~= "Function" then
+            return
+        end
+        local parent = node_from_match(match, "symbol")
+        local stop_types = { "function_definition", "declaration", "field_declaration" }
+        while parent and not vim.tbl_contains(stop_types, parent:type()) do
+            parent = parent:parent()
+        end
+        if parent then
+            for k, v in pairs(range_from_nodes(parent, parent)) do
+                symbol[k] = v
+            end
+        end
+    end,
+    ---@note Additionally processes the following captures:
+    ---      `@receiver` - extends the name to "@receiver @name"
+    go = function(bufnr, symbol, match)
+        local receiver = node_from_match(match, "receiver")
+        if receiver then
+            local receiver_text = vim.treesitter.get_node_text(receiver, bufnr) or "<parse error>"
+            symbol.name = string.format("%s %s", receiver_text, symbol.name)
+        end
+    end,
+    help = function(bufnr, symbol, match)
+        -- The name node of headers only captures the final node.
+        -- We need to get _all_ word nodes
+        local pieces = {}
+        local node = match.name.node
+        if vim.startswith(node_from_match(match, "symbol"):type(), "h") then
+            while node and node:type() == "word" do
+                local row, col = node:start()
+                table.insert(pieces, 1, vim.treesitter.get_node_text(node, bufnr))
+                node = node:prev_sibling()
+                symbol.lnum = row + 1
+                symbol.col = col
+                if symbol.selection_range then
+                    symbol.selection_range.lnum = row + 1
+                    symbol.selection_range.col = col
+                end
+            end
+            symbol.name = table.concat(pieces, " ")
+        end
+    end,
+    ---@note Additionally processes the following captures:
+    ---      `@method`, `@string`, and `@modifier` - replaces name with "@method[.@modifier] @string"
+    javascript = function(bufnr, symbol, match)
+        local method = node_from_match(match, "method")
+        local modifier = node_from_match(match, "modifier")
+        local string = node_from_match(match, "string")
+        if method and string then
+            local fn = vim.treesitter.get_node_text(method, bufnr) or "<parse error>"
+            if modifier then
+                fn = fn .. "." .. (vim.treesitter.get_node_text(modifier, bufnr) or "<parse error>")
+            end
+            local str = vim.treesitter.get_node_text(string, bufnr) or "<parse error>"
+            symbol.name = fn .. " " .. str
+        end
+    end,
+    lua = function(bufnr, symbol, match)
+        local method = node_from_match(match, "method")
+        if method then
+            local fn = vim.treesitter.get_node_text(method, bufnr) or "<parse error>"
+            if fn == "it" or fn == "describe" then
+                symbol.name = fn .. " " .. string.sub(symbol.name, 2, string.len(symbol.name) - 1)
+            end
+        end
+    end,
+    markdown = function(bufnr, symbol, match)
+        -- Strip leading whitespace
+        local prefix = symbol.name:match("^%s*")
+        if prefix ~= "" then
+            symbol.name = symbol.name:sub(prefix:len() + 1)
+            if symbol.selection_range then
+                symbol.selection_range.col = symbol.selection_range.col + prefix:len()
+            end
+        end
+    end,
+    rust = function(bufnr, symbol, match)
+        if symbol.kind == "Class" then
+            local trait_node = node_from_match(match, "trait")
+            local type = assert(node_from_match(match, "rust_type"))
+            local name = vim.treesitter.get_node_text(type, bufnr) or "<parse error>"
+            if trait_node then
+                local trait = vim.treesitter.get_node_text(trait_node, bufnr) or "<parse error>"
+                name = string.format("%s > %s", name, trait)
+            end
+            symbol.name = name
+        end
+    end,
+    ---@note Additionally processes the following captures:
+    ---      `@method`, `@string`, and `@modifier` - replaces name with "@method[.@modifier] @string"
+    typescript = function(bufnr, symbol, match)
+        local value_node = node_from_match(match, "var_type")
+        if value_node then
+            if value_node:type() == "generator_function" then
+                symbol.kind = "Function"
+            end
+            if value_node:type() == "arrow_function" then
+                symbol.kind = "Function"
+            end
+        end
+        local method = node_from_match(match, "method")
+        local modifier = node_from_match(match, "modifier")
+        local string = node_from_match(match, "string")
+        if method and string then
+            local fn = vim.treesitter.get_node_text(method, bufnr) or "<parse error>"
+            if modifier then
+                fn = fn .. "." .. (vim.treesitter.get_node_text(modifier, bufnr) or "<parse error>")
+            end
+            local str = vim.treesitter.get_node_text(string, bufnr) or "<parse error>"
+            symbol.name = fn .. " " .. str
+        end
+    end,
+}
+postprocess_funcs.vimdoc = postprocess_funcs.help
+postprocess_funcs.tsx = postprocess_funcs.typescript
+
+local function ts_get_symbols(bufnr)
+    local ft = vim.bo[bufnr].filetype
+
+    local ok, parser = pcall(vim.treesitter.get_parser, bufnr, ft)
+    if not ok or not parser then
+        return {}
+    end
+
+    local syntax_tree = parser:parse()[1]
+    if not syntax_tree then
+        return {}
+    end
+
+    local query = vim.treesitter.query.get(ft, 'outline')
+    if not query then
+        return {}
+    end
+
+    local lang = parser:lang()
+    local get_parent = get_parent_funcs[ft] or get_parent_funcs.default
+
+    local stack = {}
+    local symbols = {}
+
+    for _, matches, metadata in query:iter_matches(syntax_tree:root(), bufnr, nil, nil) do
+        local match = vim.tbl_extend('force', {}, metadata)
+        for id, nodes in pairs(matches) do
+            local node = nodes[#nodes]
+            match = vim.tbl_extend('keep', match, {
+                [query.captures[id]] = {
+                    metadata = metadata[id],
+                    node = node,
+                },
+            })
+        end
+
+        local name_match = match.name or {}
+        local selection_match = match.selection or {}
+        local symbol_node = (match.symbol or match.type or {}).node
+        if not symbol_node then
+            goto continue
+        end
+        local start_node = (match.start or {}).node or symbol_node
+        local end_node = (match['end'] or {}).node or start_node
+        local parent_symbol, parent_node, level = get_parent(stack, match, symbol_node)
+        -- Sometimes our queries will match the same node twice.
+        -- Detect that (symbol_node == parent_node), and skip dupes.
+        if symbol_node == parent_node then
+            goto continue
+        end
+        local kind = match.kind
+        if not kind then
+            vim.api.nvim_echo({
+                { string.format("[Outline] Missing 'kind' metadata in query file for language %s", lang) },
+            }, true, { err = true })
+            break
+        elseif not vim.lsp.protocol.SymbolKind[kind] then
+            vim.api.nvim_echo({
+                { string.format("[Outline] Invalid 'kind' metadata '%s' in query file for language %s", kind, lang) },
+            }, true, { err = true })
+            break
+        end
+        local range = range_from_nodes(start_node, end_node)
+        local selection_range
+        if selection_match.node then
+            selection_range = range_from_nodes(selection_match.node, selection_match.node)
+        end
+        local name
+        if name_match.node then
+            name = vim.treesitter.get_node_text(name_match.node, bufnr, name_match) or '<parse error>'
+            if not selection_range then
+                selection_range = range_from_nodes(name_match.node, name_match.node)
+            end
+        else
+            name = '<Anonymous>'
+        end
+
+        -- LSP symbol (lsp.DocumentSymbol)
+        local symbol = {
+            kind = kind,
+            name = name,
+            range = range,
+            selectionRange = selection_range,
+            children = {},
+            -- Additional field "level" used by markdown and vimdoc (help) to construct tree
+            -- hierarchy
+            level = level,
+        }
+
+        local postprocess = postprocess_funcs[ft]
+        if postprocess then
+            postprocess(bufnr, symbol, match)
+        end
+
+        if parent_symbol then
+            table.insert(parent_symbol.children, symbol)
+        else
+            table.insert(symbols, symbol)
+        end
+
+        table.insert(stack, {
+            node = symbol_node,
+            symbol = symbol,
+        })
+
+        ::continue::
+    end
+
+    return symbols
+end
+
+local function treesitter_request(bufnr)
+    local state = states[tab]
+    -- Abort if the source buffer or provider changes
+    if
+        not state.win
+        or not vim.api.nvim_win_is_valid(state.win)
+        or bufnr ~= state.source_bufnr
+        or state.provider ~= 'treesitter'
+    then
+        return
+    end
+    local symbols = ts_get_symbols(bufnr)
+    if not symbols or not next(symbols) then
+        local filename = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(bufnr), ':t')
+        set_contents({ string.format("No Treesitter symbols found in document '%s'", filename) })
+        return
+    end
+    format_symbols(symbols)
+    set_contents(states[tab].contents)
+    apply_highlights()
+    vim.t[tab].outline_provider = 'Treesitter' -- used by winbar
 end
 
 -- Ctags provider
@@ -644,6 +997,8 @@ local function request(bufnr)
     states[tab].kinds, states[tab].contents, states[tab].highlights, states[tab].jumps = {}, {}, {}, {}
     if state.provider == 'lsp' then
         lsp_request(bufnr)
+    elseif state.provider == 'treesitter' then
+        treesitter_request(bufnr)
     elseif state.provider == 'ctags' then
         ctags_request(bufnr)
     elseif state.provider == 'man' then
@@ -768,12 +1123,12 @@ local function set_autocmd()
             if not state.win or not vim.api.nvim_win_is_valid(state.win) then
                 return
             end
-            -- Skip refreshing outline if the source buffer is a special buffer and it does not have
-            -- a specific provider
             local cur_filetype = vim.bo[bufnr].filetype
             local cur_buftype = vim.bo[bufnr].buftype
-            local sp_provider = special_provider[cur_filetype]
-            if cur_buftype ~= '' and sp_provider == nil then
+            local special_provider = special_filetype_providers[cur_filetype]
+            -- Skip refreshing outline if the source buffer is a special buffer and it does not have
+            -- a specific provide
+            if cur_buftype ~= '' and special_provider == nil then
                 return
             end
             -- Skip refreshing outline if the source buffer was switched back from a special buffer
@@ -784,19 +1139,19 @@ local function set_autocmd()
             if
                 next(prev_buf_state) ~= nil
                 and prev_buftype ~= ''
-                and special_provider[prev_filetype] == nil
+                and special_filetype_providers[prev_filetype] == nil
                 and vim.b[bufnr].last_changedtick == vim.b[bufnr].changedtick
             then
                 return
             end
 
-            -- If switching from a normal buffer to a special buffer that has its specific provider,
-            -- store the provider of the normal buffer later restore.
-            if prev_buftype == '' and sp_provider ~= nil then
+            -- If switching from a normal buffer to a buffer that has its specific provider, store
+            -- the provider of the normal buffer for later restore.
+            if prev_buftype == '' and special_provider ~= nil then
                 state.prev_provider = state.provider
             end
 
-            state.provider = sp_provider or state.prev_provider
+            state.provider = special_provider or state.prev_provider or config.default_provider
 
             state.source_bufnr = bufnr
             create_outline_buffer()
@@ -848,6 +1203,8 @@ end
 
 local function open()
     local bufnr = vim.api.nvim_get_current_buf()
+    local ft = vim.bo[bufnr].filetype
+    states[tab].provider = special_filetype_providers[ft] or config.default_provider
     create_outline_buffer()
     local win = vim.api.nvim_open_win(states[tab].bufnr, true, {
         width = 50,
@@ -941,6 +1298,12 @@ function M.switch_to_lsp()
     debounce_request(state.source_bufnr)
 end
 
+function M.switch_to_treesitter()
+    local state = states[tab]
+    state.provider = 'treesitter'
+    debounce_request(state.source_bufnr)
+end
+
 function M.filter_kinds()
     local state = states[tab]
 
@@ -1003,11 +1366,7 @@ vim.api.nvim_create_autocmd({ 'VimEnter', 'TabEnter' }, {
                 highlights = {},
                 jumps = {},
                 follow_cursor = false,
-                provider = 'lsp', -- default to lsp provider
             }
-        end
-        if vim.bo.filetype == 'man' then
-            states[tab].provider = 'man'
         end
         -- Reset it upon entering a tab
         states[tab].prev_buf_state = nil

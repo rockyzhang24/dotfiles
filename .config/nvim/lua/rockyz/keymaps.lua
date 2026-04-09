@@ -17,6 +17,7 @@ vim.keymap.set('n', 'g:', ':lua =')
 vim.keymap.set('n', 'z=', '<Cmd>setlocal spell<CR>z=')
 vim.keymap.set('x', 'x', '"_d') -- for copy and delete use v_d
 vim.keymap.set('n', 'z.', ':silent lockmarks update ++p<CR>') -- Preserve '[ '] on :write
+vim.keymap.set('n', 'vK', '<C-\\><C-n><Cmd>help!<CR>')
 
 -- Argument list
 -- Reference: https://jkrl.me/vim/2025/05/28/nvim-arglist.html
@@ -379,9 +380,9 @@ vim.keymap.set('c', '<BS>', function()
 end, { expr = true })
 
 -- Hit <Space> to match multiline whitespaces
-vim.keymap.set('c', '<Space>', function()
-    return is_search_cmd() and '\\_s\\+' or '<Space>'
-end, { expr = true, remap = true }) -- Without remap, <Space> won't trigger abbreviations
+-- vim.keymap.set('c', '<Space>', function()
+--     return is_search_cmd() and '\\_s\\+' or '<Space>'
+-- end, { expr = true, remap = true }) -- Without remap, <Space> won't trigger abbreviations
 
 --
 -- Substitute

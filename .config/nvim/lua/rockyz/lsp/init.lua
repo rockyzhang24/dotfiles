@@ -80,6 +80,7 @@ local function on_attach(client, bufnr)
     --  * grr in NORMAL maps to vim.lsp.buf.references()
     --  * gri in NORMAL maps to vim.lsp.buf.implementation()
     --  * grt in NORMAL maps to vim.lsp.buf.type_definition()
+    --  * grx in NORMAL maps to vim.lsp.codelens.run()
     --  * gO in NORMAL maps to vim.lsp.buf.document_symbol()
     --  * grn in NORMAL maps to vim.lsp.buf.rename()
     --  * gra in NORMAL and VISUAL maps to vim.lsp.buf.code_action()
@@ -138,6 +139,20 @@ local function on_attach(client, bufnr)
         -- API is fixed.
         vim.keymap.set({ 'n', 'x' }, 'gra', vim.lsp.buf.code_action, opts)
     end
+
+    if client:supports_method 'textDocument/documentColor' then
+        vim.keymap.set({ 'n', 'x' }, 'grc', function()
+            vim.lsp.document_color.color_presentation()
+        end)
+    end
+
+    -- <M-ENTER> (insert-mode) manually triggers LSP completion
+    vim.keymap.set('i', '<M-Enter>', function()
+        vim.lsp.completion.enable(true, client.id, bufnr)
+        -- vim.notify('lsp completion: working...')
+        vim.lsp.completion.get()
+        -- vim.cmd[[redraw | echo '']]
+    end, opts)
 
     -- Diagnostics
     vim.keymap.set('n', 'gl', vim.diagnostic.open_float, opts)
@@ -229,9 +244,9 @@ local function on_attach(client, bufnr)
         require('rockyz.lsp.lightbulb')
     end
 
+    -- Codelens
     if client:supports_method('textDocument/codeLens') then
-        vim.lsp.codelens.enable()
-        -- Toggle codelens
+        -- Toggle
         vim.keymap.set('n', '\\cl', function()
             vim.lsp.codelens.enable(not vim.lsp.codelens.is_enabled())
         end, opts)
@@ -255,9 +270,6 @@ local function on_attach(client, bufnr)
             end,
         })
     end
-
-    -- Document colors (no need to check supports_method)
-    vim.lsp.document_color.enable(true, bufnr)
 end
 
 local group = vim.api.nvim_create_augroup('rockyz.lsp', { clear = true })

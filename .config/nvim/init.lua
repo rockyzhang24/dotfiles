@@ -60,3 +60,6 @@ end
 
 -- Fzf
 vim.opt.runtimepath:append(vim.env.HOME .. '/gitrepos/fzf')
+
+-- Enable the new experimental command-line features
+require('vim._core.ui2').enable({})

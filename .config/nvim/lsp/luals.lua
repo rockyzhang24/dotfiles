@@ -38,6 +38,7 @@ return {
             },
         })
     end,
+    ---@type vim.lsp.Config
     settings = {
         Lua = {
             -- Inlay hints

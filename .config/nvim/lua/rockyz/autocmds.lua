@@ -49,6 +49,19 @@ vim.api.nvim_create_autocmd('FileType', {
     end,
 })
 
+-- Treesitter highlight
+vim.api.nvim_create_autocmd('FileType', {
+    group = vim.api.nvim_create_augroup('rockyz.treesitter.highlight', { clear = true }),
+    callback = function(args)
+        local bufnr = args.buf
+        local filetype = args.match
+        local lang = vim.treesitter.language.get_lang(filetype)
+        if lang and vim.treesitter.language.add(lang) then
+            vim.treesitter.start(bufnr, lang)
+        end
+    end,
+})
+
 -- Jump to the position where you last quit (:h last-position-jump)
 vim.api.nvim_create_autocmd('BufRead', {
     group = vim.api.nvim_create_augroup('rockyz.restore_last_pos', {}),

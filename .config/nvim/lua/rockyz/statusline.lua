@@ -268,7 +268,7 @@ end
 function M.treesitter()
     local buf = vim.api.nvim_get_current_buf()
     local hl_enabled = vim.treesitter.highlighter.active[buf]
-    local has_parser = require('nvim-treesitter.parsers').has_parser()
+    local has_parser, _ = vim.treesitter.get_parser(buf)
     return not has_parser and '[%#StlComponentInactive#TS%*]'
         or string.format('[%%#%s#TS%%*]', hl_enabled and 'StlComponentOn' or 'StlComponentOff')
 end

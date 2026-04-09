@@ -95,19 +95,21 @@ local augroup = vim.api.nvim_create_augroup('rockyz.fold', { clear = true })
 vim.api.nvim_create_autocmd('LspAttach', {
     group = augroup,
     callback = function(args)
+        local bufnr = args.buf
         local client = vim.lsp.get_client_by_id(args.data.client_id)
         if client and client:supports_method('textDocument/foldingRange') then
             vim.wo.foldmethod = 'expr'
             vim.wo.foldexpr = 'v:lua.vim.lsp.foldexpr()'
             vim.wo.foldtext = 'v:lua.vim.lsp.foldtext()'
-            vim.w.lsp_folding_enabled = true
+            vim.b[bufnr].lsp_folding_enabled = true
         end
     end,
 })
 vim.api.nvim_create_autocmd('FileType', {
     group = augroup,
     callback = function(args)
-        if vim.bo[args.buf].filetype ~= 'bigfile' and not vim.w.lsp_folding_enabled then
+        local bufnr = args.buf
+        if vim.bo[bufnr].filetype ~= 'bigfile' and not vim.b[bufnr].lsp_folding_enabled then
             local has_parser, _ = pcall(vim.treesitter.get_parser, args.buf)
             if has_parser then
                 vim.wo.foldmethod = 'expr'

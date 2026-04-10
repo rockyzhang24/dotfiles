@@ -59,6 +59,7 @@ vim.o.softtabstop = -1 -- fall back to shiftwidth
 vim.o.spelllang = 'en_us'
 vim.o.splitbelow = true
 vim.o.splitright = true
+vim.o.switchbuf = 'usetab,newtab'
 vim.o.synmaxcol = 500
 vim.o.tabclose = 'uselast'
 vim.o.tabstop = 4

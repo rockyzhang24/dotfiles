@@ -30,10 +30,10 @@ vim.o.laststatus = 3
 vim.o.linebreak = true
 vim.o.list = true
 vim.opt.listchars = {
-    trail = '•',
+    extends = '›',
     nbsp = '.',
     precedes = '‹',
-    extends = '›',
+    trail = '•',
 }
 vim.opt.matchpairs:append('<:>')
 vim.o.mouse = 'a'

@@ -1,12 +1,16 @@
 # Font configuration
 font-family = ""
-font-family = "Iosevka Term"
+font-family = "Berkeley Mono"
+font-style = "Medium"
+font-style-italic = "Medium Oblique"
+font-style-bold = "ExtraBold"
+font-style-bold-italic = "ExtraBold Oblique"
 font-size = 14
-adjust-cell-height = 15%
-adjust-underline-position = 5
-adjust-underline-thickness = 50%
+# adjust-cell-height = 15%
+# adjust-underline-position = 5
+# adjust-underline-thickness = 50%
 
-window-title-font-family = "Iosevka Term"
+window-title-font-family = "Berkeley Mono"
 
 # Disable ligatures
 font-feature = -calt
@@ -33,6 +37,7 @@ macos-titlebar-style = tabs
 font-thicken = true
 mouse-hide-while-typing = true
 macos-window-shadow = true
+quit-after-last-window-closed = true
 
 #
 # Keybindings

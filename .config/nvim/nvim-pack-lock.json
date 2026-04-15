@@ -5,7 +5,7 @@
       "src": "https://github.com/L3MON4D3/LuaSnip"
     },
     "SchemaStore.nvim": {
-      "rev": "6c3d237daa3aa95514882f9a9336db1f71ebb7c7",
+      "rev": "b2e84d00db4d5432f471d58898e796b478f075a7",
       "src": "https://github.com/b0o/SchemaStore.nvim"
     },
     "blink.cmp": {
@@ -159,7 +159,7 @@
       "src": "https://github.com/tpope/vim-sleuth"
     },
     "vim-startuptime": {
-      "rev": "3c3342452304ee9235e28ffd986950d1477e71bb",
+      "rev": "f10474b400c197787a0434548d842a2db583c333",
       "src": "https://github.com/dstein64/vim-startuptime"
     },
     "vim-surround": {

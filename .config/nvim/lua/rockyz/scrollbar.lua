@@ -68,6 +68,7 @@ local config = {
     thumb_hl = 'ScrollbarSlider',
     exclude_filetypes = { -- e.g., outline = true
         term = true,
+        TerminalPanel = true, -- the side panel of my own terminal module (./terminal.lua)
     },
     diagnostic = {
         symbol = icons.misc.vertical_rectangle,

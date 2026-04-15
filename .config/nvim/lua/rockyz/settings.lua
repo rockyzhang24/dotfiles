@@ -33,6 +33,7 @@ vim.opt.listchars = {
     extends = '›',
     nbsp = '.',
     precedes = '‹',
+    -- space = '⋅',
     trail = '•',
 }
 vim.opt.matchpairs:append('<:>')

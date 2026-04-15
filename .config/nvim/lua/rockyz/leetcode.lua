@@ -1,15 +1,17 @@
 --
 -- Inspired by https://github.com/kawre/leetcode.nvim
 --
--- Run command :LeetCode <question_url> <label> <extension> and it will first create a directory
--- specific this question and then genreate two files
+-- Run command :LeetCode <question_url> [<label>] <extension> and it will first create a directory
+-- specific this question and then genreate two files:
 -- (1). a md file containing question description
 -- (2). a solution file with code snippet
 --
--- For example, run :LeetCode https://leetcode.com/problems/two-sum/description/ method-1 js will
--- create a directory ~/oj/leetcode-js. Then it genreates two files under this directory
--- (1). 1-two-sum.md
--- (2). 1-two-sum-method-1.js
+-- For example, run :LeetCode https://leetcode.com/problems/two-sum/description/ method-1 js
+--   - First, it creates a directory ~/oj/leetcode-js to store all javascript solutions if it does not exist yet
+--   - Next, it creates a sub-directory 1-two-sum for the solutions of this specific question
+--   - Last, it genreates two files under this directory:
+--      (1). 1-two-sum.md is the question description
+--      (2). 1-two-sum-method-1.js has the template for us to write the solution
 --
 -- Keymap <Leader>ol (ol means oj leetcode) will try to fetch the question url from Chrome's current
 -- tab or the system clipboard, and then insert partial command ":LeetCode <url> " in the command

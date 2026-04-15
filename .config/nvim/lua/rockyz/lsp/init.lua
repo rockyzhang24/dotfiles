@@ -142,6 +142,8 @@ local function on_attach(client, bufnr)
 
     if client:supports_method 'textDocument/documentColor' then
         vim.keymap.set({ 'n', 'x' }, 'grc', function()
+            -- Select a color presentation from rgb, hex, hsl, lch, etc
+            -- Try it in a css file
             vim.lsp.document_color.color_presentation()
         end)
     end

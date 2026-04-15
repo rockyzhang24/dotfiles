@@ -184,7 +184,7 @@ M.render = function()
 end
 
 -- Breadcrumbs
--- Reference: https://github.com/juniorsundar/nvim/blob/main/lua/config/lsp/breadcrumbs.lua
+-- Reference: https://github.com/juniorsundar/nvim/blob/main/lua/custom/micro.nvim/lua/micro/breadcrumbs.lua
 
 ---Check if the cursor position (line, char) is inside a LSP range
 ---TODO: later it can be implemented using vim.pos and vim.range, but they have bugs right now
@@ -241,7 +241,7 @@ local function find_symbol_path(bufnr, symbols, client, cursor_pos, symbol_path_
             local icon = icons.symbol_kinds[kind]
             local colored_icon = string.format('%%#SymbolKind%s#%s%%*', kind, icon)
             table.insert(symbol_path_component, colored_icon .. ' ' .. symbol.name)
-            find_symbol_path(symbol.children, client, cursor_pos, symbol_path_component)
+            find_symbol_path(bufnr, symbol.children, client, cursor_pos, symbol_path_component)
             return
         end
     end
@@ -272,7 +272,7 @@ local function get_breadcrumbs()
         -- results[ctx.client_id] = { err = err, error = err, result = result, context = ctx }
         for client_id, data in pairs(results) do
             if data.err then
-                vim.notify('Error: failed to request document symbols for displaying breadcrumbs', vim.log.levels.WARN)
+                vim.notify('[Winbar] Error: failed to request document symbols for breadcrumbs', vim.log.levels.WARN)
                 return
             end
             local symbol_path_components = {}

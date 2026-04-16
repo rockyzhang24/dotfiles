@@ -453,7 +453,7 @@ local function textobject(include_border)
     for _ = 1, count do
 
         -- Try to place cursor on border
-        local from, to = 'bottom', 'top'
+        local from, to = 'top', 'bottom'
         if include_border and scope.border.bottom == nil then
             from, to = 'bottom', 'top'
         end

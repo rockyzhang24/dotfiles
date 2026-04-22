@@ -1039,14 +1039,15 @@ local function reveal_symbol()
     if not state.win or not vim.api.nvim_win_is_valid(state.win) then
         return
     end
-    local cursor_pos = vim.pos.cursor(vim.api.nvim_win_get_cursor(0))
+    local bufnr = vim.api.nvim_get_current_buf()
+    local cursor_pos = vim.pos.cursor(bufnr, vim.api.nvim_win_get_cursor(0))
     local cursor_range = vim.range(cursor_pos, cursor_pos)
     local count = 0
     for i = #state.jumps, 1, -1 do
         local jump = state.jumps[i]
         count = count + 1
         local range = vim.range.lsp(state.source_bufnr, jump.range, jump.offset_encoding)
-        if vim.range.has(range, cursor_range) then
+        if range:has(cursor_range) then
             vim.api.nvim_win_call(state.win, function()
                 vim.api.nvim_win_set_cursor(state.win, { #state.jumps - count + 1, 0 })
             end)

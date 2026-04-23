@@ -5,7 +5,7 @@
       "src": "https://github.com/L3MON4D3/LuaSnip"
     },
     "SchemaStore.nvim": {
-      "rev": "b2e84d00db4d5432f471d58898e796b478f075a7",
+      "rev": "d09eb13366fe95deeecf3deba7a4639f0c82fcdc",
       "src": "https://github.com/b0o/SchemaStore.nvim"
     },
     "blink.cmp": {
@@ -18,7 +18,7 @@
       "src": "https://github.com/uga-rosa/ccc.nvim"
     },
     "conform.nvim": {
-      "rev": "086a40dc7ed8242c03be9f47fbcee68699cc2395",
+      "rev": "dca1a190aa85f9065979ef35802fb77131911106",
       "src": "https://github.com/stevearc/conform.nvim"
     },
     "cscope_maps.nvim": {
@@ -35,7 +35,7 @@
       "version": "'dev'"
     },
     "gitsigns.nvim": {
-      "rev": "8d82c240f190fc33723d48c308ccc1ed8baad69d",
+      "rev": "6d808f99bd63303646794406e270bd553ad7792e",
       "src": "https://github.com/lewis6991/gitsigns.nvim"
     },
     "inc-rename.nvim": {
@@ -47,7 +47,7 @@
       "src": "https://github.com/mizlan/iswap.nvim"
     },
     "linediff.vim": {
-      "rev": "29fa617fc10307a1e0ae82a8761114e465d17b06",
+      "rev": "c3780609769a93f4f59421b6324355f37e0ee6c5",
       "src": "https://github.com/AndrewRadev/linediff.vim"
     },
     "neogen": {
@@ -87,7 +87,7 @@
       "src": "https://github.com/wellle/targets.vim"
     },
     "treesj": {
-      "rev": "26bc2a8432ba3ea79ed6aa346fba780a3d372570",
+      "rev": "5fa4e7ba3517f8fe743bb4488f9e9c7ce83330fc",
       "src": "https://github.com/Wansmer/treesj"
     },
     "undotree": {

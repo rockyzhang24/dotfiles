@@ -15,7 +15,7 @@ FD="fd --hidden --follow $FD_EXCLUDE"
 export FZF_DEFAULT_COMMAND="$FD --type f --type l"
 
 # Theme
-arctic="`
+theme_arctic="`
 `dark,`
 `fg:-1,bg:-1,`
 `fg+:#ffffff:bold,bg+:#04395e,`
@@ -28,7 +28,8 @@ arctic="`
 `label:#4ec9b0,`
 `header:#f9ae28:underline:bold \
 "
-monokai="`
+
+theme_monokai="`
 `dark,`
 `fg:-1,bg:-1,`
 `fg+:#ffffff:bold,bg+:#414339,`
@@ -42,7 +43,7 @@ monokai="`
 `header:#f9ae28:underline:bold \
 "
 
-nvim_default_light="`
+theme_nvim_default_light="`
 `light,`
 `fg:-1,bg:-1,`
 `bg+:#9b9ea4,`
@@ -50,6 +51,38 @@ nvim_default_light="`
 `hl+:#8f6a00:bold,`
 `query:-1,`
 `disabled:#590008:strikethrough,`
+`border:-1,`
+`separator:-1,`
+`label:-1:bold,`
+`header:-1:underline:bold \
+"
+
+theme_gruvbox_dark="`
+`dark,`
+`fg:-1,bg:-1,`
+`fg+:#b8bb26:regular,` # green
+`bg+:#504945,` # bg2
+`hl:#689d6a:bold,` # neutral_aqua
+`hl+:#689d6a:bold,`
+`gutter:#3c3836,` # bg1
+`query:-1,`
+`disabled:#665c54,` # bg3
+`border:-1,`
+`separator:-1,`
+`label:-1:bold,`
+`header:-1:underline:bold \
+"
+
+theme_gruvbox_light="`
+`light,`
+`fg:-1,bg:-1,`
+`fg+:#79740e:regular,` # green
+`bg+:#d5c4a1,` # bg2
+`hl:#689d6a:bold,` # neutral_aqua
+`hl+:#689d6a:bold,`
+`gutter:#ebdbb2,` # bg1
+`query:-1,`
+`disabled:#bdae93,` # bg3
 `border:-1,`
 `separator:-1,`
 `label:-1:bold,`
@@ -105,7 +138,7 @@ export FZF_DEFAULT_OPTS=" \
     --bind 'focus:transform-preview-label:echo ┨ {} ┠' \
     --preview '~/.config/fzf/fzf-previewer.sh {}' \
     --preview-window 'right,60%,nowrap' \
-    --color=$nvim_default_light \
+    --color=$theme_gruvbox_dark \
 "
 
 # Use fd for FZF completion

@@ -170,7 +170,7 @@ vim.api.nvim_create_autocmd({ 'BufLeave', 'FocusLost', 'InsertEnter', 'CmdlineEn
 })
 
 -- Command-line window
-vim.api.nvim_create_autocmd('CmdWinEnter', {
+vim.api.nvim_create_autocmd('CmdwinEnter', {
     group = vim.api.nvim_create_augroup('rockyz.cmdwin', {}),
     callback = function(args)
         -- Execute command and stay in the command-line window
@@ -194,7 +194,7 @@ vim.api.nvim_create_autocmd('VimEnter', {
 -- Close window by :quit will resize all windows so the maximization status should be reset
 vim.api.nvim_create_autocmd('QuitPre', {
     group = vim.api.nvim_create_augroup('rockyz.reset_win_maximize', { clear = true }),
-    callback = function(args)
+    callback = function()
         local tab = vim.api.nvim_get_current_tabpage()
         vim.t[tab].maximized_win = nil
         for _, win in ipairs(vim.api.nvim_tabpage_list_wins(tab)) do

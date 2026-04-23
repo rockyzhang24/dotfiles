@@ -46,6 +46,7 @@ return {
                 enable = true,
                 setType = true,
                 arrayIndex = 'Disable',
+                semicolon = 'Disable',
             },
             codeLens = {
                 enable = true,

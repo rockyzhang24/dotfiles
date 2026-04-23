@@ -121,9 +121,9 @@ local groups = {
     SelectionHighlightBackground = { bg = '#343a41' }, -- editor.selectionHighlightBackground
     LightBulb = { fg = '#ffcc00' }, -- editorLightBulb.foreground
     CodeLens = { fg = '#999999' }, -- editorCodeLens.foreground
-    GutterGitAdded = { fg = gutter_git_added }, -- editorGutter.addedBackground
-    GutterGitDeleted = { fg = gutter_git_deleted }, -- editorGutter.deletedBackground
-    GutterGitModified = { fg = gutter_git_modified }, -- editorGutter.modifiedBackground
+    GutterDiffAdded = { fg = gutter_git_added }, -- editorGutter.addedBackground
+    GutterDiffDeleted = { fg = gutter_git_deleted }, -- editorGutter.deletedBackground
+    GutterDiffChanged = { fg = gutter_git_modified }, -- editorGutter.modifiedBackground
     Breadcrumb = { fg = winbar_fg, bg = norm_bg, bold = true }, -- breadcrumb.foreground/background
     BreadcrumbNC = { fg = winbar_fg, bg = norm_bg },
     ScrollbarSliderHover = { bg = '#4f4f4f' }, -- scrollbarSlider.hoverBackground
@@ -175,17 +175,6 @@ local groups = {
     IndentScopeSymbol = 'Delimiter',
     -- CursorLine of not-current windows
     CursorLineNC = { bg = black3, underdashed = true, sp = gray2 },
-
-    --
-    -- diff
-    --
-    -- VSCode doesn't have foreground for git added/removed/changed, so here I use the corresponding
-    -- colors for gutter instead.
-    --
-
-    diffAdded = 'GutterGitAdded',
-    diffRemoved = 'GutterGitDeleted',
-    diffChanged = 'GutterGitModified',
 
     --
     -- LSP
@@ -870,9 +859,9 @@ local groups = {
     -- Gitsigns
     --
 
-    GitSignsAdd = 'GutterGitAdded',
-    GitSignsChange = 'GutterGitModified',
-    GitSignsDelete = 'GutterGitDeleted',
+    GitSignsAdd = 'GutterDiffAdded',
+    GitSignsChange = 'GutterDiffChanged',
+    GitSignsDelete = 'GutterDiffDeleted',
     GitSignsAddNr = 'GitSignsAdd',
     GitSignsChangeNr = 'GitSignsChange',
     GitSignsDeleteNr = 'GitSignsDelete',

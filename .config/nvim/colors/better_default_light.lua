@@ -2,6 +2,8 @@
 -- https://github.com/neovim/neovim/blob/master/src/nvim/highlight_group.c
 -- https://github.com/neovim/neovim/pull/26334
 
+local utils = require('rockyz.utils.color')
+
 vim.o.background = 'light'
 
 -- Colors from Neovim's builtin default light
@@ -63,14 +65,6 @@ if not vim.g.border_enabled then
     float_norm_bg = light_gray3
 end
 
--- Some colors vary depending on whether the border is enabled or not
--- local float_norm_bg = norm_bg -- normal bg of float win
--- local float_scrollbar_gutter = float_norm_bg -- bg of scrollbar gutter in float win
--- if not vim.g.border_enabled then
---     float_norm_bg = utils.darken(norm_bg, 0.4)
---     float_scrollbar_gutter = utils.lighten(float_norm_bg, 0.2)
--- end
-
 local groups = {
 
     Normal = { fg = norm_fg, bg = norm_bg },
@@ -107,7 +101,7 @@ local groups = {
     RedrawDebugComposed = { bg = light_green },
     RedrawDebugRecompose = { bg = light_red },
     Removed = { fg = dark_red },
-    Search = { fg = dark_gray1, bg = light_yellow },
+    Search = { fg = 'fg', bg = light_yellow },
     SignColumn = { fg = light_gray4 },
     SpecialKey = { fg = light_gray4 },
     SpellBad = { undercurl = true, sp = dark_red },
@@ -119,7 +113,7 @@ local groups = {
     Title = { fg = dark_gray2, bold = true },
     Visual = { bg = light_gray4 },
     WarningMsg = { fg = dark_yellow },
-    WinBar = { fg = winbar_fg, bg = winbar_bg, bold = true },
+    WinBar = { fg = winbar_fg, bg = winbar_bg },
     WinBarNC = { fg = winbar_fg, bg = winbar_bg },
 
     -- Syntax
@@ -160,7 +154,7 @@ local groups = {
     PmenuMatchSel = { fg = dark_gold, bold = true },
     PmenuSel = { bg = light_gray4 },
     RedrawDebugNormal = { reverse = true },
-    TabLineSel = { bg = tab_active_bg, bold = true },
+    TabLineSel = { bg = tab_active_bg },
     TermCursor = { reverse = true },
     Underlined = { underline = true },
     lCursor = { fg = 'bg', bg = 'fg' },
@@ -198,7 +192,7 @@ local groups = {
     StatusLineTermNC = 'StatusLineNC',
     StderrMsg = 'ErrorMsg',
     StdoutMsg = 'NONE',
-    TabLine = 'StatusLineNC',
+    TabLine = { fg = tab_fg, bg = tab_inactive_bg },
     TabLineFill = 'TabLine',
     VertSplit = 'WinSeparator',
     VisualNOS = 'Visual',
@@ -390,9 +384,9 @@ local groups = {
     TabDefaultIcon = { fg = tab_fg, bg = tab_inactive_bg }, -- icon for special filetype on inactive tab
     TabDefaultIconActive = { fg = tab_fg, bg = tab_active_bg }, -- icon for special filetype on active tab
     TabError = { fg = dark_red, bg = tab_inactive_bg },
-    TabErrorActive = { fg = dark_red, bg = tab_active_bg, bold = true },
+    TabErrorActive = { fg = dark_red, bg = tab_active_bg },
     TabWarn = { fg = dark_yellow, bg = tab_inactive_bg },
-    TabWarnActive = { fg = dark_yellow, bg = tab_active_bg, bold = true },
+    TabWarnActive = { fg = dark_yellow, bg = tab_active_bg },
     TabIndicatorActive = { fg = dark_gold, bg = tab_active_bg },
     TabIndicatorInactive = { fg = light_gray4, bg = tab_inactive_bg },
 
@@ -451,9 +445,9 @@ local groups = {
     QuickfixHint = 'DiagnosticHint',
 
     -- Gitsigns
-    GitSignsAdd = 'GutterGitAdded',
-    GitSignsChange = 'GutterGitModified',
-    GitSignsDelete = 'GutterGitDeleted',
+    GitSignsAdd = 'GutterDiffAdded',
+    GitSignsChange = 'GutterDiffChanged',
+    GitSignsDelete = 'GutterDiffDeleted',
     GitSignsAddNr = 'GitSignsAdd',
     GitSignsChangeNr = 'GitSignsChange',
     GitSignsDeleteNr = 'GitSignsDelete',
@@ -491,14 +485,21 @@ local groups = {
 
     -- Scrollbar
     ScrollbarSlider = { bg = light_gray4 },
-    ScrollbarSearch = { fg = light_yellow },
+    ScrollbarDiffAdded = { fg = utils.blend(dark_green, 0.6, norm_bg) },
+    ScrollbarDiffDeleted = { fg = utils.blend(dark_red, 0.6, norm_bg) },
+    ScrollbarDiffChanged = { fg = utils.blend(dark_cyan, 0.6, norm_bg) },
+    ScrollbarDiagnosticError = { fg = utils.blend(dark_red, 0.6, norm_bg) },
+    ScrollbarDiagnosticWarn = { fg = utils.blend(dark_yellow, 0.6, norm_bg) },
+    ScrollbarDiagnosticInfo = { fg = utils.blend(dark_blue, 0.6, norm_bg) },
+    ScrollbarDiagnosticHint = { fg = utils.blend(dark_blue, 0.6, norm_bg) },
+    ScrollbarSearch = { fg = utils.blend(light_yellow, 0.6, norm_bg) },
 
     -- Misc
     CursorLineNC = { bg = light_gray3, underdashed = true, sp = light_gray4 },
     Description = { fg = light_gray4 },
-    GutterGitAdded = 'Added',
-    GutterGitDeleted = 'Removed',
-    GutterGitModified = 'Changed',
+    GutterDiffAdded = 'Added',
+    GutterDiffDeleted = 'Removed',
+    GutterDiffChanged = 'Changed',
     IndentScopeSymbol = 'Delimiter',
     LightBulb = { fg = dark_gold },
 

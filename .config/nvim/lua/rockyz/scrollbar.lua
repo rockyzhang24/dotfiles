@@ -71,24 +71,24 @@ local config = {
         TerminalPanel = true, -- the side panel of my own terminal module (./terminal.lua)
     },
     diagnostic = {
-        symbol = icons.misc.vertical_rectangle,
+        symbol = icons.block.right_middle_half,
         hl = {
-            'DiagnosticError',
-            'DiagnosticWarn',
-            'DiagnosticInfo',
-            'DiagnosticHint',
+            'ScrollbarDiagnosticError',
+            'ScrollbarDiagnosticWarn',
+            'ScrollbarDiagnosticInfo',
+            'ScrollbarDiagnosticHint',
         },
     },
     gitdiff = {
-        symbol = icons.lines.vertical_heavy,
+        symbol = icons.block.left_one_quarter,
         hl = {
-            add = 'GutterGitAdded',
-            change = 'GutterGitModified',
-            delete = 'GutterGitDeleted',
+            add = 'ScrollbarDiffAdded',
+            change = 'ScrollbarDiffChanged',
+            delete = 'ScrollbarDiffDeleted',
         },
     },
     search = {
-        symbol = icons.misc.vertical_rectangle,
+        symbol = icons.block.right_middle_half,
         hl = 'ScrollbarSearch',
     },
 }

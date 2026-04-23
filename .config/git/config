@@ -25,7 +25,7 @@
     navigate = true
     hyperlinks = true
     features = side-by-side line-numbers decorations interactive
-    syntax-theme = Coldark-Cold
+    syntax-theme = gruvbox-dark
 [delta "line-numbers"]
     line-numbers = true
 [delta "decorations"]

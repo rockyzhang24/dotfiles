@@ -1,16 +1,16 @@
 # Font configuration
 font-family = ""
-font-family = "Berkeley Mono"
-font-style = "Medium"
-font-style-italic = "Medium Oblique"
-font-style-bold = "ExtraBold"
-font-style-bold-italic = "ExtraBold Oblique"
-font-size = 14
-# adjust-cell-height = 15%
+font-family = "SF Mono"
+# font-style = ""
+font-style-italic = "Regular Italic"
+# font-style-bold = ""
+font-style-bold-italic = "Bold Italic"
+font-size = 13
+adjust-cell-height = 20%
 # adjust-underline-position = 5
-# adjust-underline-thickness = 50%
+adjust-underline-thickness = 50%
 
-window-title-font-family = "Berkeley Mono"
+window-title-font-family = "SF Mono"
 
 # Disable ligatures
 font-feature = -calt
@@ -18,18 +18,20 @@ font-feature = -liga
 font-feature = -dlig
 
 # Window
-window-padding-x = 3
+window-padding-x = 0
 window-padding-y = 0
 window-decoration = auto
 background-opacity = 1
 
 # Color theme
-theme = nvim-default-light
+theme = Gruvbox Dark
 # bold-color = bright
 
 # Cursor
 cursor-style-blink = false
 shell-integration-features = no-cursor
+cursor-color = FFFFFF
+cursor-text = 000000
 
 # macOS specific
 macos-option-as-alt = left

@@ -159,8 +159,8 @@ function M.render()
         -- Indicator, the bar on the leftmost of the tab
         -- %iT label at the beginning of each tab is used for mouse click
         local indicator_hl = is_cur and 'TabIndicatorActive' or 'TabIndicatorInactive'
-        table.insert(fmt_items, string.format('%%%sT%%#%s#%s%%#%s#', i, indicator_hl, icons.separators.bar_left_bold, tab_hl))
-        table.insert(vis_items, string.format('%%%sT%s', i, icons.separators.bar_left_bold))
+        table.insert(fmt_items, string.format('%%%sT%%#%s#%s%%#%s#', i, indicator_hl, icons.block.left_one_quarter, tab_hl))
+        table.insert(vis_items, string.format('%%%sT%s', i, icons.block.left_one_quarter))
 
         -- Tab number
         table.insert(fmt_items, i .. '.')

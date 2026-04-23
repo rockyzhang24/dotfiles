@@ -127,9 +127,9 @@ local groups = {
     SelectionHighlightBackground = { bg = '#3f4242' }, -- editor.selectionHighlightBackground
     LightBulb = { fg = '#ffcc00' }, -- editorLightBulb.foreground
     CodeLens = { fg = '#999999' }, -- editorCodeLens.foreground
-    GutterGitAdded = { fg = gutter_git_added }, -- editorGutter.addedBackground
-    GutterGitDeleted = { fg = gutter_git_deleted }, -- editorGutter.deletedBackground
-    GutterGitModified = { fg = gutter_git_modified }, -- editorGutter.modifiedBackground
+    GutterDiffAdded = { fg = gutter_git_added }, -- editorGutter.addedBackground
+    GutterDiffDeleted = { fg = gutter_git_deleted }, -- editorGutter.deletedBackground
+    GutterDiffChanged = { fg = gutter_git_modified }, -- editorGutter.modifiedBackground
     Breadcrumb = { fg = winbar_fg, bg = norm_bg, bold = true}, -- breadcrumb.foreground/background
     BreadcrumbNC = { fg = winbar_fg, bg = norm_bg },
     ScrollbarSliderHover = { bg = '#525250' }, -- scrollbarSlider.hoverBackground
@@ -181,14 +181,6 @@ local groups = {
     IndentScopeSymbol = 'Delimiter',
     -- CursorLine of not-current windows
     CursorLineNC = { bg = gray4, underdashed = true, sp = '#9b9ea4' },
-
-    --
-    -- diff
-    --
-
-    diffAdded = 'GutterGitAdded',
-    diffRemoved = 'GutterGitDeleted',
-    diffChanged = 'GutterGitModified',
 
     --
     -- LSP
@@ -869,9 +861,9 @@ local groups = {
     -- Gitsigns
     --
 
-    GitSignsAdd = 'GutterGitAdded',
-    GitSignsChange = 'GutterGitModified',
-    GitSignsDelete = 'GutterGitDeleted',
+    GitSignsAdd = 'GutterDiffAdded',
+    GitSignsChange = 'GutterDiffChanged',
+    GitSignsDelete = 'GutterDiffDeleted',
     GitSignsAddNr = 'GitSignsAdd',
     GitSignsChangeNr = 'GitSignsChange',
     GitSignsDeleteNr = 'GitSignsDelete',
@@ -1029,6 +1021,13 @@ local groups = {
     -- Scrollbar
     --
 
+    ScrollbarDiffAdded = { fg = utils.blend(gutter_git_added, 0.6, norm_bg) },
+    ScrollbarDiffDeleted = { fg = utils.blend(gutter_git_deleted, 0.6, norm_bg) },
+    ScrollbarDiffChanged = { fg = utils.blend(gutter_git_modified, 0.6, norm_bg) },
+    ScrollbarDiagnosticError = { fg = utils.blend(error_red, 0.6, norm_bg) },
+    ScrollbarDiagnosticWarn = { fg = utils.blend(warn_yellow, 0.6, norm_bg) },
+    ScrollbarDiagnosticInfo = { fg = utils.blend(info_blue, 0.6, norm_bg) },
+    ScrollbarDiagnosticHint = { fg = utils.blend(hint_gray, 0.6, norm_bg) },
     ScrollbarSearch = { fg = '#9e6a03' },
 }
 

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 # Color theme for fzf, bat, etc
-# Options: arctic, monokai, nvim-default-light
-export COLOR_THEME="nvim-default-light"
+# Options: arctic, monokai, nvim-default-light, gruvbox-dark, gruvbox-light
+export COLOR_THEME="gruvbox-dark"
 
 # Terminal backgroud is transparent or not
 export TRANSPARENT=false
@@ -57,15 +57,21 @@ export RANGER_LOAD_DEFAULT_RC=FALSE
 export SSL_CERT_FILE=$HOME/.config/misc/cacert.pem
 
 # ls colors
-export LS_COLORS="$(vivid generate ~/.config/vivid/nvim-default-light)"
+# export LS_COLORS="$(vivid generate ~/.config/vivid/nvim-default-light)"
+export LS_COLORS="$(vivid generate gruvbox-dark)"
 # BSD (vanilla ls in macOS)
 export CLICOLOR=1
 export LSCOLORS='ExfxcxdxbxGxDxabagacad'
 
 # Bat
-[[ $COLOR_THEME == 'monokai' ]] && export BAT_THEME='Monokai Extended Origin'
-[[ $COLOR_THEME == 'arctic' ]] && export BAT_THEME='arctic'
-[[ $COLOR_THEME == 'nvim-default-light' ]] && export BAT_THEME='Coldark-Cold'
+case "$COLOR_THEME" in
+    monokai) bat_theme='Monokai Extended Origin' ;;
+    arctic) bat_theme='arctic' ;;
+    nvim-default-light) bat_theme='Coldark-Cold' ;;
+    gruvbox-dark) bat_theme='gruvbox-dark' ;;
+    gruvbox-light) bat_theme='gruvbox-light' ;;
+esac
+[[ -n $bat_theme ]] && export BAT_THEME="$bat_theme"
 
 # Ripgrep
 export RIPGREP_CONFIG_PATH=$HOME/.config/ripgrep/ripgreprc
@@ -79,13 +85,24 @@ export EZA_ICON_SPACING=2
 
 # Delta
 # Options based on different terminal color theme that can used directly when we run delta command
-if [[ $COLOR_THEME == 'monokai' ]]; then
-    export DELTA_OPTS=' --dark --syntax-theme "Monokai Extended"'
-elif [[ $COLOR_THEME == 'arctic' ]]; then
-    export DELTA_OPTS=' --dark --syntax-theme "Visual Studio Dark+"'
-elif [[ $COLOR_THEME == 'nvim-default-light' ]]; then
-    export DELTA_OPTS=' --light --syntax-theme Coldark-Cold'
-fi
+case "$COLOR_THEME" in
+    monokai)
+        delta_opts=' --dark --syntax-theme "Monokai Extended"'
+        ;;
+    arctic)
+        delta_opts=' --dark --syntax-theme "Visual Studio Dark+"'
+        ;;
+    nvim-default-light)
+        delta_opts=' --light --syntax-theme Coldark-Cold'
+        ;;
+    gruvbox-dark)
+        delta_opts=' --dark --syntax-theme gruvbox-dark'
+        ;;
+    gruvbox-light)
+        delta_opts=' --dark --syntax-theme gruvbox-light'
+        ;;
+esac
+[[ -n $delta_opts ]] && export DELTA_OPTS="$delta_opts"
 
 #
 # User-defined

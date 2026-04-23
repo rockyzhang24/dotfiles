@@ -1,5 +1,11 @@
-# arctic theme
+--color=always
+--smart-case
+--hidden
 
+# do not search .git
+--glob=!.git/
+
+# arctic theme
 # --colors
 # # #c586c0
 # path:fg:197,134,192
@@ -14,7 +20,6 @@
 # match:fg:244,71,71
 
 # monokai theme
-
 # --colors
 # # #67d8ef
 # path:fg:103,216,239
@@ -29,15 +34,29 @@
 # match:fg:249,36,114
 
 # nvim-default-light theme
+# --colors
+# # #004c73
+# path:fg:0,76,115
+# --colors
+# # #005523
+# line:fg:0,85,35
+# --colors
+# # #007373
+# column:fg:0,115,115
+# --colors
+# # #590008
+# match:fg:89,0,8
+
+# gruvbox-dark theme
 --colors
-# #004c73
-path:fg:0,76,115
+# #d3869b purple
+path:fg:211,134,155
 --colors
-# #005523
-line:fg:0,85,35
+# #fabd2f yellow
+line:fg:250,189,47
 --colors
-# #007373
-column:fg:0,115,115
+# #83a598 blue
+column:fg:131,165,152
 --colors
-# #590008
-match:fg:89,0,8
+# #fb4934 red
+match:fg:251,73,52

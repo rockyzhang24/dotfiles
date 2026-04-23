@@ -1,4 +1,9 @@
-vim.g.colorscheme = 'better_default_light'
+-- Colorscheme: arctic, monokai, better_default_light, gruvbox
+vim.g.colorscheme = 'gruvbox'
+if vim.g.colorscheme == 'gruvbox' then
+    vim.g.gruvbox_contrast = 'normal' -- 'normal', 'soft' or 'dark'
+end
+vim.g.is_dark = true
 vim.g.transparent = false
 vim.g.border_enabled = true
 vim.g.border_style = vim.g.border_enabled and 'rounded' or 'none'

@@ -91,7 +91,6 @@ icons.minimal.git = {
 
 icons.separators = {
     bar = '│',
-    bar_left_bold = '▎',
     chevron_left = '',
     chevron_right = '',
     triangle_left = '',
@@ -115,6 +114,11 @@ icons.tree = {
     vertical = '│ ',
     middle = '├╴',
     last = '└╴',
+}
+
+icons.block = {
+    left_one_quarter = '▎', -- U+258E Left One Quarter Block
+    right_middle_half ='🬇', -- U+1FB07 Block Sextant-4
 }
 
 icons.misc = {
@@ -161,7 +165,6 @@ icons.misc = {
     thumbsup = '',
     thumbsdown = '',
     tree = '󰐅',
-    vertical_rectangle ='▮', -- unicode U+25AE
 }
 
 icons.emoji = {

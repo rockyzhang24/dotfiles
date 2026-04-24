@@ -172,22 +172,26 @@ end
 ---Ensure the scrollbar floating window exists and is up-to-date.
 ---This function creates the scrollbar buffer and floating window if they do not exist, or updates
 ---the window geometry (height and col) when the viewport changes.
----After this function returns, the scrollbar window is guaranteed to be valid and correctly
+---After this function returns true, the scrollbar window is guaranteed to be valid and correctly
 ---positioned. Other components (e.g., thumb, diagnostics, git, search matches, etc) can then be
 ---rendered their content into the scrollbar buffer via extmarks.
 ---@param winid? integer The winid of the floating window where the scrollbar resides
+---@return boolean # If the essential floating window and the buffer are ready to use
 local function ensure_scrollbar(winid)
     winid = winid or vim.api.nvim_get_current_win()
     local win_config = vim.api.nvim_win_get_config(winid)
     -- Ignore floating window
     if win_config.relative ~= '' then
-        return
+        return false
     end
 
     ---@type rockyz.scrollbar.State
     local state = vim.w[winid].scrollbar_state or {}
 
     local viewport_height = get_viewport_height(winid)
+    if viewport_height < 1 then
+        return false
+    end
 
     if not state.bufnr then
         state.bufnr = create_scrollbar_buffer(viewport_height)
@@ -232,6 +236,7 @@ local function ensure_scrollbar(winid)
     state.last_win_col = col
     state.is_enabled = true
     vim.w[winid].scrollbar_state = state
+    return true
 end
 
 function M.render_thumb(winid)
@@ -254,7 +259,8 @@ function M.render_thumb(winid)
         position = 0
     else
         position = math.floor(top_buffer_line * viewport_height / buf_line_count)
-        position = math.min(position, viewport_height - thumb_size)
+        -- It shouldn't be less than zero (viewport_height maybe less than thumb_size)
+        position = math.max(math.min(position, viewport_height - thumb_size), 0)
     end
 
     clear_extmarks(winid, thumb_ns)
@@ -487,8 +493,9 @@ function M.flush()
                 if vim.api.nvim_win_is_valid(winid) and should_render(winid) then
                     -- Ensure the scrollbar's buffer and floating window exist and are correctly sized
                     -- before rendering other components on it.
-                    ensure_scrollbar(winid)
-                    render(winid)
+                    if ensure_scrollbar(winid) then
+                        render(winid)
+                    end
                 end
             end
         end

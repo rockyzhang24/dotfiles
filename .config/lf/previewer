@@ -34,21 +34,42 @@ bat() {
         --terminal-width="${PV_WIDTH}" "$@"
 }
 
-image_previewer() {
-    # kitty's icat doesn't work well in tmux: images can be displayed but not be cleared, see
-    # https://github.com/kovidgoyal/kitty/commit/6347ea0210ac9dd913bfc540f5f46489fbc27a77.
-    # In neovim's builtin terminal, I cannot find an approach to preview images.
-    if [[ ! $TERM =~ "tmux" && -z $NVIM ]]; then
-        if [[ $KITTY_WINDOW_ID || $GHOSTTY_BIN_DIR ]]; then
-            local place="${PV_WIDTH}x${PV_HEIGHT}@${HORIZONTAL_POS}x${VERTICAL_POS}"
-            kitty icat --clear --transfer-mode memory --stdin no --align left --place "$place" "$1" < /dev/null > /dev/tty
-        elif [[ $WEZTERM_PANE || $ALACRITTY_WINDOW_ID ]]; then
-            chafa -s "${PV_WIDTH}x${PV_HEIGHT}" --animate off --polite on "$1"
-        else
-            printf "Image preview is not supported"
-        fi
+# Check whether preview (image or video thumbnail) is supported in the current terminal environment
+is_preview_supported() {
+    local type="$1" # image or video thumbnail
+    local label
+
+    case "$type" in
+        image) label="Image preview" ;;
+        thumbnail) label="Video thumbnail preview" ;;
+        *) label="Preview" ;;
+    esac
+
+    local context=""
+
+    # Kitty's icat does not work well within Tmux: images may render correctly but cannot be
+    # cleared.
+    # See https://github.com/kovidgoyal/kitty/commit/6347ea0210ac9dd913bfc540f5f46489fbc27a77
+    if [[ $TERM == *tmux* ]]; then
+        context="Tmux"
+    elif [[ -n $NVIM ]]; then
+        context="Neovim's terminal"
+    elif [[ $KITTY_WINDOW_ID || $GHOSTTY_BIN_DIR || $ITERM_PROFILE ]]; then
+        return 0
     else
-        printf "Image preview is not supported"
+        context="this terminal"
+    fi
+
+    printf "%s is not supported in %s" "$label" "$context"
+    return 1
+}
+
+image_previewer() {
+    if [[ $KITTY_WINDOW_ID || $GHOSTTY_BIN_DIR || $ITERM_PROFILE ]]; then
+        local place="${PV_WIDTH}x${PV_HEIGHT}@${HORIZONTAL_POS}x${VERTICAL_POS}"
+        kitty icat --clear --transfer-mode memory --stdin no --align left --place "$place" "$1" < /dev/null > /dev/tty
+    else
+        printf "Image preview is not supported in this terminal"
     fi
 }
 
@@ -103,25 +124,31 @@ handle_mime() {
             pandoc -s -t markdown -- "${FILE_PATH}" | glow -s dark --width "${PV_WIDTH}" && exit 0;;
         # Image
         image/*)
-            if [[ $MODE == "preload" ]]; then
-                preload "$FILE_PATH"
-                exit 1
-            else
-                image_previewer "$(cache "$FILE_PATH")"
-                exit 0
+            if is_preview_supported image; then
+                if [[ $MODE == "preload" ]]; then
+                    preload "$FILE_PATH"
+                    exit 1
+                else
+                    image_previewer "$(cache "$FILE_PATH")"
+                    exit 0
+                fi
             fi
+            exit 0
             ;;
         # Video
         video/*)
-            if [[ $MODE == "preload" ]]; then
-                local thumbnail
-                thumbnail=$("$XDG_CONFIG_HOME"/lf/vidthumb "${FILE_PATH}")
-                preload "$thumbnail" "$FILE_PATH"
-                exit 1
-            else
-                image_previewer "$(cache "$FILE_PATH")"
-                exit 0
+            if is_preview_supported thumbnail; then
+                if [[ $MODE == "preload" ]]; then
+                    local thumbnail
+                    thumbnail=$("$XDG_CONFIG_HOME"/lf/vidthumb "${FILE_PATH}")
+                    preload "$thumbnail" "$FILE_PATH"
+                    exit 1
+                else
+                    image_previewer "$(cache "$FILE_PATH")"
+                    exit 0
+                fi
             fi
+            exit 0
             ;;
         # Text
         text/* | */xml)

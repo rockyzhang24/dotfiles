@@ -97,7 +97,7 @@ function M.store_buf(bufnr)
         local winid = vim.api.nvim_get_current_win()
         -- It seems 'diff' setting is delayed so I have to use `vim.schedule` to make it work
         vim.schedule(function()
-            if not vim.wo[winid].diff then
+            if vim.api.nvim_win_is_valid(winid) and not vim.wo[winid].diff then
                 table.insert(bufs, bufnr)
                 last_bufnr = bufnr
                 count = (count + 1) % 10

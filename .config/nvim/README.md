@@ -52,7 +52,7 @@ I assign key mappings deliberately, aiming for efficiency and ease of recall.
 
 * Multiple leader keys
 
-  In addition to using `<Space>` as the primary leader key, `,` serves as the leader key for Git-related keymaps, while `\` is designated for toggles.
+  In addition to using `<Space>` as the primary leader key, use `,` for Git-related actions, `\` for toggling, and `<C-Space>` as the leader key in terminal buffers.
 
 * Mnemonic
 

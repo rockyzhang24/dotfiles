@@ -137,7 +137,7 @@ local function config_term_esc()
     vim.keymap.set('t', '<C-[>', [[<C-\><C-N>]])
 
     -- Send literal ESC
-    vim.keymap.set('t', '<Space><C-[>', '<Esc>')
+    vim.keymap.set('t', '<C-Space><C-[>', '<Esc>')
 
     -- In terminal-nested Nvim, we should map <C-[> back to <ESC>
     if vim.env.NVIM then

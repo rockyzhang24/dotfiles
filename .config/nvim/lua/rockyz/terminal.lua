@@ -1,16 +1,18 @@
 -- <M-`>: toggle
--- <Leader><M-n>: new a terminal
--- <Leader><M-d>: delete the current terminal
--- <Leader><M-o>: delete all terminals but the current one
+--
+-- <C-Space>n: new a terminal
+-- <C-Space>d: delete the current terminal
+-- <C-Space>o: delete all terminals but the current one
 -- <M-=>: jump to the next terminal
 -- <M-->: jump to the previous terminal
 -- <M-1> to <M-9>: jump to terminal #i
--- <Leader><M-Enter>: rename the current terminal
+-- <C-Space>r: rename the current terminal
 -- <M-,>: move the current terminal backwards
 -- <M-.>: move the current terminal forwards
--- <Leader><M-t>: send the terminal to a new tabpage
--- <Leader><M-p>: send the terminal to the panel
--- <Leader><M-m>: toggle maximize
+-- <C-Space>t: send the terminal to a new tabpage
+-- <C-Space>p: send the terminal to the panel
+-- <C-Space>m: toggle maximize
+--
 -- <Leader>ts: send the current line in NORMAL or selected lines in VISUAL to terminal
 -- <Leader>tr: open a terminal running REPL based on the filetype
 -- <Leader>x: compile and run the current file
@@ -73,16 +75,16 @@ local win_opts = {
 local keymaps = {
     -- Keymaps defined in the terminal buffer
     term = {
-        ['<Leader><M-n>'] = 'new',
-        ['<Leader><M-d>'] = 'delete',
-        ['<Leader><M-o>'] = 'only',
+        ['<C-Space>n'] = 'new',
+        ['<C-Space>d'] = 'delete',
+        ['<C-Space>o'] = 'only',
         ['<M-=>'] = 'next',
         ['<M-->'] = 'prev',
-        ['<Leader><M-Enter>'] = 'rename',
+        ['<C-Space>r'] = 'rename',
         ['<M-.>'] = 'move_next',
         ['<M-,>'] = 'move_prev',
-        ['<Leader><M-t>'] = 'to_tab',
-        ['<Leader><M-m>'] = 'toggle_maximize',
+        ['<C-Space>t'] = 'to_tab',
+        ['<C-Space>m'] = 'toggle_maximize',
         ['<M-1>'] = 'switch_1',
         ['<M-2>'] = 'switch_2',
         ['<M-3>'] = 'switch_3',
@@ -96,7 +98,7 @@ local keymaps = {
     },
     global = {
         ['<M-`>'] = 'toggle',
-        ['<Leader><M-p>'] = 'to_panel',
+        ['<C-Space>p'] = 'to_panel',
         ['<Leader>ts'] = {
             n = 'send_line',
             x = 'send_selection',

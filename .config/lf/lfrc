@@ -290,8 +290,8 @@ nmap d
 nmap y
 nmap zh
 
-# <space> will be used as the leader key
-map <space>
+# Use <c-f> as the leader key
+map <c-f>
 
 # enter to open
 nmap <enter> open
@@ -308,14 +308,14 @@ nmap T trash
 # list the size of each item in the current directory
 nmap U !printf "\n"; du -csh *
 nmap <c-t> fzf-toggle-select
-nmap <c-f> fzf-file
+nmap <c-f><c-f> fzf-file
 nmap <c-z> fzf-cd
 # give a name and then make a directory
 nmap <c-n> push :mkdir<space>
 nmap <a-n> new-folder-with-selection
 nmap x cut
 # give a name and then open neovim to edit it
-nmap <space>v push :!nvim<space>
+nmap <c-f>v push :!nvim<space>
 
 # Navigate among the parent directories
 nmap [ push hkl
@@ -330,11 +330,11 @@ nmap re push A<c-f><c-k> # rename the extension
 nmap <c-r> bulk-rename
 
 # compress (give a name like foo and it will compress the selected items to foo.zip)
-nmap <space>c push :zip<space>
+nmap <c-f>c push :zip<space>
 # extract
-nmap <space>x extract
+nmap <c-f>x extract
 # Open the directory in Finder on macOS
-nmap <space>f &if [[ -d $f ]]; then open $f; fi
+nmap <c-f>f &if [[ -d $f ]]; then open $f; fi
 
 cmap <tab> cmd-menu-complete
 cmap <backtab> cmd-menu-complete-back

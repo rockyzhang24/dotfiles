@@ -53,7 +53,7 @@ gitsigns.setup({
         -- Hunk navigation
         buf_map('n', ']c', function()
             if vim.wo.diff then
-                vim.cmd.normal({ '[c', bang = true })
+                vim.cmd.normal({ ']c', bang = true })
             else
                 gitsigns.nav_hunk('next', { target = 'all' })
             end
@@ -61,7 +61,7 @@ gitsigns.setup({
 
         buf_map('n', '[c', function()
             if vim.wo.diff then
-                vim.cmd.normal({ ']c', bang = true })
+                vim.cmd.normal({ '[c', bang = true })
             else
                 gitsigns.nav_hunk('prev', { target = 'all' })
             end

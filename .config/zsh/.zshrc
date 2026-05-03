@@ -122,3 +122,6 @@ function print_osc133() {
     printf "\e]133;A\a"
 }
 precmd_functions+=(print_osc133)
+
+# uv (a python package managers used to install ZMK)
+source "$HOME/.local/bin/env"

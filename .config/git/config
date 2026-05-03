@@ -64,4 +64,14 @@
 [mergetool]
     prompt = true
 [mergetool "nvimdiff"]
+    ; How to resolve git conflicts:
+    ; 1. Run `git mergetool`
+    ; 2. Resolve conflicts
+    ; 3. Save file
+    ; 4. Git will automatically launch nvim for the next file
+
+    ; Use vim-fugitive
     cmd = nvim -c \"Gvdiffsplit!\" \"$MERGED\"
+    ; Or use raw nvim
+    ; Reference: https://www.reddit.com/r/neovim/comments/1syumjt/plugin_to_resolve_git_conflicts_in_neovim_and/
+    ; cmd = nvim -d $LOCAL $REMOTE $MERGED -c '$wincmd w' -c 'wincmd J'

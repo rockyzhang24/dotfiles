@@ -5,7 +5,7 @@ require('blink.cmp').setup({
     -- keymaps for snippet jumping forward and backward are defined in luasnip config
     keymap = {
         preset = 'none',
-        ['<C-Enter>'] = { 'show', 'show_documentation', 'hide_documentation', 'fallback' },
+        ['<C-.>'] = { 'show', 'show_documentation', 'hide_documentation', 'fallback' },
         ['<C-e>'] = { 'cancel', 'fallback' },
         ['<C-\\>'] = { 'hide', 'fallback' },
         ['<C-y>'] = { 'select_and_accept', 'fallback' },

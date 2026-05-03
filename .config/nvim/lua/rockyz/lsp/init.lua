@@ -278,9 +278,9 @@ local group = vim.api.nvim_create_augroup('rockyz.lsp', { clear = true })
 
 vim.api.nvim_create_autocmd('LspAttach', {
     group = group,
-    callback = function(args)
-        local bufnr = args.buf
-        local client = vim.lsp.get_client_by_id(args.data.client_id)
+    callback = function(ev)
+        local bufnr = ev.buf
+        local client = vim.lsp.get_client_by_id(ev.data.client_id)
         on_attach(client, bufnr)
     end,
 })
@@ -288,9 +288,9 @@ vim.api.nvim_create_autocmd('LspAttach', {
 -- Auto close imports
 vim.api.nvim_create_autocmd({ 'LspNotify' }, {
     group = group,
-    callback = function(args)
-        if args.data.method == 'textDocument/didOpen' then
-            vim.lsp.foldclose('imports', vim.fn.bufwinid(args.buf))
+    callback = function(ev)
+        if ev.data.method == 'textDocument/didOpen' then
+            vim.lsp.foldclose('imports', vim.fn.bufwinid(ev.buf))
         end
     end,
 })

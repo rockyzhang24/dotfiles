@@ -112,8 +112,8 @@ end
 vim.api.nvim_create_augroup('rockyz.mru', { clear = true })
 vim.api.nvim_create_autocmd({ 'BufEnter', 'FocusGained' }, {
     group = 'rockyz.mru',
-    callback = function(args)
-        require('rockyz.mru').store_buf(args.buf)
+    callback = function(ev)
+        require('rockyz.mru').store_buf(ev.buf)
     end,
 })
 vim.api.nvim_create_autocmd('VimLeavePre', {

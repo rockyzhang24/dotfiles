@@ -96,9 +96,9 @@ vim.o.foldtext = '' -- transparent foldtext (https://github.com/neovim/neovim/pu
 local augroup = vim.api.nvim_create_augroup('rockyz.fold', { clear = true })
 vim.api.nvim_create_autocmd('LspAttach', {
     group = augroup,
-    callback = function(args)
-        local bufnr = args.buf
-        local client = vim.lsp.get_client_by_id(args.data.client_id)
+    callback = function(ev)
+        local bufnr = ev.buf
+        local client = vim.lsp.get_client_by_id(ev.data.client_id)
         if client and client:supports_method('textDocument/foldingRange') then
             vim.wo.foldmethod = 'expr'
             vim.wo.foldexpr = 'v:lua.vim.lsp.foldexpr()'
@@ -109,10 +109,10 @@ vim.api.nvim_create_autocmd('LspAttach', {
 })
 vim.api.nvim_create_autocmd('FileType', {
     group = augroup,
-    callback = function(args)
-        local bufnr = args.buf
+    callback = function(ev)
+        local bufnr = ev.buf
         if vim.bo[bufnr].filetype ~= 'bigfile' and not vim.b[bufnr].lsp_folding_enabled then
-            local has_parser, _ = pcall(vim.treesitter.get_parser, args.buf)
+            local has_parser, _ = pcall(vim.treesitter.get_parser, ev.buf)
             if has_parser then
                 vim.wo.foldmethod = 'expr'
                 vim.wo.foldexpr = 'v:lua.vim.treesitter.foldexpr()'

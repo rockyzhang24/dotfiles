@@ -279,8 +279,8 @@ local function set_termwin_autocmds()
     vim.api.nvim_create_autocmd({ 'WinClosed' }, {
         group = 'rockyz.terminal',
         pattern = table.concat({ state.term_win, state.panel_win }, ','),
-        callback = function(args)
-            local closed_win = tonumber(args.match)
+        callback = function(ev)
+            local closed_win = tonumber(ev.match)
             if closed_win == state.term_win then
                 close_win(state.panel_win)
             elseif closed_win == state.panel_win then

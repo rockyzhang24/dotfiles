@@ -559,16 +559,16 @@ vim.api.nvim_create_autocmd({ 'WinResized', 'BufWinEnter' }, {
 
 vim.api.nvim_create_autocmd({ 'WinScrolled' }, {
     group = group,
-    callback = function(args)
-        dirty.thumb[tonumber(args.match)] = true
+    callback = function(ev)
+        dirty.thumb[tonumber(ev.match)] = true
         schedule_flush()
     end,
 })
 
 vim.api.nvim_create_autocmd({ 'TextChanged', 'TextChangedI' }, {
     group = group,
-    callback = function(args)
-        local wins = vim.fn.win_findbuf(args.buf)
+    callback = function(ev)
+        local wins = vim.fn.win_findbuf(ev.buf)
         for _, winid in ipairs(wins) do
             dirty.thumb[winid] = true
         end
@@ -578,8 +578,8 @@ vim.api.nvim_create_autocmd({ 'TextChanged', 'TextChangedI' }, {
 
 vim.api.nvim_create_autocmd({ 'DiagnosticChanged' }, {
     group = group,
-    callback = function(args)
-        local bufnr = args.buf
+    callback = function(ev)
+        local bufnr = ev.buf
         -- Record the buffer changedtick at the moment diagnostics are updated.
         -- Used to ensure we only render diagnostics for the same buffer state.
         vim.b[bufnr].scrollbar_diagnostic_changedtick = vim.api.nvim_buf_get_changedtick(bufnr)
@@ -603,15 +603,15 @@ vim.api.nvim_create_autocmd({ 'BufWinEnter' }, {
 vim.api.nvim_create_autocmd({ 'User' }, {
     group = group,
     pattern = 'GitSignsUpdate',
-    callback = function(args)
-        local bufnr = args.data and args.data.buffer
+    callback = function(ev)
+        local bufnr = ev.data and ev.data.buffer
         if not bufnr then
             return
         end
         -- Record the buffer changedtick at the moment the git diffs are updated.
         -- Used to ensure we only render git diffs for the same buffer state.
         vim.b[bufnr].scrollbar_git_changedtick = vim.api.nvim_buf_get_changedtick(bufnr)
-        local wins = vim.fn.win_findbuf(args.data.buffer)
+        local wins = vim.fn.win_findbuf(ev.data.buffer)
         for _, winid in ipairs(wins) do
             dirty.git[winid] = true
         end
@@ -621,12 +621,12 @@ vim.api.nvim_create_autocmd({ 'User' }, {
 
 vim.api.nvim_create_autocmd({ 'CmdlineLeave' }, {
     group = group,
-    callback = function(args)
+    callback = function(ev)
         local t = vim.fn.getcmdtype()
         if t ~= '/' and t ~= '?' then
             return
         end
-        local wins = vim.fn.win_findbuf(args.buf)
+        local wins = vim.fn.win_findbuf(ev.buf)
         for _, winid in ipairs(wins) do
             dirty.search[winid] = true
             schedule_flush()

@@ -308,9 +308,10 @@ local function show_message(client)
     end)
 end
 
--- Display the progress message
-local function handler(args)
-    local client_id = args.data.client_id
+---Callback of LspProgress autocmd: display the progress message
+---@param ev table The argument of the callback
+local function handler(ev)
+    local client_id = ev.data.client_id
 
     -- Initialize the properties
     if clients[client_id] == nil then
@@ -329,7 +330,7 @@ local function handler(args)
     end
 
     -- Get the formatted progress message
-    cur_client.message = process_message(cur_client, vim.lsp.get_client_by_id(client_id).name, args.data.params)
+    cur_client.message = process_message(cur_client, vim.lsp.get_client_by_id(client_id).name, ev.data.params)
 
     -- Show progress message in floating window
     show_message(cur_client)
@@ -387,8 +388,8 @@ local group = vim.api.nvim_create_augroup('rockyz.lsp_progress', { clear = true 
 vim.api.nvim_create_autocmd({ 'LspProgress' }, {
     group = group,
     pattern = { 'begin', 'report', 'end' },
-    callback = function(args)
-        handler(args)
+    callback = function(ev)
+        handler(ev)
     end,
 })
 

@@ -52,9 +52,9 @@ vim.api.nvim_create_autocmd('FileType', {
 -- Treesitter highlight
 vim.api.nvim_create_autocmd('FileType', {
     group = vim.api.nvim_create_augroup('rockyz.treesitter.highlight', { clear = true }),
-    callback = function(args)
-        local bufnr = args.buf
-        local filetype = args.match
+    callback = function(ev)
+        local bufnr = ev.buf
+        local filetype = ev.match
         local lang = vim.treesitter.language.get_lang(filetype)
         if lang and vim.treesitter.language.add(lang) then
             vim.treesitter.start(bufnr, lang)
@@ -153,7 +153,7 @@ vim.api.nvim_create_autocmd({ 'BufEnter', 'FocusGained', 'InsertLeave', 'Cmdline
 -- Toggle relative number off
 vim.api.nvim_create_autocmd({ 'BufLeave', 'FocusLost', 'InsertEnter', 'CmdlineEnter', 'WinLeave' }, {
     group = rnu_augroup,
-    callback = function(args)
+    callback = function(ev)
         if tbl_contains(exclude_ft, vim.bo.filetype) then
             return
         end
@@ -161,7 +161,7 @@ vim.api.nvim_create_autocmd({ 'BufLeave', 'FocusLost', 'InsertEnter', 'CmdlineEn
             vim.wo.relativenumber = false
         end
         -- Redraw here to avoid having to first write something for the line numbers to update.
-        if args.event == 'CmdlineEnter' then
+        if ev.event == 'CmdlineEnter' then
             if not vim.tbl_contains({ '@', '-' }, vim.v.event.cmdtype) then
                 vim.cmd.redraw()
             end
@@ -172,10 +172,10 @@ vim.api.nvim_create_autocmd({ 'BufLeave', 'FocusLost', 'InsertEnter', 'CmdlineEn
 -- Command-line window
 vim.api.nvim_create_autocmd('CmdwinEnter', {
     group = vim.api.nvim_create_augroup('rockyz.cmdwin', {}),
-    callback = function(args)
+    callback = function(ev)
         -- Execute command and stay in the command-line window
-        vim.keymap.set({ 'n', 'i' }, '<S-CR>', '<CR>q:', { buffer = args.buf })
-        vim.keymap.set('n', 'q', ':q<CR>', { buffer = args.buf, nowait = true, silent = true })
+        vim.keymap.set({ 'n', 'i' }, '<S-CR>', '<CR>q:', { buffer = ev.buf })
+        vim.keymap.set('n', 'q', ':q<CR>', { buffer = ev.buf, nowait = true, silent = true })
     end,
 })
 
@@ -264,13 +264,13 @@ vim.api.nvim_create_autocmd('FileType', {
 vim.api.nvim_create_autocmd('BufNewFile', {
     group = vim.api.nvim_create_augroup('rockyz.templates', { clear = true }),
     desc = 'Load template file',
-    callback = function(args)
-        if not vim.bo[args.buf].modifiable then
+    callback = function(ev)
+        if not vim.bo[ev.buf].modifiable then
             return
         end
         local home = os.getenv('HOME')
-        local fname = vim.fn.fnamemodify(args.file, ':t')
-        local ext = vim.fn.fnamemodify(args.file, ':e')
+        local fname = vim.fn.fnamemodify(ev.file, ':t')
+        local ext = vim.fn.fnamemodify(ev.file, ':e')
         local candidates = { fname, ext }
         for _, candidate in ipairs(candidates) do
             local tmpl = table.concat({ home, '/.config/nvim/templates/', candidate, '.tpl' })

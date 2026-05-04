@@ -17,7 +17,7 @@ require('blink.cmp').setup({
         ['<C-f>'] = { 'scroll_documentation_down', 'fallback' },
     },
     sources = {
-        default = { 'lsp', 'omni', 'snippets', 'buffer', 'path' },
+        default = { 'lsp', 'snippets', 'buffer', 'path' },
         providers = {
             -- lsp = {
             --     -- By default it fallbacks to 'buffer'. It means buffer items will only be listed
@@ -28,12 +28,6 @@ require('blink.cmp').setup({
             -- buffer = {
             --     min_keyword_length = 4,
             -- },
-            omni = {
-                enabled = function()
-                    return vim.bo.omnifunc ~= 'v:lua.vim.lsp.omnifunc'
-                        and vim.bo.omnifunc ~= 'v:lua.vim.lua_omnifunc'
-                end,
-            },
         },
     },
     snippets = {

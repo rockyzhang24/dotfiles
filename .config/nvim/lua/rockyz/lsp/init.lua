@@ -33,12 +33,12 @@ local float_opts = {
 
 local virtual_lines_opts = {
     format = function(d)
-    return string.format(
-        '%s: %s [%s]',
-        d.source and d.source or 'Unknown',
-        d.message,
-        d.code and d.code or 'Unknown'
-    )
+        return string.format(
+            '%s: %s [%s]',
+            d.source and d.source or 'Unknown',
+            d.message,
+            d.code and d.code or 'Unknown'
+        )
     end,
 }
 

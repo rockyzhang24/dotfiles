@@ -311,7 +311,8 @@ function M.filetype()
     local sp_ft = special_filetypes[filetype]
     if sp_ft then
         local icon = sp_ft.icon
-        return string.format('%%#StlIcon#%s %%#StlFiletype#%s%%*', icon, filetype)
+        local icon_hl = sp_ft.icon_hl or 'StlIcon'
+        return string.format('%%#%s#%s %%#StlFiletype#%s%%*', icon_hl, icon, filetype)
     end
     -- Normal filetype
     local has_devicons, devicons = pcall(require, 'nvim-web-devicons')

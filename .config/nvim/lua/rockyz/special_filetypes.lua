@@ -1,6 +1,4 @@
--- Define icons and titles for special filetypes.
--- icons are used by tabline, winbar and statusline.
--- titles are used by tabline.
+-- Define icons, titles and highlight groups for special filetypes
 
 local icons = require('rockyz.icons')
 
@@ -32,6 +30,7 @@ local special_filetypes = {
     fzf = {
         icon = icons.misc.search,
         title = 'FZF',
+        icon_hl = 'Special',
     },
     ['gitsigns.blame'] = {
         icon = icons.git.commit,
@@ -61,6 +60,11 @@ local special_filetypes = {
         icon = icons.misc.file,
         title = 'No Name',
     },
+    ['nvim-pack'] = {
+        icon = icons.symbol_kinds.Method,
+        title = 'Nvim Pack',
+        icon_hl = 'Special',
+    },
     oil = {
         icon = icons.misc.explorer,
         title = 'Oil',
@@ -80,6 +84,7 @@ local special_filetypes = {
     qf = {
         icon = icons.misc.quickfix,
         title = 'Quickfix List',
+        icon_hl = 'Conditional',
     },
     tagbar = {
         icon = icons.misc.outline,

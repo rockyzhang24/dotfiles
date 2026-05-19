@@ -1,60 +1,91 @@
--- Use _ to toggle lf
--- Use lf's builtin q to quit
+-- _ to toggle lf
+-- q to quit
 -- <C-x>, <C-v>, <C-t> to open the selected files in split, vsplit or tab
--- <M-Enter> to open the files in the previous window
+-- <C-Enter> to open the files in the previous window
 -- <C-q> to change nvim's cwd to the current directory of lf
--- q in NORMAL to close lf window
 
 local M = {}
 
 local io_utils = require('rockyz.utils.io')
-local notify = require('rockyz.utils.notify')
 
-local term = {
+local config = {
+    keymaps = {
+        ['<C-x>'] = 'split',
+        ['<C-v>'] = 'vsplit',
+        ['<C-t>'] = 'tab',
+        ['<C-Enter>'] = 'edit',
+        ['<C-q>'] = 'cd',
+    }
+}
+
+local state = {
     winid = -1,
     bufnr = -1,
+    jobid = -1,
+    pid = -1, -- pid of lf
 }
 
 local prev_FZF_DEFAULT_OPTS
 
-local actions = {
-    ['<C-x>'] = 'belowright split',
-    ['<C-v>'] = 'belowright vsplit',
-    ['<C-t>'] = 'tab split',
-    ['<M-Enter>'] = 'edit',
-}
-
 local function create_keymaps()
-    for k, act in pairs(actions) do
-        vim.keymap.set('t', k, function()
-            local key = vim.api.nvim_replace_termcodes('<A-S-e>', true, false, true)
-            vim.api.nvim_feedkeys(key, 'n', false)
-            vim.defer_fn(function()
-                M.close()
-                local filepath = io_utils.read_file(vim.env.TMPDIR .. '/lf-filepath'):gsub('\n', '')
-                for _, f in ipairs(vim.split(filepath, ' ')) do
-                    vim.cmd(act .. ' ' .. f)
-                end
-            end, 100)
-        end, { buffer = term.bufnr })
-    end
-
     vim.keymap.set('t', '_', function()
         M.close()
-    end, { buffer = term.bufnr })
+    end, { buffer = state.bufnr })
 
-    vim.keymap.set('t', '<C-q>', function()
-        local key = vim.api.nvim_replace_termcodes('<A-S-q>', true, false, true)
-        vim.api.nvim_feedkeys(key, 'n', false)
-        vim.defer_fn(function()
-            M.close()
-            local path = io_utils.read_file(vim.env.TMPDIR .. '/lf-pwd'):gsub('\n', '')
-            vim.cmd.cd(path)
-            notify.info('Current directory is changed to ' .. path)
-        end, 100)
-    end, { buffer = term.bufnr })
+    vim.keymap.set('n', 'q', '<Cmd>q<CR>', { buffer = state.bufnr, nowait = true })
 
-    vim.keymap.set('n', 'q', '<Cmd>q<CR>', { buffer = term.bufnr, nowait = true })
+    for key, action in pairs(config.keymaps) do
+        vim.keymap.set('t', key, function()
+            M[action]()
+        end, { buffer = state.buffer })
+    end
+end
+
+---Generate lf remote command that tells the parent Nvim (i.e., the remote server) to run the
+---function from lf.lua module via Nvim's RPC.
+---Example: tell the parent Nvim to run a function foobar() with the selected files as the argument
+---lf -remote 'send lf_pid $nvim --server "$NVIM" --remote-expr
+---"v:lua.require(\'rockyz.lf\').foobar(\'$fx\')"'
+---@param func_call_str string A string representation of a funciton call expression
+local function gen_remote_command(func_call_str)
+    return {
+        'lf',
+        '-remote',
+        string.format(
+            'send %s $nvim --server "$NVIM" --remote-expr "v:lua.require(\'rockyz.lf\').%s"',
+            state.pid,
+            func_call_str
+        ),
+    }
+end
+
+---@param command string Vim's Ex command to open file, e.g., vsplit
+local function open_file(command)
+    local cmd = gen_remote_command(string.format('remote_open_file(\'$fx\', \'%s\')', command))
+    M.close()
+    vim.system(cmd, { text = true })
+end
+
+function M.split()
+    open_file('belowright split')
+end
+
+function M.vsplit()
+    open_file('belowright vsplit')
+end
+
+function M.tab()
+    open_file('tab split')
+end
+
+function M.edit()
+    open_file('edit')
+end
+
+function M.cd()
+    local cmd = gen_remote_command('remote_cd(\'$PWD\')')
+    M.close()
+    vim.system(cmd, { text = true })
 end
 
 local function calculate_win_pos()
@@ -81,35 +112,39 @@ function M.open()
     prev_FZF_DEFAULT_OPTS = vim.env.FZF_DEFAULT_OPTS
     vim.env.FZF_DEFAULT_OPTS = vim.env.FZF_DEFAULT_OPTS:gsub('%-%-tmux%s+%S+', '')
 
-    if not vim.api.nvim_buf_is_valid(term.bufnr) then
-        term.bufnr = vim.api.nvim_create_buf(false, true)
-        vim.api.nvim_buf_call(term.bufnr, function()
-            vim.fn.jobstart({ vim.o.shell, '-c', 'lf' }, {
+    local bufname = vim.api.nvim_buf_get_name(0)
+    local tmpfile = vim.env.TMPDIR .. '/nvim-lf-bufname'
+    io_utils.write_file_async(tmpfile, bufname)
+
+    if not vim.api.nvim_buf_is_valid(state.bufnr) then
+        state.bufnr = vim.api.nvim_create_buf(false, true)
+        vim.api.nvim_buf_call(state.bufnr, function()
+            state.jobid = vim.fn.jobstart({ 'lf' }, {
                 term = true,
                 on_exit = function()
                     -- Immediately close the buffer and window to avoid the redundant message "[Process
                     -- exited 0]"
-                    vim.api.nvim_buf_delete(term.bufnr, { force = true })
+                    vim.api.nvim_buf_delete(state.bufnr, { force = true })
                 end,
             })
         end)
+        state.pid = vim.fn.jobpid(state.jobid)
+        create_keymaps()
     end
 
-    term.winid = vim.api.nvim_open_win(term.bufnr, true, calculate_win_pos())
+    state.winid = vim.api.nvim_open_win(state.bufnr, true, calculate_win_pos())
     vim.cmd.startinsert()
-
-    create_keymaps()
 end
 
 -- Close the window
 function M.close()
-    vim.api.nvim_win_hide(term.winid)
+    vim.api.nvim_win_hide(state.winid)
     vim.env.FZF_DEFAULT_OPTS = prev_FZF_DEFAULT_OPTS
 end
 
 -- Toggle lf window
 function M.toggle()
-    if vim.api.nvim_win_is_valid(term.winid) then
+    if vim.api.nvim_win_is_valid(state.winid) then
         M.close()
     else
         M.open()
@@ -119,3 +154,34 @@ end
 vim.keymap.set('n', '_', function()
     M.toggle()
 end)
+
+---------------------------------------------------------------
+-- Functions invoked by lf's remote commands through Nvim's RPC
+---------------------------------------------------------------
+
+---@param selection string Selected files that delimited by "\n"
+---@param command string Vim's Ex command to open file
+function M.remote_open_file(selection, command)
+    command = command or 'edit'
+    local files = vim.split(selection, '\n')
+    for _, f in ipairs(files) do
+        local stat = vim.uv.fs_stat(f)
+        if stat and stat.type == 'file' then
+            vim.cmd(command .. ' ' .. f)
+        else
+            vim.notify(string.format('[lf] %s is not a file', f), vim.log.levels.WARN)
+        end
+    end
+end
+
+---@param pwd string The present working directory of lf, i.e., lf's $PWD
+function M.remote_cd(pwd)
+    local stat = vim.uv.fs_stat(pwd)
+    if not stat or stat.type ~= 'directory' then
+        vim.notify(string.format('[lf] %s is not a directory', pwd), vim.log.levels.WARN)
+        return
+    end
+    vim.cmd.cd(pwd)
+end
+
+return M

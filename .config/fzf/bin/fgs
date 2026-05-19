@@ -7,103 +7,137 @@
 # Reference: the _forgit_add() implementation in forgit, see
 # https://github.com/wfxr/forgit/blob/master/bin/git-forgit
 
+# Keymaps
+# CTRL-L: stage
+# CTRL-H: unstage
+# CTRL-ALT-R: reset
+# ENTER: open files in $EDITOR
+
 __fda=${BASH_SOURCE[0]}
 
-git_cmd="git"
-status="status -s"
+git=(git)
+git_status=(
+    status
+    -s
+)
 # Handle my dotfile bare repo
 if [[ $PWD == $HOME/.config || $PWD == $HOME/.config/* && $PWD != $HOME/.config/nvim/pack* ]]; then
-    git_cmd="git --git-dir=$HOME/dotfiles/ --work-tree=$HOME"
+    git+=(
+        --git-dir="$HOME/dotfiles/"
+        --work-tree="$HOME"
+    )
     # For my dotfile bare repo with set "showUntrackedFiles = no", show untracked files in ~/.config
-    status+=" -uall $XDG_CONFIG_HOME"
+    git_status+=(
+        -uall
+        "$XDG_CONFIG_HOME"
+    )
 fi
 
 # Entries listed by 'git status -s' look like this:
 # [R ] original/path/for/a/file -> new/path/for/the/file
-# This is function is used to extract the file path
-# remove indicators | remove original path for rename case | remove surrounding quotes
-cleaner() {
-    sed 's/^.*]  //' |
-    sed 's/.* -> //' |
-    sed -e 's/^\"//' -e 's/\"$//'
-}
+# This cleaner extracts the file path
+# 1. remove indicators
+# 2. remove original path for rename case
+# 3. remove surrounding quotes
+cleaner=(
+    sed '
+    s/^.*]  //;
+    s/.* -> //;
+    s/^"//;
+    s/"$//
+    '
+)
+
+delta=(
+    delta
+    --width
+    "${FZF_PREVIEW_COLUMNS:-$COLUMNS}"
+    --file-style omit
+    "${DELTA_OPTS}"
+)
 
 # This script file is also used for fzf preview by passing in the current entry
 if [[ $# -eq 1 ]]; then
-    delta_cmd="delta --width ${FZF_PREVIEW_COLUMNS:-$COLUMNS} --file-style omit ${DELTA_OPTS}"
-    file=$(echo "$1" | cleaner)
-    if ($git_cmd status -s -uall -- "$file" | grep '^??') &>/dev/null; then
+    file=$(echo "$1" | "${cleaner[@]}")
+    if "${git[@]}" status -s -uall -- "$file" | grep '^??'; then
         # (1). Untracked file or folder
         # folder: list contents of the folder by tree
         # file: diff with /dev/null <file>
         if [[ -d $file ]]; then
             tree -C "$file"
         else
-            $git_cmd diff --color=always --no-index -- /dev/null "$file" | eval "$delta_cmd"
+            "${git[@]}" diff --color=always --no-index -- /dev/null "$file" | "${delta[@]}"
         fi
     else
         # (2). Unstaged: git diff <file>
         # (3). Staged: git diff --staged <file>
-        diff_output=$($git_cmd diff -- "$file")
+        diff_output=$("${git[@]}" diff -- "$file")
         if [[ -n $diff_output ]]; then
-            echo "$diff_output" | eval "$delta_cmd"
+            echo "$diff_output" | "${delta[@]}"
         else
-            $git_cmd diff --staged -- "$file" | eval "$delta_cmd"
+            "${git[@]}" diff --staged -- "$file" | "${delta[@]}"
         fi
     fi
     exit 0
 fi
 
-git_status_cmd="$git_cmd -c color.status=always -c status.relativePaths=true -c core.quotePath=false $status"
-
-# Create an array to store the selections
-while IFS= read -r file; do
-    lines+=("$file")
-done < <(
-    $git_status_cmd |
-        sed -E 's/^(..[^[:space:]]*|[^[:space:]]*[[:space:]]?)[[:space:]]+(.*)$/[\1]  \2/' |
-        fzf \
-            --ansi \
-            --exit-0 \
-            --preview "$__fda {}" \
-            --preview-window down,60% \
-            --prompt="Git Status> " \
-            --expect 'ctrl-h,ctrl-l,ctrl-r' \
-            --header ":: CTRL-H (unstaged), CTRL-L (staged), CTRL-R (reset), ENTER (open)" |
-    cleaner
+git_status_cmd=(
+    "${git[@]}"
+    -c color.status=always
+    -c status.relativePaths=true
+    -c core.quotePath=false
+    "${git_status[@]}"
 )
 
-if [[ ! ${#lines[@]} -gt 1 ]]; then
-    exit
-fi
+# Surround the two-letter status code with square bracket
+sed_regex='s/^(..[^[:space:]]*|[^[:space:]]*[[:space:]]?)[[:space:]]+(.*)$/[\1]  \2/'
 
-key=${lines[0]}
-if [[ -z $key ]]; then
-    # ENTER: open files in EDITOR
-    nvim "${lines[@]:1}"
-elif [[ $key == 'ctrl-h' ]]; then
-    # CTRL-H: unstage
-    $git_cmd reset -- "${lines[@]:1}" >/dev/null
-elif [[ $key == 'ctrl-l' ]]; then
-    # CTRL-L: stage
-    $git_cmd add -- "${lines[@]:1}"
-elif [[ $key == 'ctrl-r' ]]; then
-    # CTRL-R: reset
-    file_list=$(printf '%s\n' "${lines[@]:1}")
-    read -rp $'Reset files:\n'"$file_list"$'\n\nContinue? [y/N]' answer
-    if [[ ! $answer =~ ^[Yy]$ ]]; then
-        exit 1
-    fi
-    for file in "${lines[@]:1}"; do
-        if $git_cmd status -s -uall -- "$file" | grep -q "^??"; then
-            # For untracked file
-            $git_cmd clean -f "$file"
+reload_cmd="$(
+    printf '%q ' "${git_status_cmd[@]}"
+)"
+reload_cmd+=" | sed -E '$sed_regex'"
+
+git_str="$(
+    printf '%q ' "${git[@]}"
+)"
+
+cleaner_str="$(
+    printf '%q ' "${cleaner[@]}"
+)"
+
+"${git_status_cmd[@]}" |
+sed -E "$sed_regex" |
+fzf \
+--ansi \
+--exit-0 \
+--preview "$__fda {}" \
+--preview-window down,60% \
+--prompt="Git Status> " \
+--bind "ctrl-l:execute-silent(
+    printf '%s\n' {+} | $cleaner_str | xargs -r $git_str add --
+)+reload($reload_cmd)" \
+--bind "ctrl-h:execute-silent(
+    printf '%s\n' {+} | $cleaner_str | xargs -r $git_str reset -- >/dev/null
+)+reload($reload_cmd)" \
+--bind "ctrl-alt-r:execute-silent(
+    printf '%s\n' {+} |
+    $cleaner_str |
+    while IFS= read -r file; do
+        # For untracked file
+        if $git_str status -s -uall -- \"\$file\" | grep -q '^??'; then
+            $git_str clean -f -- \"\$file\"
+        # For tracked file
         else
-            # For tracked file
-            $git_cmd checkout HEAD -- "$file"
+            $git_str checkout HEAD -- \"\$file\"
         fi
     done
-fi
+)+reload($reload_cmd)" \
+--bind "enter:execute(
+    printf '%s\n' {+} |
+    $cleaner_str |
+    xargs -r $EDITOR
+)+abort" \
+--header ":: CTRL-H (unstaged), CTRL-L (staged), CTRL-ALT-R (reset), ENTER (open)"
 
-printf "\nGit Status:\n"
-eval "$git_cmd $status"
+printf "\nCurrent Git Status:\n"
+"${git[@]}" "${git_status[@]}"

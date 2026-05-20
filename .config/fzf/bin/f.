@@ -7,6 +7,9 @@
 # In fzf, list all the dot files managed by the bare repo including untracked files.
 # Support displaying the two-letter status code.
 
+set -euo pipefail
+declare -a files
+
 # shellcheck disable=SC2016
 while IFS= read -r file; do
     files+=("${file/#~/$HOME}") # replace the leading ~ to $HOME
@@ -15,7 +18,7 @@ done < <( ls-gitfiles 'dot' | fzf \
     --multi \
     --delimiter='\t' \
     --with-nth=1 \
-    --query="$1" \
+    --query="${1:-}" \
     --prompt='.dotfiles> ' \
     --preview='
         line={}

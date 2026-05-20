@@ -2,8 +2,19 @@
 --smart-case
 --hidden
 
-# do not search .git
---glob=!.git/
+# Exclude files and directories for searching
+--glob=!.cache
+--glob=!.DS_Store
+--glob=!.git
+--glob=!karabiner/automatic_backups
+--glob=!Library
+--glob=!.local
+--glob=!Movies
+--glob=!Music
+--glob=!Pictures
+--glob=!.Trash
+--glob=!.vscode
+--glob=!.zsh_sessions
 
 # arctic theme
 # --colors

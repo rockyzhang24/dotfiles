@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env zsh
 
 # Color theme for fzf, bat, etc
 # Options: arctic, monokai, nvim-default-light, gruvbox-dark, gruvbox-light
@@ -104,45 +104,22 @@ case "$COLOR_THEME" in
 esac
 [[ -n $delta_opts ]] && export DELTA_OPTS="$delta_opts"
 
-#
-# User-defined
-#
+# Reference: https://github.com/zimfw/utility/blob/master/init.zsh
+if [[ -z ${NO_COLOR} ]]; then
 
-# Build options for fd and rg to exclude files and directories
-
-export EXCLUDE=".git,.Trash,.vscode,.cache,.local,.DS_Store,Library,Music,Movies,Pictures,karabiner/automatic_backups,.zsh_sessions,Downloads/z"
-FD_EXCLUDE=""
-RG_EXCLUDE=""
-while IFS=',' read -d ',' item; do
-    # Build --exclude options for fd (i.e., --exclude .git --exclude .Trash --exclude ...)
-    FD_EXCLUDE+="--exclude '$item' "
-    # Build -g options for rg (i.e., -g !.git -g !.Trash -g ...)
-    RG_EXCLUDE+="-g '!$item' "
-done <<< "$EXCLUDE,"
-export FD_EXCLUDE=${FD_EXCLUDE% } # trim trailing space
-export RG_EXCLUDE=${RG_EXCLUDE% }
-
-#
-# Configs below are taken from zimfw utility: https://github.com/zimfw/utility/blob/master/init.zsh
-#
-
-# Colors
-if (( terminfo[colors] >= 8 )); then
     # grep colours
-    if (( ! ${+GREP_COLOR} )) export GREP_COLOR='37;45'                             #BSD
+    if (( ! ${+GREP_COLOR} )) export GREP_COLOR='37;45'                 #BSD
     if (( ! ${+GREP_COLORS} )) export GREP_COLORS="mt=${GREP_COLOR}"    #GNU
+    if [[ ${OSTYPE} == (openbsd|solaris)* ]]; then
+        if (( ${+commands[ggrep]} )) alias grep='ggrep --color=auto'
+    elif (( ${+commands[grep]} )); then
+        alias grep='grep --color=auto'
+    fi
 
     # less colours
-    if (( ${+commands[less]} )); then
-        if (( ! ${+LESS_TERMCAP_mb} )) export LESS_TERMCAP_mb=$'\E[1;31m'       # Begins blinking.
-        if (( ! ${+LESS_TERMCAP_md} )) export LESS_TERMCAP_md=$'\E[1;31m'       # Begins bold.
-        if (( ! ${+LESS_TERMCAP_me} )) export LESS_TERMCAP_me=$'\E[0m'          # Ends mode.
-        if (( ! ${+LESS_TERMCAP_se} )) export LESS_TERMCAP_se=$'\E[27m'         # Ends standout-mode.
-        if (( ! ${+LESS_TERMCAP_so} )) export LESS_TERMCAP_so=$'\E[7m'          # Begins standout-mode.
-        if (( ! ${+LESS_TERMCAP_ue} )) export LESS_TERMCAP_ue=$'\E[0m'          # Ends underline.
-        if (( ! ${+LESS_TERMCAP_us} )) export LESS_TERMCAP_us=$'\E[1;32m'       # Begins underline.
-    fi
-else
-    # See https://no-color.org
-    export NO_COLOR=1
+    if (( ! ${+LESS_TERMCAP_mb} )) export LESS_TERMCAP_mb=$'\E[1;31m'  # Begins blinking.
+    if (( ! ${+LESS_TERMCAP_md} )) export LESS_TERMCAP_md=$'\E[1;31m'  # Begins bold.
+    if (( ! ${+LESS_TERMCAP_me} )) export LESS_TERMCAP_me=$'\E[0m'     # Ends mode.
+    if (( ! ${+LESS_TERMCAP_ue} )) export LESS_TERMCAP_ue=$'\E[0m'     # Ends underline.
+    if (( ! ${+LESS_TERMCAP_us} )) export LESS_TERMCAP_us=$'\E[1;32m'  # Begins underline.
 fi

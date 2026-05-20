@@ -214,12 +214,10 @@ vim.api.nvim_create_autocmd('User', {
     end,
 })
 
-local fd_exclude = vim.env.FD_EXCLUDE and vim.env.FD_EXCLUDE or ''
-
 local rg_prefix = 'rg --column --line-number --no-heading --color=always --smart-case --with-filename'
 -- Use bat to preview text file
 local bat_prefix = 'bat --color=always --paging=never --style=numbers'
-local fd_prefix = 'fd --hidden --follow --color=never --type f --type l ' .. fd_exclude
+local fd_prefix = 'fd --hidden --follow --color=never --type f --type l '
 -- A script to preview various types of files (text, image, etc)
 local fzf_previewer = '~/.config/fzf/fzf-previewer.sh'
 local diff_pager = '| delta --width $FZF_PREVIEW_COLUMNS' .. vim.env.DELTA_OPTS
@@ -3499,8 +3497,6 @@ set_keymaps()
 
 -- Complete path (include files and dirs)
 local function complete_path(from_resume)
-    local fd_cmd = 'fd ' .. fd_exclude
-    local fd_abs_cmd = 'fd --absolute-path ' .. fd_exclude
     local prompt = shortpath(vim.uv.cwd())
 
     local winid = vim.api.nvim_get_current_win()
@@ -3529,10 +3525,10 @@ local function complete_path(from_resume)
             '--bind',
             'ctrl-/:ignore',
             '--bind',
-            'alt-/:transform:[[ ! $FZF_PROMPT =~ Absolute ]] && echo "reload(' .. fd_abs_cmd .. ')+change-prompt(Absolute Paths> )" || echo "reload(' .. fd_cmd .. ')+change-prompt(' .. prompt .. ')"',
+            'alt-/:transform:[[ ! $FZF_PROMPT =~ Absolute ]] && echo "reload(fd --absolute-path)+change-prompt(Absolute Paths> )" || echo "reload(fd)+change-prompt(' .. prompt .. ')"',
         }),
     }
-    fzf(spec, nil, fd_cmd)
+    fzf(spec, nil, 'fd ')
 end
 
 vim.keymap.set('i', '<C-x><C-f>', function()

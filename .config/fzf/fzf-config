@@ -9,7 +9,7 @@ fi
 eval "$(fzf --zsh)"
 
 # Default fd command
-FD="fd --hidden --follow $FD_EXCLUDE"
+FD="fd --hidden --follow"
 
 # Use fd instead of default find
 export FZF_DEFAULT_COMMAND="$FD --type f --type l"
@@ -144,11 +144,11 @@ export FZF_DEFAULT_OPTS=" \
 # Use fd for FZF completion
 # 1). listing files and dirs ($1 is the base path to start search) such as "vim ~/.config/**<TAB>"
 _fzf_compgen_path() {
-    fd --hidden --follow ${(z)FD_EXCLUDE} . "$1"
+    fd --hidden --follow . "$1"
 }
 # 2). listing dirs such as "cd **<TAB>"
 _fzf_compgen_dir() {
-    fd --type d --hidden --follow ${(z)FD_EXCLUDE} . "$1"
+    fd --type d --hidden --follow . "$1"
 }
 
 # CTRL-T to paste the selected files and directories onto the command-line

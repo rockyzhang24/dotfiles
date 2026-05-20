@@ -1,0 +1,12 @@
+.cache
+.DS_Store
+.git
+karabiner/automatic_backups
+Library
+.local
+Movies
+Music
+Pictures
+.Trash
+.vscode
+.zsh_sessions

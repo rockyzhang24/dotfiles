@@ -156,7 +156,7 @@ cmd copy-absolute-path ${{
 cmd fzf-toggle-select ${{
     no_depth="/tmp/lf-fzf-toggle-select-no-depth"
     rm -f $no_depth
-    fd_cmd="fd --max-depth 1 --hidden --follow $FD_EXCLUDE"
+    fd_cmd="fd --max-depth 1 --hidden --follow"
     selections=$(eval "$fd_cmd" | fzf \
         --multi \
         --header ':: ENTER (toggle selections), CTRL-T (toggle no-depth/depth-1 traveral)' \
@@ -164,7 +164,7 @@ cmd fzf-toggle-select ${{
         --bind "ctrl-t:transform: \
         [[ ! -e $no_depth ]] && { \
             touch $no_depth; \
-            echo \"reload(fd --hidden --follow $FD_EXCLUDE)\"; \
+            echo \"reload(fd --hidden --follow)\"; \
         } || { \
             rm $no_depth; \
             echo \"reload($fd_cmd)\"; \
@@ -181,7 +181,7 @@ cmd fzf-toggle-select ${{
 
 # Fzf: change the current file selection
 cmd fzf-file ${{
-    fd_cmd="fd --type f --type l --hidden --follow $FD_EXCLUDE"
+    fd_cmd="fd --type f --type l --hidden --follow"
     select=$(eval "$fd_cmd" | fzf \
         --no-multi \
         --header ':: ALT-/ (toggle HOME/CWD)' \
@@ -200,7 +200,7 @@ cmd fzf-file ${{
 
 # Fzf: cd into the selected directory
 cmd fzf-cd ${{
-    fd_cmd="fd --type d --hidden --follow $FD_EXCLUDE"
+    fd_cmd="fd --type d --hidden --follow"
     select=$(eval "$fd_cmd" | fzf \
         --no-multi \
         --header ':: ALT-/ (toggle HOME/CWD)' \

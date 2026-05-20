@@ -6,15 +6,26 @@
 #   If [PARAM] is ommited, choose interactively via fzf.
 # DESCRIPTION: Create a gitignore file from gitignore.io
 
-api="command curl -sL https://www.toptal.com/developers/gitignore/api"
+set -euo pipefail
+
+API_BASE="https://www.toptal.com/developers/gitignore/api"
+
+fetch_list() {
+    command curl -sL "$API_BASE/list"
+}
+
+fetch_gitignore() {
+    local langs="$1"
+    command curl -sL "$API_BASE/$langs"
+}
 
 if  [ "$#" -eq 0 ]; then
     IFS+=","
-    for item in $(eval "$api/list"); do
+    for item in $(fetch_list); do
         echo "$item"
-    done | fzf --multi --ansi --prompt="GitIgnore> " --preview "$api/{} | bat -p -l gitignore --color=always" | paste -s -d "," - |
-    { read -r result && eval "$api/$result"; }
+    done | fzf --multi --ansi --prompt="GitIgnore> " --preview "command curl -sL $API_BASE/{} | bat -p -l gitignore --color=always" | paste -s -d "," - |
+    { read -r result && fetch_gitignore "$result"; }
 else
     IFS=","
-    eval "$api/$*"
+    fetch_gitignore "$*"
 fi

@@ -44,7 +44,7 @@ else
     extra_opts="${*%%"$last_arg"}"
 fi
 
-rg_prefix="rg --line-number --column --color=always --smart-case --vimgrep $RG_EXCLUDE $extra_opts "
+rg_prefix="rg --line-number --column --color=always --smart-case --vimgrep $extra_opts "
 
 selections="$(fzf \
     --height 80% \

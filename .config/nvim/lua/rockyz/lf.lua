@@ -44,24 +44,26 @@ end
 ---Generate lf remote command that tells the parent Nvim (i.e., the remote server) to run the
 ---function from lf.lua module via Nvim's RPC.
 ---Example: tell the parent Nvim to run a function foobar() with the selected files as the argument
----lf -remote 'send lf_pid $nvim --server "$NVIM" --remote-expr
----"v:lua.require(\'rockyz.lf\').foobar(\'$fx\')"'
----@param func_call_str string A string representation of a funciton call expression
-local function gen_remote_command(func_call_str)
+---lf -remote 'send lf_pid $nvim --server "$NVIM" --remote-expr "v:lua.require(\'rockyz.lf\').foobar(\'$fx\')"'
+---@param fn_name string Function name
+---@param args? string A string representation of the argument list passed to the funcion, e.g., "'foo', 'bar'"
+local function build_remote_expr_cmd(fn_name, args)
+    args = args or ''
     return {
         'lf',
         '-remote',
         string.format(
-            'send %s $nvim --server "$NVIM" --remote-expr "v:lua.require(\'rockyz.lf\').%s"',
+            'send %s $nvim --server "$NVIM" --remote-expr "v:lua.require(\'rockyz.lf\').%s(%s)"',
             state.pid,
-            func_call_str
+            fn_name,
+            args
         ),
     }
 end
 
 ---@param command string Vim's Ex command to open file, e.g., vsplit
 local function open_file(command)
-    local cmd = gen_remote_command(string.format('remote_open_file(\'$fx\', \'%s\')', command))
+    local cmd = build_remote_expr_cmd('remote_open_file', string.format("'$fx', '%s'", command))
     M.close()
     vim.system(cmd, { text = true })
 end
@@ -83,7 +85,7 @@ function M.edit()
 end
 
 function M.cd()
-    local cmd = gen_remote_command('remote_cd(\'$PWD\')')
+    local cmd = build_remote_expr_cmd('remote_cd', "'$PWD'")
     M.close()
     vim.system(cmd, { text = true })
 end

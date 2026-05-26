@@ -289,7 +289,7 @@ local groups = {
     Float = 'Number',
 
     Identifier = { fg = blue },
-    Function = { fg = green, bold = true },
+    Function = { fg = aqua, bold = true },
 
     Statement = { fg = red },
     Conditional = 'Statement',

@@ -21,6 +21,13 @@ local snippets = {
             }
         )
     ),
+    -- Divider
+    s(
+        'dvd',
+        f(function()
+            return string.rep('-', 80)
+        end, {})
+    )
 }
 
 return snippets

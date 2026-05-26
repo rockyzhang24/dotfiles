@@ -27,6 +27,7 @@ local states = {}
 local config = {
     default_provider = 'lsp',
     toggle = '\\ss',
+    width = 50,
     keymaps = {
         -- Local keymaps available only in outline buffer
         ['local'] = {
@@ -1208,7 +1209,7 @@ local function open()
     states[tab].provider = special_filetype_providers[ft] or config.default_provider
     create_outline_buffer()
     local win = vim.api.nvim_open_win(states[tab].bufnr, true, {
-        width = 50,
+        width = config.width,
         split = 'right',
         win = -1,
         style = 'minimal',

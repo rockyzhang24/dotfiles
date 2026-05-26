@@ -569,6 +569,7 @@ local disabled_filetypes = {
     'minpac',
     'minpacprgs',
     'Outline',
+    'pager', -- vim._core.ui2
     'tagbar',
     'term',
     'undotree',

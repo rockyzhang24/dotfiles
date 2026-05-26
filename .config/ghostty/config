@@ -41,6 +41,9 @@ mouse-hide-while-typing = true
 macos-window-shadow = true
 quit-after-last-window-closed = true
 
+# Shader
+custom-shader = shaders/cursor_warp.glsl
+
 #
 # Keybindings
 #

@@ -34,6 +34,9 @@ local bright_purple = '#d3869b' -- 175, 211-134-155
 local bright_aqua = '#8ec07c' -- 108, 142-192-124
 local bright_orange = '#fe8019' -- 208, 254-128-25
 
+local bright_coral_pink = '#ff7a90'
+local bright_mint_cyan = '#6fe3c1'
+
 local neutral_red = '#cc241d' -- 124, 204-36-29
 local neutral_green = '#98971a' -- 106, 152-151-26
 local neutral_yellow = '#d79921' -- 172, 215-153-33
@@ -50,11 +53,15 @@ local faded_purple = '#8f3f71' -- 96, 143-63-113
 local faded_aqua = '#427b58' -- 66, 66-123-88
 local faded_orange = '#af3a03' -- 130, 175-58-3
 
+local faded_coral_pink = '#d64d6f'
+local faded_mint_cyan = '#2aa198'
+
 -- Colors
 
 local bg0, bg1, bg2, bg3, bg4
 local fg0, fg1, fg2, fg3, fg4
 local red, green, yellow, blue, purple, aqua, orange
+local coral_pink, mint_cyan
 if vim.g.is_dark then
     bg0 = dark0
     if vim.g.gruvbox_contrast == 'soft' then
@@ -81,6 +88,9 @@ if vim.g.is_dark then
     purple = bright_purple
     aqua = bright_aqua
     orange = bright_orange
+
+    coral_pink = bright_coral_pink
+    mint_cyan = bright_mint_cyan
 else
     bg0 = light0
     if vim.g.gruvbox_contrast == 'soft' then
@@ -107,6 +117,9 @@ else
     purple = faded_purple
     aqua = faded_aqua
     orange = faded_orange
+
+    coral_pink = faded_coral_pink
+    mint_cyan = faded_mint_cyan
 end
 
 local norm_fg = fg1
@@ -719,6 +732,10 @@ local groups = {
     -- TreesitterContextSeparator = {},
     TreesitterContextBottom = { underline = true, sp = bg2 },
     -- TreesitterContextLineNumberBottom = {},
+
+    -- quick-scope
+    QuickScopePrimary = { fg = norm_bg, bg = coral_pink },
+    QuickScopeSecondary = { fg = norm_bg, bg = mint_cyan },
 }
 
 for k, v in pairs(groups) do

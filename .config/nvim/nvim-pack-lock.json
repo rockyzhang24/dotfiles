@@ -70,6 +70,10 @@
       "rev": "dfbfaa967a6f7ec50789bead7ef87e336c1fa63c",
       "src": "https://github.com/kyazdani42/nvim-web-devicons"
     },
+    "quick-scope": {
+      "rev": "6cee1d9e0b9ac0fbffeb538d4a5ba9f5628fabbc",
+      "src": "https://github.com/unblevable/quick-scope"
+    },
     "quickfix-reflector.vim": {
       "rev": "6a6a9e2",
       "src": "https://github.com/stefandtw/quickfix-reflector.vim"

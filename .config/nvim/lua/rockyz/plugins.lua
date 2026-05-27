@@ -45,6 +45,7 @@ vim.pack.add({
     'https://github.com/godlygeek/tabular',
     'https://github.com/mbbill/undotree',
     'https://github.com/haya14busa/vim-asterisk',
+    'https://github.com/unblevable/quick-scope',
     'https://github.com/tpope/vim-surround',
     'https://github.com/tpope/vim-sleuth',
     'https://github.com/tpope/vim-repeat',

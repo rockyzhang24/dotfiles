@@ -296,12 +296,19 @@ vim.api.nvim_create_autocmd({ 'LspNotify' }, {
 })
 
 -- Enable LSP servers
-local lsp_configs = {}
-for _, v in ipairs(vim.api.nvim_get_runtime_file('lsp/*', true)) do
-    local name = vim.fn.fnamemodify(v, ':t:r')
-    lsp_configs[name] = true
-end
-
-vim.lsp.enable(vim.tbl_keys(lsp_configs))
+vim.lsp.enable({
+    'bashls',
+    'clangd',
+    'cssls',
+    'gopls',
+    'html',
+    'jsonls',
+    'luals',
+    'taplo',
+    'ts_query_ls',
+    'tsgo',
+    'vimls',
+    'yamlls',
+})
 
 return M

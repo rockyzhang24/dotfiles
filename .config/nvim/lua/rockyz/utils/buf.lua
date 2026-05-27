@@ -4,11 +4,11 @@
 local M = {}
 
 ---@class rockyz.bufdelete.Opts
----@field bufnr number? Buffer to delete. Defaults to the current buffer
----@field file string? Delete buffer by file name. If provided, `buf` is ignored
----@field force boolean? Delete the buffer even if it is modified
----@field filter fun(buf: number): boolean? Filter buffers to delete
----@field wipe boolean? Wipe the buffer instead of deleting it
+---@field bufnr? number Buffer to delete. Defaults to the current buffer
+---@field file? string Delete buffer by file name. If provided, `buf` is ignored
+---@field force? boolean Delete the buffer even if it is modified
+---@field filter? fun(buf: number): boolean Filter buffers to delete
+---@field wipe? boolean Wipe the buffer instead of deleting it
 
 ---Delete a buffer:
 --- - either the current buffer if `bufnr` is not provided

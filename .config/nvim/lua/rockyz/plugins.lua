@@ -62,7 +62,6 @@ vim.pack.add({
     -- cx{motion}, cxx (line), X (visual), cxc (clear), and `.` is supported
 
     'https://github.com/othree/eregex.vim',
-    'https://github.com/wellle/targets.vim',
     'https://github.com/danymat/neogen',
     'https://github.com/stevearc/conform.nvim',
     'https://github.com/Wansmer/treesj',

@@ -102,11 +102,11 @@ vim.api.nvim_create_autocmd({ 'BufWritePre' }, {
     end,
 })
 
--- Highlight the selections on yank
-vim.api.nvim_create_autocmd({ 'TextYankPost' }, {
+-- Highlight the selections on yank and put
+vim.api.nvim_create_autocmd({ 'TextYankPost', 'TextPutPost' }, {
     group = vim.api.nvim_create_augroup('rockyz.highlight_yank', {}),
     callback = function()
-        vim.hl.on_yank({ timeout = 300, priority = 65535 })
+        vim.hl.hl_op({ timeout = 300, priority = 65535 })
     end,
 })
 

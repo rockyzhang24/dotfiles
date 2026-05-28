@@ -71,6 +71,38 @@ vim.lsp.buf.signature_help = function()
     }
 end
 
+-- Return the worst severity
+local function diagnostic_worst_severity()
+    local num_warnings = 0
+    for _, d in ipairs(vim.diagnostic.get(0)) do
+        if d.severity == vim.diagnostic.severity.ERROR then
+            return vim.diagnostic.severity.ERROR
+        elseif d.severity == vim.diagnostic.severity.WARN then
+            num_warnings = num_warnings + 1
+        end
+    end
+    if num_warnings > 0 then
+        return vim.diagnostic.severity.WARN
+    else
+        return nil
+    end
+end
+
+local function worst_severity_jump_opts(count)
+    local opts = {
+        severity = diagnostic_worst_severity(),
+        count = count,
+        on_jump = function(_, bufnr)
+            vim.diagnostic.open_float({
+                bufnr = bufnr,
+                scope = 'cursor',
+                focus = false,
+            })
+        end,
+    }
+    return opts
+end
+
 local function on_attach(client, bufnr)
     --
     -- Mappings
@@ -170,11 +202,11 @@ local function on_attach(client, bufnr)
     vim.keymap.set('n', ']D', function() -- last
         vim.diagnostic.jump({ count = math.huge, wrap = false })
     end)
-    vim.keymap.set('n', '[e', function() -- previous error
-        vim.diagnostic.jump({ count = -vim.v.count1, severity = vim.diagnostic.severity.ERROR })
+    vim.keymap.set('n', '[w', function() -- previous worst severity, i.e., skip warnings if there are any errors
+        vim.diagnostic.jump(worst_severity_jump_opts(-vim.v.count1))
     end, opts)
-    vim.keymap.set('n', ']e', function() -- next error
-        vim.diagnostic.jump({ count = vim.v.count1, severity = vim.diagnostic.severity.ERROR })
+    vim.keymap.set('n', ']w', function() -- next worst severity
+        vim.diagnostic.jump(worst_severity_jump_opts(vim.v.count1))
     end, opts)
     -- Toggle diagnostics (buffer-local)
     vim.keymap.set('n', 'yoe', function()

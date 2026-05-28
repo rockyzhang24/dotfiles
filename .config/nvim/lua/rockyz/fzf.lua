@@ -268,6 +268,8 @@ local fzf_ctx = {
     origin_git_root = nil,
     -- Working directory as launch time
     cwd = nil,
+    -- Session ids are used to discard stale async callbacks from previous finders
+    cur_session_id = 0
 }
 
 -- Use the general statusline
@@ -459,6 +461,15 @@ local function expect_keys(opts)
     return table.concat(keys, ',')
 end
 
+local function next_session_id()
+    fzf_ctx.cur_session_id = fzf_ctx.cur_session_id + 1
+    return fzf_ctx.cur_session_id
+end
+
+local function is_active_session(session_id)
+    return session_id == fzf_ctx.cur_session_id
+end
+
 --
 -- There are two ways to provide input to fzf: raw output from an external command like fd or git,
 -- or feed entries by a Lua table.
@@ -533,8 +544,10 @@ end
 
 ---Launch fzf with entries from a shell command or an entry builder
 ---@param spec table The spec dictionary for fzf#run(). See: https://github.com/junegunn/fzf/blob/master/README-VIM.md
----@param source string|fun() Shell command or function
+---@param source string|fun(number) Shell command or function
 local function fzf(spec, source)
+    local session_id = next_session_id()
+
     fzf_ctx.origin_bufnr = vim.api.nvim_get_current_buf()
     fzf_ctx.origin_winid = vim.api.nvim_get_current_win()
     fzf_ctx.origin_tabpage = vim.api.nvim_get_current_tabpage()
@@ -546,7 +559,7 @@ local function fzf(spec, source)
         vim.env.FZF_DEFAULT_COMMAND = source
     elseif type(source) == 'function' then
         vim.env.FZF_DEFAULT_COMMAND = 'cat ' .. fifo_path
-        source()
+        source(session_id)
     else
         notify.warn('[FZF] source must be a shell command or an entry builder function')
         vim.env.FZF_DEFAULT_COMMAND = old_fzf_cmd
@@ -2711,10 +2724,13 @@ local function lsp_symbols(method, params, title, symbol_query, from_resume)
         }),
     }
 
-    local function lsp_symbols_source()
+    local function lsp_symbols_source(session_id)
         local remaining = #clients
         for _, client in ipairs(clients) do
             client:request(method, params, function(_, result, ctx)
+                if not is_active_session(session_id) then
+                    return
+                end
                 symbol_conversion(result, ctx, '', all_entries, all_items)
                 remaining = remaining - 1
                 if remaining == 0 then
@@ -2854,7 +2870,7 @@ local function lsp_locations(method, title, from_resume)
         }),
     }
 
-    local function lsp_locations_source()
+    local function lsp_locations_source(session_id)
         local remaining = #clients
         for _, client in ipairs(clients) do
             local params = vim.lsp.util.make_position_params(win, client.offset_encoding)
@@ -2863,6 +2879,9 @@ local function lsp_locations(method, title, from_resume)
                 params.context = { includeDeclaration = true }
             end
             client:request(method, params, function(_, result, ctx)
+                if not is_active_session(session_id) then
+                    return
+                end
                 locations_to_entries_and_items(result or {}, ctx, all_entries, all_items)
                 remaining = remaining - 1
                 if remaining == 0 then

@@ -18,6 +18,9 @@ vim.keymap.set('n', 'z=', '<Cmd>setlocal spell<CR>z=')
 vim.keymap.set('x', 'x', '"_d') -- for copy and delete use v_d
 vim.keymap.set('n', 'z.', ':silent lockmarks update ++p<CR>') -- Preserve '[ '] on :write
 vim.keymap.set('n', 'vK', '<C-\\><C-n><Cmd>help!<CR>')
+vim.keymap.set('n', '<TAB>', 'za')
+vim.keymap.set({ 'n', 'x', 'o' }, 'H', '^')
+vim.keymap.set({ 'n', 'x', 'o' }, 'L', '$')
 
 -- Argument list
 -- Reference: https://jkrl.me/vim/2025/05/28/nvim-arglist.html
@@ -125,11 +128,11 @@ vim.keymap.set('n', '<M-r>', "<Cmd>execute 'later ' .. vim.v.count1 .. 'f'<CR>")
 -- Format the whole buffer and preserve the cursor position
 vim.keymap.set('n', 'gQ', 'mzgggqG`z<Cmd>delmarks z<CR>')
 -- Toggle spell
-vim.keymap.set('n', '\\S', function()
+vim.keymap.set('n', 'yoS', function()
     vim.wo.spell = not vim.wo.spell
 end)
 -- Toggle diffthis for each window in the current tab page
-vim.keymap.set('n', '\\dd', function()
+vim.keymap.set('n', 'yodd', function()
     if vim.wo.diff then
         vim.cmd('windo diffoff')
     else
@@ -137,8 +140,8 @@ vim.keymap.set('n', '\\dd', function()
     end
 end)
 -- Toggle autoformat (format-on-save)
-vim.keymap.set('n', '\\f', ':ToggleAutoFormat<CR>') -- buffer-local
-vim.keymap.set('n', '\\F', ':ToggleAutoFormat!<CR>') -- global
+vim.keymap.set('n', 'yof', ':ToggleAutoFormat<CR>') -- buffer-local
+vim.keymap.set('n', 'yoF', ':ToggleAutoFormat!<CR>') -- global
 vim.keymap.set('n', '<C-c>', 'ciw')
 
 -- From TJ
@@ -165,7 +168,7 @@ vim.keymap.set('x', 'A', function()
 end, { expr = true })
 
 -- Toggle a shallow fold view for quick code overview
-vim.keymap.set('n', '\\z', function()
+vim.keymap.set('n', 'yoz', function()
     if vim.w.shallow_outline_enabled then
         vim.wo.foldmethod, vim.wo.foldnestmax, vim.wo.foldlevel = unpack(vim.w.shallow_outline_prev_opts)
         vim.cmd('1,$foldopen!')
@@ -301,7 +304,7 @@ end)
 --
 
 -- Toggle the quickfix window
-vim.keymap.set('n', '\\q', function()
+vim.keymap.set('n', 'yoq', function()
     if vim.fn.getqflist({ winid = 0 }).winid ~= 0 then
         vim.cmd.cclose()
     elseif #vim.fn.getqflist() > 0 then
@@ -311,7 +314,7 @@ vim.keymap.set('n', '\\q', function()
 end)
 
 -- Toggle the location list window
-vim.keymap.set('n', '\\l', function()
+vim.keymap.set('n', 'yol', function()
     if vim.fn.getloclist(0, { winid = 0 }).winid ~= 0 then
         vim.cmd.lclose()
     elseif #vim.fn.getloclist(0) > 0 then
@@ -484,7 +487,7 @@ end)
 --
 
 -- Switch to the alternate buffer or the first available file in MRU list
-vim.keymap.set('n', '<Leader><Tab>', require('rockyz.utils.buf').switch_last_buf)
+vim.keymap.set('n', '<BS>', require('rockyz.utils.buf').switch_last_buf)
 -- Delete the current buffer and switch back to the previous one
 vim.keymap.set('n', '<Leader>bd', require('rockyz.utils.buf').bufdelete)
 -- Delete all the other unmodified buffers
@@ -763,7 +766,7 @@ for i = 1, 9 do
 end
 -- Go to the previous window
 -- (The builtin ctrl-w p has a bug. It considers the window that is currently invalid)
-vim.keymap.set('n', '<M-Tab>', function()
+vim.keymap.set('n', '<M-BS>', function()
     require('rockyz.mru_win').goto_recent()
 end)
 -- Split (use [count] to set the width or height)
@@ -800,7 +803,7 @@ vim.keymap.set('n', '<Leader>wo', function()
     end)) > 1 and '<C-w>o' or ''
 end, { expr = true })
 -- Maximize and restore the current window
-vim.keymap.set('n', '\\m', require('rockyz.utils.win').win_maximize_toggle)
+vim.keymap.set('n', 'yom', require('rockyz.utils.win').win_maximize_toggle)
 
 --
 -- Terminal

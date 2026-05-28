@@ -177,11 +177,11 @@ local function on_attach(client, bufnr)
         vim.diagnostic.jump({ count = vim.v.count1, severity = vim.diagnostic.severity.ERROR })
     end, opts)
     -- Toggle diagnostics (buffer-local)
-    vim.keymap.set('n', '\\e', function()
+    vim.keymap.set('n', 'yoe', function()
         vim.diagnostic.enable(not vim.diagnostic.is_enabled({ bufnr = 0 }), { bufnr = 0 })
     end, opts)
     -- Toggle diagnostics (global)
-    vim.keymap.set('n', '\\E', function()
+    vim.keymap.set('n', 'yoE', function()
         vim.diagnostic.enable(not vim.diagnostic.is_enabled())
     end, opts)
     -- Switch the way diagnostics are displayed (virtual text or virtual line)
@@ -212,7 +212,7 @@ local function on_attach(client, bufnr)
         end
         -- Toggle inlay hints
         -- (1). Buffer locally
-        vim.keymap.set('n', '\\h', function()
+        vim.keymap.set('n', 'yoh', function()
             local is_enabled = vim.lsp.inlay_hint.is_enabled({ bufnr = 0 })
             vim.b.inlay_hint_enabled = not is_enabled
             vim.lsp.inlay_hint.enable(vim.b.inlay_hint_enabled, { bufnr = 0 })
@@ -225,7 +225,7 @@ local function on_attach(client, bufnr)
             )
         end, opts)
         -- (2). Globally
-        vim.keymap.set('n', '\\H', function()
+        vim.keymap.set('n', 'yoH', function()
             vim.g.inlay_hint_enabled = not vim.g.inlay_hint_enabled
             vim.lsp.inlay_hint.enable(vim.g.inlay_hint_enabled)
             vim.notify(
@@ -249,7 +249,7 @@ local function on_attach(client, bufnr)
     -- Codelens
     if client:supports_method('textDocument/codeLens') then
         -- Toggle
-        vim.keymap.set('n', '\\cl', function()
+        vim.keymap.set('n', 'yocl', function()
             vim.lsp.codelens.enable(not vim.lsp.codelens.is_enabled())
         end, opts)
     end

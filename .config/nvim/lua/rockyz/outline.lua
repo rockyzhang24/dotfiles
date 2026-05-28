@@ -26,7 +26,7 @@ local states = {}
 
 local config = {
     default_provider = 'lsp',
-    toggle = '\\ss',
+    toggle = 'yoo',
     width = 50,
     keymaps = {
         -- Local keymaps available only in outline buffer
@@ -39,7 +39,7 @@ local config = {
         -- Available in both normal buffer and outline buffer
         global = {
             gs = 'reveal', -- reveal the symbol in outline buffer
-            ['\\sc'] = 'toggle_follow', -- follow cursor
+            ['yofc'] = 'toggle_follow', -- follow cursor
             ['<Leader>sr'] = 'refresh', -- update outline
             ['<Leader>sg'] = 'switch_to_ctags', -- switch to ctags provider
             ['<Leader>sl'] = 'switch_to_lsp', -- switch to LSP provider

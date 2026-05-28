@@ -1,15 +1,6 @@
 {
-    "global": { "show_in_menu_bar": false },
     "profiles": [
         {
-            "name": "rockyzhang24",
-            "selected": true,
-            "virtual_hid_keyboard": {
-                "caps_lock_delay_milliseconds": 0,
-                "country_code": 0,
-                "keyboard_type": "ansi",
-                "keyboard_type_v2": "ansi"
-            },
             "complex_modifications": {
                 "rules": [
                     {
@@ -47,19 +38,19 @@
                         "description": "Map CTRL-[ to ESC except in Neovim",
                         "manipulators": [
                             {
+                                "conditions": [
+                                    {
+                                        "name": "in_nvim",
+                                        "type": "variable_if",
+                                        "value": 0
+                                    }
+                                ],
                                 "from": {
                                     "key_code": "open_bracket",
                                     "modifiers": { "mandatory": ["left_control"] }
                                 },
                                 "to": [{ "key_code": "escape" }],
-                                "type": "basic",
-                                "conditions": [
-                                    {
-                                        "type": "variable_if",
-                                        "name": "in_nvim",
-                                        "value": 0
-                                    }
-                                ]
+                                "type": "basic"
                             }
                         ]
                     },
@@ -93,84 +84,84 @@
                         "description": "Vim-like navigation: Option + h/j/k/l",
                         "manipulators": [
                             {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$",
+                                            "^com\\.github\\.wez\\.wezterm$",
+                                            "^com\\.googlecode\\.iterm2",
+                                            "^com\\.mitchellh\\.ghostty"
+                                        ],
+                                        "type": "frontmost_application_unless"
+                                    }
+                                ],
                                 "description": "Option + h -> Left Arrow (outside terminals)",
                                 "from": {
                                     "key_code": "h",
                                     "modifiers": { "mandatory": ["left_option"] }
                                 },
                                 "to": [{ "key_code": "left_arrow" }],
-                                "type": "basic",
+                                "type": "basic"
+                            },
+                            {
                                 "conditions": [
                                     {
-                                        "type": "frontmost_application_unless",
                                         "bundle_identifiers": [
                                             "^net\\.kovidgoyal\\.kitty$",
                                             "^com\\.github\\.wez\\.wezterm$",
                                             "^com\\.googlecode\\.iterm2",
                                             "^com\\.mitchellh\\.ghostty"
-                                        ]
+                                        ],
+                                        "type": "frontmost_application_unless"
                                     }
-                                ]
-                            },
-                            {
+                                ],
                                 "description": "Option + j -> Down Arrow (outside terminals)",
                                 "from": {
                                     "key_code": "j",
                                     "modifiers": { "mandatory": ["left_option"] }
                                 },
                                 "to": [{ "key_code": "down_arrow" }],
-                                "type": "basic",
+                                "type": "basic"
+                            },
+                            {
                                 "conditions": [
                                     {
-                                        "type": "frontmost_application_unless",
                                         "bundle_identifiers": [
                                             "^net\\.kovidgoyal\\.kitty$",
                                             "^com\\.github\\.wez\\.wezterm$",
                                             "^com\\.googlecode\\.iterm2",
                                             "^com\\.mitchellh\\.ghostty"
-                                        ]
+                                        ],
+                                        "type": "frontmost_application_unless"
                                     }
-                                ]
-                            },
-                            {
+                                ],
                                 "description": "Option + k -> Up Arrow (outside terminals)",
                                 "from": {
                                     "key_code": "k",
                                     "modifiers": { "mandatory": ["left_option"] }
                                 },
                                 "to": [{ "key_code": "up_arrow" }],
-                                "type": "basic",
+                                "type": "basic"
+                            },
+                            {
                                 "conditions": [
                                     {
-                                        "type": "frontmost_application_unless",
                                         "bundle_identifiers": [
                                             "^net\\.kovidgoyal\\.kitty$",
                                             "^com\\.github\\.wez\\.wezterm$",
                                             "^com\\.googlecode\\.iterm2",
                                             "^com\\.mitchellh\\.ghostty"
-                                        ]
+                                        ],
+                                        "type": "frontmost_application_unless"
                                     }
-                                ]
-                            },
-                            {
+                                ],
                                 "description": "Option + l -> right Arrow (outside terminals)",
                                 "from": {
                                     "key_code": "l",
                                     "modifiers": { "mandatory": ["left_option"] }
                                 },
                                 "to": [{ "key_code": "right_arrow" }],
-                                "type": "basic",
-                                "conditions": [
-                                    {
-                                        "type": "frontmost_application_unless",
-                                        "bundle_identifiers": [
-                                            "^net\\.kovidgoyal\\.kitty$",
-                                            "^com\\.github\\.wez\\.wezterm$",
-                                            "^com\\.googlecode\\.iterm2",
-                                            "^com\\.mitchellh\\.ghostty"
-                                        ]
-                                    }
-                                ]
+                                "type": "basic"
                             }
                         ]
                     },
@@ -178,12 +169,20 @@
                         "description": "Ctrl+Space → Ctrl+Shift+Space except in terminals (to switch input source by ctrl+space outside terminals)",
                         "manipulators": [
                             {
-                                "type": "basic",
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^com\\.mitchellh\\.ghostty",
+                                            "^net\\.kovidgoyal\\.kitty$",
+                                            "^com\\.googlecode\\.iterm2$",
+                                            "^com\\.apple\\.Terminal$"
+                                        ],
+                                        "type": "frontmost_application_unless"
+                                    }
+                                ],
                                 "from": {
                                     "key_code": "spacebar",
-                                    "modifiers": {
-                                        "mandatory": ["control"]
-                                    }
+                                    "modifiers": { "mandatory": ["control"] }
                                 },
                                 "to": [
                                     {
@@ -191,17 +190,7 @@
                                         "modifiers": ["control", "shift"]
                                     }
                                 ],
-                                "conditions": [
-                                    {
-                                        "type": "frontmost_application_unless",
-                                        "bundle_identifiers": [
-                                            "^com\\.mitchellh\\.ghostty",
-                                            "^net\\.kovidgoyal\\.kitty$",
-                                            "^com\\.googlecode\\.iterm2$",
-                                            "^com\\.apple\\.Terminal$"
-                                        ]
-                                    }
-                                ]
+                                "type": "basic"
                             }
                         ]
                     },
@@ -209,13 +198,27 @@
                         "description": "HHKB Volume Control: HYPER + -/= for volumn down/up",
                         "manipulators": [
                             {
+                                "conditions": [
+                                    {
+                                        "identifiers": [
+                                            {
+                                                "description": "HHKB",
+                                                "product_id": 33,
+                                                "vendor_id": 1278
+                                            }
+                                        ],
+                                        "type": "device_if"
+                                    }
+                                ],
                                 "description": "Volume Down",
                                 "from": {
                                     "key_code": "hyphen",
                                     "modifiers": { "mandatory": ["left_command", "left_option", "left_control", "left_shift"] }
                                 },
                                 "to": [{ "consumer_key_code": "volume_decrement" }],
-                                "type": "basic",
+                                "type": "basic"
+                            },
+                            {
                                 "conditions": [
                                     {
                                         "identifiers": [
@@ -227,28 +230,14 @@
                                         ],
                                         "type": "device_if"
                                     }
-                                ]
-                            },
-                            {
+                                ],
                                 "description": "Volume Up",
                                 "from": {
                                     "key_code": "equal_sign",
                                     "modifiers": { "mandatory": ["left_command", "left_option", "left_control", "left_shift"] }
                                 },
                                 "to": [{ "consumer_key_code": "volume_increment" }],
-                                "type": "basic",
-                                "conditions": [
-                                    {
-                                        "identifiers": [
-                                            {
-                                                "description": "HHKB",
-                                                "product_id": 33,
-                                                "vendor_id": 1278
-                                            }
-                                        ],
-                                        "type": "device_if"
-                                    }
-                                ]
+                                "type": "basic"
                             }
                         ]
                     },
@@ -256,12 +245,6 @@
                         "description": "HHKB: Opt + ` -> Esc",
                         "manipulators": [
                             {
-                                "from": {
-                                    "key_code": "grave_accent_and_tilde",
-                                    "modifiers": { "mandatory": ["left_option"] }
-                                },
-                                "to": [{ "key_code": "escape" }],
-                                "type": "basic",
                                 "conditions": [
                                     {
                                         "identifiers": [
@@ -273,7 +256,13 @@
                                         ],
                                         "type": "device_if"
                                     }
-                                ]
+                                ],
+                                "from": {
+                                    "key_code": "grave_accent_and_tilde",
+                                    "modifiers": { "mandatory": ["left_option"] }
+                                },
+                                "to": [{ "key_code": "escape" }],
+                                "type": "basic"
                             }
                         ]
                     }
@@ -307,11 +296,6 @@
                     ]
                 },
                 {
-                    "identifiers": {
-                        "is_keyboard": true,
-                        "product_id": 33,
-                        "vendor_id": 1278
-                    },
                     "fn_function_keys": [
                         {
                             "from": { "key_code": "f1" },
@@ -362,6 +346,11 @@
                             "to": [{ "key_code": "f12" }]
                         }
                     ],
+                    "identifiers": {
+                        "is_keyboard": true,
+                        "product_id": 33,
+                        "vendor_id": 1278
+                    },
                     "simple_modifications": [
                         {
                             "from": { "key_code": "delete_or_backspace" },
@@ -411,7 +400,15 @@
                         }
                     ]
                 }
-            ]
+            ],
+            "name": "rockyzhang24",
+            "selected": true,
+            "virtual_hid_keyboard": {
+                "caps_lock_delay_milliseconds": 0,
+                "country_code": 0,
+                "keyboard_type": "ansi",
+                "keyboard_type_v2": "ansi"
+            }
         }
     ]
 }

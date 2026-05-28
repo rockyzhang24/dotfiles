@@ -13,6 +13,7 @@
 .config/misc/
 .config/nvim/pack/
 .config/ranger/plugins/
+.config/uv/uv-receipt.json
 .config/vifm/vifminfo.json
 .config/vifm/vifm-help.txt
 .config/zoxide/db*

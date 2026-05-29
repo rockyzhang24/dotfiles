@@ -1,9 +1,10 @@
 -- Colorscheme: arctic, monokai, better_default_light, gruvbox
 vim.g.colorscheme = 'gruvbox'
 if vim.g.colorscheme == 'gruvbox' then
-    vim.g.gruvbox_contrast = 'normal' -- 'normal', 'soft' or 'dark'
+    vim.g.gruvbox_contrast = 'normal' -- 'normal', 'soft' or 'hard'
 end
 vim.g.is_dark = true
+vim.g.italic = false
 vim.g.transparent = false
 vim.g.border_enabled = true
 vim.g.border_style = vim.g.border_enabled and 'rounded' or 'none'
@@ -17,6 +18,3 @@ vim.g.autoformat = false -- global autoformat (format-on-save)
 -- Some LSP and Treesitter features will be disabled.
 vim.g.bigfile_size = 1024 * 1024 * 1.5 -- 1.5 MB
 vim.g.bigfile_line_length = 1000
-
--- Can be 'default', 'ivy'
-vim.g.fzf_theme = 'default'

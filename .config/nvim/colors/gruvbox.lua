@@ -212,7 +212,7 @@ local groups = {
     LineNrBelow = 'LineNr',
     SignColumn = 'LineNr',
     CursorLineSign = 'SignColumn',
-    Folded = { fg = gray, bg = bg1, italic = true },
+    Folded = { fg = gray, bg = bg1, italic = vim.g.italic },
     FoldColumn = 'SignColumn',
     CursorLineFold = 'FoldColumn',
     Cursor = { reverse = true },
@@ -292,7 +292,7 @@ local groups = {
 
     -- Syntax
 
-    Comment = { fg = gray, italic = true },
+    Comment = { fg = gray, italic = vim.g.italic },
 
     Constant = { fg = purple },
     String = { fg = green },
@@ -333,7 +333,7 @@ local groups = {
     Underlined = { fg = blue, underline = true },
     Ignore = 'Normal',
     Error = { fg = 'bg', bg = red, bold = true },
-    Todo = { fg = bg0, bg = yellow, bold = true, italic = true },
+    Todo = { fg = bg0, bg = yellow, bold = true, italic = vim.g.italic },
 
     Added = 'DiffAdd', -- added line in a diff
     Changed = 'DiffChange', -- changed line in a diff
@@ -529,7 +529,7 @@ local groups = {
 
     -- Winbar
     WinbarHeader = 'WinBar',
-    WinbarPath = { fg = winbar_fg, bg = winbar_bg, italic = true },
+    WinbarPath = { fg = winbar_fg, bg = winbar_bg, italic = vim.g.italic },
     WinbarFilename = 'WinBar',
     WinbarModified = 'WinBar',
     WinbarError = { fg = red, bg = winbar_bg },

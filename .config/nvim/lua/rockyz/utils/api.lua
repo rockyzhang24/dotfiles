@@ -15,6 +15,7 @@ function M.get_lines(bufnr, rows)
     end
 
     local function buf_lines()
+        ---@type table<integer,string>
         local lines = {}
         for _, row in ipairs(rows) do
             lines[row] = (vim.api.nvim_buf_get_lines(bufnr, row, row + 1, false) or { '' })[1]
@@ -22,12 +23,14 @@ function M.get_lines(bufnr, rows)
         return lines
     end
 
+    -- Use loaded buffer if available
     if vim.fn.bufloaded(bufnr) == 1 then
         return buf_lines()
     end
 
     local uri = vim.uri_from_bufnr(bufnr)
 
+    -- Load the buffer if this is not a file uri
     if uri:sub(1, 4) ~= 'file' then
         vim.fn.bufload(bufnr)
         return buf_lines()
@@ -47,8 +50,9 @@ function M.get_lines(bufnr, rows)
     local data = assert(vim.uv.fs_read(fd, stat.size, 0))
     vim.uv.fs_close(fd)
 
+    ---@type table<integer,true|string> rows we need to retrieve
     local lines = {}
-    local need = 0
+    local need = 0 -- keep track of how many unique rows we need
     for _, row in pairs(rows) do
         if not lines[row] then
             need = need + 1
@@ -70,12 +74,13 @@ function M.get_lines(bufnr, rows)
         lnum = lnum + 1
     end
 
+    -- Change any lines we didn't find to the empty string
     for i, line in pairs(lines) do
         if line == true then
             lines[i] = ''
         end
     end
-    return lines
+    return lines --[[@as table<integer,string>]]
 end
 
 return M

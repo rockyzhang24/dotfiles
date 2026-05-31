@@ -103,6 +103,107 @@ local function worst_severity_jump_opts(count)
     return opts
 end
 
+---Convert lsp.Range to range in vim
+---@param lsp_range lsp.Range
+local function to_vim_range(bufnr, lsp_range, offset_encoding)
+    local buf_lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+    local start = lsp_range.start
+    local _end = lsp_range['end']
+    local line = buf_lines and buf_lines[start.line + 1] or ''
+    local end_line = buf_lines and buf_lines[_end.line + 1] or ''
+    return {
+        start = {
+            line = start.line,
+            -- When on the first character, we can ignore the difference between byte and character
+            character = start.character > 0
+                and vim.str_byteindex(line, offset_encoding, start.character, false)
+                or start.character,
+        },
+        ['end'] = {
+            line = lsp_range['end'].line,
+            character = _end.character > 0
+                and vim.str_byteindex(end_line, offset_encoding, _end.character, false)
+                or _end.character,
+        },
+    }
+end
+
+local function is_before(x, y)
+    if x.start.line < y.start.line then
+        return true
+    elseif x.start.line == y.start.line then
+        return x.start.character < y.start.character
+    else
+        return false
+    end
+end
+
+---@param is_closer fun(table, table): boolean
+local function move_to_highlight(is_closer)
+    local method = 'textDocument/documentHighlight'
+    local bufnr = vim.api.nvim_get_current_buf()
+    local clients = vim.lsp.get_clients({ bufnr = bufnr, method = method })
+    if not next(clients) then
+        return
+    end
+
+    local win = vim.api.nvim_get_current_win()
+    local cursor_row, cursor_col = unpack(vim.api.nvim_win_get_cursor(win))
+    cursor_row = cursor_row - 1
+    local cursor_range = {
+        start = { line = cursor_row, character = cursor_col },
+    }
+
+    local remaining = #clients
+    local closest = nil
+
+    ---@param result lsp.DocumentHighlight[]|nil
+    local function on_result(_, result, ctx)
+        local client = vim.lsp.get_client_by_id(ctx.client_id)
+        local offset_encoding = client.offset_encoding
+        for _, hl in ipairs(result or {}) do
+            local hl_range = to_vim_range(bufnr, hl.range, offset_encoding)
+            local cursor_inside_range = hl_range.start.line <= cursor_row
+                and hl_range.start.character < cursor_col
+                and hl_range['end'].line >= cursor_row
+                and hl_range['end'].character > cursor_col
+            if
+                not cursor_inside_range
+                and is_closer(cursor_range, hl_range)
+                and (closest == nil or is_closer(hl_range, closest))
+            then
+                closest = hl_range
+            end
+        end
+        remaining = remaining - 1
+    end
+
+    for _, client in ipairs(clients) do
+        local param = vim.lsp.util.make_position_params(win, client.offset_encoding)
+        client:request(method, param, on_result, bufnr)
+    end
+
+    vim.wait(1000, function()
+        return remaining == 0
+    end)
+
+    if closest then
+        vim.api.nvim_win_set_cursor(win, { closest.start.line + 1, closest.start.character })
+    end
+end
+
+function M.next_highlight()
+    for _ = 1, vim.v.count1 do
+        move_to_highlight(is_before)
+    end
+end
+
+function M.prev_highlight()
+    for _ = 1, vim.v.count1 do
+        move_to_highlight(function(x, y) return is_before(y, x) end)
+    end
+end
+
 local function on_attach(client, bufnr)
     --
     -- Mappings
@@ -161,14 +262,6 @@ local function on_attach(client, bufnr)
     vim.keymap.set('n', 'grn', vim.lsp.buf.rename, opts)
 
     if client:supports_method('textDocument/codeAction') then
-        -- Code actions for the current line.
-        -- In order to get the code actions only for the cursor position, the diagnostics overlap the
-        -- cursor position could be passed as part of the parameter to vim.lsp.buf.code_action(). However,
-        -- currently the code action function doesn't offer a way to extract per client diagnostics, i.e.,
-        -- all the diagnostics at the cursor position will be sent to each server.
-        --
-        -- TODO: modify this keymap to only get the code actions for the current cursor position after the
-        -- API is fixed.
         vim.keymap.set({ 'n', 'x' }, 'gra', vim.lsp.buf.code_action, opts)
     end
 
@@ -303,6 +396,13 @@ local function on_attach(client, bufnr)
                 vim.lsp.buf.clear_references()
             end,
         })
+
+        vim.keymap.set('n', '[v', function()
+            require('rockyz.lsp').prev_highlight()
+        end)
+        vim.keymap.set('n', ']v', function()
+            require('rockyz.lsp').next_highlight()
+        end)
     end
 end
 

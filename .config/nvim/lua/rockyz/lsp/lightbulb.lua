@@ -4,6 +4,9 @@
 -- the previous line if the space is not enough.
 --
 -- This is implemented by using window-local extmark
+--
+-- Reference: the source code of vim.lsp.buf.code_action() in
+-- https://github.com/neovim/neovim/blob/master/runtime/lua/vim/lsp/buf.lua
 
 local ok, icons = pcall(require, 'rockyz.icons')
 local bulb_icon = ok and icons.misc.lightbulb or ''
@@ -84,39 +87,51 @@ local function lightbulb()
 
     for _, client in ipairs(clients) do
         local context = {}
+        context.triggerKind = vim.lsp.protocol.CodeActionTriggerKind.Invoked
+
         -- For each client, only retrieve the diagnostics that belong to it. They are the ones that are
         -- pushed to this client by the server and ones this client pulls from the server.
-        -- NOTE: Diagnostics returned by vim.diagnostic.get() are vim.Diagnostics[].
-        local ns_push = vim.lsp.diagnostic.get_namespace(client.id, false)
-        local ns_pull = vim.lsp.diagnostic.get_namespace(client.id, true)
-        local diagnostics = {}
-        vim.list_extend(diagnostics, vim.diagnostic.get(bufnr, { namespace = ns_pull }))
-        vim.list_extend(diagnostics, vim.diagnostic.get(bufnr, { namespace = ns_push }))
 
-        -- Fetch lsp diagnostics (lsp.Diagnostics[]) that only overlaps the cursor position
-        context.diagnostics = vim.iter(diagnostics):map(function(d)
-            --
-            -- After the client receives diagnostics (lsp.Diagnostics[]) from the server, each lsp
-            -- diagnostic gets converted to vim diagnostic (vim.Diagnostics[]) and then catched. In the
-            -- conversion, the original lsp diagnostic is stored in diagnostic.user_data.lsp.
-            -- Reference: handle_diagnostics() in
-            -- https://github.com/neovim/neovim/blob/master/runtime/lua/vim/lsp/diagnostic.lua
-            --
-            -- Now we need the lsp diagnostics and use them to request code actions. We just need to fetch
-            -- them from vim diagnostic's user_data.lsp.
-            -- Reference: code_action() in
-            -- https://github.com/neovim/neovim/blob/master/runtime/lua/vim/lsp/buf.lua
-            --
-            if
-                (d.lnum < cursor_lnum or d.lnum == cursor_lnum and d.col <= cursor_col)
-                and (d.end_lnum > cursor_lnum or d.end_lnum == cursor_lnum and d.end_col > cursor_col)
-            then
-                return d.user_data.lsp
-            end
-        end):totable()
+        local ns_push = vim.lsp.diagnostic.get_namespace(client.id, false)
+        ---@type vim.Diagnostic[]
+        local diagnostics = {}
+
+        -- vim.diagnostic.get() returns vim.Diagnostic[].
+        --
+        -- Internally, the diagnostics, i.e., lsp.Diagnostic[], returned from the server are
+        -- converted to vim.Diagnostic[] and cached, but the original lsp.Diagnostic is stored to
+        -- vim.Diagnostic.user_data.lsp.
+        -- Reference: the source code of handle_diagnostics() in
+        -- https://github.com/neovim/neovim/blob/master/runtime/lua/vim/lsp/diagnostic.lua
+
+        client:_provider_foreach('textDocument/diagnostic', function(cap)
+            local ns_pull = vim.lsp.diagnostic.get_namespace(client.id, true, cap.identifier)
+            vim.list_extend(
+                diagnostics,
+                vim.diagnostic.get(bufnr, { namespace = ns_pull, lnum = cursor_lnum })
+            )
+        end)
+
+        vim.list_extend(
+            diagnostics,
+            vim.diagnostic.get(bufnr, { namespace = ns_push, lnum = cursor_lnum })
+        )
 
         local params = vim.lsp.util.make_range_params(winid, client.offset_encoding)
-        params.context = context
+        ---@cast params lsp.CodeActionParams
+        params.context = vim.tbl_extend('force', context, {
+            diagnostics = vim.iter(diagnostics):map(function(d)
+                -- Filter the diagnostics at the cursor position
+                -- TODO: use vim.pos once it gets stable, see diagnostic_contains_cursor() in
+                -- https://github.com/neovim/neovim/blob/master/runtime/lua/vim/lsp/buf.lua
+                if
+                    (d.lnum < cursor_lnum or d.lnum == cursor_lnum and d.col <= cursor_col)
+                    and (d.end_lnum > cursor_lnum or d.end_lnum == cursor_lnum and d.end_col > cursor_col)
+                then
+                    return d.user_data.lsp
+                end
+            end):totable()
+        })
 
         client:request(method, params, function(_, result, _)
             if has_action then

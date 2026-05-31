@@ -1,0 +1,72 @@
+{
+  "profiles" : [
+    {
+      "id" : "2416EE42-447D-43C3-83D6-EBE26DDB58CA",
+      "name" : "Rocky",
+      "workspaces" : [
+        {
+          "apps" : [
+            {
+              "bundleIdentifier" : "com.google.Chrome",
+              "iconPath" : "/Applications/Google Chrome.app/Contents/Resources/app.icns",
+              "name" : "Google Chrome"
+            },
+            {
+              "bundleIdentifier" : "com.apple.Notes",
+              "iconPath" : "/System/Applications/Notes.app/Contents/Resources/AppIcon.icns",
+              "name" : "Notes"
+            },
+            {
+              "bundleIdentifier" : "com.apple.finder",
+              "iconPath" : "/System/Library/CoreServices/Finder.app/Contents/Resources/Finder.icns",
+              "name" : "Finder"
+            },
+            {
+              "bundleIdentifier" : "com.reederapp.5.macOS",
+              "iconPath" : "/Applications/Reeder.app/Contents/Resources/AppIcon-macOS.icns",
+              "name" : "Reeder"
+            },
+            {
+              "bundleIdentifier" : "ru.keepcoder.Telegram",
+              "iconPath" : "/Applications/Telegram.app/Contents/Resources/AppIcon.icns",
+              "name" : "Telegram"
+            },
+            {
+              "bundleIdentifier" : "com.apple.MobileSMS",
+              "iconPath" : "/System/Applications/Messages.app/Contents/Resources/AppIcon.icns",
+              "name" : "Messages"
+            }
+          ],
+          "assignAppShortcut" : "ctrl+opt+1",
+          "display" : "Built-in Retina Display",
+          "id" : "BC7F41B9-01A4-4645-8CBE-EA17F043A0FA",
+          "name" : "Browser",
+          "openAppsOnActivation" : false,
+          "shortcut" : "ctrl+1",
+          "symbolIconName" : "network"
+        },
+        {
+          "apps" : [
+            {
+              "bundleIdentifier" : "com.mitchellh.ghostty",
+              "iconPath" : "/Applications/Ghostty.app/Contents/Resources/Ghostty.icns",
+              "name" : "Ghostty"
+            },
+            {
+              "bundleIdentifier" : "net.kovidgoyal.kitty",
+              "iconPath" : "/Applications/kitty.app/Contents/Resources/kitty.icns",
+              "name" : "kitty"
+            }
+          ],
+          "assignAppShortcut" : "ctrl+opt+2",
+          "display" : "Built-in Retina Display",
+          "id" : "88254E6B-142F-4974-B81E-5F72190EC1B4",
+          "name" : "Terminal",
+          "openAppsOnActivation" : false,
+          "shortcut" : "ctrl+2",
+          "symbolIconName" : "apple.terminal"
+        }
+      ]
+    }
+  ]
+}

@@ -39,13 +39,14 @@ local config = {
         -- Available in both normal buffer and outline buffer
         global = {
             gs = 'reveal', -- reveal the symbol in outline buffer
-            ['yofc'] = 'toggle_follow', -- follow cursor
+            ['yost'] = 'toggle_follow', -- follow cursor (t means tracking)
             ['<Leader>sr'] = 'refresh', -- update outline
             ['<Leader>sg'] = 'switch_to_ctags', -- switch to ctags provider
             ['<Leader>sl'] = 'switch_to_lsp', -- switch to LSP provider
             ['<Leader>st'] = 'switch_to_treesitter',
             ['<Leader>sf'] = 'filter_kinds',
             ['<Leader>sc'] = 'clear_filter',
+            ['<Leader>sF'] = 'show_functions_only', -- show functions only
         },
     }
 }
@@ -1241,6 +1242,17 @@ local function close()
     end
 end
 
+---Filter symbols for the given kinds
+---@param kinds string[] List of kinds
+local function show_only(kinds)
+    local state = states[tab]
+    local provider = state.provider
+    state[provider .. '_filter_kinds'] = kinds
+    debounce_request(state.source_bufnr)
+    vim.t[tab].filter_on = true
+    vim.api.nvim__redraw({ win = state.win, winbar = true })
+end
+
 function M.jump()
     select({ focus = true })
 end
@@ -1284,6 +1296,10 @@ function M.toggle_follow()
     vim.api.nvim__redraw({ win = state.win, winbar = true })
 end
 
+function M.show_functions_only()
+    show_only({ 'Constructor', 'Function', 'Method' })
+end
+
 function M.refresh()
     debounce_request(states[tab].source_bufnr)
 end
@@ -1309,20 +1325,14 @@ end
 function M.filter_kinds()
     local state = states[tab]
 
-    local function filter(selections)
-        local provider = state.provider
-        state[provider .. '_filter_kinds'] = selections
-        debounce_request(state.source_bufnr)
-        vim.t[tab].filter_on = true
-    end
-
     local kinds = {}
     for kind, _ in pairs(state.kinds) do
         local icon = icons.symbol_kinds[kind]
         table.insert(kinds, fzf.ansi(icon, 'SymbolKind' .. kind) .. ' ' .. kind)
     end
+
     fzf.fzf(kinds, {
-        enter = filter,
+        enter = show_only,
     }, {
         '--prompt',
         '[Outline] Filter Kinds> ',
@@ -1341,6 +1351,7 @@ function M.clear_filter()
     state[provider .. '_filter_kinds'] = nil
     debounce_request(state.source_bufnr)
     vim.t[tab].filter_on = false
+    vim.api.nvim__redraw({ win = state.win, winbar = true })
 end
 
 function M.toggle_outline_window()

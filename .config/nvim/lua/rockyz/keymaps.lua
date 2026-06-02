@@ -18,9 +18,11 @@ vim.keymap.set('n', 'z=', '<Cmd>setlocal spell<CR>z=')
 vim.keymap.set('x', 'x', '"_d') -- for copy and delete use v_d
 vim.keymap.set('n', 'z.', ':silent lockmarks update ++p<CR>') -- Preserve '[ '] on :write
 vim.keymap.set('n', 'vK', '<C-\\><C-n><Cmd>help!<CR>')
-vim.keymap.set('n', '<TAB>', 'za')
 vim.keymap.set({ 'n', 'x', 'o' }, 'H', '^')
 vim.keymap.set({ 'n', 'x', 'o' }, 'L', '$')
+
+vim.keymap.set('n', '<TAB>', 'za')
+vim.keymap.set('n', '<C-i>', '<C-i>')
 
 -- Argument list
 -- Reference: https://jkrl.me/vim/2025/05/28/nvim-arglist.html

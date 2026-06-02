@@ -1,16 +1,12 @@
 # Font configuration
-font-family = ""
-font-family = "SF Mono"
-# font-style = ""
-font-style-italic = "Regular Italic"
-# font-style-bold = ""
-font-style-bold-italic = "Bold Italic"
+font-family = "Fira Code"
+font-style-bold = "SemiBold"
 font-size = 13
-adjust-cell-height = 20%
-# adjust-underline-position = 5
-adjust-underline-thickness = 50%
+adjust-cell-height = 10%
+adjust-underline-position = 2
+adjust-underline-thickness = 100%
 
-window-title-font-family = "SF Mono"
+window-title-font-family = "Fira Code"
 
 # Disable ligatures
 font-feature = -calt

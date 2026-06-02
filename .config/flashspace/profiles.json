@@ -35,6 +35,11 @@
               "bundleIdentifier" : "com.apple.MobileSMS",
               "iconPath" : "/System/Applications/Messages.app/Contents/Resources/AppIcon.icns",
               "name" : "Messages"
+            },
+            {
+              "bundleIdentifier" : "com.openai.chat",
+              "iconPath" : "/Applications/ChatGPT.app/Contents/Resources/AppIcon.icns",
+              "name" : "ChatGPT"
             }
           ],
           "assignAppShortcut" : "ctrl+opt+1",

@@ -182,6 +182,9 @@ vim.api.nvim_create_autocmd('VimEnter', {
     callback = vim.schedule_wrap(function()
         if vim.uv.fs_stat(session) then
             vim.cmd.source(session)
+            vim.defer_fn(function()
+                vim.notify('Restarted at: ' .. vim.fn.localtime())
+            end, 1000)
             vim.fs.rm(session)
         end
     end),

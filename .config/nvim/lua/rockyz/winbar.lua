@@ -204,7 +204,7 @@ local function range_contains_cursor(bufnr, range, cursor_pos, offset_encoding)
 
     local col = range['start'].character
     if col > 0 then
-        local line = api.get_lines(bufnr, { row })[row] or ''
+        local line = api.get_lines(bufnr, { row })[row]
         col = vim.str_byteindex(line, offset_encoding, col, false)
     end
 
@@ -214,7 +214,7 @@ local function range_contains_cursor(bufnr, range, cursor_pos, offset_encoding)
 
     local end_col = range['end'].character
     if end_col > 0 then
-        local end_line = api.get_lines(bufnr, { end_row })[end_row] or ''
+        local end_line = api.get_lines(bufnr, { end_row })[end_row]
         end_col = vim.str_byteindex(end_line, offset_encoding, end_col, false)
     end
 

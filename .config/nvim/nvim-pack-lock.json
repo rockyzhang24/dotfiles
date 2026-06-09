@@ -5,7 +5,7 @@
       "src": "https://github.com/L3MON4D3/LuaSnip"
     },
     "SchemaStore.nvim": {
-      "rev": "bb1550c91d09d2ede8edd90a87fa4ccc9c0b9e1f",
+      "rev": "8fa7f9cb8805f8abf27432d4b1e7c4be83d76807",
       "src": "https://github.com/b0o/SchemaStore.nvim"
     },
     "blink.cmp": {
@@ -26,7 +26,7 @@
       "src": "https://github.com/dhananjaylatkar/cscope_maps.nvim"
     },
     "diffs.nvim": {
-      "rev": "a3fea8ae479ac0cefabb358724fed1227be88ef4",
+      "rev": "d280baf3e937a487038766f51156dd41ceb0f8e7",
       "src": "https://github.com/barrettruth/diffs.nvim"
     },
     "eregex.vim": {
@@ -39,7 +39,7 @@
       "version": "'dev'"
     },
     "gitsigns.nvim": {
-      "rev": "dd3f588bacbeb041be6facf1742e42097f62165d",
+      "rev": "25050e4ed39e628282831d4cbecb1850454ce915",
       "src": "https://github.com/lewis6991/gitsigns.nvim"
     },
     "inc-rename.nvim": {
@@ -53,10 +53,6 @@
     "linediff.vim": {
       "rev": "c3780609769a93f4f59421b6324355f37e0ee6c5",
       "src": "https://github.com/AndrewRadev/linediff.vim"
-    },
-    "lspsaga.nvim": {
-      "rev": "3e33a6a6c5d379f3d4fae77fae6b53b762a0a30f",
-      "src": "https://github.com/nvimdev/lspsaga.nvim"
     },
     "neogen": {
       "rev": "23e7e9f883d01289ebd90e98025acc860ea26366",

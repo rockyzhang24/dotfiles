@@ -1,6 +1,8 @@
---- @class go_dir_custom_args
---- @field envvar_id string
---- @field custom_subdir string?
+-- Settings document: https://go.dev/gopls/settings
+
+---@class go_dir_custom_args
+---@field envvar_id string
+---@field custom_subdir string?
 
 local mod_cache = nil
 local std_lib = nil
@@ -93,7 +95,7 @@ return {
                 unusedparams = true,
             },
             staticcheck = true,
-            -- semanticTokens = true, -- go's semantic token highlight is not accurate so far
+            semanticTokens = true,
         },
     },
 }

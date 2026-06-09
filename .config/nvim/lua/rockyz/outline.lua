@@ -444,9 +444,10 @@ local function lsp_request(bufnr)
 end
 
 -- Treesitter provider
--- Highly inspired by aerial.nvim
--- (https://github.com/stevearc/aerial.nvim/tree/master/lua/aerial/backends/treesitter)
+-- Highly inspired by aerial.nvim: https://github.com/stevearc/aerial.nvim/tree/master/lua/aerial/backends/treesitter
 
+---@param start_node TSNode
+---@param end_node TSNode
 local function range_from_nodes(start_node, end_node)
     local sr, sc = start_node:start()
     local er, ec = end_node:end_()
@@ -479,7 +480,7 @@ local get_parent_funcs = {
     end,
     help = function(stack, match, node)
         local function get_level(_node)
-            local level_str = _node:type():match("^h(%d+)$")
+            local level_str = _node:type():match('^h(%d+)$')
             if level_str then
                 return tonumber(level_str)
             else
@@ -499,12 +500,24 @@ local get_parent_funcs = {
         return nil, nil, 0
     end,
     markdown = function(stack, match, node)
-        local level_node = assert(node_from_match(match, "level"))
+        local level_node = assert(node_from_match(match, 'level'))
         -- Parse the level out of e.g. atx_h1_marker
         local level = tonumber(string.match(level_node:type(), '%d')) - 1
         for i = #stack, 1, -1 do
             if stack[i].symbol.level < level or stack[i].node == node then
                 return stack[i].symbol, stack[i].node, level
+            else
+                table.remove(stack, i)
+            end
+        end
+        return nil, nil, level
+    end,
+    typst = function(stack, match, node)
+        local level = tonumber(match.level)
+        assert(level, "Missing 'level' metadata in typst query")
+        for i = #stack, 1, -1 do
+            if stack[i].item.level < level or stack[i].node == node then
+                return stack[i].item, stack[i].node, level
             else
                 table.remove(stack, i)
             end
@@ -517,38 +530,38 @@ get_parent_funcs.tsx = get_parent_funcs.typescript
 
 local postprocess_funcs = {
     c = function(bufnr, symbol, match)
-        local root = node_from_match(match, "root")
+        local root = node_from_match(match, 'root')
         if root then
             while
                 root
                 and not vim.tbl_contains({
-                    "identifier",
-                    "field_identifier",
-                    "qualified_identifier",
-                    "destructor_name",
-                    "operator_name",
+                    'identifier',
+                    'field_identifier',
+                    'qualified_identifier',
+                    'destructor_name',
+                    'operator_name',
                 }, root:type())
             do
                 -- Search the declarator downwards until you hit the identifier
-                local next = root:field("declarator")[1]
+                local next = root:field('declarator')[1]
                 if next ~= nil then
                     root = next
                 else
                     break
                 end
             end
-            symbol.name = vim.treesitter.get_node_text(root, bufnr) or "<parse error>"
+            symbol.name = vim.treesitter.get_node_text(root, bufnr) or '<parse error>'
             if not symbol.selection_range then
                 symbol.selection_range = range_from_nodes(root, root)
             end
         end
     end,
     cpp = function(bufnr, symbol, match)
-        if symbol.kind ~= "Function" then
+        if symbol.kind ~= 'Function' then
             return
         end
-        local parent = node_from_match(match, "symbol")
-        local stop_types = { "function_definition", "declaration", "field_declaration" }
+        local parent = node_from_match(match, 'symbol')
+        local stop_types = { 'function_definition', 'declaration', 'field_declaration' }
         while parent and not vim.tbl_contains(stop_types, parent:type()) do
             parent = parent:parent()
         end
@@ -558,13 +571,55 @@ local postprocess_funcs = {
             end
         end
     end,
+    elixir = function(bufnr, symbol, match)
+        local kind_map = {
+            callback = 'Function',
+            def = 'Function',
+            defguard = 'Function',
+            defimpl = 'Class',
+            defmacro = 'Function',
+            defmacrop = 'Function',
+            defmodule = 'Module',
+            defp = 'Function',
+            defprotocol = 'Interface',
+            defstruct = 'Struct',
+            module_attribute = 'Field',
+            spec = 'TypeParameter',
+        }
+
+        local identifier = node_from_match(match, 'identifier')
+        if identifier then
+            local name = vim.treesitter.get_node_text(identifier, bufnr) or '<parse error>'
+            if name == 'defp' then
+                symbol.scope = 'private'
+            end
+            symbol.kind = kind_map[name] or symbol.kind
+            if name == 'callback' and symbol.parent then
+                symbol.parent.kind = 'Interface'
+            elseif name == 'defstruct' and symbol.parent then
+                symbol.parent.kind = 'Struct'
+                return false
+            elseif name == 'defimpl' then
+                local protocol = assert(node_from_match(match, 'protocol'))
+                local protocol_name = vim.treesitter.get_node_text(protocol, bufnr) or '<parse error>'
+                symbol.name = string.format('%s > %s', symbol.name, protocol_name)
+            elseif name == 'test' then
+                symbol.name = string.format('test %s', symbol.name)
+            elseif name == 'describe' then
+                symbol.name = string.format('describe %s', symbol.name)
+            end
+        elseif symbol.kind == 'Constant' then
+            symbol.name = string.format('@%s', symbol.name)
+        end
+    end,
+
     ---@note Additionally processes the following captures:
     ---      `@receiver` - extends the name to "@receiver @name"
     go = function(bufnr, symbol, match)
-        local receiver = node_from_match(match, "receiver")
+        local receiver = node_from_match(match, 'receiver')
         if receiver then
-            local receiver_text = vim.treesitter.get_node_text(receiver, bufnr) or "<parse error>"
-            symbol.name = string.format("%s %s", receiver_text, symbol.name)
+            local receiver_text = vim.treesitter.get_node_text(receiver, bufnr) or '<parse error>'
+            symbol.name = string.format('%s %s', receiver_text, symbol.name)
         end
     end,
     help = function(bufnr, symbol, match)
@@ -572,8 +627,8 @@ local postprocess_funcs = {
         -- We need to get _all_ word nodes
         local pieces = {}
         local node = match.name.node
-        if vim.startswith(node_from_match(match, "symbol"):type(), "h") then
-            while node and node:type() == "word" do
+        if vim.startswith(node_from_match(match, 'symbol'):type(), 'h') then
+            while node and node:type() == 'word' do
                 local row, col = node:start()
                 table.insert(pieces, 1, vim.treesitter.get_node_text(node, bufnr))
                 node = node:prev_sibling()
@@ -584,51 +639,75 @@ local postprocess_funcs = {
                     symbol.selection_range.col = col
                 end
             end
-            symbol.name = table.concat(pieces, " ")
+            symbol.name = table.concat(pieces, ' ')
         end
     end,
     ---@note Additionally processes the following captures:
     ---      `@method`, `@string`, and `@modifier` - replaces name with "@method[.@modifier] @string"
     javascript = function(bufnr, symbol, match)
-        local method = node_from_match(match, "method")
-        local modifier = node_from_match(match, "modifier")
-        local string = node_from_match(match, "string")
+        local method = node_from_match(match, 'method')
+        local modifier = node_from_match(match, 'modifier')
+        local string = node_from_match(match, 'string')
         if method and string then
-            local fn = vim.treesitter.get_node_text(method, bufnr) or "<parse error>"
+            local fn = vim.treesitter.get_node_text(method, bufnr) or '<parse error>'
             if modifier then
-                fn = fn .. "." .. (vim.treesitter.get_node_text(modifier, bufnr) or "<parse error>")
+                fn = fn .. '.' .. (vim.treesitter.get_node_text(modifier, bufnr) or '<parse error>')
             end
-            local str = vim.treesitter.get_node_text(string, bufnr) or "<parse error>"
-            symbol.name = fn .. " " .. str
+            local str = vim.treesitter.get_node_text(string, bufnr) or '<parse error>'
+            symbol.name = fn .. ' ' .. str
         end
     end,
     lua = function(bufnr, symbol, match)
-        local method = node_from_match(match, "method")
+        local method = node_from_match(match, 'method')
         if method then
-            local fn = vim.treesitter.get_node_text(method, bufnr) or "<parse error>"
-            if fn == "it" or fn == "describe" then
-                symbol.name = fn .. " " .. string.sub(symbol.name, 2, string.len(symbol.name) - 1)
+            local fn = vim.treesitter.get_node_text(method, bufnr) or '<parse error>'
+            if fn == 'it' or fn == 'describe' then
+                symbol.name = fn .. ' ' .. string.sub(symbol.name, 2, string.len(symbol.name) - 1)
             end
         end
     end,
     markdown = function(bufnr, symbol, match)
         -- Strip leading whitespace
-        local prefix = symbol.name:match("^%s*")
-        if prefix ~= "" then
+        local prefix = symbol.name:match('^%s*')
+        if prefix ~= '' then
             symbol.name = symbol.name:sub(prefix:len() + 1)
             if symbol.selection_range then
                 symbol.selection_range.col = symbol.selection_range.col + prefix:len()
             end
         end
     end,
+    ---@note Additionally processes the following captures:
+    ---      `@method`, `@receiver`, `@separator` - extends the name to "@method @reciever[@separator]@name", with @separator defaulting to "."
+    ruby = function(bufnr, symbol, match)
+        -- Reciever modification comes first, as we intend for it to generate a ruby-like `reciever.name`
+        local receiver = node_from_match(match, 'receiver')
+        local separator = node_from_match(match, 'separator')
+        if receiver then
+            local reciever_name = vim.treesitter.get_node_text(receiver, bufnr) or '<parse error>'
+            local separator_string = separator and vim.treesitter.get_node_text(separator, bufnr) or '.'
+            if reciever_name ~= symbol.name then
+                symbol.name = reciever_name .. separator_string .. symbol.name
+            end
+        end
+
+        -- Method modification comes last, as it's supposed to generate a global prefix
+        -- akin to RSpec's "describe ClassName"
+        local method = node_from_match(match, 'method')
+        if method then
+            local fn = vim.treesitter.get_node_text(method, bufnr) or '<parse error>'
+            if fn ~= symbol.name then
+                symbol.name = fn .. ' ' .. symbol.name
+            end
+        end
+    end,
     rust = function(bufnr, symbol, match)
-        if symbol.kind == "Class" then
-            local trait_node = node_from_match(match, "trait")
-            local type = assert(node_from_match(match, "rust_type"))
-            local name = vim.treesitter.get_node_text(type, bufnr) or "<parse error>"
+        if symbol.kind == 'Class' then
+            local trait_node = node_from_match(match, 'trait')
+            local type = assert(node_from_match(match, 'rust_type'))
+            local name = vim.treesitter.get_node_text(type, bufnr) or '<parse error>'
             if trait_node then
-                local trait = vim.treesitter.get_node_text(trait_node, bufnr) or "<parse error>"
-                name = string.format("%s > %s", name, trait)
+                local trait = vim.treesitter.get_node_text(trait_node, bufnr) or '<parse error>'
+                name = string.format('%s > %s', name, trait)
             end
             symbol.name = name
         end
@@ -636,30 +715,37 @@ local postprocess_funcs = {
     ---@note Additionally processes the following captures:
     ---      `@method`, `@string`, and `@modifier` - replaces name with "@method[.@modifier] @string"
     typescript = function(bufnr, symbol, match)
-        local value_node = node_from_match(match, "var_type")
+        local value_node = node_from_match(match, 'var_type')
         if value_node then
-            if value_node:type() == "generator_function" then
-                symbol.kind = "Function"
+            if value_node:type() == 'generator_function' then
+                symbol.kind = 'Function'
             end
-            if value_node:type() == "arrow_function" then
-                symbol.kind = "Function"
+            if value_node:type() == 'arrow_function' then
+                symbol.kind = 'Function'
             end
         end
-        local method = node_from_match(match, "method")
-        local modifier = node_from_match(match, "modifier")
-        local string = node_from_match(match, "string")
+        local method = node_from_match(match, 'method')
+        local modifier = node_from_match(match, 'modifier')
+        local string = node_from_match(match, 'string')
         if method and string then
-            local fn = vim.treesitter.get_node_text(method, bufnr) or "<parse error>"
+            local fn = vim.treesitter.get_node_text(method, bufnr) or '<parse error>'
             if modifier then
-                fn = fn .. "." .. (vim.treesitter.get_node_text(modifier, bufnr) or "<parse error>")
+                fn = fn .. '.' .. (vim.treesitter.get_node_text(modifier, bufnr) or '<parse error>')
             end
-            local str = vim.treesitter.get_node_text(string, bufnr) or "<parse error>"
-            symbol.name = fn .. " " .. str
+            local str = vim.treesitter.get_node_text(string, bufnr) or '<parse error>'
+            symbol.name = fn .. ' ' .. str
+        end
+    end,
+    zig = function(buf, symbol, match)
+        local node = assert(node_from_match(match, 'symbol'))
+        if node:type() == 'test_declaration' then
+            symbol.name = 'test ' .. symbol.name
         end
     end,
 }
-postprocess_funcs.vimdoc = postprocess_funcs.help
+postprocess_funcs.cuda = postprocess_funcs.cpp
 postprocess_funcs.tsx = postprocess_funcs.typescript
+postprocess_funcs.vimdoc = postprocess_funcs.help
 
 local function ts_get_symbols(bufnr)
     local ft = vim.bo[bufnr].filetype
@@ -748,6 +834,9 @@ local function ts_get_symbols(bufnr)
             -- Additional field "level" used by markdown and vimdoc (help) to construct tree
             -- hierarchy
             level = level,
+            -- Additional field "parent" for easily adjusting (by postprocess_func) the parent
+            -- symbol based on its child
+            parent = parent_symbol,
         }
 
         local postprocess = postprocess_funcs[ft]
@@ -1030,7 +1119,7 @@ local function select(opts)
     local jump = state.jumps[lnum]
     local location = { -- lsp.Location
         uri = vim.uri_from_bufnr(state.source_bufnr),
-        range = jump.range,
+        range = jump.selection_range,
     }
     vim.lsp.util.show_document(location, jump.offset_encoding, { reuse_win = true, focus = opts.focus })
 end
@@ -1216,13 +1305,14 @@ local function open()
         style = 'minimal',
     })
     local win_options = {
-        list = true,
-        wrap = false,
-        foldcolumn = '1',
-        statuscolumn = '%C ',
         cursorline = true,
-        foldmethod = 'expr',
+        foldcolumn = '1',
         foldexpr = 'v:lua.require("rockyz.outline").get_fold()',
+        foldmethod = 'expr',
+        list = true,
+        statuscolumn = '%C ',
+        winfixwidth = true,
+        wrap = false,
     }
     for option, value in pairs(win_options) do
         vim.wo[option] = value

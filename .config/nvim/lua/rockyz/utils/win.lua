@@ -33,7 +33,7 @@ function M.close_diff()
         for _, winid in ipairs(winids) do
             local ok, msg = pcall(vim.api.nvim_win_close, winid, false)
             -- Handle the last window that cannot be closed by nvim_win_close
-            if not ok and msg:match('^Vim:E444:') then
+            if not ok and msg and msg:match('^Vim:E444:') then
                 -- If we run a script like `ngd` in the terminal, we should fully exit
                 -- nvim
                 if vim.g.from_script then

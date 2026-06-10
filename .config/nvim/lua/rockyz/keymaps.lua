@@ -748,8 +748,9 @@ vim.keymap.set('n', '<M-.>', function()
     return '<Cmd>tabmove ' .. (vim.v.count ~= 0 and vim.v.count or '+1') .. '<CR>'
 end, { expr = true })
 
+-- <M-1> ... <M-9> to switch tabpage
 for i = 1, 9 do
-    vim.keymap.set('n', ',' .. i , i .. 'gt')
+    vim.keymap.set('n', '<M-' .. i .. '>' , i .. 'gt')
 end
 
 --

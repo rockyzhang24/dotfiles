@@ -5,7 +5,7 @@
 -- <C-Space>o: delete all terminals but the current one
 -- <M-=>: jump to the next terminal
 -- <M-->: jump to the previous terminal
--- <M-1> to <M-9>: jump to terminal #i
+-- <C-Space>1 ... <C-Space>9: jump to terminal #i
 -- <C-Space>r: rename the current terminal
 -- <M-,>: move the current terminal backwards
 -- <M-.>: move the current terminal forwards
@@ -85,16 +85,16 @@ local keymaps = {
         ['<M-,>'] = 'move_prev',
         ['<C-Space>t'] = 'to_tab',
         ['<C-Space>m'] = 'toggle_maximize',
-        ['<M-1>'] = 'switch_1',
-        ['<M-2>'] = 'switch_2',
-        ['<M-3>'] = 'switch_3',
-        ['<M-4>'] = 'switch_4',
-        ['<M-5>'] = 'switch_5',
-        ['<M-6>'] = 'switch_6',
-        ['<M-7>'] = 'switch_7',
-        ['<M-8>'] = 'switch_8',
-        ['<M-9>'] = 'switch_9',
-        ['<M-0>'] = 'switch_10',
+        ['<C-Space>1'] = 'switch_1',
+        ['<C-Space>2'] = 'switch_2',
+        ['<C-Space>3'] = 'switch_3',
+        ['<C-Space>4'] = 'switch_4',
+        ['<C-Space>5'] = 'switch_5',
+        ['<C-Space>6'] = 'switch_6',
+        ['<C-Space>7'] = 'switch_7',
+        ['<C-Space>8'] = 'switch_8',
+        ['<C-Space>9'] = 'switch_9',
+        ['<C-Space>0'] = 'switch_10',
     },
     global = {
         ['<M-`>'] = 'toggle',

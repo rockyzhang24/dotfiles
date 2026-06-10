@@ -1,11 +1,3 @@
-local icons = require('rockyz.icons')
-local fzf = require('rockyz.fzf')
-
-local M = {}
-
----@type integer The tabid of the current tabpage
-local tab
-
 ---Store the state of the outline in the current tabpage
 ---@class rockyz.outline.OutlineStatePerTab
 ---@field bufnr integer|nil The bufnr of the outline buffer
@@ -20,9 +12,20 @@ local tab
 ---@field provider string Can be "lsp", "treesitter", "ctags" or "man" (specific for man page)
 ---@field prev_provider string The provider of the previous normal buffer for later restore
 
+local icons = require('rockyz.icons')
+local fzf = require('rockyz.fzf')
+local notify = require('rockyz.utils.notify')
+
+local M = {}
+
+---@type integer The tabid of the current tabpage
+local tab
+
 ---Store per-tab outline state, indexed by tabid
 ---@type table<integer, rockyz.outline.OutlineStatePerTab>
 local states = {}
+
+local query_cache = {}
 
 local config = {
     default_provider = 'lsp',
@@ -39,7 +42,7 @@ local config = {
         -- Available in both normal buffer and outline buffer
         global = {
             gs = 'reveal', -- reveal the symbol in outline buffer
-            ['yost'] = 'toggle_follow', -- follow cursor (t means tracking)
+            ['yosf'] = 'toggle_follow', -- follow cursor
             ['<Leader>sr'] = 'refresh', -- update outline
             ['<Leader>sg'] = 'switch_to_ctags', -- switch to ctags provider
             ['<Leader>sl'] = 'switch_to_lsp', -- switch to LSP provider
@@ -297,6 +300,17 @@ local special_filetype_providers = {
     help = 'treesitter',
 }
 
+---Ignore results from requests that no longer match the current outline state
+---@param bufnr integer
+---@param provider string
+local function is_stale(bufnr, provider)
+    local state = states[tab]
+    return not state.win
+        or not vim.api.nvim_win_is_valid(state.win)
+        or bufnr ~= state.source_bufnr
+        or state.provider ~= provider
+end
+
 local function create_outline_buffer()
     local state = states[tab]
     if not state.bufnr or not vim.api.nvim_buf_is_valid(state.bufnr) then
@@ -423,13 +437,7 @@ local function lsp_request(bufnr)
     for _, client in ipairs(clients) do
         client:request(method, params, function(_, result, ctx)
             local state = states[tab]
-            -- Abort if the source buffer or provider changes
-            if
-                not state.win
-                or not vim.api.nvim_win_is_valid(state.win)
-                or state.source_bufnr ~= ctx.bufnr
-                or state.provider ~= 'lsp'
-            then
+            if is_stale(ctx.bufnr, 'lsp') then
                 return
             end
             format_symbols(result, ctx)
@@ -747,26 +755,35 @@ postprocess_funcs.cuda = postprocess_funcs.cpp
 postprocess_funcs.tsx = postprocess_funcs.typescript
 postprocess_funcs.vimdoc = postprocess_funcs.help
 
-local function ts_get_symbols(bufnr)
-    local ft = vim.bo[bufnr].filetype
-
-    local ok, parser = pcall(vim.treesitter.get_parser, bufnr, ft)
-    if not ok or not parser then
-        return {}
+---@param lang string
+---@return vim.treesitter.Query|nil err parse error
+---@return string|nil
+local function get_query(lang)
+    local ok, query = pcall(vim.treesitter.query.get, lang, 'outline')
+    if ok then
+        query_cache[lang] = { query = query }
+    else
+        query_cache[lang] = { err = tostring(query) }
     end
 
-    local syntax_tree = parser:parse()[1]
-    if not syntax_tree then
-        return {}
-    end
+    local entry = query_cache[lang]
+    return entry.query, entry.err
+end
 
-    local query = vim.treesitter.query.get(ft, 'outline')
-    if not query then
-        return {}
-    end
+---@param buf integer|nil
+---@return vim.treesitter.LanguageTree|nil
+local function get_parser(buf)
+    buf = buf or vim.api.nvim_get_current_buf()
+    local ok, parser = pcall(vim.treesitter.get_parser, buf)
+    return ok and parser or nil
+end
 
-    local lang = parser:lang()
-    local get_parent = get_parent_funcs[ft] or get_parent_funcs.default
+---@param bufnr integer
+---@param lang string
+---@param query vim.treesitter.Query
+---@param syntax_tree TSTree
+local function ts_build_symbols(bufnr, lang, query, syntax_tree)
+    local get_parent = get_parent_funcs[lang] or get_parent_funcs.default
 
     local stack = {}
     local symbols = {}
@@ -839,7 +856,7 @@ local function ts_get_symbols(bufnr)
             parent = parent_symbol,
         }
 
-        local postprocess = postprocess_funcs[ft]
+        local postprocess = postprocess_funcs[lang]
         if postprocess then
             postprocess(bufnr, symbol, match)
         end
@@ -861,26 +878,46 @@ local function ts_get_symbols(bufnr)
     return symbols
 end
 
+---@param bufnr integer
+---@param cb fun(lang: string, query: vim.treesitter.Query, syntax_tree: TSNode)
+local function ts_parse_tree(bufnr, cb)
+    local parser = get_parser(bufnr)
+    if not parser then
+        set_contents({ 'No parser for this buffer' })
+        return
+    end
+
+    local lang = parser:lang()
+
+    local query = get_query(lang)
+    if not query then
+        set_contents({ string.format('No runtime query for %s', lang) })
+        return
+    end
+
+    parser:parse(nil, function(err, syntax_trees)
+        if is_stale(bufnr, 'treesitter') then
+            return
+        end
+        if err then
+            set_contents({ 'Error occurred when parsing the language tree' })
+            notify.error('[Outline] ' .. err)
+            return
+        else
+            cb(lang, query, syntax_trees[1])
+        end
+    end)
+end
+
+---@param bufnr integer
 local function treesitter_request(bufnr)
-    local state = states[tab]
-    -- Abort if the source buffer or provider changes
-    if
-        not state.win
-        or not vim.api.nvim_win_is_valid(state.win)
-        or bufnr ~= state.source_bufnr
-        or state.provider ~= 'treesitter'
-    then
-        return
-    end
-    local symbols = ts_get_symbols(bufnr)
-    if not symbols or not next(symbols) then
-        local filename = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(bufnr), ':t')
-        set_contents({ string.format("No Treesitter symbols found in document '%s'", filename) })
-        return
-    end
-    format_symbols(symbols)
-    set_contents(states[tab].contents)
-    apply_highlights()
+    ts_parse_tree(bufnr, function(lang, query, syntax_tree)
+        local symbols = ts_build_symbols(bufnr, lang, query, syntax_tree)
+        format_symbols(symbols)
+        set_contents(states[tab].contents)
+        apply_highlights()
+    end)
+
     vim.t[tab].outline_provider = 'Treesitter' -- used by winbar
 end
 
@@ -982,14 +1019,7 @@ end
 
 local function ctags_request(bufnr)
     local on_exit = vim.schedule_wrap(function(obj)
-        local state = states[tab]
-        -- Abort if the source buffer or provider changes
-        if
-            not state.win
-            or not vim.api.nvim_win_is_valid(state.win)
-            or bufnr ~= state.source_bufnr
-            or state.provider ~= 'ctags'
-        then
+        if is_stale(bufnr, 'ctags') then
             return
         end
         if obj.code ~= 0 then

@@ -1,60 +1,62 @@
 # .dotfiles
 
-My dotfiles for `macOS` and `Linux`. Just cherry pick the piece of code you totally understand.
+My development environment for `macOS` and `Linux`.
 
-![platform](https://img.shields.io/badge/platform-macOS%2FLinux-blue)
-![last commit](https://img.shields.io/github/last-commit/rockyzhang24/dotfiles)
+Built around a highly customized Neovim setup, terminal-first workflows, and a carefully crafted macOS environment.
+
+## Highlights:
+
+- **Neovim**: A highly customized setup focused on stability, simplicity, and full control. Most functionality is implemented from scratch rather than delegated to plugins
+- **FZF**: A heavily customized terminal workflow built around fzf for fast navigation, searching, and command execution
+- **Terminal**: Kitty / Ghostty, Tmux, and Zsh (Zimfw + Starship) form the foundation of a productive terminal environment
+- **File Management**: A carefully crafted lf setup for efficient keyboard-driven file navigation and manipulation
+- **macOS Workflow**: Karabiner-Element, SketchyBar, and Yabai provide a fully keyboard-driven desktop experience
+
+📖 **Neovim Documentation**
+
+For a detailed walkthrough of my Neovim configuration and custom modules: [Nvim README](./.config/nvim/README.md)
 
 ![demo](https://github.com/user-attachments/assets/de888ec1-a391-48f2-b951-0a7dfabdbb90)
 
-↗ Like the color theme? Please check [arctic.nvim](https://github.com/rockyzhang24/arctic.nvim).
+# Configurations
 
-# ✨ Contents
+### Neovim
 
-### 🔥 Text Editor
+* [Neovim](https://neovim.io) ([config](./.config/nvim/) and [README](./.config/nvim/README.md))
 
-* [Neovim](https://neovim.io) ([config](./.config/nvim/) and [README](./.config/nvim#readme))
-
-### 🐚 Shell
-
-* [Zsh](https://www.zsh.org) ([config](./.config/zsh/))
-
-  * Use [Zimfw](https://zimfw.sh) framework
-  * The prompt is [Starship](https://starship.rs/)
-
-### 📟 Terminal Emulator
+### Terminal
 
 * [Ghostty](https://ghostty.org/) ([config](./.config/ghostty/))
 * [Kitty](https://sw.kovidgoyal.net/kitty/) ([config](./.config/kitty/))
 * [Wezterm](https://wezfurlong.org/wezterm/) ([config](./.config/wezterm/))
 * [Alacritty](https://alacritty.org) ([config](./.config/alacritty/))
+* [Tmux](https://github.com/tmux/tmux) ([config](./.tmux.conf))
+* [fzf](https://github.com/junegunn/fzf) ([config](./.config/fzf/))
 
-### 🪄 Tiling Window Manager
+### Shell
 
-* [yabai](https://github.com/koekeishiya/yabai) ([config](./.config/yabai/))
-* [skhd](https://github.com/koekeishiya/skhd) ([config](./.config/yabai/))
+* [Zsh](https://www.zsh.org) ([config](./.config/zsh/))
+  * Use [Zimfw](https://zimfw.sh) framework
+  * Prompt powered by [Starship](https://starship.rs/)
 
-### 🗃️ Console File Manager
+### File Management
 
 * [lf](https://pkg.go.dev/github.com/gokcehan/lf) ([config](./.config/lf/))
 * [Vifm](https://vifm.info) ([config](./.config/vifm/))
 * [Ranger](https://ranger.github.io) ([config](./.config/ranger/))
 
-### 🪟 Menu Bar
+### macOS
 
+* [yabai](https://github.com/koekeishiya/yabai) ([config](./.config/yabai/))
+* [skhd](https://github.com/koekeishiya/skhd) ([config](./.config/yabai/))
 * [Sketchybar](https://github.com/FelixKratz/SketchyBar) ([config](./.config/sketchybar))
-
-### ⌨️ Keyboard Customizer
-
 * [Karabiner-Elements](https://karabiner-elements.pqrs.org) ([config](./.config/karabiner/))
 
-### 🧶 Others
+### Misc
 
-* [Tmux](https://github.com/tmux/tmux) ([config](./.tmux.conf))
-* [fzf](https://github.com/junegunn/fzf) ([config](./.config/fzf/))
 * My scripts: [bin](./.config/bin/)
 
-# 💡 How I am managing the dotfiles
+# Dotfile Management
 
 Using a bare repository. The dotfiles can reside where they are. No symlinks needed.
 

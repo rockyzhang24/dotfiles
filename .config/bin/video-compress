@@ -1,0 +1,130 @@
+#!/usr/bin/env bash
+
+# Usage: video-compress input.mov 10
+# It will compress it and save it as a new video file `input.mp4` with size 10 MB
+
+set -euo pipefail
+
+if [ "$#" -lt 2 ]; then
+    echo "Usage: $0 input_video target_size_mb [output.mp4]"
+    echo "Example: $0 input.mov 10 output.mp4"
+    exit 1
+fi
+
+INPUT="$1"
+TARGET_MB="$2"
+OUTPUT="${3:-${INPUT%.*}_compressed.mp4}"
+
+AUDIO_KBPS=128
+
+# More conservative to make sure output never exceeds target size.
+# 0.9 means we only use 90% of the requested size for encoded streams.
+SIZE_SAFETY_RATIO=0.90
+
+DURATION=$(ffprobe -v error \
+    -show_entries format=duration \
+    -of csv=p=0 \
+    "$INPUT")
+
+if [ -z "$DURATION" ]; then
+    echo "Failed to get video duration"
+    exit 1
+fi
+
+TOTAL_KBPS=$(awk -v size="$TARGET_MB" -v duration="$DURATION" -v ratio="$SIZE_SAFETY_RATIO" '
+    BEGIN {
+        print int(size * 1024 * 1024 * 8 * ratio / duration / 1000)
+    }
+')
+
+VIDEO_KBPS=$((TOTAL_KBPS - AUDIO_KBPS))
+
+if [ "$VIDEO_KBPS" -lt 100 ]; then
+    echo "Target size too small."
+    echo "Try a larger target size or lower AUDIO_KBPS."
+    exit 1
+fi
+
+COLOR_ARGS=()
+
+get_stream_field() {
+    ffprobe -v error \
+        -select_streams v:0 \
+        -show_entries "stream=$1" \
+        -of default=noprint_wrappers=1:nokey=1 \
+        "$INPUT" | head -n 1
+}
+
+COLOR_RANGE=$(get_stream_field color_range || true)
+COLOR_SPACE=$(get_stream_field color_space || true)
+COLOR_TRANSFER=$(get_stream_field color_transfer || true)
+COLOR_PRIMARIES=$(get_stream_field color_primaries || true)
+
+if [ -n "${COLOR_RANGE:-}" ] && [ "$COLOR_RANGE" != "unknown" ]; then
+    COLOR_ARGS+=("-color_range" "$COLOR_RANGE")
+fi
+
+if [ -n "${COLOR_SPACE:-}" ] && [ "$COLOR_SPACE" != "unknown" ]; then
+    COLOR_ARGS+=("-colorspace" "$COLOR_SPACE")
+fi
+
+if [ -n "${COLOR_TRANSFER:-}" ] && [ "$COLOR_TRANSFER" != "unknown" ]; then
+    COLOR_ARGS+=("-color_trc" "$COLOR_TRANSFER")
+fi
+
+if [ -n "${COLOR_PRIMARIES:-}" ] && [ "$COLOR_PRIMARIES" != "unknown" ]; then
+    COLOR_ARGS+=("-color_primaries" "$COLOR_PRIMARIES")
+fi
+
+PASSLOG=$(mktemp -u /tmp/ffmpeg-passlog.XXXXXX)
+
+ffmpeg -y -i "$INPUT" \
+    -map 0:v:0 \
+    -c:v libx264 \
+    -b:v "${VIDEO_KBPS}k" \
+    -preset slow \
+    -pix_fmt yuv420p \
+    "${COLOR_ARGS[@]}" \
+    -map_metadata 0 \
+    -map_chapters 0 \
+    -movflags +faststart \
+    -pass 1 \
+    -passlogfile "$PASSLOG" \
+    -an \
+    -f mp4 /dev/null
+
+ffmpeg -y -i "$INPUT" \
+    -map 0:v:0 \
+    -map 0:a? \
+    -c:v libx264 \
+    -b:v "${VIDEO_KBPS}k" \
+    -preset slow \
+    -pix_fmt yuv420p \
+    "${COLOR_ARGS[@]}" \
+    -c:a aac \
+    -b:a "${AUDIO_KBPS}k" \
+    -map_metadata 0 \
+    -map_chapters 0 \
+    -movflags +faststart \
+    -pass 2 \
+    -passlogfile "$PASSLOG" \
+    "$OUTPUT"
+
+rm -f "${PASSLOG}"*
+
+ACTUAL_BYTES=$(stat -f%z "$OUTPUT" 2>/dev/null || stat -c%s "$OUTPUT")
+TARGET_BYTES=$(awk -v size="$TARGET_MB" 'BEGIN { print int(size * 1024 * 1024) }')
+
+if [ "$ACTUAL_BYTES" -gt "$TARGET_BYTES" ]; then
+    echo "Warning: output is still larger than target."
+    echo "Output: $ACTUAL_BYTES bytes"
+    echo "Target: $TARGET_BYTES bytes"
+    echo "Try lowering SIZE_SAFETY_RATIO to 0.88 or 0.85."
+    exit 2
+fi
+
+echo "Done: $OUTPUT"
+echo "Target size: ${TARGET_MB} MB"
+echo "Actual size: $(awk -v b="$ACTUAL_BYTES" 'BEGIN { printf "%.2f MB", b / 1024 / 1024 }')"
+echo "Video bitrate: ${VIDEO_KBPS}k"
+echo "Audio bitrate: ${AUDIO_KBPS}k"

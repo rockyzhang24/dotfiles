@@ -1,5 +1,6 @@
 local gitsigns = require('gitsigns')
 
+---@diagnostic disable-next-line: redundant-parameter
 gitsigns.setup({
 
     -- Experimental features
@@ -69,48 +70,48 @@ gitsigns.setup({
 
         -- Stage hunk or buffer
         -- To unstage, run it on a staged lines
-        buf_map('n', '<Leader>hs', gitsigns.stage_hunk)
-        buf_map('v', '<Leader>hs', function()
+        buf_map('n', ',hs', gitsigns.stage_hunk)
+        buf_map('v', ',hs', function()
             gitsigns.stage_hunk({ vim.fn.line('.'), vim.fn.line('v') })
         end)
-        buf_map('n', '<Leader>hS', gitsigns.stage_buffer)
+        buf_map('n', ',hS', gitsigns.stage_buffer)
 
         -- Reset
-        buf_map('n', '<Leader>hr', gitsigns.reset_hunk)
-        buf_map('v', '<Leader>hr', function()
+        buf_map('n', ',hr', gitsigns.reset_hunk)
+        buf_map('v', ',hr', function()
             gitsigns.reset_hunk({ vim.fn.line('.'), vim.fn.line('v') })
         end)
-        buf_map('n', '<Leader>hR', gitsigns.reset_buffer)
+        buf_map('n', ',hR', gitsigns.reset_buffer)
 
         -- Discard changes
-        buf_map({ 'n', 'v' }, '<Leader>hr', ':Gitsigns reset_hunk<CR>')
-        buf_map('n', '<Leader>hR', gitsigns.reset_buffer)
+        buf_map({ 'n', 'v' }, ',hr', ':Gitsigns reset_hunk<CR>')
+        buf_map('n', ',hR', gitsigns.reset_buffer)
 
         -- Hunk preview
-        buf_map('n', '<Leader>hp', gitsigns.preview_hunk)
-        buf_map('n', '<Leader>hi', gitsigns.preview_hunk_inline)
+        buf_map('n', ',hp', gitsigns.preview_hunk)
+        buf_map('n', ',hi', gitsigns.preview_hunk_inline)
 
         -- Blame
-        buf_map('n', '<Leader>hb', function()
+        buf_map('n', ',hb', function()
             gitsigns.blame_line({ full = true })
         end)
 
         -- Diff
-        buf_map('n', '<Leader>hd', gitsigns.diffthis)
-        buf_map('n', '<Leader>hD', function()
+        buf_map('n', ',hd', gitsigns.diffthis)
+        buf_map('n', ',hD', function()
             gitsigns.diffthis('~')
         end)
 
         -- Show the commit with revision of the current line blame's sha
         -- Available when current_lien_blame is toggled on
-        buf_map('n', '<Leader>hc', function()
+        buf_map('n', ',hc', function()
             if vim.b.gitsigns_blame_line_dict then
                 gitsigns.show_commit(vim.b.gitsigns_blame_line_dict.sha)
             end
         end)
 
         -- Change base revision to diff against, e.g., ~2
-        buf_map('n', '<leader>hB', ':Gitsigns change_base ~')
+        buf_map('n', ',hB', ':Gitsigns change_base ~')
 
         -- Toggle
         buf_map('n', 'yodw', gitsigns.toggle_word_diff) -- toggle the word_diff in the buffer
@@ -120,9 +121,9 @@ gitsigns.setup({
         buf_map({ 'o', 'x' }, 'ih', ':<C-U>Gitsigns select_hunk<CR>')
 
         -- Populate quickfix with hunks
-        buf_map('n', '<leader>hq', gitsigns.setqflist)
+        buf_map('n', ',hq', gitsigns.setqflist)
 
-        buf_map('n', '<leader>hQ', function()
+        buf_map('n', ',hQ', function()
             -- all modified files for git dir
             gitsigns.setqflist('all')
         end)

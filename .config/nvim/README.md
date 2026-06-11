@@ -83,7 +83,7 @@ Symbols can be interactively filtered by kind using fzf.
 
 ![outline](https://github.com/user-attachments/assets/5caf9204-fb46-49aa-80d6-c729a017adcc)
 
-### Call Hierarchy ([config](.lua/rockyz/call_hierarchy.lua))
+### Call Hierarchy ([config](./lua/rockyz/call_hierarchy.lua))
 
 Provides a toggleable call hierarchy sidebar for exploring incoming and outgoing calls.
 
@@ -118,8 +118,6 @@ Terminals can be moved into their own tabpages and later restored back to the pa
 It also supports opening filetype-specific REPLs, sending selected lines for execution, and running the current file directly in a terminal.
 
 https://github.com/user-attachments/assets/37acb4f1-002c-418f-8c01-d2c5ecb44626
-
-
 
 ### lf file manager ([config](./lua/rockyz/lf.lua))
 

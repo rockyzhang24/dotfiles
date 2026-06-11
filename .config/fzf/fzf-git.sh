@@ -1,8 +1,8 @@
 # Reference: https://github.com/junegunn/fzf-git.sh/blob/main/fzf-git.sh
-# till the commit 3ec3e97d1cc75ec97c0ab923ed5aa567aee01a5e on 5/8/2025
+# till the commit 0f0488331a060cf45aaecb6705a2cf394fb20293 on 3/18/2026
 
 # shellcheck disable=SC2039
-[[ $0 = - ]] && return
+[[ $0 == - ]] && return
 
 __fzf_git_color() {
   if [[ -n $NO_COLOR ]]; then
@@ -33,11 +33,11 @@ __fzf_git_cat() {
 
 __fzf_git_pager() {
   local pager
-  pager="${FZF_GIT_PAGER:-${GIT_PAGER:-$(git config --get core.pager 2>/dev/null)}}"
+  pager="${FZF_GIT_PAGER:-${GIT_PAGER:-$(git config --get core.pager 2> /dev/null)}}"
   echo "${pager:-cat}"
 }
 
-if [[ $1 = --list ]]; then
+if [[ $1 == --list ]]; then
   shift
   if [[ $# -eq 1 ]]; then
     branches() {
@@ -61,13 +61,13 @@ if [[ $1 = --list ]]; then
         branches -a
         ;;
       hashes)
-        echo ':: CTRL-O (open in browser), CTRL-D (diff)'
-        echo ':: CTRL-S (toggle sort), ALT-A (show all hashes)'
+        echo ':: CTRL-O (open in browser), CTRL-D (diff), CTRL-S (toggle sort)'
+        echo ':: ALT-R (toggle raw mode), ALT-F (list files), ALT-A (show all hashes)'
         hashes
         ;;
       all-hashes)
         echo ':: CTRL-O (open in browser), CTRL-D (diff)'
-        echo ':: CTRL-S (toggle sort)'
+        echo ':: CTRL-S (toggle sort), ALT-F (list files)'
         hashes --all
         ;;
       refs)
@@ -75,7 +75,7 @@ if [[ $1 = --list ]]; then
         refs --exclude='refs/remotes'
         ;;
       all-refs)
-        echo ':: CTRL-O (open in browser), ALT-E (examine in editor)'
+        echo ':: CTRL-O (open in browser), ALT-E (examine in editor), ALT-ENTER (accept without remote)'
         refs
         ;;
       nobeep) ;;
@@ -85,7 +85,7 @@ if [[ $1 = --list ]]; then
     set -e
 
     branch=$(git rev-parse --abbrev-ref HEAD 2> /dev/null)
-    if [[ $branch = HEAD ]]; then
+    if [[ $branch == HEAD ]]; then
       branch=$(git describe --exact-match --tags 2> /dev/null || git rev-parse --short HEAD)
     fi
 
@@ -121,14 +121,24 @@ if [[ $1 = --list ]]; then
       url=${remote_url%.git}
     fi
 
-    case "$(uname -sr)" in
-      Darwin*)
+    case "$OSTYPE" in
+      darwin*)
         open "$url$path"
         ;;
-      *microsoft* | *Microsoft*)
-        explorer.exe "$url$path"
+      msys)
+        # Git-Bash on Windows
+        start "$url$path"
+        ;;
+      linux*)
+        # Handle WSL on Windows
+        if uname -a | grep -i -q Microsoft && command -v powershell.exe; then
+          powershell.exe -NoProfile start "$url$path"
+        else
+          xdg-open "$url$path"
+        fi
         ;;
       *)
+        # fall back to xdg-open for BSDs, etc.
         xdg-open "$url$path"
         ;;
     esac
@@ -159,15 +169,16 @@ else
     }
 fi
 
-
 # Check git repository
+git_files_show_untracked_files="all"
 _fzf_git_check() {
   # Handle the bare repo that manages my dotfiles
   if [[ $PWD == $HOME/.config || $PWD == $HOME/.config/* && $PWD != $HOME/.config/nvim/pack* ]]; then
     export GIT_DIR=$HOME/dotfiles
     export GIT_WORK_TREE=$HOME
+    git_files_show_untracked_files="no"
   fi
-  git rev-parse HEAD > /dev/null 2>&1 && return
+  git rev-parse > /dev/null 2>&1 && return
   [[ -n $TMUX ]] && tmux display-message "Not in a git repository"
   return 1
 }
@@ -181,18 +192,43 @@ _fzf_git_files() {
   _fzf_git_check || return
   local root query
   root=$(git rev-parse --show-toplevel)
-  [[ $root != "$PWD" ]] && query='!../ '
+  [[ -n "$(git rev-parse --show-prefix)" ]] && query='!../ '
 
-  (git -c color.status=$(__fzf_git_color) status --short --no-branch
-   git ls-files "$root" | grep -vxFf <(git status -s | grep '^[^?]' | cut -c4-; echo :) | sed 's/^/   /') |
-  _fzf_git_fzf -m --ansi --nth 2..,.. \
-    --prompt '📁 Files> ' \
-    --header ':: CTRL-O (open in browser), ALT-E (open in editor)' \
-    --bind "ctrl-o:execute-silent:bash \"$__fzf_git\" --list file {-1}" \
-    --bind "alt-e:execute:${EDITOR:-vim} {-1} > /dev/tty" \
-    --query "$query" \
-    --preview "git diff --no-ext-diff --color=$(__fzf_git_color .) -- {-1} | $(__fzf_git_pager); $(__fzf_git_cat) {-1}" "$@" |
-  cut -c4- | sed 's/.* -> //'
+  read -r -d "" extract_file_name <<'EOF'
+"$(cut -c4- <<< {} | sed 's/.* -> //;s/^"//;s/"$//;s/\\"/"/g')"
+EOF
+
+  (
+    git -c core.quotePath=false -c color.status=$(__fzf_git_color) status --short --no-branch --untracked-files="$git_files_show_untracked_files"
+    git -c core.quotePath=false ls-files "$root" | grep -vxFf <(
+      git -c core.quotePath=false status --short --untracked-files=no |
+        cut -c4- | sed -e 's/.* -> //' -e '/^"[^"\\]*"$/ { s/^"//;s/"$//; }'
+      echo :
+    ) | sed 's/^/   /'
+  ) |
+    _fzf_git_fzf -m --ansi --nth 2..,.. \
+      --prompt '📁 Files> ' \
+      --header ':: CTRL-O (open in browser), ALT-E (open in editor)' \
+      --bind "ctrl-o:execute-silent:bash \"$__fzf_git\" --list file $extract_file_name" \
+      --bind "alt-e:execute:${EDITOR:-vim} $extract_file_name" \
+      --query "$query" \
+      --preview "git -c core.quotePath=false diff --no-ext-diff --color=$(__fzf_git_color .) -- $extract_file_name | $(__fzf_git_pager); $(__fzf_git_cat) $extract_file_name" "$@" |
+    cut -c4- | sed 's/.* -> //'
+}
+
+_fzf_git_tree_files() {
+  _fzf_git_check || return
+
+  local treeish
+  for treeish in "$@"; do
+    git diff-tree --no-commit-id --name-only "$treeish" -r
+  done | sort -u |
+    _fzf_git_fzf -m \
+      --prompt "📂 Files in $*> " \
+      --header ':: CTRL-O (open in browser), ALT-E (open in editor)' \
+      --bind "ctrl-o:execute-silent:bash \"$__fzf_git\" --list file {}" \
+      --bind "alt-e:execute:${EDITOR:-vim} {}" \
+      --preview "git -c core.quotePath=false diff --no-ext-diff --color=$(__fzf_git_color .) -- {} | $(__fzf_git_pager); $(__fzf_git_cat) {}"
 }
 
 # Branches
@@ -200,7 +236,7 @@ _fzf_git_branches() {
   _fzf_git_check || return
 
   local shell
-  [[ -n "${BASH_VERSION:-}" ]] && shell=bash || shell=zsh
+  [[ -n ${BASH_VERSION:-} ]] && shell=bash || shell=zsh
 
   bash "$__fzf_git" --list branches |
   __fzf_git_fzf=$(declare -f _fzf_git_fzf) _fzf_git_fzf --ansi \
@@ -226,6 +262,7 @@ _fzf_git_tags() {
     --prompt '📛 Tags> ' \
     --header ':: CTRL-O (open in browser)' \
     --bind "ctrl-o:execute-silent:bash \"$__fzf_git\" --list tag {}" \
+    --bind 'alt-r:toggle-raw' \
     --preview "git show --color=$(__fzf_git_color .) {} | $(__fzf_git_pager)" "$@"
 }
 
@@ -233,15 +270,32 @@ _fzf_git_tags() {
 _fzf_git_hashes() {
   _fzf_git_check || return
   bash "$__fzf_git" --list hashes |
-  _fzf_git_fzf --ansi --no-sort --bind 'ctrl-s:toggle-sort' \
+  _fzf_git_fzf --ansi --no-sort --bind 'ctrl-s:toggle-sort,alt-r:toggle-raw' \
     --prompt '🍡 Hashes> ' \
     --header-lines 2 \
     --bind "ctrl-o:execute-silent:bash \"$__fzf_git\" --list commit {}" \
     --bind "ctrl-d:execute:grep -o '[a-f0-9]\{7,\}' <<< {} | head -n 1 | xargs git diff --color=$(__fzf_git_color) > /dev/tty" \
     --bind "alt-a:change-prompt(🍇 All hashes> )+reload:bash \"$__fzf_git\" --list all-hashes" \
+    --bind "alt-f:become:echo ::tree_files;
+      awk 'match(\$0, /[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]*/) { print substr(\$0, RSTART, RLENGTH) }' {+f} |
+        xargs bash \"$__fzf_git\" --run tree_files" \
     --color hl:underline,hl+:underline \
     --preview "grep -o '[a-f0-9]\{7,\}' <<< {} | head -n 1 | xargs git show --color=$(__fzf_git_color .) | $(__fzf_git_pager)" "$@" |
-  awk 'match($0, /[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]*/) { print substr($0, RSTART, RLENGTH) }'
+  awk '
+    NR==1 && $0=="::tree_files" {
+      mode="tree_files"
+      next
+    }
+
+    mode=="tree_files" {
+      print
+      next
+    }
+
+    match($0, /[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]*/) {
+      print substr($0, RSTART, RLENGTH)
+    }
+  '
 }
 
 # Remotes
@@ -264,7 +318,7 @@ _fzf_git_stashes() {
     --prompt '🥡 Stashes> ' \
     --header ':: CTRL-X (drop stash)' \
     --bind 'ctrl-x:reload(git stash drop -q {1}; git stash list)' \
-    -d: --preview "git show --color=$(__fzf_git_color .) {1} | $(__fzf_git_pager)" "$@" |
+    -d: --preview "git show --first-parent --color=$(__fzf_git_color .) {1} | $(__fzf_git_pager)" "$@" |
   cut -d: -f1
 }
 
@@ -273,6 +327,7 @@ _fzf_git_lreflogs() {
   _fzf_git_check || return
   git reflog --color=$(__fzf_git_color) --format="%C(blue)%gD %C(yellow)%h%C(auto)%d %gs" | _fzf_git_fzf --ansi \
     --prompt '📒 Reflogs> ' \
+    --bind 'alt-r:toggle-raw' \
     --preview "git show --color=$(__fzf_git_color .) {1} | $(__fzf_git_pager)" "$@" |
   awk '{print $1}'
 }
@@ -289,10 +344,12 @@ _fzf_git_each_ref() {
     --no-hscroll \
     --bind 'ctrl-/:change-preview-window(down,70%|hidden|)' \
     --bind "ctrl-o:execute-silent:bash \"$__fzf_git\" --list {1} {2}" \
-    --bind "alt-e:execute:${EDITOR:-vim} <(git show {2}) > /dev/tty" \
+    --bind "alt-e:execute:${EDITOR:-vim} <(git show {2}) < /dev/tty > /dev/tty" \
     --bind "alt-a:change-prompt(🍀 Every ref> )+reload:bash \"$__fzf_git\" --list all-refs" \
-    --preview "git log --oneline --graph --date=short --color=$(__fzf_git_color .) --pretty='format:%C(auto)%cd %h%d %s' {2} --" "$@" |
-  awk '{print $2}'
+    --bind "alt-enter:become:printf '%s\n' {+2} | sed 's@[^/]*/@@'" \
+    --preview "git log --oneline --graph --date=short --color=$(__fzf_git_color .) --pretty='format:%C(auto)%cd %h%d %s' {2} --" \
+    --accept-nth 2 \
+    "$@"
 }
 
 # Worktrees
@@ -309,6 +366,23 @@ _fzf_git_worktrees() {
     " "$@" |
   awk '{print $1}'
 }
+
+_fzf_git_list_bindings() {
+  cat <<'EOF'
+
+CTRL-G ? to show this list
+CTRL-G F for Files
+CTRL-G B for Branches
+CTRL-G T for Tags
+CTRL-G R for Remotes
+CTRL-G H for commit Hashes
+CTRL-G S for Stashes
+CTRL-G L for reflogs
+CTRL-G W for Worktrees
+CTRL-G E for Each ref (git for-each-ref)
+EOF
+}
+
 fi # --------------------------------------------------------------------------
 
 if [[ $1 = --run ]]; then
@@ -320,6 +394,7 @@ if [[ $1 = --run ]]; then
 elif [[ $- =~ i ]]; then # ------------------------------------------------------
 
 # Setup key bindings:
+# CTRL-G ? for help message
 # CTRL-G F for files
 # CTRL-G B for branches
 # CTRL-G T for tags
@@ -343,6 +418,10 @@ if [[ -n "${BASH_VERSION:-}" ]]; then
       # bind -m emacs-standard '"\C-g\C-'$c'": " \C-u \C-a\C-k`_fzf_git_'$o'`\e\C-e\C-y\C-a\C-y\ey\C-h\C-e\er \C-h"'
       # bind -m vi-command     '"\C-g\C-'$c'": "\C-z\C-g\C-'$c'\C-z"'
       # bind -m vi-insert      '"\C-g\C-'$c'": "\C-z\C-g\C-'$c'\C-z"'
+      if [[ $c == '?' ]]; then
+        bind -x "\"\C-g$c\": _fzf_git_list_bindings"
+        continue
+      fi
       bind -m emacs-standard '"\C-g'$c'":    " \C-u \C-a\C-k`_fzf_git_'$o'`\e\C-e\C-y\C-a\C-y\ey\C-h\C-e\er \C-h"'
       bind -m vi-command     '"\C-g'$c'":    "\C-z\C-g'$c'\C-z"'
       bind -m vi-insert      '"\C-g'$c'":    "\C-z\C-g'$c'\C-z"'
@@ -351,16 +430,21 @@ if [[ -n "${BASH_VERSION:-}" ]]; then
 elif [[ -n "${ZSH_VERSION:-}" ]]; then
   __fzf_git_join() {
     local item
-    while read item; do
-      echo -n "${(q)item} "
+    while read -r item; do
+      echo -n -E "${(q)${(Q)item}} "
     done
   }
 
   __fzf_git_init() {
     bindkey -r '^g'
+    setopt localoptions no_glob
     local m o
     for o in "$@"; do
-      eval "fzf-git-$o-widget() { local result=\$(_fzf_git_$o | __fzf_git_join); zle reset-prompt; LBUFFER+=\$result }"
+      if [[ ${o[1]} == "?" ]];then
+        eval "fzf-git-$o-widget() { zle -M '$(_fzf_git_list_bindings)' }"
+      else
+        eval "fzf-git-$o-widget() { local result=\$(_fzf_git_$o | __fzf_git_join); zle reset-prompt; LBUFFER+=\$result }"
+      fi
       eval "zle -N fzf-git-$o-widget"
       for m in emacs vicmd viins; do
         # eval "bindkey -M $m '^g^${o[1]}' fzf-git-$o-widget"
@@ -369,6 +453,6 @@ elif [[ -n "${ZSH_VERSION:-}" ]]; then
     done
   }
 fi
-__fzf_git_init files branches tags remotes hashes stashes lreflogs each_ref worktrees
+__fzf_git_init files branches tags remotes hashes stashes lreflogs each_ref worktrees '?list_bindings'
 
 fi # --------------------------------------------------------------------------

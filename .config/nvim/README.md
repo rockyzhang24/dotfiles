@@ -20,6 +20,7 @@ Functionalities I implemented:
 * Concise LSP progress message in the bottom right: [LSP progress](./lua/rockyz/lsp/progress.lua) ([showcase](#lsp-progress-message-config))
 * Subtle LSP lightbulb indicator for code actions: [Lightbulb](./lua/rockyz/lsp/lightbulb.lua) ([showcase](#lightbulb-config))
 * Versatile outline sidebar with LSP, Ctags and man providers, plus fzf-based filtering: [Outline](./lua/rockyz/outline.lua) ([showcase](#outline-config))
+* Interactive call hierarchy sidebar with incoming/outgoing calls, lazy loading and recursive expansion: [Call Hierarchy](./lua/rockyz/call_hierarchy.lua) ([showcase](#call-hierarchy-config))
 * Minimalist indent guide using `listchars`: [Indent guide](./lua/rockyz/indentline.lua)
 * Neat indent scope display with motions and text objects support: [Indent scope](./lua/rockyz/indentscope.lua) ([showcase](#indent-scope-config))
 * Appealing winbar with file path and diagnostics: [Winbar](./lua/rockyz/winbar.lua) ([showcase](#winbar-config))
@@ -72,9 +73,25 @@ This approach keeps the implementation lightweight, predictable, and fully under
 
 ![fuzzy-finders](https://github.com/user-attachments/assets/0459ae54-b0bd-4187-8760-d19f5fc1731c)
 
-### LSP progress message ([config](./lua/rockyz/lsp/progress.lua))
+### Outline ([config](./lua/rockyz/outline.lua))
 
-![lsp-progress](https://github.com/user-attachments/assets/63f5fa48-cefe-4d32-9d8d-806418c066a2)
+Provides a toggleable outline sidebar for structural navigation.
+
+Supports multiple providers, including LSP, Treesitter, Ctags and Man (for man page specifically).
+
+Symbols can be interactively filtered by kind using fzf.
+
+![outline](https://github.com/user-attachments/assets/5caf9204-fb46-49aa-80d6-c729a017adcc)
+
+### Call Hierarchy ([config](.lua/rockyz/call_hierarchy.lua))
+
+Provides a toggleable call hierarchy sidebar for exploring incoming and outgoing calls.
+
+Nodes are loaded lazily and can be recursively expanded to reveal deeper call relationships.
+
+Supports jumping, peeking and rebuilding the hierarchy from any selected node.
+
+https://github.com/user-attachments/assets/4baea87f-57d1-4903-b252-85a546c4fdc0
 
 ### Statusline ([config](./lua/rockyz/statusline.lua))
 
@@ -92,18 +109,6 @@ This approach keeps the implementation lightweight, predictable, and fully under
 
 ![indentscope](https://github.com/user-attachments/assets/5732405e-d5fe-4d2d-a36f-fbc7d27f4747)
 
-### Lightbulb ([config](./lua/rockyz/lsp/lightbulb.lua))
-
-![lightbulb](https://github.com/user-attachments/assets/882c0ddc-0f29-4844-b4dd-a243d8a4009d)
-
-### Quickfix list ([config](./lua/rockyz/quickfix.lua))
-
-![quickfix](https://github.com/user-attachments/assets/7c3446d4-3fb1-47ad-a1c5-c96b06a999a3)
-
-### lf file manager ([config](./lua/rockyz/lf.lua))
-
-![lf](https://github.com/user-attachments/assets/b4055211-d0c4-4422-82b6-c447fb0d5902)
-
 ### Terminal ([config](./lua/rockyz/terminal.lua))
 
 Supports creating, deleting, and renaming terminals.
@@ -114,16 +119,20 @@ It also supports opening filetype-specific REPLs, sending selected lines for exe
 
 https://github.com/user-attachments/assets/37acb4f1-002c-418f-8c01-d2c5ecb44626
 
-### Scrollbar ([config](./lua/rockyz/scrollbar.lua))
 
-![scrollbar](https://github.com/user-attachments/assets/40402934-1849-47e1-96b7-caacd28a092d)
 
-### Outline ([config](./lua/rockyz/outline.lua))
+### lf file manager ([config](./lua/rockyz/lf.lua))
 
-Provides a toggleable outline sidebar for structural navigation.
+![lf](https://github.com/user-attachments/assets/b4055211-d0c4-4422-82b6-c447fb0d5902)
 
-Supports multiple providers, including LSP, Ctags and man (for man page specifically).
+### LSP progress message ([config](./lua/rockyz/lsp/progress.lua))
 
-Symbols can be interactively filtered by kind using fzf.
+![lsp-progress](https://github.com/user-attachments/assets/63f5fa48-cefe-4d32-9d8d-806418c066a2)
 
-![outline](https://github.com/user-attachments/assets/5caf9204-fb46-49aa-80d6-c729a017adcc)
+### Quickfix list ([config](./lua/rockyz/quickfix.lua))
+
+![quickfix](https://github.com/user-attachments/assets/7c3446d4-3fb1-47ad-a1c5-c96b06a999a3)
+
+### Lightbulb ([config](./lua/rockyz/lsp/lightbulb.lua))
+
+![lightbulb](https://github.com/user-attachments/assets/882c0ddc-0f29-4844-b4dd-a243d8a4009d)

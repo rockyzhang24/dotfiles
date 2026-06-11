@@ -337,7 +337,7 @@ local function on_attach(client, bufnr)
         end
         -- Toggle inlay hints
         -- (1). Buffer locally
-        vim.keymap.set('n', 'yoh', function()
+        vim.keymap.set('n', 'yoi', function()
             local is_enabled = vim.lsp.inlay_hint.is_enabled({ bufnr = 0 })
             vim.b.inlay_hint_enabled = not is_enabled
             vim.lsp.inlay_hint.enable(vim.b.inlay_hint_enabled, { bufnr = 0 })
@@ -350,7 +350,7 @@ local function on_attach(client, bufnr)
             )
         end, opts)
         -- (2). Globally
-        vim.keymap.set('n', 'yoH', function()
+        vim.keymap.set('n', 'yoI', function()
             vim.g.inlay_hint_enabled = not vim.g.inlay_hint_enabled
             vim.lsp.inlay_hint.enable(vim.g.inlay_hint_enabled)
             vim.notify(

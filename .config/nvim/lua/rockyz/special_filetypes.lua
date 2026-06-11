@@ -11,6 +11,10 @@ local special_filetypes = {
         icon = icons.misc.color,
         title = 'Color Picker',
     },
+    callhierarchy = {
+        icon = icons.misc.references,
+        title = 'Call Hierarchy',
+    },
     cmdwin = { -- for Command-line window
         icon = icons.misc.code,
         title = 'Command-line',

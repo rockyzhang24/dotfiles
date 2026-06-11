@@ -126,6 +126,13 @@ M.render = function()
             local follow_cursor_hl = vim.t.is_outline_follow_cursor_enabled and 'WinbarComponentOn' or 'WinbarComponentInactive'
             local follow_cursor = string.format('[%%#%s#%s%%*]', follow_cursor_hl, icons.misc.pointer)
             winbar = winbar .. ' ' .. follow_cursor
+        elseif ft == 'callhierarchy' then
+            local call_mode = string.format(
+                '[%s ]',
+                vim.t.call_hierarchy_mode == 'incoming' and icons.misc.call_incoming
+                    or icons.misc.call_outgoing
+            )
+            winbar = winbar .. ' ' .. call_mode
         end
         return winbar
     end

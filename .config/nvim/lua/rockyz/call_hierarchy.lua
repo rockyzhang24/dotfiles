@@ -1024,9 +1024,11 @@ local function open(state)
     })
     vim.bo[state.buf].buftype = 'nofile'
     vim.bo[state.buf].modifiable = false
+    vim.bo[state.buf].shiftwidth = 2
     vim.wo[state.win].cursorline = true
     vim.wo[state.win].wrap = false
     vim.wo[state.win].winfixwidth = true
+    vim.wo[state.win].list = true
 end
 
 ---@param state CallHierarchyState

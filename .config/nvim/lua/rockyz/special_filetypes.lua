@@ -14,6 +14,7 @@ local special_filetypes = {
     callhierarchy = {
         icon = icons.misc.references,
         title = 'Call Hierarchy',
+        icon_hl = 'Special',
     },
     cmdwin = { -- for Command-line window
         icon = icons.misc.code,
@@ -76,6 +77,7 @@ local special_filetypes = {
     outline = {
         icon = icons.misc.outline,
         title = 'Outline',
+        icon_hl = 'Special',
     },
     OverseerForm = {
         icon = icons.misc.task,

@@ -43,6 +43,7 @@ local function special_ft_component(ft, winid)
     end
 
     local icon = special_filetypes[ft].icon
+    local icon_hl = special_filetypes[ft].icon_hl or 'WinbarPath'
     local title
     local rest = {}
     if ft == 'floggraph' or ft == 'fugitive' or ft == 'oil' or ft == 'term' then
@@ -62,7 +63,7 @@ local function special_ft_component(ft, winid)
         title = special_filetypes[ft].title
     end
     local rest_str = table.concat(rest, ' ' .. delimiter .. ' ')
-    return string.format('%%#WinbarPath#%s %s%%*', icon, title)
+    return string.format('%%#%s#%s %%#WinbarPath#%s%%*', icon_hl, icon, title)
         .. (rest_str ~= '' and (' ' .. delimiter .. ' ' .. rest_str) or '')
 end
 
@@ -128,7 +129,7 @@ M.render = function()
             winbar = winbar .. ' ' .. follow_cursor
         elseif ft == 'callhierarchy' then
             local call_mode = string.format(
-                '[%s ]',
+                '[%%#WinbarComponentOn#%s %%*]',
                 vim.t.call_hierarchy_mode == 'incoming' and icons.misc.call_incoming
                     or icons.misc.call_outgoing
             )

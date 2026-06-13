@@ -37,11 +37,10 @@ for line in io.lines() do
     elseif source == 'ls_gitfiles' then
         -- lines are output of ls-gitfiles
         -- (1) Some file changed, i.e., git status has output
-        -- <status_code> <status_text>\t<filename> ---> <status_code> <icon>
-        -- <status_text>\t<filename>
+        -- <status_code> <filename>\t<fullpath> --> <status_code> <icon> <filename>\t<fullpath>
         -- (2) No file changed, i.e., git status has no output
-        -- <filename>\t<filename> ---> <icon> <filename>\t<filename>
-        local filename, filepath = unpack(vim.split(line, '\t'))
+        -- <filename>\t<fullpath> --> <icon> <filename>\t<fullpath>
+        local filename, fullpath = unpack(vim.split(line, '\t'))
         local status_code = filename:match('^(%[.*%])')
         if status_code then
             filename = line:match('^%[.*%]%s(.*)\t')
@@ -49,10 +48,10 @@ for line in io.lines() do
         else
             filename = vim.trim(filename)
         end
-        local icon = ansi_icon(filepath)
+        local icon = ansi_icon(fullpath)
         if not dotfile_changed then
             -- For (2)
-            output_line = icon .. ' ' .. filename .. '\t' .. filepath
+            output_line = icon .. ' ' .. filename .. '\t' .. fullpath
         else
             -- For (1)
             output_line = string.format(
@@ -60,7 +59,7 @@ for line in io.lines() do
                 status_code and status_code or string.rep(' ', 4),
                 icon,
                 filename,
-                filepath
+                fullpath
             )
         end
     elseif source == 'git_status' then

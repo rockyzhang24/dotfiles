@@ -247,7 +247,7 @@ local config = {
             ['<Leader>fg'] = 'buffer_tags',
             ['<Leader>fG'] = 'tags',
         },
-        open = {
+        open_file = {
             ['ctrl-x'] = 'split',
             ['ctrl-v'] = 'vsplit',
             ['ctrl-t'] = 'tab split',
@@ -255,7 +255,7 @@ local config = {
     }
 }
 
-local open_map = config.keymaps.open
+local open_file_keymaps = config.keymaps.open_file
 local theme = config.themes[config.theme]
 vim.g.fzf_layout = theme.layout
 
@@ -594,7 +594,7 @@ end
 ---@param lines table The first item is the key; others are filenames.
 local function dispatch_open(lines)
     local key = lines[1]
-    local action = open_map[key] or 'edit'
+    local action = open_file_keymaps[key] or 'edit'
     for i = 2, #lines do
         if vim.fn.fnamemodify(lines[i], ':p') ~= vim.fn.expand('%:p') then
             vim.cmd(action .. ' ' .. lines[i])
@@ -664,6 +664,16 @@ end
 -- Files
 --------------------------------------------------------------------------------
 
+---@param entries_str string
+function M.reveal_file_in_finder(entries_str)
+    local entries = vim.split(entries_str, '\n')
+    if #entries > 1 then
+        return
+    end
+    local file = string.match(entries[1], '.*\t(.*)$')
+    system.async('open -R ' .. file)
+end
+
 local function files(from_resume)
     local fd_cwd = fd_prefix .. ' | ' .. dressup_cmd('fd')
     local fd_home = 'cd $HOME; ' .. fd_prefix .. ' | ' .. dressup_cmd('fd')
@@ -685,7 +695,7 @@ local function files(from_resume)
             '--accept-nth',
             '{2}',
             '--header',
-            ':: ALT-/ (toggle HOME/CWD)',
+            ':: ALT-F (reveal in Finder), ALT-/ (toggle HOME/CWD)',
             '--bind',
             set_label(tildefy_home('{2}')),
             '--bind',
@@ -694,6 +704,15 @@ local function files(from_resume)
             '} || {' ..
                 'echo "reload(' .. vim.fn.escape(fd_cwd, '"') .. ')+change-prompt(' .. prompt_cwd .. ')";' ..
             '}',
+            '--bind',
+            build_execute_reload_action({
+                bind_key = 'alt-f',
+                execute_fn = 'reveal_file_in_finder',
+                reload = {
+                    type = 'shell',
+                    cmd = fd_cwd,
+                },
+            }),
         }),
     }
 
@@ -708,6 +727,24 @@ end
 -- Old files
 --------------------------------------------------------------------------------
 
+local function oldfiles_build_entries()
+    local entries = {}
+    for _, file in ipairs(vim.v.oldfiles) do
+        if vim.fn.filereadable(file) == 1 then
+            local icon = ansi_devicon(file)
+            file = vim.fn.fnamemodify(file, ':~:.')
+            local entry = string.format('%s %s\t%s', icon, file, file)
+            table.insert(entries, entry)
+        end
+    end
+    return entries
+end
+
+function M.oldfiles_source()
+    local entries = oldfiles_build_entries()
+    emit(entries)
+end
+
 local function old_files(from_resume)
     local spec = {
         ['sink*'] = dispatch_open,
@@ -715,41 +752,34 @@ local function old_files(from_resume)
             '--delimiter',
             '\t',
             '--with-nth',
-            '2',
+            '1',
             '--prompt',
             'Old Files> ',
             '--tiebreak',
             'index',
             '--expect',
             expect_keys({ include_defaults = true }),
+            '--header',
+            ':: ALT-F (reveal in Finder)',
             '--preview',
-            fzf_previewer .. ' {1}',
+            fzf_previewer .. ' {2}',
             '--bind',
-            set_label('{2}'),
+            set_label('{1}'),
             '--accept-nth',
-            '1',
+            '2',
+            '--bind',
+            build_execute_reload_action({
+                bind_key = 'alt-f',
+                execute_fn = 'reveal_file_in_finder',
+                reload = {
+                    type = 'remote',
+                    fn = 'oldfiles_source',
+                },
+            })
         }),
     }
 
-    local function oldfiles_build_entries()
-        local entries = {}
-        for _, file in ipairs(vim.v.oldfiles) do
-            if vim.fn.filereadable(file) == 1 then
-                local icon = ansi_devicon(file)
-                file = vim.fn.fnamemodify(file, ':~:.')
-                local entry = string.format('%s\t%s %s', file, icon, file)
-                table.insert(entries, entry)
-            end
-        end
-        return entries
-    end
-
-    local function oldfiles_source()
-        local entries = oldfiles_build_entries()
-        emit(entries)
-    end
-
-    fzf(spec, oldfiles_source)
+    fzf(spec, M.oldfiles_source)
 end
 
 function M.old_files()
@@ -774,6 +804,8 @@ local function dot_files(from_resume)
             '.dotfiles> ',
             '--expect',
             expect_keys({ include_defaults = true }),
+            '--header',
+            ':: ALT-F (reveal in Finder)',
             '--preview',
             'line={} \
             if [[ "${line:1:2}" =~ D ]]; then \
@@ -783,13 +815,22 @@ local function dot_files(from_resume)
                     echo "No preview for this deleted file" \
                 fi \
             else \
-                ' .. fzf_previewer .. ' ~/{2} \
+                ' .. fzf_previewer .. ' {2} \
             fi \
             ',
             '--accept-nth',
-            '~/{2}',
+            '{2}',
             '--bind',
-            set_label('{2}'),
+            set_label('{1}'),
+            '--bind',
+            build_execute_reload_action({
+                bind_key = 'alt-f',
+                execute_fn = 'reveal_file_in_finder',
+                reload = {
+                    type = 'shell',
+                    cmd = git_cmd,
+                }
+            }),
         }),
     }
 
@@ -883,7 +924,7 @@ local function buffers(from_resume)
             if key == '' and #lines ~= 2 then
                 return
             end
-            local action = open_map[key]
+            local action = open_file_keymaps[key]
             action = action and action .. ' | buffer ' or 'buffer '
             for i = 2, #lines do
                 local bufnr = string.match(lines[i], '%[(%d+)%]')
@@ -970,7 +1011,7 @@ local function mru_build_entries()
     local max_digit = math.floor(math.log10(max_bufnr)) + 1
     local mru_list = mru.list()
     local entries = {}
-    local entry_fmt = '%s\t%s\t%s[%s] %s'
+    local entry_fmt = '%s[%s] %s\t%s\t%s'
     for _, b in ipairs(bufinfo_list) do
         local bufnr = b.bufnr
         local buftype = vim.bo[bufnr].buftype
@@ -998,21 +1039,21 @@ local function mru_build_entries()
             local bufnr_str = ansi_string(tostring(bufnr), 'Number')
             local digit = math.floor(math.log10(bufnr)) + 1
             local padding = (' '):rep(max_digit - digit)
-            -- Entry: <fullname>\t<lnum>\t<[bufnr]> <flag> <icon> <bufname>
-            -- {3..} will be presented
-            local entry = entry_fmt:format(name, lnum, padding, bufnr_str, sname)
+            -- Entry: <[bufnr]> <flag> <icon> <bufname>\t<lnum>\t<fullname>
+            -- {1} will be presented
+            local entry = entry_fmt:format(padding, bufnr_str, sname, lnum, name)
             table.insert(entries, entry)
         end
     end
 
-    entry_fmt = '%s\t0\t' .. (' '):rep(max_digit + 2) .. ' %s'
+    entry_fmt = (' '):rep(max_digit + 2) .. ' %s\t0\t%s'
     for _, f in ipairs(mru_list) do
         if not buf_names[f] then
             local icon = ansi_devicon(f)
             local sname = vim.fn.fnamemodify(f, ':~:.')
-            -- Entry: <fullname>\t<0>\t<icon> <bufname>
-            -- {3..} will be presented
-            local entry = entry_fmt:format(f, icon .. ' ' .. sname)
+            -- Entry: <icon> <bufname>\t<0>\t<fullname>
+            -- {1} will be presented
+            local entry = entry_fmt:format(icon .. ' ' .. sname, f)
             table.insert(entries, entry)
         end
     end
@@ -1033,9 +1074,9 @@ local function bufs_and_mru(from_resume)
         ['sink*'] = function(lines)
             -- ENTER/CTRL-X/CTRL-V/CTRL-T to switch to the buffer or edit the file
             local key = lines[1]
-            local action = open_map[key]
+            local action = open_file_keymaps[key]
             for i = 2, #lines do
-                local filename = string.match(lines[i], '^(.-)\t')
+                local filename = string.match(lines[i], '.*\t(.*)$')
                 local bufnr = string.match(lines[i], '%[(%d+)%]')
                 local cmd = bufnr and ('buffer ' .. bufnr) or ('edit ' .. filename)
                 vim.cmd(action and (action .. ' | ' .. cmd) or cmd)
@@ -1046,11 +1087,11 @@ local function bufs_and_mru(from_resume)
             '--delimiter',
             '\t',
             '--header',
-            ':: ALT-BS (delete buffers)',
+            ':: ALT-BS (delete buffers), ALT-F (reveal in Finder)',
             '--header-lines',
             header_lines,
             '--with-nth',
-            '3..',
+            '1',
             '--prompt',
             'MRU> ',
             '--tiebreak',
@@ -1058,15 +1099,24 @@ local function bufs_and_mru(from_resume)
             '--expect',
             expect_keys({ include_defaults = true }),
             '--preview',
-            '[[ {1} == "[No Name]" ]] && echo "" || ' .. bat_prefix .. ' --highlight-line {2} -- {1}',
+            '[[ {3} == "[No Name]" ]] && echo "" || ' .. bat_prefix .. ' --highlight-line {2} -- {3}',
             '--preview-window',
             '+{2}-/2',
             '--bind',
-            set_label('{3..}'),
+            set_label('{1}'),
             '--bind',
             build_execute_reload_action({
                 bind_key = 'alt-bs',
                 execute_fn = 'delete_buffers',
+                reload = {
+                    type = 'remote',
+                    fn = 'mru_source',
+                },
+            }),
+            '--bind',
+            build_execute_reload_action({
+                bind_key = 'alt-f',
+                execute_fn = 'reveal_file_in_finder',
                 reload = {
                     type = 'remote',
                     fn = 'mru_source',
@@ -1287,7 +1337,7 @@ local function marks(from_resume)
         ['sink*'] = function(lines)
             local key = lines[1]
             -- ENTER/CTRL-X/CTRL-V/CTRL-T to open file
-            local action = open_map[key]
+            local action = open_file_keymaps[key]
             for i = 2, #lines do
                 if action then
                     vim.cmd(action)
@@ -1505,7 +1555,7 @@ local function args(from_resume)
         ['sink*'] = function(lines)
             local key = lines[1]
             -- ENTER/CTRL-X/CTRL-V/CTRL-T
-            local action = open_map[key]
+            local action = open_file_keymaps[key]
             for i = 2, #lines do
                 if action then
                     vim.cmd(action)
@@ -2035,7 +2085,7 @@ local function qf_items_fzf(win_local, from_resume)
                 vim.cmd(nr .. 'cc!')
             else
                 -- ENTER/CTRL-X/CTRL-V/CTRL-T with multiple selections
-                local action = open_map[key]
+                local action = open_file_keymaps[key]
                 for i = 2, #lines do
                     if action then
                         vim.cmd(action)
@@ -2382,7 +2432,7 @@ local function grep_sink(lines)
     else
         for i = 2, #lines do
             local filename, lnum, col = lines[i]:match('^([^:]+):([^:]+):([^:]+):.*$')
-            local cmd = open_map[key] or 'edit'
+            local cmd = open_file_keymaps[key] or 'edit'
             -- if vim.fn.fnamemodify(lines[i], ':p') ~= vim.fn.expand('%:p') then
             -- end
             vim.cmd(cmd .. ' ' .. filename)
@@ -2681,7 +2731,7 @@ local function lsp_symbols(method, params, title, symbol_query, from_resume)
                 end
             else
                 -- ENTER/CTRL-X/CTRL-V/CTRL-T with multiple selections
-                local action = open_map[key]
+                local action = open_file_keymaps[key]
                 for i = 2, #lines do
                     if action then
                         vim.cmd(action)
@@ -2835,7 +2885,7 @@ local function lsp_locations(method, title, from_resume)
                 end
             else
                 -- ENTER/CTRL-X/CTRL-V/CTRL-T with multiple selections
-                local action = open_map[key]
+                local action = open_file_keymaps[key]
                 for i = 2, #lines do
                     if action then
                         vim.cmd(action)
@@ -2969,7 +3019,7 @@ local function diagnostics(from_resume, opts)
                 end
             else
                 -- ENTER/CTRL-X/CTRL-V/CTRL-T
-                local action = open_map[key]
+                local action = open_file_keymaps[key]
                 for i = 2, #lines do
                     local idx = tonumber(lines[i]:match('^(%d+)\t'))
                     if idx then
@@ -3134,15 +3184,24 @@ local function git_files(from_resume)
                     echo "No preview for this deleted file" \
                 fi \
             else \
-                ' .. fzf_previewer .. ' ' .. git_root .. '/{2} \
+                ' .. fzf_previewer .. ' {2} \
             fi \
             ',
             '--accept-nth',
-            git_root .. '/{2}',
+            '{2}',
             '--header',
-            'Git Root: ' .. vim.fn.fnamemodify(git_root, ':~'),
+            ':: ALT-F (reveal in Finder)\nGit Root: ' .. vim.fn.fnamemodify(git_root, ':~'),
             '--bind',
-            set_label('{2}'),
+            set_label('{1}'),
+            '--bind',
+            build_execute_reload_action({
+                bind_key = 'alt-f',
+                execute_fn = 'reveal_file_in_finder',
+                reload = {
+                    type = 'shell',
+                    cmd = git_cmd,
+                },
+            }),
         }),
     }
 
@@ -3796,7 +3855,7 @@ local function tags(from_resume)
     local spec = {
         ['sink*'] = function(lines)
             local key = lines[1]
-            local action = open_map[key] or (key == '' and 'edit' or 'silent keepjumps keepalt hide edit')
+            local action = open_file_keymaps[key] or (key == '' and 'edit' or 'silent keepjumps keepalt hide edit')
             local items = {}
 
             local magic, wrapscan, autochdir = vim.o.magic, vim.o.wrapscan, vim.o.autochdir
@@ -3930,7 +3989,7 @@ local function buffer_tags(from_resume)
                     })
                 else
                     -- ENTER/CTRL-X/CTRL-V/CTRL-T
-                    local action = open_map[key]
+                    local action = open_file_keymaps[key]
                     if action then
                         vim.cmd(action)
                     end

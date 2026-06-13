@@ -2,6 +2,8 @@
 
 # List all files managed by git including untracked files.
 # Support displaying the two-letter status code.
+#
+# Output: <status code> <filename>\t<fullpath>
 
 if [[ $# -eq 0 ]]; then
     # Normal git repository
@@ -17,13 +19,13 @@ fi
 
 root_dir="$($git_cmd rev-parse --show-toplevel)"
 
-if [[ -z $git_status ]]; then
-    $git_cmd -C "$root_dir" ls-files --exclude-standard --full-name | sed -E "s|^(.*)|\1\t\1|"
+if [[ -z $($git_status) ]]; then
+    $git_cmd -C "$root_dir" ls-files --exclude-standard --full-name | sed -E "s|^(.*)|\1\t${root_dir}/\1|"
     exit 0
 fi
 
 # (1) Get files listed by git status
-$git_status | awk '{
+$git_status | awk -v root_dir="$root_dir" '{
     if ($1 ~ /R/) {
         # (1)
         # Handle the special case rename, i.e., [R ] oldfile -> newfile
@@ -33,7 +35,7 @@ $git_status | awk '{
         substr($0,2,1),
         a[1],
         a[2],
-        a[2]
+        root_dir "/" a[2]
     } else {
         # (2)
         # Deal with the other cases, e.g., [M ] file
@@ -41,7 +43,7 @@ $git_status | awk '{
         substr($0,1,1),
         substr($0,2,1),
         substr($0,4),
-        substr($0,4)
+        root_dir "/" substr($0,4)
     }
 }' && $git_cmd -C "$root_dir" ls-files --exclude-standard --full-name | grep -v -F -f <(  # (2) Get all files and filter out files from git status
     $git_status | awk '{
@@ -51,4 +53,4 @@ $git_status | awk '{
         } else {
             print $2
         }
-}') | sed -E "s|^(.*)|     \1\t\1|"
+}') | sed -E "s|^(.*)|     \1\t${root_dir}/\1|"

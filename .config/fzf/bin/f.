@@ -29,11 +29,11 @@ done < <( ls-gitfiles 'dot' | fzf \
                 echo "No preview for this deleted file"
             fi
         else
-            ~/.config/fzf/fzf-previewer.sh ~/{2}
+            ~/.config/fzf/fzf-previewer.sh {2}
         fi
     ' \
-    --bind='focus:transform-preview-label:echo [ {2} ]' \
-    --accept-nth='~/{2}'
+    --bind='focus:transform-preview-label:echo [ {1} ]' \
+    --accept-nth='{2}'
 )
 
 if [[ ${#files[@]} -gt 0 ]]; then

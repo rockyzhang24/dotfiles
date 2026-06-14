@@ -1,4 +1,3 @@
-local system = require('rockyz.utils.system')
 local notify = require('rockyz.utils.notify')
 
 local opts = {
@@ -43,11 +42,11 @@ local function open_preview(file)
     tell application terminalApp to activate
     ]]
 
-    local obj = system.sync({
+    local obj = vim.system({
         'osascript',
         '-e',
         pin_and_move_right,
-    })
+    }):wait()
     if obj.stderr:find('Can’t get application "Marked 2"') then
         notify.warn('Marked 2 is not installed')
     end

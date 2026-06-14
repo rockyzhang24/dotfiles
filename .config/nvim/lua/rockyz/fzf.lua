@@ -129,7 +129,6 @@ local color = require('rockyz.utils.color')
 local io_utils = require('rockyz.utils.io')
 local icons = require('rockyz.icons')
 local notify = require('rockyz.utils.notify')
-local system = require('rockyz.utils.system')
 local api = require('rockyz.utils.api')
 local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
 local mru = require('rockyz.mru')
@@ -488,7 +487,7 @@ local function ensure_fifo()
         return
     end
     fifo_path = vim.fn.tempname()
-    system.sync('mkfifo ' .. fifo_path)
+    vim.system({ 'mkfifo', fifo_path }):wait()
 end
 
 ensure_fifo()
@@ -671,7 +670,7 @@ function M.reveal_file_in_finder(entries_str)
         return
     end
     local file = string.match(entries[1], '.*\t(.*)$')
-    system.async('open -R ' .. file)
+    vim.system({ 'open', '-R', file })
 end
 
 local function files(from_resume)
@@ -809,17 +808,17 @@ local function dot_files(from_resume)
             '--preview',
             'line={} \
             if [[ "${line:1:2}" =~ D ]]; then \
-                if git --git-dir=$HOME/dotfiles --work-tree=$HOME show HEAD:{2} | file - | grep -q text; then \
-                    git --git-dir=$HOME/dotfiles --work-tree=$HOME show HEAD:{2} | bat --color=always --style=numbers \
+                if git --git-dir=$HOME/dotfiles --work-tree=$HOME show HEAD:{3} | file - | grep -q text; then \
+                    git --git-dir=$HOME/dotfiles --work-tree=$HOME show HEAD:{3} | bat --color=always --style=numbers \
                 else \
                     echo "No preview for this deleted file" \
                 fi \
             else \
-                ' .. fzf_previewer .. ' {2} \
+                ' .. fzf_previewer .. ' {3} \
             fi \
             ',
             '--accept-nth',
-            '{2}',
+            '{3}',
             '--bind',
             set_label('{1}'),
             '--bind',
@@ -1612,7 +1611,7 @@ local function helptags(from_resume)
     local spec = {
         ['sink*'] = function(lines)
             if #lines > 2 then
-                notify.warn('Multiple selection is not supported')
+                notify.warn('[FZF] Multiple selection is not supported')
             end
             local key = lines[1]
             local tag = string.match(lines[2], '^(.-)\t')
@@ -1988,7 +1987,7 @@ local function zoxide(from_resume)
     local function zoxide_build_entries()
         local entries = {}
 
-        local obj = system.sync('zoxide query --list --score', { text = true })
+        local obj = vim.system({ 'zoxide', 'query', '--list', '--score' }, { text = true }):wait()
         if obj.code ~= 0 then
             system_on_error(obj.stderr, obj.stdout)
             return entries
@@ -2478,7 +2477,7 @@ local function live_grep_cur_buffer(from_resume)
     local rg_cmd = rg_prefix .. ' --'
     local filename = vim.api.nvim_buf_get_name(0)
     if #filename == 0 or not vim.uv.fs_stat(filename) then
-        notify.warn('Current buffer should be valid')
+        notify.warn('[FZF] Current buffer should be valid')
         return
     end
     local spec = {
@@ -2698,7 +2697,7 @@ local function lsp_symbols(method, params, title, symbol_query, from_resume)
     local bufnr = vim.api.nvim_get_current_buf()
     local clients = vim.lsp.get_clients({ method = method, bufnr = bufnr })
     if not next(clients) then
-        notify.warn(string.format('No active clients supporting %s method', method))
+        notify.warn(string.format('[FZF] No active clients supporting %s method', method))
         return
     end
 
@@ -2858,7 +2857,7 @@ local function lsp_locations(method, title, from_resume)
     local bufnr = vim.api.nvim_get_current_buf()
     local clients = vim.lsp.get_clients({ method = method, bufnr = bufnr })
     if not next(clients) then
-        notify.warn(string.format('No active clients supporting %s method', method))
+        notify.warn(string.format('[FZF] No active clients supporting %s method', method))
         return
     end
     local win = vim.api.nvim_get_current_win()
@@ -2988,7 +2987,7 @@ local function diagnostics(from_resume, opts)
     local curbuf = vim.api.nvim_get_current_buf()
     local diags = vim.diagnostic.get(not opts.all and curbuf or nil)
     if vim.tbl_isempty(diags) then
-        notify.warn('No diagnostics')
+        notify.warn('[FZF] No diagnostics')
         return
     end
 
@@ -3142,7 +3141,7 @@ local function get_git_root(dir)
         dir = dir:gsub('^fugitive://', '')
     end
     local cmd = { 'git', '-C', dir, 'rev-parse', '--show-toplevel' }
-    local obj = system.sync(cmd)
+    local obj = vim.system(cmd):wait()
     if obj.code ~= 0 then
         system_on_error(obj.stderr, obj.stdout)
         return nil
@@ -3153,6 +3152,15 @@ end
 --------------------------------------------------------------------------------
 -- Git files
 --------------------------------------------------------------------------------
+
+function M.open_in_browser(entries_str)
+    local entries = vim.split(entries_str, '\n')
+    if #entries > 1 then
+        return
+    end
+    local file = string.match(entries[1], '^.*\t(.*)\t.*$')
+    vim.system({ 'open-giturl', 'file', file })
+end
 
 local function git_files(from_resume)
     local git_root = get_git_root()
@@ -3178,25 +3186,34 @@ local function git_files(from_resume)
             '--preview',
             'line={} \
             if [[ "${line:1:2}" =~ D ]]; then \
-                if git show HEAD:{2} | file - | grep -q text; then \
-                    git show HEAD:{2} | bat --color=always --style=numbers \
+                if git show HEAD:{3} | file - | grep -q text; then \
+                    git show HEAD:{3} | bat --color=always --style=numbers \
                 else \
                     echo "No preview for this deleted file" \
                 fi \
             else \
-                ' .. fzf_previewer .. ' {2} \
+                ' .. fzf_previewer .. ' {3} \
             fi \
             ',
             '--accept-nth',
-            '{2}',
+            '{3}',
             '--header',
-            ':: ALT-F (reveal in Finder)\nGit Root: ' .. vim.fn.fnamemodify(git_root, ':~'),
+            ':: ALT-F (reveal in Finder), ALT-O (open in browser)\nGit Root: ' .. vim.fn.fnamemodify(git_root, ':~'),
             '--bind',
             set_label('{1}'),
             '--bind',
             build_execute_reload_action({
                 bind_key = 'alt-f',
                 execute_fn = 'reveal_file_in_finder',
+                reload = {
+                    type = 'shell',
+                    cmd = git_cmd,
+                },
+            }),
+            '--bind',
+            build_execute_reload_action({
+                bind_key = 'alt-o',
+                execute_fn = 'open_in_browser',
                 reload = {
                     type = 'shell',
                     cmd = git_cmd,
@@ -3228,11 +3245,23 @@ local function git_exec(entries_str, cmd)
             table.insert(filenames, file)
         end
     end
-    system.async(
-        string.format('git -C %s %s -- %s', fzf_ctx.origin_git_root, cmd, table.concat(filenames, ' ')),
+    vim.system(
+        {
+            'bash',
+            '-c',
+            string.format(
+                'git -C %s %s -- %s',
+                fzf_ctx.origin_git_root,
+                cmd,
+                table.concat(filenames, ' ')
+            ),
+        },
         {},
-        nil,
-        system_on_error
+        function(obj)
+            if obj.code ~= 0 then
+                notify.error({ obj.stderr, obj.stdout })
+            end
+        end
     )
 end
 
@@ -3252,14 +3281,15 @@ function M.git_reset(entries_str)
         local is_untracked = entry:match('^%[%?%?%]')
         local cmd = is_untracked and string.format('git -C %s clean -f %s', git_root, file)
             or string.format('git -C %s checkout HEAD -- %s', git_root, file)
-        system.async(
-            cmd,
-            {},
-            vim.schedule_wrap(function(_)
-                vim.cmd.checktime()
-            end),
-            system_on_error
-        )
+        vim.system({ 'bash', '-c', cmd }, {}, function(obj)
+            if obj.code == 0 then
+                vim.schedule(function()
+                    vim.cmd.checktime()
+                end)
+            else
+                notify.error({ obj.stderr, obj.stdout })
+            end
+        end)
     end
 end
 
@@ -3366,7 +3396,11 @@ function M.delete_git_branches(entries_str)
     local git_branch_del_cmd = { 'git', '-C', root_dir, 'branch', '--delete' }
     local git_cur_branch_cmd = { 'git', '-C', root_dir, 'rev-parse', '--abbrev-ref', 'HEAD' }
 
-    local cur_branch = vim.trim(system.sync(git_cur_branch_cmd).stdout)
+    local branch_obj = vim.system(git_cur_branch_cmd, { text = true }):wait()
+    if branch_obj and branch_obj.code ~= 0 then
+        return
+    end
+    local cur_branch = vim.trim(branch_obj.stdout)
 
     local target_branches = {}
 
@@ -3385,17 +3419,26 @@ function M.delete_git_branches(entries_str)
     end
 
     local cmd = vim.list_extend(vim.deepcopy(git_branch_del_cmd), target_branches)
-    system.async(cmd, {}, nil, system_on_error)
+    vim.system(cmd, { text = true }, function(obj)
+        if obj.code ~= 0 then
+            notify.error({ obj.stderr, obj.stdout })
+        end
+    end)
 end
 
 function M.git_branches_source()
     local entries = {}
-    system.async('git branch --all -vv --color', { text = true }, function(output)
+    vim.system({ 'git', 'branch', '--all', '-vv', '--color' }, { text = true }, function(obj)
+        if obj.code ~= 0 then
+            notify.error({ obj.stderr, obj.stdout })
+            return
+        end
+        local output = obj.stdout or {}
         for line in output:gmatch('[^\n]+') do
             table.insert(entries, line)
         end
         emit(entries)
-    end, system_on_error)
+    end)
 end
 
 local function git_branches(from_resume)
@@ -3437,10 +3480,16 @@ local function git_branches(from_resume)
             end
             table.insert(cmd, branch)
             notify.info('Switching to ' .. branch .. ' branch...')
-            system.async(cmd, {}, vim.schedule_wrap(function(_)
-                vim.cmd('checktime')
-                notify.info('Switched to ' .. branch .. ' branch.')
-            end), system_on_error)
+            vim.system(cmd, { text = true }, function(obj)
+                if obj.code ~= 0 then
+                    notify.error({ obj.stderr, obj.stdout })
+                    return
+                end
+                vim.schedule(function()
+                    vim.cmd('checktime')
+                    notify.info('Switched to ' .. branch .. ' branch.')
+                end)
+            end)
         end,
         options = get_fzf_opts(from_resume, {
             '--prompt',
@@ -3540,7 +3589,12 @@ local function git_commits_build_sink_func(root_dir)
                 notify.warn('To checkout a commit, select only one and do not choose multiple.')
                 return
             end
-            local cur_commit_hash = system.sync({ 'git', '-C', root_dir, 'rev-parse', '--short', 'HEAD' }).stdout
+            local hash_obj = vim.system({ 'git', '-C', root_dir, 'rev-parse', '--short', 'HEAD' }):wait()
+            if hash_obj.code ~= 0 then
+                notify.error({ hash_obj.stderr, hash_obj.stdout })
+                return
+            end
+            local cur_commit_hash = hash_obj.stdout
             local s, e = vim.regex('[0-9a-f]\\{7,40}'):match_str(lines[2])
             local sele_commit_hash = lines[2]:sub(s + 1, e)
             if sele_commit_hash == cur_commit_hash then
@@ -3550,7 +3604,7 @@ local function git_commits_build_sink_func(root_dir)
                 prompt = 'Checkout commit ' .. sele_commit_hash .. '? (y/N)',
             }, function(input)
                 if input and input:lower() == 'y' then
-                    local obj = system.sync({ 'git', '-C', root_dir, 'checkout', sele_commit_hash })
+                    local obj = vim.system({ 'git', '-C', root_dir, 'checkout', sele_commit_hash }):wait()
                     if obj.code ~= 0 then
                         notify.error({ obj.stderr, obj.stdout })
                     else
@@ -3615,7 +3669,7 @@ local function git_buf_commit(from_resume)
         return
     end
 
-    local obj = system.sync({ 'git', '-C', root_dir, 'ls-files', '--error-unmatch', bufname })
+    local obj = vim.system({ 'git', '-C', root_dir, 'ls-files', '--error-unmatch', bufname }):wait()
     if obj.code ~= 0 then
         notify.error({ obj.stderr, obj.stdout })
         return
@@ -3673,18 +3727,25 @@ end
 
 function M.git_stash_source()
     local entries = {}
-    system.async('git --no-pager stash list', { text = true }, vim.schedule_wrap(function(output)
-        for line in output:gmatch('[^\n]+') do
-            local stash, revision, rest = line:match('^(%S+)({%d+})(:.*)')
-            if stash then
-                stash = ansi_string(stash, 'FzfFilename')
-                revision = ansi_string(revision, 'Number')
-                local entry = stash .. revision .. rest
-                table.insert(entries, entry)
-            end
+    vim.system({ 'git', '--no-pager', 'stash', 'list' }, { text = true }, function(obj)
+        if obj.code ~= 0 then
+            notify.error({ obj.stderr, obj.stdout })
+            return
         end
-        emit(entries)
-    end), system_on_error)
+        local output = obj.stdout or {}
+        vim.schedule(function()
+            for line in output:gmatch('[^\n]+') do
+                local stash, revision, rest = line:match('^(%S+)({%d+})(:.*)')
+                if stash then
+                    stash = ansi_string(stash, 'FzfFilename')
+                    revision = ansi_string(revision, 'Number')
+                    local entry = stash .. revision .. rest
+                    table.insert(entries, entry)
+                end
+            end
+            emit(entries)
+        end)
+    end)
 end
 
 function M.drop_stashes(entries_str)
@@ -3702,7 +3763,7 @@ function M.drop_stashes(entries_str)
         return a_idx > b_idx
     end)
     for _, stash in ipairs(stashes) do
-        local obj = system.sync('git stash drop ' .. stash)
+        local obj = vim.system({ 'git', 'stash', 'drop', stash }):wait()
         if obj.code ~= 0 then
             system_on_error(obj.stderr, obj.stdout)
         end
@@ -3727,9 +3788,14 @@ local function git_stash(from_resume)
                     if input and input:lower() == 'y' then
                         -- Extract the stash name , e.g., stash@{1}
                         local name = lines[2]:match('^(%S+):')
-                        system.async('git stash apply ' .. name, {}, function(output)
+                        vim.system({ 'git', 'stash', 'apply', name }, { text = true }, function(obj)
+                            if obj.code ~= 0 then
+                                notify.error({ obj.stderr, obj.stdout })
+                                return
+                            end
+                            local output = obj.stdout or ''
                             notify.info(output)
-                        end, system_on_error)
+                        end)
                     end
                 end)
             elseif key == 'alt-enter' and #lines == 2 then
@@ -3739,9 +3805,14 @@ local function git_stash(from_resume)
                 }, function(input)
                     if input and input:lower() == 'y' then
                         local name = lines[2]:match('^(%S+):')
-                        system.async('git stash pop ' .. name, {}, function(output)
+                        vim.system({ 'git', 'stash', 'pop', name }, { text = true }, function(obj)
+                            if obj.code ~= 0 then
+                                notify.error({ obj.stderr, obj.stdout })
+                                return
+                            end
+                            local output = obj.stdout or ''
                             notify.info(output)
-                        end, system_on_error)
+                        end)
                     end
                 end)
             end
@@ -4033,22 +4104,29 @@ local function buffer_tags(from_resume)
 
     local function buffer_tags_source()
         local entries = {}
-        system.async('ctags -f - --fields=+n ' .. filename, { text = true }, vim.schedule_wrap(function(output)
-            for line in output:gmatch('[^\n]+') do
-                local tagname, excmd, lnum = line:match('([^\t]+)\t[^\t]+\t(.*);"\t.*line:(%d+)')
-                local fzf_line = string.format(
-                    '%-30s%s',
-                    tagname,
-                    excmd == '' and '' or (tonumber(excmd) == nil and ' ' .. ansi_string(excmd, 'FzfTagsPattern') or ' ' .. ansi_string(excmd, 'Number'))
-                )
-                entries[#entries + 1] = table.concat({
-                    tagname,
-                    lnum,
-                    fzf_line
-                }, special_delimiter)
+        vim.system({ 'ctags', '-f', '-', '--fields=+n', filename }, { text = true }, function(obj)
+            if obj.code ~= 0 then
+                notify.error({ obj.stderr, obj.stdout })
+                return
             end
-            emit(entries)
-        end))
+            local output = obj.stdout or ''
+            vim.schedule(function()
+                for line in output:gmatch('[^\n]+') do
+                    local tagname, excmd, lnum = line:match('([^\t]+)\t[^\t]+\t(.*);"\t.*line:(%d+)')
+                    local fzf_line = string.format(
+                        '%-30s%s',
+                        tagname,
+                        excmd == '' and '' or (tonumber(excmd) == nil and ' ' .. ansi_string(excmd, 'FzfTagsPattern') or ' ' .. ansi_string(excmd, 'Number'))
+                    )
+                    entries[#entries + 1] = table.concat({
+                        tagname,
+                        lnum,
+                        fzf_line
+                    }, special_delimiter)
+                end
+                emit(entries)
+            end)
+        end)
     end
 
     fzf(spec, buffer_tags_source)

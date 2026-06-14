@@ -19,7 +19,6 @@
 --
 
 local io_utils = require('rockyz.utils.io')
-local system = require('rockyz.utils.system')
 local notify = require('rockyz.utils.notify')
 local icons = require('rockyz.icons')
 
@@ -143,7 +142,7 @@ end
 
 local function fulfill_query(query)
     local cmd = get_curl_command(query)
-    local obj = system.sync(cmd, { text = true })
+    local obj = vim.system(cmd, { text = true }):wait()
     if obj.code ~= 0 then
         notify.error({
             '[LeetCode] curl failed',
@@ -244,9 +243,9 @@ local function run(question_url, label, lang)
     -- [2]. Question content
 
     -- Convert HTML to markdown
-    local html2md_obj = system.sync({
+    local html2md_obj = vim.system({
         'pandoc', '-f', 'html', '-t', 'markdown',
-    }, { stdin = q.content })
+    }, { stdin = q.content }):wait()
     if html2md_obj.code ~= 0 then
         notify.error({
             '[LeetCode] pandoc failed to convert HTML to markdown',
@@ -379,16 +378,16 @@ local function get_url(obj)
 end
 
 local function get_url_from_chrome()
-    local obj = system.sync({
+    local obj = vim.system({
         'osascript',
         '-e',
         'tell application "Google Chrome" to get URL of active tab of front window',
-    }, { text = true })
+    }, { text = true }):wait()
     return get_url(obj)
 end
 
 local function get_url_from_clipboard()
-    local obj = system.sync({ 'pbpaste' }, { text = true })
+    local obj = vim.system({ 'pbpaste' }, { text = true }):wait()
     return get_url(obj)
 end
 

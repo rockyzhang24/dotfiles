@@ -37,9 +37,12 @@ for line in io.lines() do
     elseif source == 'ls_gitfiles' then
         -- lines are output of ls-gitfiles
         -- (1) Some file changed, i.e., git status has output
-        -- <status_code> <filename>\t<fullpath> --> <status_code> <icon> <filename>\t<fullpath>
+        -- <status_code> <filename>\t<fullpath> --> <status_code> <icon> <filename>\t<filename>\t<fullpath>
         -- (2) No file changed, i.e., git status has no output
-        -- <filename>\t<fullpath> --> <icon> <filename>\t<fullpath>
+        -- <filename>\t<fullpath> --> <icon> <filename>\t<filename>\t<fullpath>
+        --
+        -- In fzf, we set \t as its delimiter, and then we can easily extract the filename and its
+        -- fullpath by the second and the third items.
         local filename, fullpath = unpack(vim.split(line, '\t'))
         local status_code = filename:match('^(%[.*%])')
         if status_code then
@@ -51,13 +54,14 @@ for line in io.lines() do
         local icon = ansi_icon(fullpath)
         if not dotfile_changed then
             -- For (2)
-            output_line = icon .. ' ' .. filename .. '\t' .. fullpath
+            output_line = icon .. ' ' .. filename .. '\t' .. filename .. '\t' .. fullpath
         else
             -- For (1)
             output_line = string.format(
-                '%s %s %s\t%s',
+                '%s %s %s\t%s\t%s',
                 status_code and status_code or string.rep(' ', 4),
                 icon,
+                filename,
                 filename,
                 fullpath
             )

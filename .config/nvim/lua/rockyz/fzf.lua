@@ -304,7 +304,7 @@ local bat_prefix = 'bat --color=always --paging=never --style=numbers'
 local fd_prefix = 'fd --hidden --follow --color=never --type f --type l '
 -- A script to preview various types of files (text, image, etc)
 local fzf_previewer = '~/.config/fzf/fzf-previewer.sh'
-local diff_pager = '| delta --width $FZF_PREVIEW_COLUMNS' .. vim.env.DELTA_OPTS
+local diff_pager = 'delta --width $FZF_PREVIEW_COLUMNS' .. vim.env.DELTA_OPTS
 
 ---Get the command to decorate input lines, e.g., prepend a devicon to the filename. This command
 ---gets input through a pipe.
@@ -659,17 +659,25 @@ local function build_execute_reload_action(cfg)
     )
 end
 
+local function get_single_entry(entries_str)
+    local entries = vim.split(entries_str, '\n')
+    if #entries > 1 then
+        return nil
+    end
+    return entries[1]
+end
+
 --------------------------------------------------------------------------------
 -- Files
 --------------------------------------------------------------------------------
 
 ---@param entries_str string
 function M.reveal_file_in_finder(entries_str)
-    local entries = vim.split(entries_str, '\n')
-    if #entries > 1 then
+    local entry = get_single_entry(entries_str)
+    if not entry then
         return
     end
-    local file = string.match(entries[1], '.*\t(.*)$')
+    local file = string.match(entry, '.*\t(.*)$')
     vim.system({ 'open', '-R', file })
 end
 
@@ -3153,12 +3161,12 @@ end
 -- Git files
 --------------------------------------------------------------------------------
 
-function M.open_in_browser(entries_str)
-    local entries = vim.split(entries_str, '\n')
-    if #entries > 1 then
+function M.open_file_in_browser(entries_str)
+    local entry = get_single_entry(entries_str)
+    if not entry then
         return
     end
-    local file = string.match(entries[1], '^.*\t(.*)\t.*$')
+    local file = string.match(entry, '^.*\t(.*)\t.*$')
     vim.system({ 'open-giturl', 'file', file })
 end
 
@@ -3213,7 +3221,7 @@ local function git_files(from_resume)
             '--bind',
             build_execute_reload_action({
                 bind_key = 'alt-o',
-                execute_fn = 'open_in_browser',
+                execute_fn = 'open_file_in_browser',
                 reload = {
                     type = 'shell',
                     cmd = git_cmd,
@@ -3337,14 +3345,14 @@ local function git_status(from_resume)
                 if [[ -d {2} ]]; then \
                     tree -C {2} \
                 else \
-                    ' .. git .. ' diff --no-index -- /dev/null {2} ' .. diff_pager .. ' \
+                    ' .. git .. ' diff --no-index -- /dev/null {2} | ' .. diff_pager .. ' \
                 fi \
             else \
                 diff_output=$(' .. git .. ' diff -- {2}) \
                 if [[ -n $diff_output ]]; then \
-                    echo $diff_output ' .. diff_pager .. ' \
+                    echo $diff_output | ' .. diff_pager .. ' \
                 else \
-                    ' .. git .. ' diff --staged -- {2} ' .. diff_pager .. ' \
+                    ' .. git .. ' diff --staged -- {2} | ' .. diff_pager .. ' \
                 fi \
             fi',
             '--bind',
@@ -3428,17 +3436,33 @@ end
 
 function M.git_branches_source()
     local entries = {}
-    vim.system({ 'git', 'branch', '--all', '-vv', '--color' }, { text = true }, function(obj)
-        if obj.code ~= 0 then
-            notify.error({ obj.stderr, obj.stdout })
-            return
+    vim.system(
+        {
+            'bash',
+            '-c',
+            "git branch --all --sort=-committerdate --sort='refname:rstrip=-2' --sort=-HEAD -vv --color=always --format=$'%(HEAD) %(color:yellow)%(refname:short) %(color:green)(%(committerdate:relative))\t%(color:blue)%(subject)%(color:reset)'",
+        },
+        { text = true },
+        function(obj)
+            if obj.code ~= 0 then
+                notify.error({ obj.stderr, obj.stdout })
+                return
+            end
+            local output = obj.stdout or {}
+            for line in output:gmatch('[^\n]+') do
+                table.insert(entries, line)
+            end
+            emit(entries)
         end
-        local output = obj.stdout or {}
-        for line in output:gmatch('[^\n]+') do
-            table.insert(entries, line)
-        end
-        emit(entries)
-    end)
+    )
+end
+
+function M.open_branch_in_browser(entries_str)
+    local entry = get_single_entry(entries_str)
+    if not entry then
+        return
+    end
+    vim.system({ 'open-giturl', 'branch', entry })
 end
 
 local function git_branches(from_resume)
@@ -3495,17 +3519,29 @@ local function git_branches(from_resume)
             '--prompt',
             'Git Branches> ',
             '--header',
-            ':: ENTER (checkout), ALT-BS (delete branches)',
+            ':: ENTER (checkout), ALT-BS (delete branches), ALT-O (open in browser)',
             '--preview-window',
             theme.name == 'default' and 'down,60%' or '',
             '--preview',
-            'git log --graph --pretty=oneline --abbrev-commit --color $(' .. extract_branch_cmd .. ')',
+            -- "git log --oneline --graph --date=short --color=always --pretty='format:%C(auto)%cd %h%d %s' $(cut -c3- <<< {} | cut -d' ' -f1) --",
+            "git log --oneline --graph --date=short --color=always --pretty='format:%C(auto)%cd %h%d %s' $(" .. extract_branch_cmd .. ")",
+            '--bind',
+            'ctrl-/:change-preview-window(right,50%|hidden|)+refresh-preview',
             '--bind',
             set_label('Branch: $(' .. extract_branch_cmd .. ')'),
             '--bind',
             build_execute_reload_action({
                 bind_key = 'alt-bs',
                 execute_fn = 'delete_git_branches',
+                reload = {
+                    type = 'remote',
+                    fn = 'git_branches_source',
+                },
+            }),
+            '--bind',
+            build_execute_reload_action({
+                bind_key = 'alt-o',
+                execute_fn = 'open_branch_in_browser',
                 reload = {
                     type = 'remote',
                     fn = 'git_branches_source',
@@ -3542,11 +3578,12 @@ local function get_preview_cmd_git_commits(root_dir, range)
 
     if range then
         preview_cmd = string.format('git log -L %d,%d:%s', range[1], range[2], bufname)
+        preview_cmd = preview_cmd .. " | awk '/commit {2}/ {flag=1;print;next} /^[^ ]*commit/{flag=0} flag' "
     else
         -- Extract the hash commit and use git show to preview it
-        preview_cmd = 'hash=$(echo {} | grep -o "[a-f0-9]\\{7,\\}" | head -1); git show -O' .. orderfile .. ' --format=format: --color=always $hash'
+        preview_cmd = 'grep -o "[a-f0-9]\\{7,\\}" <<< {} | head -n 1 | xargs git show --color=always --format=format: -O' .. orderfile
     end
-    return preview_cmd .. ' ' .. diff_pager
+    return preview_cmd .. ' | ' .. diff_pager
 end
 
 ---Get the sink function for git commits
@@ -3574,8 +3611,8 @@ local function git_commits_build_sink_func(root_dir)
             vim.fn.setreg(reg, hashes)
             vim.fn.setreg([[0]], hashes)
             notify.info(string.format('Commit hashes copied to register %s', reg))
-        elseif key == 'alt-bs' then
-            -- ALT-BS to diff against the commits (only available for buffer commits)
+        elseif key == 'alt-d' then
+            -- ALT-D to diff against the commits (only available for buffer commits)
             for i = 2, #lines do
                 local hash = extract_hash(lines[i])
                 if hash and hash ~= '' then
@@ -3616,6 +3653,14 @@ local function git_commits_build_sink_func(root_dir)
     end
 end
 
+function M.open_commit_in_browser(entries_str)
+    local entry = get_single_entry(entries_str)
+    if not entry then
+        return
+    end
+    vim.system({ 'open-giturl', 'commit', entry })
+end
+
 local function git_commits(from_resume)
     local root_dir = get_git_root()
     if root_dir == nil then
@@ -3623,6 +3668,7 @@ local function git_commits(from_resume)
     end
     fzf_ctx.origin_git_root = root_dir
 
+    local git_cmd = 'git log --date=short --format="%C(green)%C(bold)%cd %C(auto)%h%d %s (%an)" --graph --color=always'
     local preview_cmd = get_preview_cmd_git_commits(root_dir)
 
     local spec = {
@@ -3631,7 +3677,7 @@ local function git_commits(from_resume)
             '--prompt',
             'Git Commits> ',
             '--header',
-            ':: ENTER (checkout commit), CTRL-Y (yank commits)',
+            ':: ENTER (checkout commit), CTRL-Y (yank commits), ALT-O (open in browser)',
             '--expect',
             expect_keys({
                 extra = { 'ctrl-y' },
@@ -3643,10 +3689,19 @@ local function git_commits(from_resume)
             preview_cmd,
             '--bind',
             set_label('Preview'),
+            '--bind',
+            'ctrl-/:change-preview-window(right,80%|hidden|)+refresh-preview',
+            '--bind',
+            build_execute_reload_action({
+                bind_key = 'alt-o',
+                execute_fn = 'open_commit_in_browser',
+                reload = {
+                    type = 'shell',
+                    cmd = git_cmd,
+                },
+            }),
         }),
     }
-
-    local git_cmd = 'git log --graph --color=always --format="%C(auto)%h%d %s %C(green)%cr %C(blue dim)<%an>"'
 
     fzf(spec, git_cmd)
 end
@@ -3675,7 +3730,7 @@ local function git_buf_commit(from_resume)
         return
     end
 
-    local git_cmd = 'git log --color=always --format="%C(auto)%h%d %s %C(green)%cr %C(blue dim)<%an>"'
+    local git_cmd = 'git log --date=short --format="%C(green)%C(bold)%cd %C(auto)%h%d %s (%an)" --color=always'
     local preview_cmd
 
     local mode = vim.api.nvim_get_mode().mode
@@ -3699,10 +3754,11 @@ local function git_buf_commit(from_resume)
             '--prompt',
             'Git Commits (buffer)> ',
             '--header',
-            ':: ENTER (checkout commit), CTRL-Y (yank commits), ALT-BS (diff against commits)',
+            ':: ENTER (checkout commit), CTRL-Y (yank commits), ALT-D (diff against commits)\n' ..
+            ':: ALT-O (open in browser)',
             '--expect',
             expect_keys({
-                extra = { 'alt-bs', 'ctrl-y' },
+                extra = { 'alt-d', 'ctrl-y' },
                 include_defaults = false,
             }),
             '--preview-window',
@@ -3711,6 +3767,17 @@ local function git_buf_commit(from_resume)
             preview_cmd,
             '--bind',
             set_label('Preview'),
+            '--bind',
+            'ctrl-/:change-preview-window(right,80%|hidden|)+refresh-preview',
+            '--bind',
+            build_execute_reload_action({
+                bind_key = 'alt-o',
+                execute_fn = 'open_commit_in_browser',
+                reload = {
+                    type = 'shell',
+                    cmd = git_cmd,
+                },
+            }),
         }),
     }
 
@@ -3830,7 +3897,7 @@ local function git_stash(from_resume)
                 include_defaults = false,
             }),
             '--preview',
-            'git --no-pager stash show --patch --color {1} ' .. diff_pager,
+            'git --no-pager stash show --patch --color {1} | ' .. diff_pager,
             '--preview-window',
             theme.name == 'default' and 'down,60%' or '',
             '--bind',

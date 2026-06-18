@@ -61,8 +61,7 @@
 --             -- buffers. Instead of quitting fzf upon executing the action, fzf reloads the entries.
 --             --
 --             '--bind',
---             build_execute_reload_action({
---                 bind_key = 'alt-bs',
+--             'alt-bs:' .. build_execute_reload_action({
 --                 execute_fn = 'demo_execute', -- function that performs certain operations on selected entries
 --                 reload = {
 --                     type = 'remote',
@@ -98,8 +97,7 @@
 --         options = get_fzf_opts(from_resume, {
 --             -- To support reload
 --             '--bind',
---             build_execute_reload_action({
---                 bind_key = 'alt-bs',
+--             'alt-bs:' .. build_execute_reload_action({
 --                 execute_fn = 'demo_execute',
 --                 reload = {
 --                     type = 'shell',
@@ -247,6 +245,7 @@ local config = {
             ['<Leader>fG'] = 'tags',
         },
         open_file = {
+            ['enter'] = 'edit',
             ['ctrl-x'] = 'split',
             ['ctrl-v'] = 'vsplit',
             ['ctrl-t'] = 'tab split',
@@ -312,7 +311,9 @@ local diff_pager = 'delta --width $FZF_PREVIEW_COLUMNS' .. vim.env.DELTA_OPTS
 ---@param source string Different types of input such as 'fd', 'git_status', etc
 local function dressup_cmd(source)
     return string.format(
-        'nvim -n --headless -u NONE -i NONE --cmd "colorscheme "' .. vim.g.colorscheme .. ' --cmd "let g:source = \'%s\'" --cmd "lua require(\'rockyz.headless.fzf_dressup\')" +q',
+        'nvim -n --headless -u NONE -i NONE --cmd "colorscheme "'
+            .. vim.g.colorscheme
+            .. " --cmd \"lua require('rockyz.headless.fzf_dressup').dressup('%s')\" +q",
         source
     )
 end
@@ -417,9 +418,17 @@ local function get_fzf_opts(from_resume, extra)
     return vim.list_extend(opts, extra)
 end
 
----@param label string The label or a shell command to generate the label
+---@param label string|fun(): string
+---@return string
 local function set_label(label)
-    return string.format('load,focus:transform-%s-label:echo ┨ %s ┠', theme.label_pos, label)
+    local cmd = ''
+    if type(label) == 'string' then
+        cmd = string.format('echo [ %s ]', label)
+    elseif type(label) == 'function' then
+        cmd = label()
+    end
+    return string.format('load,focus:transform-%s-label(%s)', theme.label_pos, cmd)
+
 end
 
 ---Bash command to replace $HOME with tilde
@@ -448,7 +457,7 @@ end
 ---
 ---@param opts table
 local function expect_keys(opts)
-    local default = { 'ctrl-x', 'ctrl-v', 'ctrl-t' }
+    local default = { 'enter', 'ctrl-x', 'ctrl-v', 'ctrl-t' }
     local keys = {}
 
     if opts.include_defaults ~= false then
@@ -588,17 +597,23 @@ function M.resume()
     run(cached_finder, true)
 end
 
--- Helper function for sink* to handle selected files
--- ENTER/CTRL-X/CTRL-V/CTRL-T to open files
----@param lines table The first item is the key; others are filenames.
-local function dispatch_open(lines)
-    local key = lines[1]
-    local action = open_file_keymaps[key] or 'edit'
-    for i = 2, #lines do
-        if vim.fn.fnamemodify(lines[i], ':p') ~= vim.fn.expand('%:p') then
-            vim.cmd(action .. ' ' .. lines[i])
+local function open(key, filepaths)
+    local action = open_file_keymaps[key]
+    if not action then
+        return
+    end
+    for _, filepath in ipairs(filepaths) do
+        if vim.fn.fnamemodify(filepath, ':p') ~= vim.fn.expand('%:p') then
+            vim.cmd(action .. ' ' .. filepath)
         end
     end
+end
+
+---@param lines string[]
+local function files_sink(lines)
+    local key = lines[1]
+    local filepaths = vim.list_slice(lines, 2)
+    open(key, filepaths)
 end
 
 ---@param fn_name string Function name
@@ -613,16 +628,17 @@ local function build_remote_expr(fn_name, args)
     )
 end
 
----Build an fzf execute+reload bind action
+---Build a fzf action that silently execute a shell command.
 ---
----Supports two reload strategies:
----1. remote: reload through fifo + `nvim --remote-expr`
+---If the action should refresh fzf entries afterward, set `opts.reload`.
+---
+---Reload strategies:
+---1. remote: reload via fifo and `nvim --remote-expr`
 ---2. shell: reload directly from a shell command
 ---
 ---Example:
 ---
 ---{
----    bind-key = 'alt-bs',
 ---    execute_fn = 'delete_buffers'
 ---    reload = {
 ---        type = 'remote',
@@ -631,7 +647,6 @@ end
 ---}
 ---
 ---{
----    bind-key = 'ctrl-l',
 ---    execute_fn = 'git_stage'
 ---    reload = {
 ---        type = 'shell',
@@ -639,24 +654,31 @@ end
 ---    },
 ---}
 ---
----@param cfg table
+---@param opts { execute_fn: string, reload?: { type: 'remote', fn: string}|{type: 'shell', cmd: string} }
 ---@return string
-local function build_execute_reload_action(cfg)
-    local bind_key = cfg.bind_key
-    local reload_cmd, post_execute_cmd
-    if cfg.reload.type == 'remote' then
-        reload_cmd = string.format('cat %s', fifo_path)
-        post_execute_cmd = build_remote_expr(cfg.reload.fn)
-    else
-        reload_cmd = cfg.reload.cmd
-    end
-    return string.format(
-        "%s:execute-silent(selection=$(printf '%%s\\n' {+}); %s)+reload(%s)%s",
-        bind_key,
-        build_remote_expr(cfg.execute_fn, "'$selection'"),
-        reload_cmd,
-        post_execute_cmd and string.format('+execute-silent(%s)', post_execute_cmd) or ''
+local function build_execute_action(opts)
+    local execute_action = string.format(
+        "execute-silent(selection=$(printf '%%s\\n' {+}); %s)",
+        build_remote_expr(opts.execute_fn, "'$selection'")
     )
+
+    local reload = opts.reload
+    if not reload then
+        return execute_action
+    end
+
+    local reload_action
+    if reload.type == 'remote' then
+        reload_action = string.format(
+            'reload(cat %s)+execute-silent(%s)',
+            fifo_path,
+            build_remote_expr(opts.reload.fn)
+        )
+    elseif reload.type == 'shell' then
+        reload_action = string.format("reload(%s)", opts.reload.cmd)
+    end
+
+    return execute_action .. '+' .. reload_action
 end
 
 local function get_single_entry(entries_str)
@@ -687,7 +709,7 @@ local function files(from_resume)
     local prompt_cwd = shortpath(vim.uv.cwd())
 
     local spec = {
-        ['sink*'] = dispatch_open,
+        ['sink*'] = files_sink,
         options = get_fzf_opts(from_resume, {
             '--delimiter',
             '\t',
@@ -712,13 +734,8 @@ local function files(from_resume)
                 'echo "reload(' .. vim.fn.escape(fd_cwd, '"') .. ')+change-prompt(' .. prompt_cwd .. ')";' ..
             '}',
             '--bind',
-            build_execute_reload_action({
-                bind_key = 'alt-f',
+            'alt-f:' .. build_execute_action({
                 execute_fn = 'reveal_file_in_finder',
-                reload = {
-                    type = 'shell',
-                    cmd = fd_cwd,
-                },
             }),
         }),
     }
@@ -754,7 +771,7 @@ end
 
 local function old_files(from_resume)
     local spec = {
-        ['sink*'] = dispatch_open,
+        ['sink*'] = files_sink,
         options = get_fzf_opts(from_resume, {
             '--delimiter',
             '\t',
@@ -775,13 +792,8 @@ local function old_files(from_resume)
             '--accept-nth',
             '2',
             '--bind',
-            build_execute_reload_action({
-                bind_key = 'alt-f',
+            'alt-f:' .. build_execute_action({
                 execute_fn = 'reveal_file_in_finder',
-                reload = {
-                    type = 'remote',
-                    fn = 'oldfiles_source',
-                },
             })
         }),
     }
@@ -801,7 +813,7 @@ local function dot_files(from_resume)
     local git_cmd = 'ls-gitfiles dot | ' .. dressup_cmd('ls_gitfiles')
 
     local spec = {
-        ['sink*'] = dispatch_open,
+        ['sink*'] = files_sink,
         options = get_fzf_opts(from_resume, {
             '--delimiter',
             '\t',
@@ -830,13 +842,8 @@ local function dot_files(from_resume)
             '--bind',
             set_label('{1}'),
             '--bind',
-            build_execute_reload_action({
-                bind_key = 'alt-f',
+            'alt-f:' .. build_execute_action({
                 execute_fn = 'reveal_file_in_finder',
-                reload = {
-                    type = 'shell',
-                    cmd = git_cmd,
-                }
             }),
         }),
     }
@@ -928,7 +935,7 @@ local function buffers(from_resume)
             local key = lines[1]
             -- ENTER with only a single selection: switch to the buffer
             -- CTRL-X/V/T supports multiple selections
-            if key == '' and #lines ~= 2 then
+            if key == 'enter' and #lines ~= 2 then
                 return
             end
             local action = open_file_keymaps[key]
@@ -959,8 +966,7 @@ local function buffers(from_resume)
             '--bind',
             set_label('{3..}'),
             '--bind',
-            build_execute_reload_action({
-                bind_key = 'alt-bs',
+            'alt-bs:' .. build_execute_action({
                 execute_fn = 'delete_buffers',
                 reload = {
                     type = 'remote',
@@ -1086,7 +1092,10 @@ local function bufs_and_mru(from_resume)
                 local filename = string.match(lines[i], '.*\t(.*)$')
                 local bufnr = string.match(lines[i], '%[(%d+)%]')
                 local cmd = bufnr and ('buffer ' .. bufnr) or ('edit ' .. filename)
-                vim.cmd(action and (action .. ' | ' .. cmd) or cmd)
+                if key ~= 'enter' then
+                    vim.cmd(action)
+                end
+                vim.cmd(cmd)
             end
         end,
         options = get_fzf_opts(from_resume, {
@@ -1112,8 +1121,7 @@ local function bufs_and_mru(from_resume)
             '--bind',
             set_label('{1}'),
             '--bind',
-            build_execute_reload_action({
-                bind_key = 'alt-bs',
+            'alt-bs:' .. build_execute_action({
                 execute_fn = 'delete_buffers',
                 reload = {
                     type = 'remote',
@@ -1121,13 +1129,8 @@ local function bufs_and_mru(from_resume)
                 },
             }),
             '--bind',
-            build_execute_reload_action({
-                bind_key = 'alt-f',
+            'alt-f:' .. build_execute_action({
                 execute_fn = 'reveal_file_in_finder',
-                reload = {
-                    type = 'remote',
-                    fn = 'mru_source',
-                },
             }),
         }),
     }
@@ -1161,12 +1164,12 @@ local function search_history(from_resume)
             -- ENTER to execute selected search
             -- CTRL-E to edit selected search in cmdline
             local key = lines[1]
-            if key == '' or key == 'ctrl-e' then
+            if key == 'enter' or key == 'ctrl-e' then
                 local query = lines[2]
                 vim.cmd('stopinsert')
                 vim.api.nvim_feedkeys('/' .. query, 'n', true)
             end
-            if key == '' then
+            if key == 'enter' then
             vim.api.nvim_feedkeys(
                 vim.api.nvim_replace_termcodes('<CR>', true, false, true),
                 'n',
@@ -1185,7 +1188,7 @@ local function search_history(from_resume)
             '--header',
             ':: ENTER (run), CTRL-E (edit)',
             '--expect',
-            'ctrl-e',
+            'ctrl-e,enter',
         }),
     }
 
@@ -1210,7 +1213,7 @@ local function command_history(from_resume)
         ['sink*'] = function(lines)
             local key = lines[1]
             local cmd = lines[2]
-            if key == '' then
+            if key == 'enter' then
                 -- ENTER to execute the command
                 vim.cmd(cmd)
                 vim.fn.histadd('cmd', cmd)
@@ -1231,7 +1234,7 @@ local function command_history(from_resume)
             '--header',
             ':: ENTER (run), CTRL-E (edit)',
             '--expect',
-            'ctrl-e',
+            'ctrl-e,enter',
         }),
     }
 
@@ -1374,8 +1377,7 @@ local function marks(from_resume)
             '--bind',
             set_label('{2}'),
             '--bind',
-            build_execute_reload_action({
-                bind_key = 'alt-bs',
+            'alt-bs:' .. build_execute_action({
                 execute_fn = 'delete_marks',
                 reload = {
                     type = 'remote',
@@ -1502,8 +1504,7 @@ local function tabs(from_resume)
             '--bind',
             set_label(tildefy_home('{1}')),
             '--bind',
-            build_execute_reload_action({
-                bind_key = 'alt-bs',
+            'alt-bs:' .. build_execute_action({
                 execute_fn = 'close_tabs',
                 reload = {
                     type = 'remote',
@@ -1587,8 +1588,7 @@ local function args(from_resume)
             '--bind',
             set_label('{2}'),
             '--bind',
-            build_execute_reload_action({
-                bind_key = 'alt-bs',
+            'alt-bs:' .. build_execute_action({
                 execute_fn = 'delete_args',
                 reload = {
                     type = 'remote',
@@ -1619,11 +1619,11 @@ local function helptags(from_resume)
     local spec = {
         ['sink*'] = function(lines)
             if #lines > 2 then
-                notify.warn('[FZF] Multiple selection is not supported')
+                notify.warn('[FZF] Multiple selection is not supported here')
             end
             local key = lines[1]
             local tag = string.match(lines[2], '^(.-)\t')
-            if key == '' or key == 'ctrl-x' then
+            if key == 'enter' or key == 'ctrl-x' then
                 vim.cmd('help ' .. tag)
             elseif key == 'ctrl-v' then
                 vim.cmd('vert help ' .. tag)
@@ -2086,7 +2086,7 @@ local function qf_items_fzf(win_local, from_resume)
                         setqflist(new_what, false, 'u')
                     end
                 end
-            elseif key == '' and #lines == 2 then
+            elseif key == 'enter' and #lines == 2 then
                 -- ENTER with a single selection: display the error
                 local nr = string.match(lines[2], '^%d+')
                 vim.cmd(nr .. 'cc!')
@@ -3181,7 +3181,7 @@ local function git_files(from_resume)
     local git_cmd = 'ls-gitfiles ' .. arg .. ' | ' .. dressup_cmd('ls_gitfiles')
 
     local spec = {
-        ['sink*'] = dispatch_open,
+        ['sink*'] = files_sink,
         options = get_fzf_opts(from_resume, {
             '--delimiter',
             '\t',
@@ -3210,22 +3210,12 @@ local function git_files(from_resume)
             '--bind',
             set_label('{1}'),
             '--bind',
-            build_execute_reload_action({
-                bind_key = 'alt-f',
+            'alt-f:' .. build_execute_action({
                 execute_fn = 'reveal_file_in_finder',
-                reload = {
-                    type = 'shell',
-                    cmd = git_cmd,
-                },
             }),
             '--bind',
-            build_execute_reload_action({
-                bind_key = 'alt-o',
+            'alt-o:' .. build_execute_action({
                 execute_fn = 'open_file_in_browser',
-                reload = {
-                    type = 'shell',
-                    cmd = git_cmd,
-                },
             }),
         }),
     }
@@ -3358,8 +3348,7 @@ local function git_status(from_resume)
             '--bind',
             set_label('{1}'),
             '--bind',
-            build_execute_reload_action({
-                bind_key = 'ctrl-l',
+            'ctrl-l:' .. build_execute_action({
                 execute_fn = 'git_stage',
                 reload = {
                     type = 'shell',
@@ -3367,8 +3356,7 @@ local function git_status(from_resume)
                 },
             }),
             '--bind',
-            build_execute_reload_action({
-                bind_key = 'ctrl-h',
+            'ctrl-h:' .. build_execute_action({
                 execute_fn = 'git_unstage',
                 reload = {
                     type = 'shell',
@@ -3376,8 +3364,7 @@ local function git_status(from_resume)
                 },
             }),
             '--bind',
-            build_execute_reload_action({
-                bind_key = 'ctrl-alt-r',
+            'ctrl-alt-r:' .. build_execute_action({
                 execute_fn = 'git_reset',
                 reload = {
                     type = 'shell',
@@ -3530,8 +3517,7 @@ local function git_branches(from_resume)
             '--bind',
             set_label('Branch: $(' .. extract_branch_cmd .. ')'),
             '--bind',
-            build_execute_reload_action({
-                bind_key = 'alt-bs',
+            'alt-bs:' .. build_execute_action({
                 execute_fn = 'delete_git_branches',
                 reload = {
                     type = 'remote',
@@ -3539,13 +3525,8 @@ local function git_branches(from_resume)
                 },
             }),
             '--bind',
-            build_execute_reload_action({
-                bind_key = 'alt-o',
+            'alt-o:' .. build_execute_action({
                 execute_fn = 'open_branch_in_browser',
-                reload = {
-                    type = 'remote',
-                    fn = 'git_branches_source',
-                },
             }),
         })
     }
@@ -3561,6 +3542,8 @@ end
 -- Git commits
 --------------------------------------------------------------------------------
 
+local mode_file
+
 ---Build the command for fzf preview
 ---@param root_dir string Git root directory
 ---@param range table? { start_line, end_line } as the range of VISUAL selection
@@ -3568,11 +3551,9 @@ local function get_preview_cmd_git_commits(root_dir, range)
     -- orderfile used for "git show -O" to display the current file as the first one
     local orderfile = vim.fn.tempname()
     local bufname = vim.api.nvim_buf_get_name(0)
-    local file = io.open(orderfile, 'w')
-    if file then
-        file:write(bufname:sub(#root_dir + 2))
-        file:close()
-    end
+    local file = assert(io.open(orderfile, 'w'))
+    file:write(bufname:sub(#root_dir + 2))
+    file:close()
 
     local preview_cmd = ''
 
@@ -3581,75 +3562,86 @@ local function get_preview_cmd_git_commits(root_dir, range)
         preview_cmd = preview_cmd .. " | awk '/commit {2}/ {flag=1;print;next} /^[^ ]*commit/{flag=0} flag' "
     else
         -- Extract the hash commit and use git show to preview it
-        preview_cmd = 'grep -o "[a-f0-9]\\{7,\\}" <<< {} | head -n 1 | xargs git show --color=always --format=format: -O' .. orderfile
+        preview_cmd = 'grep -o "[a-f0-9]\\{7,\\}" <<< {1} | head -n 1 | xargs git show --color=always --format=format: -O' .. orderfile
     end
     return preview_cmd .. ' | ' .. diff_pager
 end
 
----Get the sink function for git commits
-local function git_commits_build_sink_func(root_dir)
-    ---Extract the commit hash from git log output
-    ---"* 81055ee nvim(fzf): remove fzf.vim 3 days ago <Rocky Zhang>" --> "81055ee"
-    local function extract_hash(line)
-        local s, e = vim.regex('[0-9a-f]\\{7,40}'):match_str(line)
-        return line:sub(s + 1, e)
+---Extract the commit hash from git log output
+local function extract_hash(line)
+    local s, e = vim.regex('[0-9a-f]\\{7,40}'):match_str(line)
+    return line:sub(s + 1, e)
+end
+
+---Copy commit hashes in selected lines
+---@param lines string[]
+local function copy_hashes(lines)
+    local hashes = table.concat(vim.iter({unpack(lines, 2)}):map(function(v)
+        return extract_hash(v)
+    end):totable(), ' ')
+    if not hashes then
+        return
+    end
+    local reg
+    local selection_regs = { unnamed = [[*]], unnamedplus = [[+]] }
+    reg = selection_regs[vim.o.clipboard] and selection_regs[vim.o.clipboard] or [["]]
+    vim.fn.setreg(reg, hashes)
+    vim.fn.setreg([[0]], hashes)
+    notify.info(string.format('Commit hashes copied to register %s', reg))
+end
+
+local function checkout_commit(lines)
+    local root_dir = fzf_ctx.origin_git_root
+    if #lines > 2 then
+        notify.warn('To checkout a commit, select only one and do not choose multiple.')
+        return
+    end
+    local hash_obj = vim.system({ 'git', '-C', root_dir, 'rev-parse', '--short', 'HEAD' }):wait()
+    if hash_obj.code ~= 0 then
+        notify.error({ hash_obj.stderr, hash_obj.stdout })
+        return
+    end
+    local cur_commit_hash = hash_obj.stdout
+    local s, e = vim.regex('[0-9a-f]\\{7,40}'):match_str(lines[2])
+    local sele_commit_hash = lines[2]:sub(s + 1, e)
+    if sele_commit_hash == cur_commit_hash then
+        return
+    end
+    vim.ui.input({
+        prompt = 'Checkout commit ' .. sele_commit_hash .. '? (y/N)',
+    }, function(input)
+        if input and input:lower() == 'y' then
+            local obj = vim.system({ 'git', '-C', root_dir, 'checkout', sele_commit_hash }):wait()
+            if obj.code ~= 0 then
+                notify.error({ obj.stderr, obj.stdout })
+            else
+                notify.info(obj.stdout)
+            end
+        end
+    end)
+end
+
+local function git_commits_sink(lines)
+    local f = assert(io.open(mode_file, 'r'))
+    local mode = f:read('*l')
+    f:close()
+
+    local key = lines[1]
+
+    if mode == 'files' then
+        local filepaths = {}
+        for i = 2, #lines do
+            local line = lines[i]
+            filepaths[#filepaths + 1] = vim.split(line, '\t')[2]
+        end
+        open(key, filepaths)
+        return
     end
 
-    return function(lines)
-        local key = lines[1]
-        if key == 'ctrl-y' then
-            -- CTRL-Y to copy the commit hashes
-            local hashes = table.concat(vim.iter({unpack(lines, 2)}):map(function(v)
-                return extract_hash(v)
-            end):totable(), ' ')
-            if not hashes then
-                return
-            end
-            local reg
-            local selection_regs = { unnamed = [[*]], unnamedplus = [[+]] }
-            reg = selection_regs[vim.o.clipboard] and selection_regs[vim.o.clipboard] or [["]]
-            vim.fn.setreg(reg, hashes)
-            vim.fn.setreg([[0]], hashes)
-            notify.info(string.format('Commit hashes copied to register %s', reg))
-        elseif key == 'alt-d' then
-            -- ALT-D to diff against the commits (only available for buffer commits)
-            for i = 2, #lines do
-                local hash = extract_hash(lines[i])
-                if hash and hash ~= '' then
-                    vim.cmd('tab sb')
-                    vim.cmd('Gdiffsplit ' .. hash)
-                end
-            end
-        elseif key == '' then
-            -- ENTER to checkout the commit
-            if #lines > 2 then
-                notify.warn('To checkout a commit, select only one and do not choose multiple.')
-                return
-            end
-            local hash_obj = vim.system({ 'git', '-C', root_dir, 'rev-parse', '--short', 'HEAD' }):wait()
-            if hash_obj.code ~= 0 then
-                notify.error({ hash_obj.stderr, hash_obj.stdout })
-                return
-            end
-            local cur_commit_hash = hash_obj.stdout
-            local s, e = vim.regex('[0-9a-f]\\{7,40}'):match_str(lines[2])
-            local sele_commit_hash = lines[2]:sub(s + 1, e)
-            if sele_commit_hash == cur_commit_hash then
-                return
-            end
-            vim.ui.input({
-                prompt = 'Checkout commit ' .. sele_commit_hash .. '? (y/N)',
-            }, function(input)
-                if input and input:lower() == 'y' then
-                    local obj = vim.system({ 'git', '-C', root_dir, 'checkout', sele_commit_hash }):wait()
-                    if obj.code ~= 0 then
-                        notify.error({ obj.stderr, obj.stdout })
-                    else
-                        notify.info(obj.stdout)
-                    end
-                end
-            end)
-        end
+    if key == 'ctrl-y' then
+        copy_hashes(lines)
+    elseif key == 'enter' then
+        checkout_commit(lines)
     end
 end
 
@@ -3658,7 +3650,17 @@ function M.open_commit_in_browser(entries_str)
     if not entry then
         return
     end
-    vim.system({ 'open-giturl', 'commit', entry })
+
+    local f = assert(io.open(mode_file, 'r'))
+    local mode = f:read('*l')
+    f:close()
+
+    if mode == 'commits' then
+        vim.system({ 'open-giturl', 'commit', entry })
+    elseif mode == 'files' then
+        local file = string.match(entry, '^%S+%s+(.-)\t')
+        vim.system({ 'open-giturl', 'file', file })
+    end
 end
 
 local function git_commits(from_resume)
@@ -3668,38 +3670,84 @@ local function git_commits(from_resume)
     end
     fzf_ctx.origin_git_root = root_dir
 
-    local git_cmd = 'git log --date=short --format="%C(green)%C(bold)%cd %C(auto)%h%d %s (%an)" --graph --color=always'
-    local preview_cmd = get_preview_cmd_git_commits(root_dir)
+    -- Format of each entry: `* 2026-06-14 ff2cb51 feat(xxx): xxxxxxx (Rocky Zhang)\tff2cb51`
+    -- We append `\t` and the hash string to the output of `git log`
+    local git_cmd = 'git log --date=short --format="%C(green)%C(bold)%cd %C(auto)%h%d %s (%an)%C(reset)%x09%h" --graph --color=always'
+
+    local extract_commits_cmd = "awk 'match($0, /[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]*/) { print substr($0, RSTART, RLENGTH) }' {+f}"
+
+    mode_file = vim.fn.tempname()
+    local f = assert(io.open(mode_file, 'w'))
+    f:write('commits\n')
+    f:close()
 
     local spec = {
-        ['sink*'] = git_commits_build_sink_func(root_dir),
+        ['sink*'] = git_commits_sink,
         options = get_fzf_opts(from_resume, {
+            '--delimiter',
+            '\t',
+            '--with-nth',
+            1,
             '--prompt',
             'Git Commits> ',
             '--header',
-            ':: ENTER (checkout commit), CTRL-Y (yank commits), ALT-O (open in browser)',
+            ':: ENTER (checkout commit), CTRL-Y (yank commits), ALT-O (open in browser)\n' ..
+            ':: ALT-F (list files)',
             '--expect',
             expect_keys({
                 extra = { 'ctrl-y' },
-                include_defaults = false,
+                include_defaults = true,
             }),
             '--preview-window',
             theme.name == 'default' and 'down,60%' or '',
             '--preview',
-            preview_cmd,
+            " \
+                mode=$(cat " .. mode_file .. ") \
+                if [[ $mode == \"commits\" ]]; then \
+                    " .. get_preview_cmd_git_commits(root_dir) .. " \
+                else \
+                    diff_output=$(git -C " .. root_dir .. " -c core.quotePath=false diff --no-ext-diff --color=always -- {2} | " .. diff_pager .. ") \
+                    if [[ -n $diff_output ]]; then \
+                        printf '%s\n' \"$diff_output\" \
+                    else \
+                        " .. fzf_previewer .. " {2} \
+                    fi \
+                fi \
+            ",
             '--bind',
-            set_label('Preview'),
+            set_label(function()
+                return " \
+                    mode=$(cat " .. mode_file .. ") \
+                    if [[ $mode == \"commits\" ]]; then \
+                        echo [ Preview ] \
+                    else \
+                        echo [ {1} ] \
+                    fi \
+                "
+            end),
             '--bind',
             'ctrl-/:change-preview-window(right,80%|hidden|)+refresh-preview',
             '--bind',
-            build_execute_reload_action({
-                bind_key = 'alt-o',
+            'alt-o:' .. build_execute_action({
                 execute_fn = 'open_commit_in_browser',
-                reload = {
-                    type = 'shell',
-                    cmd = git_cmd,
-                },
             }),
+            '--bind',
+            'load:first',
+            '--bind',
+            "alt-f:reload(" ..
+                extract_commits_cmd .. " | \
+                while IFS= read -r treeish; do \
+                    git diff-tree --no-commit-id --name-only \"$treeish\" -r; \
+                done | sort -u | \
+                while IFS= read -r relpath; do \
+                    printf '%s\t%s\n' \"$relpath\" " .. root_dir .. "/\"$relpath\" \
+                done | " .. dressup_cmd('git_lsfiles_fullname') .. " \
+                echo files > " .. mode_file .. " \
+            )+bg-transform-prompt( \
+                printf 'Files in %s> ' \"$(" .. extract_commits_cmd .. " | paste -sd' ' -)\" \
+            )+bg-transform-header( \
+                printf ':: ALT-O (open in browser)' \
+            )+unbind(alt-f)",
         }),
     }
 
@@ -3711,7 +3759,38 @@ function M.git_commits()
 end
 
 -- Git commit (buffer)
-local function git_buf_commit(from_resume)
+
+function M.open_buf_commit_in_browser(entries_str)
+    local entry = get_single_entry(entries_str)
+    if not entry then
+        return
+    end
+
+    vim.system({ 'open-giturl', 'commit', entry })
+end
+
+local function git_buf_commits_sink(lines)
+    local key = lines[1]
+
+    if key == 'ctrl-y' then
+        -- CTRL-Y to copy the commit hashes
+        copy_hashes(lines)
+    elseif key == 'alt-d' then
+        -- ALT-D to diff against the commits
+        for i = 2, #lines do
+            local hash = extract_hash(lines[i])
+            if hash and hash ~= '' then
+                vim.cmd('tab sb')
+                vim.cmd('Gdiffsplit ' .. hash)
+            end
+        end
+    elseif key == 'enter' then
+        -- ENTER to checkout the commit
+        checkout_commit(lines)
+    end
+end
+
+local function git_buf_commits(from_resume)
     local root_dir = get_git_root()
     if root_dir == nil then
         return
@@ -3730,7 +3809,10 @@ local function git_buf_commit(from_resume)
         return
     end
 
-    local git_cmd = 'git log --date=short --format="%C(green)%C(bold)%cd %C(auto)%h%d %s (%an)" --color=always'
+    -- Format of each entry: `* 2026-06-14 ff2cb51 feat(xxx): xxxxxxx (Rocky Zhang)\tff2cb51`
+    -- We append `\t` and the hash string to the output of `git log`
+    local git_cmd = 'git log --date=short --format="%C(green)%C(bold)%cd %C(auto)%h%d %s (%an)%C(reset)%x09%h" --color=always'
+
     local preview_cmd
 
     local mode = vim.api.nvim_get_mode().mode
@@ -3749,8 +3831,12 @@ local function git_buf_commit(from_resume)
     end
 
     local spec = {
-        ['sink*'] = git_commits_build_sink_func(root_dir),
+        ['sink*'] = git_buf_commits_sink,
         options = get_fzf_opts(from_resume, {
+            '--delimiter',
+            '\t',
+            '--with-nth',
+            1,
             '--prompt',
             'Git Commits (buffer)> ',
             '--header',
@@ -3758,7 +3844,7 @@ local function git_buf_commit(from_resume)
             ':: ALT-O (open in browser)',
             '--expect',
             expect_keys({
-                extra = { 'alt-d', 'ctrl-y' },
+                extra = { 'alt-d', 'ctrl-y', 'enter' },
                 include_defaults = false,
             }),
             '--preview-window',
@@ -3770,13 +3856,8 @@ local function git_buf_commit(from_resume)
             '--bind',
             'ctrl-/:change-preview-window(right,80%|hidden|)+refresh-preview',
             '--bind',
-            build_execute_reload_action({
-                bind_key = 'alt-o',
-                execute_fn = 'open_commit_in_browser',
-                reload = {
-                    type = 'shell',
-                    cmd = git_cmd,
-                },
+            'alt-o:' .. build_execute_action({
+                execute_fn = 'open_buf_commit_in_browser',
             }),
         }),
     }
@@ -3785,7 +3866,7 @@ local function git_buf_commit(from_resume)
 end
 
 function M.git_buffer_commits()
-    run(git_buf_commit)
+    run(git_buf_commits)
 end
 
 --------------------------------------------------------------------------------
@@ -3847,7 +3928,7 @@ local function git_stash(from_resume)
     local spec = {
         ['sink*'] = function(lines)
             local key = lines[1]
-            if key == '' and #lines == 2 then
+            if key == 'enter' and #lines == 2 then
                 -- ENTER to apply the stash
                 vim.ui.input({
                     prompt = lines[2] .. '\nApply this stash? (y/N)',
@@ -3893,7 +3974,7 @@ local function git_stash(from_resume)
             ':: ENTER (apply), ALT-ENTER (pop), ALT-BS (drop)',
             '--expect',
             expect_keys({
-                extra = { 'alt-enter' },
+                extra = { 'alt-enter', 'enter' },
                 include_defaults = false,
             }),
             '--preview',
@@ -3903,8 +3984,7 @@ local function git_stash(from_resume)
             '--bind',
             set_label('{1}'),
             '--bind',
-            build_execute_reload_action({
-                bind_key = 'alt-bs',
+            'alt-bs:' .. build_execute_action({
                 execute_fn = 'drop_stashes',
                 reload = {
                     type = 'remote',
@@ -3993,7 +4073,7 @@ local function tags(from_resume)
     local spec = {
         ['sink*'] = function(lines)
             local key = lines[1]
-            local action = open_file_keymaps[key] or (key == '' and 'edit' or 'silent keepjumps keepalt hide edit')
+            local action = open_file_keymaps[key] or 'silent keepjumps keepalt hide edit'
             local items = {}
 
             local magic, wrapscan, autochdir = vim.o.magic, vim.o.wrapscan, vim.o.autochdir

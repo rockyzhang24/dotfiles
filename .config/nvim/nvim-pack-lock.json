@@ -5,7 +5,7 @@
       "src": "https://github.com/L3MON4D3/LuaSnip"
     },
     "SchemaStore.nvim": {
-      "rev": "0f3cd0e584b4ed221fc44eee5b0b6ce335f7e263",
+      "rev": "735540a7602bffd1b07deab7d508affb57b78c64",
       "src": "https://github.com/b0o/SchemaStore.nvim"
     },
     "blink.cmp": {
@@ -26,7 +26,7 @@
       "src": "https://github.com/dhananjaylatkar/cscope_maps.nvim"
     },
     "diffs.nvim": {
-      "rev": "d280baf3e937a487038766f51156dd41ceb0f8e7",
+      "rev": "7ab445c39224160203ae692d3c883e2f51f2d442",
       "src": "https://github.com/barrettruth/diffs.nvim"
     },
     "eregex.vim": {
@@ -87,7 +87,7 @@
       "src": "https://github.com/godlygeek/tabular"
     },
     "tagbar": {
-      "rev": "b37b05ff1925b0b3931f031ebf88690aa0974375",
+      "rev": "07cb8247487208124978daff8e13624667635457",
       "src": "https://github.com/preservim/tagbar"
     },
     "treesj": {

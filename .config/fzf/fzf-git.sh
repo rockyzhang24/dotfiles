@@ -219,6 +219,9 @@ EOF
 _fzf_git_tree_files() {
   _fzf_git_check || return
 
+  local root
+  root=$(git rev-parse --show-toplevel)
+
   local treeish
   for treeish in "$@"; do
     git diff-tree --no-commit-id --name-only "$treeish" -r
@@ -228,7 +231,7 @@ _fzf_git_tree_files() {
       --header ':: CTRL-O (open in browser), ALT-E (open in editor)' \
       --bind "ctrl-o:execute-silent:bash \"$__fzf_git\" --list file {}" \
       --bind "alt-e:execute:${EDITOR:-vim} {}" \
-      --preview "git -c core.quotePath=false diff --no-ext-diff --color=$(__fzf_git_color .) -- {} | $(__fzf_git_pager); $(__fzf_git_cat) {}"
+      --preview "git -C $root -c core.quotePath=false diff --no-ext-diff --color=$(__fzf_git_color .) -- {} | $(__fzf_git_pager); $(__fzf_git_cat) $root/{}"
 }
 
 # Branches

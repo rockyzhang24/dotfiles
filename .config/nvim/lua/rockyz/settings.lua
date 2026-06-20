@@ -184,6 +184,10 @@ config_term_esc()
 -- the terminal window to match the terminal's pwd.
 local function config_term()
     vim.api.nvim_create_autocmd('TermOpen', {
+        pattern = {
+            '{term,shell}://*',
+            ':shell*',
+        },
         callback = function()
             vim.cmd[=[
             nnoremap <silent><buffer> <cr> i<cr><c-\><c-n>

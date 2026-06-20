@@ -357,14 +357,24 @@ end
 vim.keymap.set('n', '/', 'ms/')
 vim.keymap.set('n', '?', 'ms?')
 
--- Clean search highlighting and update diff if needed
-vim.keymap.set('n', '<Esc>', function()
-    if vim.v.hlsearch then
-        return ":<C-u>nohlsearch<C-R>=has('diff')?'<Bar>diffupdate':''<CR><CR>:lua require('rockyz.scrollbar').clear_search()<CR>"
-    else
-        return '<Esc>'
+-- Use <C-l> to:
+--   - redraw
+--   - clear 'hlsearch'
+--   - clearmatches()
+--   - :diffupdate
+--   - :syncbind
+-- Use {count}<C-l> to also:
+--   - clear all extmark namespaces
+vim.keymap.set('n', '<C-l>', function()
+    if vim.v.count > 0 then
+        vim.fn.clearmatches()
+        vim.api.nvim_buf_clear_namespace(0, -1, 0, -1)
     end
-end, { expr = true, silent = true })
+    vim.cmd('nohlsearch')
+    vim.cmd('diffupdate')
+    vim.cmd('syncbind')
+    vim.cmd('normal! <C-l>')
+end, { silent = true })
 
 -- //: Search within VISUAL selection
 vim.keymap.set('c', '/', function()

@@ -69,12 +69,13 @@ function M.dressup(source)
                 )
             end
         elseif source == 'git_lsfiles_fullname' then
-            -- Each line: <relative_path>\t<absolute_path>, where
+            -- input line: <relative_path>\t<absolute_path>, where
             --   <relative_path> is the output of `git ls-files --full-name`
             --   <absolute_path> is <git_root_dir>/<relative_path>
+            -- Output: <icon> <relative_path>\t<relative_path>\t<absolute_path>
             local relpath, abspath = unpack(vim.split(line, '\t'))
             local icon = ansi_icon(abspath)
-            output_line = icon .. ' ' .. relpath .. '\t' .. abspath
+            output_line = icon .. ' ' .. relpath .. '\t' .. relpath .. '\t' .. abspath
         elseif source == 'git_status' then
             -- lines are the output of `git status --porcelain=v1`. Each lines has one of these formats:
             -- (1). XY FILENAME

@@ -34,6 +34,14 @@
 --     emit(entries)
 -- end
 --
+-- funcion M.demo_delete(selection_file)
+--     local f = assert(io.open(selection_file, 'r'))
+--     local lines = vim.split(f:read('*a'), '\n', { trimempty = true, plain = true })
+--     for _, line in ipairs(lines) do
+--         -- Do something with each selected lines
+--     end
+-- end
+--
 -- local function demo_finder(from_resume)
 --     local spec = {
 --         ['sink*'] = function(lines)
@@ -45,7 +53,29 @@
 --             --     lines: selected entries
 --         end,
 --         options = get_fzf_opts(from_resume, {
---             -- fzf options go here
+--             --
+--             -- fzf options go here ...
+--             --
+--             -- To execute a function with selected entries, use nvim's remote expr. Then we can
+--             -- reload the resulting entries in fzf.
+--             --
+--             '--bind',
+--             "alt-bs:execute-silent( \
+--                 nvim --server $NVIM --remote-expr \"v:lua.require('rockyz.fzf').demo_delete('{+f}')\" \
+--             )+reload( \
+--                 cat " .. fifo_path .. " \
+--             )+execute-silent( \
+--                 nvim --server $NVIM --remote-expr \"v:lua.require('rockyz.fzf').demo_source()\" \
+--             )",
+--             --
+--             -- Or if the fzf entries are just the result of a shell command
+--             --
+--             '--bind',
+--             "alt-bs:execute-silent( \
+--                 nvim --server $NVIM --remote-expr \"v:lua.require('rockyz.fzf').demo_delete('{+f}')\" \
+--             )+reload( \
+--                 a_shell_command_generate_fzf_entries \
+--             )",
 --         }),
 --     }
 --
@@ -65,6 +95,7 @@
 --             -- Same as above
 --         end,
 --         options = get_fzf_opts(from_resume, {
+--             -- fzf options go here ...
 --         })
 --     }
 --
@@ -339,15 +370,9 @@ local function setqflist(what, is_local, action)
     vim.cmd('silent wincmd p')
 end
 
-local cached_fzf_query -- cached the last fzf query
-local cached_rg_query -- cached the last rg query (for live greps)
+local cached_fzf_query = vim.fn.tempname() -- cached the last fzf query
+local cached_rg_query = vim.fn.tempname() -- cached the last rg query (for live greps)
 local cached_finder -- cached the last executed fzf finder
-if not cached_fzf_query then
-    cached_fzf_query = vim.fn.tempname()
-end
-if not cached_rg_query then
-    cached_rg_query = vim.fn.tempname()
-end
 
 -- Record whether Rg is in fzf mode or not
 local in_fzf_mode = ''
@@ -3351,29 +3376,6 @@ function M.delete_git_branches(selection_file)
     end)
 end
 
-function M.git_branches_source()
-    local entries = {}
-    vim.system(
-        {
-            'bash',
-            '-c',
-            "git branch --all --sort=-committerdate --sort='refname:rstrip=-2' --sort=-HEAD -vv --color=always --format=$'%(HEAD) %(color:yellow)%(refname:short) %(color:green)(%(committerdate:relative))\t%(color:blue)%(subject)%(color:reset)'",
-        },
-        { text = true },
-        function(obj)
-            if obj.code ~= 0 then
-                notify.error({ obj.stderr, obj.stdout })
-                return
-            end
-            local output = obj.stdout or {}
-            for line in output:gmatch('[^\n]+') do
-                table.insert(entries, line)
-            end
-            emit(entries)
-        end
-    )
-end
-
 local function git_branches(from_resume)
     local root_dir = get_git_root()
     if root_dir == nil then
@@ -3381,6 +3383,9 @@ local function git_branches(from_resume)
     end
     fzf_ctx.origin_git_root = root_dir
 
+    local git_branch_cmd = "git branch --sort=-committerdate --sort='refname:rstrip=-2' --sort=-HEAD -vv --color=always --format=$'%(HEAD) %(color:yellow)%(refname:short) %(color:green)(%(committerdate:relative))\t%(color:blue)%(subject)%(color:reset)'"
+
+    --
     -- Extract the branch name for fzf preview and border label
     --
     --   entry                            |  extracted branch
@@ -3429,11 +3434,10 @@ local function git_branches(from_resume)
             'Git Branches> ',
             '--header',
             ':: ENTER (checkout), ALT-BS (delete branches), ALT-O (open in browser)\n' ..
-            ':: ALT-C (list commits)',
+            ':: ALT-C (list commits), ALT-A (toggle local/all branches)',
             '--preview-window',
             theme.name == 'default' and 'down,60%' or '',
             '--preview',
-            -- "git log --oneline --graph --date=short --color=always --pretty='format:%C(auto)%cd %h%d %s' $(cut -c3- <<< {} | cut -d' ' -f1) --",
             "git log --oneline --graph --date=short --color=always --pretty='format:%C(auto)%cd %h%d %s' $(" .. extract_branch_cmd .. ")",
             '--bind',
             'ctrl-/:change-preview-window(right,50%|hidden|)+refresh-preview',
@@ -3442,15 +3446,18 @@ local function git_branches(from_resume)
             '--bind',
             "alt-bs:execute-silent(" ..
                 remote_call('delete_git_branches', '{+f}') .. " \
-            )+reload( \
-                cat " .. fifo_path .. " \
-            )+execute-silent(" ..
-                remote_call('git_branches_source') .. " \
+            )+reload(" ..
+                git_branch_cmd .. " \
             )",
             '--bind',
             'alt-o:execute-silent( \
                 open-giturl branch {} \
             )',
+            '--bind',
+            'alt-a:transform:case "$FZF_PROMPT" in \
+                *"[ALL]"*) echo "change-prompt(Git Branches> )+reload:' .. git_branch_cmd .. '" ;; \
+                *) echo "change-prompt(Git Branches [ALL]> )+reload:' .. git_branch_cmd .. ' --all" ;; \
+            esac',
             '--bind',
             "alt-c:execute-silent( \
                 cut -c3- <<< {} | cut -d' ' -f1 > " .. vim.fn.stdpath('cache') .. "/fzf-selected-branch; " ..
@@ -3465,7 +3472,7 @@ local function git_branches(from_resume)
         end,
     }
 
-    fzf(spec, M.git_branches_source)
+    fzf(spec, git_branch_cmd)
 end
 
 function M.git_branches()
@@ -4179,7 +4186,8 @@ local function complete_path(from_resume)
             '--preview-window',
             'hidden',
             '--header',
-            ':: ALT-/ (switch between absolute and relative)\n:: CWD: ' .. vim.uv.cwd(),
+            ':: ALT-/ (toggle absolute/relative)\n' ..
+            ':: CWD: ' .. vim.uv.cwd(),
             '--bind',
             'ctrl-/:ignore',
             '--bind',

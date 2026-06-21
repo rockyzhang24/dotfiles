@@ -34,17 +34,6 @@
 --     emit(entries)
 -- end
 --
---
--- The operation performed in "execute + reload" action
--- This function is invoked via Nvim's remote expr. Selected entries are passed in as
--- a newline-delimited string.
--- function M.demo_execute(entries_str)
---     local entries = vim.split(entries_str, '\n')
---     for _, entry in ipairs(entries) do
---         -- Do something with each selected entry...
---     end
--- end
---
 -- local function demo_finder(from_resume)
 --     local spec = {
 --         ['sink*'] = function(lines)
@@ -57,18 +46,6 @@
 --         end,
 --         options = get_fzf_opts(from_resume, {
 --             -- fzf options go here
---             --
---             -- To support execute + reload: e.g., in the buffers finder, alt-bs is binded to delete selected
---             -- buffers. Instead of quitting fzf upon executing the action, fzf reloads the entries.
---             --
---             '--bind',
---             'alt-bs:' .. build_execute_reload_action({
---                 execute_fn = 'demo_execute', -- function that performs certain operations on selected entries
---                 reload = {
---                     type = 'remote',
---                     fn = 'demo_source', -- function that emits (reloads) entries to fifo
---                 },
---             })
 --         }),
 --     }
 --
@@ -79,14 +56,6 @@
 -- 2. Use a shell command
 -- -----------------------------------------------------------------------------
 --
--- -- For "execute + reload" action
--- function M.demo_execute(entries_str)
---     local entries = vim.split(entries_str, '\n')
---     for _, entry in ipairs(entries) do
---         -- Do something for each selected entry...
---     end
--- end
---
 -- local function demo_finder(from_resume)
 --     -- The shell command whose stdout will be fed to fzf
 --     local shell_cmd = ''
@@ -96,15 +65,6 @@
 --             -- Same as above
 --         end,
 --         options = get_fzf_opts(from_resume, {
---             -- To support reload
---             '--bind',
---             'alt-bs:' .. build_execute_reload_action({
---                 execute_fn = 'demo_execute',
---                 reload = {
---                     type = 'shell',
---                     cmd = shell_cmd,
---                 },
---             })
 --         })
 --     }
 --
@@ -221,13 +181,13 @@ local config = {
             },
             ['<C-g>/'] = 'live_grep_current_buffer',
 
-            ['<C-l>s'] = 'lsp_document_symbol',
-            ['<C-l>S'] = 'lsp_workspace_symbol',
-            ['<C-l>d'] = 'lsp_definition',
-            ['<C-l>r'] = 'lsp_references',
-            ['<C-l>i'] = 'lsp_implementation',
-            ['<C-l>D'] = 'lsp_declaration',
-            ['<C-l>t'] = 'lsp_type_definition',
+            ['<Leader>ls'] = 'lsp_document_symbol',
+            ['<Leader>lS'] = 'lsp_workspace_symbol',
+            ['<Leader>ld'] = 'lsp_definition',
+            ['<Leader>lr'] = 'lsp_references',
+            ['<Leader>li'] = 'lsp_implementation',
+            ['<Leader>lD'] = 'lsp_declaration',
+            ['<Leader>lt'] = 'lsp_type_definition',
 
             ['<Leader>fd'] = 'document_diagnostics',
             ['<Leader>fD'] = 'workspace_diagnostics',
@@ -405,22 +365,22 @@ local common_opts = {
 
 ---Get fzf options
 ---@param from_resume boolean? Whether the finder is called by fzf resume
----@param extra table? Extra options
+---@param extra? table Extra options
 local function get_fzf_opts(from_resume, extra)
     extra = extra or {}
-    local opts = vim.list_extend(vim.deepcopy(common_opts), {
+    local fzf_opts = vim.list_extend(vim.deepcopy(common_opts), {
         -- Cache the query for fzf resume
         '--bind',
         'result:execute-silent(echo {q} > ' .. cached_fzf_query .. ')',
     })
     -- When the finder is called by fzf resume, use the fzf's start event to fetch the cached query
     if from_resume then
-        opts = vim.list_extend(opts, {
+        fzf_opts = vim.list_extend(fzf_opts, {
             '--bind',
             'start:transform-query:cat ' .. cached_fzf_query,
         })
     end
-    return vim.list_extend(opts, extra)
+    return vim.list_extend(fzf_opts, extra)
 end
 
 ---@param label string|fun(): string
@@ -561,10 +521,14 @@ end
 local function fzf(spec, source)
     local session_id = next_session_id()
 
-    fzf_ctx.origin_bufnr = vim.api.nvim_get_current_buf()
-    fzf_ctx.origin_winid = vim.api.nvim_get_current_win()
-    fzf_ctx.origin_tabpage = vim.api.nvim_get_current_tabpage()
-    fzf_ctx.cwd = vim.uv.cwd()
+    -- Don't update the origin state if the finder is launched from another finder (e.g., switching
+    -- to tree files finder from git commits finder)
+    if vim.bo.buftype ~= 'terminal' then
+        fzf_ctx.origin_bufnr = vim.api.nvim_get_current_buf()
+        fzf_ctx.origin_winid = vim.api.nvim_get_current_win()
+        fzf_ctx.origin_tabpage = vim.api.nvim_get_current_tabpage()
+        fzf_ctx.cwd = vim.uv.cwd()
+    end
 
     local old_fzf_cmd = vim.env.FZF_DEFAULT_COMMAND
 
@@ -590,7 +554,7 @@ end
 ---Cache the given finder for later fzf resume and run the finder (launch fzf UI, process entries
 ---and send the entries to fzf for display)
 ---@param finder function
----@param from_resume boolean? Whether it is called from fzf resume
+---@param from_resume? boolean Whether it is called from fzf resume
 local function run(finder, from_resume)
     cached_finder = finder
     finder(from_resume)
@@ -3099,10 +3063,21 @@ end
 -- Git
 --------------------------------------------------------------------------------
 
----@param dir string?
+---@param dir? string
 local function get_git_root(dir)
+    local buftype = vim.bo.buftype
     if not dir then
-        local path = vim.fn.expand('%:p:h')
+        local path
+        if buftype == '' then
+            path = vim.fn.expand('%:p:h')
+        elseif buftype == 'terminal' and fzf_ctx.origin_bufnr then
+            -- If this finder is launched from another finder (finder switch), use the original
+            -- buffer as well.
+            path = vim.api.nvim_buf_get_name(fzf_ctx.origin_bufnr)
+        else
+            notify.error('Not a git repository')
+            return nil
+        end
         -- Extract everything before ".git"
         dir = path:match('^(.-)[/\\]%.git[/\\]?.*$') or path
         -- Remove "fugitive://" from the beginning
@@ -3453,7 +3428,8 @@ local function git_branches(from_resume)
             '--prompt',
             'Git Branches> ',
             '--header',
-            ':: ENTER (checkout), ALT-BS (delete branches), ALT-O (open in browser)',
+            ':: ENTER (checkout), ALT-BS (delete branches), ALT-O (open in browser)\n' ..
+            ':: ALT-C (list commits)',
             '--preview-window',
             theme.name == 'default' and 'down,60%' or '',
             '--preview',
@@ -3475,7 +3451,18 @@ local function git_branches(from_resume)
             'alt-o:execute-silent( \
                 open-giturl branch {} \
             )',
-        })
+            '--bind',
+            "alt-c:execute-silent( \
+                cut -c3- <<< {} | cut -d' ' -f1 > " .. vim.fn.stdpath('cache') .. "/fzf-selected-branch; " ..
+                remote_call('switches.branch_commits') .. " \
+            )+abort",
+        }),
+        -- Move the cursor back to fzf window after finder switching
+        exit = function()
+            if fzf_ctx.winid and vim.api.nvim_win_is_valid(fzf_ctx.winid) then
+                vim.api.nvim_set_current_win(fzf_ctx.winid)
+            end
+        end,
     }
 
     fzf(spec, M.git_branches_source)
@@ -3488,67 +3475,6 @@ end
 --------------------------------------------------------------------------------
 -- Git commits
 --------------------------------------------------------------------------------
-
-local function tree_files(from_resume)
-
-    local path = vim.fn.stdpath('cache') .. '/rockyz-fzf-selection'
-    local commits = read_file(path)
-    local commits_str = table.concat(commits, ' ')
-
-    -- Each entry: <icon> <relative_path>\t<relative_path>\t<absolute_path>
-    local cmd = " \
-        printf '%s\n' " .. commits_str .. " | \
-        while IFS= read -r treeish; do \
-            git diff-tree --no-commit-id --name-only \"$treeish\" -r; \
-        done | sort -u | \
-        while IFS= read -r relpath; do \
-            printf '%s\t%s\n' \"$relpath\" " .. fzf_ctx.origin_git_root .. "/\"$relpath\" \
-        done | " .. dressup_cmd('git_lsfiles_fullname') .. " \
-    "
-
-    local spec = {
-        ['sink*'] = files_sink,
-        options = get_fzf_opts(from_resume, {
-            '--delimiter',
-            '\t',
-            '--with-nth',
-            1,
-            '--accept-nth',
-            3,
-            '--prompt',
-            'Files in ' .. commits_str .. '> ',
-            '--header',
-            ':: ALT-O (open in browser)',
-            '--expect',
-            expect_keys({ include_defaults = true }),
-            '--preview',
-            " \
-            diff_output=$( \
-                git -C " .. fzf_ctx.origin_git_root ..
-                " -c core.quotePath=false diff --no-ext-diff --color=always -- {3} | " ..
-                diff_pager .. " \
-            ) \
-            if [[ -n $diff_output ]]; then \
-                printf '%s\n' \"$diff_output\" \
-            else \
-                " .. fzf_previewer .. " {3} \
-            fi \
-            ",
-            '--bind',
-            set_label('{1}'),
-            '--bind',
-            'alt-o:execute-silent( \
-                open-giturl file {2} \
-            )',
-        }),
-    }
-
-    fzf(spec, cmd)
-end
-
-function switches.tree_files()
-    run(tree_files)
-end
 
 ---Build the command for fzf preview
 ---@param root_dir string Git root directory
@@ -3625,7 +3551,7 @@ local function git_commits_sink(lines)
     end
 end
 
-local function git_commits(from_resume)
+local function git_commits(from_resume, branch)
     local root_dir = get_git_root()
     if root_dir == nil then
         return
@@ -3634,7 +3560,14 @@ local function git_commits(from_resume)
 
     -- Format of each entry: `* 2026-06-14 ff2cb51 feat(xxx): xxxxxxx (Rocky Zhang)\tff2cb51`
     -- We append `\t` and the hash string to the output of `git log`
-    local git_cmd = 'git log --date=short --format="%C(green)%C(bold)%cd %C(auto)%h%d %s (%an)%C(reset)%x09%h" --graph --color=always'
+    local git_commits_cmd = 'git log --date=short --format="%C(green)%C(bold)%cd %C(auto)%h%d %s (%an)%C(reset)%x09%h" --graph --color=always'
+
+    local prompt = 'Git Commits'
+
+    if branch then
+        git_commits_cmd = git_commits_cmd .. ' ' .. branch
+        prompt = prompt .. ' in ' .. branch .. ' branch'
+    end
 
     local spec = {
         ['sink*'] = git_commits_sink,
@@ -3646,7 +3579,7 @@ local function git_commits(from_resume)
             '--accept-nth',
             2,
             '--prompt',
-            'Git Commits> ',
+            prompt .. '> ',
             '--header',
             ':: ENTER (checkout commit), CTRL-Y (yank commits), ALT-O (open in browser)\n' ..
             ':: ALT-F (list files)',
@@ -3669,7 +3602,7 @@ local function git_commits(from_resume)
             )',
             '--bind',
             "alt-f:execute-silent( \
-                awk 'match($0, /[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]*/) { print substr($0, RSTART, RLENGTH) }' {+f} > " .. vim.fn.stdpath('cache') .. "/rockyz-fzf-selection;" ..
+                awk 'match($0, /[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]*/) { print substr($0, RSTART, RLENGTH) }' {+f} > " .. vim.fn.stdpath('cache') .. "/fzf-selected-commits; " ..
                 remote_call('switches.tree_files') .. " \
             )+abort",
         }),
@@ -3681,7 +3614,7 @@ local function git_commits(from_resume)
         end,
     }
 
-    fzf(spec, git_cmd)
+    fzf(spec, git_commits_cmd)
 end
 
 function M.git_commits()
@@ -4367,6 +4300,84 @@ function M.fzf(entries, action_map, opts)
     end
 
     fzf(spec, source)
+end
+
+--------------------------------------------------------------------------------
+-- Switch finders
+--------------------------------------------------------------------------------
+
+-- Tree files: list files in given commits
+
+local function tree_files(from_resume)
+
+    local path = vim.fn.stdpath('cache') .. '/fzf-selected-commits'
+    local commits = read_file(path)
+    local commits_str = table.concat(commits, ' ')
+
+    -- Each entry: <icon> <relative_path>\t<relative_path>\t<absolute_path>
+    local cmd = " \
+        printf '%s\n' " .. commits_str .. " | \
+        while IFS= read -r treeish; do \
+            git diff-tree --no-commit-id --name-only \"$treeish\" -r; \
+        done | sort -u | \
+        while IFS= read -r relpath; do \
+            printf '%s\t%s\n' \"$relpath\" " .. fzf_ctx.origin_git_root .. "/\"$relpath\" \
+        done | " .. dressup_cmd('git_lsfiles_fullname') .. " \
+    "
+
+    local spec = {
+        ['sink*'] = files_sink,
+        options = get_fzf_opts(from_resume, {
+            '--delimiter',
+            '\t',
+            '--with-nth',
+            1,
+            '--accept-nth',
+            3,
+            '--prompt',
+            'Files in ' .. commits_str .. '> ',
+            '--header',
+            ':: ALT-O (open in browser)',
+            '--expect',
+            expect_keys({ include_defaults = true }),
+            '--preview',
+            " \
+            diff_output=$( \
+                git -C " .. fzf_ctx.origin_git_root ..
+                " -c core.quotePath=false diff --no-ext-diff --color=always -- {3} | " ..
+                diff_pager .. " \
+            ) \
+            if [[ -n $diff_output ]]; then \
+                printf '%s\n' \"$diff_output\" \
+            else \
+                " .. fzf_previewer .. " {3} \
+            fi \
+            ",
+            '--bind',
+            set_label('{1}'),
+            '--bind',
+            'alt-o:execute-silent( \
+                open-giturl file {2} \
+            )',
+        }),
+    }
+
+    fzf(spec, cmd)
+end
+
+function switches.tree_files()
+    run(tree_files)
+end
+
+-- Branch commits: list commits in the given branch
+
+function switches.branch_commits()
+    local path = vim.fn.stdpath('cache') .. '/fzf-selected-branch'
+    local branch = read_file(path)[1]
+
+    run(function(from_resume)
+        git_commits(from_resume, branch)
+    end)
 end
 
 M.switches = switches

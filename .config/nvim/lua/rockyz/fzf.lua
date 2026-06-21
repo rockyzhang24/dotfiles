@@ -49,7 +49,7 @@
 --             --     lines[1]: the pressed key (empty string for enter key if it's not specified in
 --             --             expect option)
 --             --     lines[2..]: the selected entries
---             -- If --expect is not specified:
+--             -- If --expect is not specified, this function will be invoked once enter is pressed:
 --             --     lines: selected entries
 --         end,
 --         options = get_fzf_opts(from_resume, {
@@ -232,7 +232,8 @@ local config = {
             },
             [',fC'] = 'git_commits',
             [',fh'] = 'git_stash',
-            [',ft'] = 'git_worktrees',
+            [',fw'] = 'git_worktrees',
+            [',ft'] = 'git_tags',
 
             ['<Leader>fg'] = 'buffer_tags',
             ['<Leader>fG'] = 'tags',
@@ -3538,7 +3539,7 @@ local function checkout_commit(hash)
                 notify.error({ obj.stderr, obj.stdout })
             else
                 notify.info(obj.stdout)
-                notify.info('Successfully checkout ' .. hash)
+                notify.info('Successfully checkout commit ' .. hash)
             end
         end
     end)
@@ -3925,6 +3926,61 @@ end
 
 function M.git_worktrees()
     run(git_worktrees)
+end
+
+--------------------------------------------------------------------------------
+-- Git tags
+--------------------------------------------------------------------------------
+
+local function git_tags(from_resume)
+    local root_dir = get_git_root()
+    if root_dir == nil then
+        return
+    end
+    fzf_ctx.origin_git_root = root_dir
+
+    local cmd = 'git tag --sort -version:refname'
+
+    local spec = {
+        ['sink*'] = function(lines)
+            -- ENTER to checkout the tag
+            local tag = lines[1]
+            vim.ui.input({
+                prompt = 'Checkout tag ' .. tag .. '? (y/N)',
+            }, function(input)
+                if input and input:lower() == 'y' then
+                    local obj = vim.system({ 'git', '-C', root_dir, 'checkout', tag }):wait()
+                    if obj.code ~= 0 then
+                        notify.error({ obj.stderr, obj.stdout })
+                        return
+                    end
+                    notify.info(obj.stdout)
+                    notify.info('Successfully checkout tag ' .. tag)
+                end
+            end)
+        end,
+        options = get_fzf_opts(from_resume, {
+            '--no-multi',
+            '--prompt',
+            'Git Tags> ',
+            '--header',
+            ':: ALT-O (open in browser), ALT-R (toggle raw)',
+            '--preview',
+            'git show --color=always {} | ' .. diff_pager,
+            '--bind',
+            set_label('{}'),
+            '--bind',
+            'alt-o:execute-silent( \
+                open-giturl tag {} \
+            )',
+        })
+    }
+
+    fzf(spec, cmd)
+end
+
+function M.git_tags()
+    run(git_tags)
 end
 
 --------------------------------------------------------------------------------

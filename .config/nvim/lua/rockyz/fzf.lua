@@ -235,6 +235,7 @@ local config = {
             [',fw'] = 'git_worktrees',
             [',ft'] = 'git_tags',
             [',fr'] = 'git_remotes',
+            [',fl'] = 'git_reflogs',
 
             ['<Leader>fg'] = 'buffer_tags',
             ['<Leader>fG'] = 'tags',
@@ -1713,6 +1714,8 @@ local function commands(from_resume)
             theme.name == 'default' and 'down,3' or '',
             '--bind',
             set_label('{1}'),
+            '--bind',
+            'ctrl-/:toggle-preview',
         }),
     }
 
@@ -2081,6 +2084,8 @@ local function qf_items_fzf(win_local, from_resume)
             '+{3}-/2' .. (theme.name == 'default' and ',down,45%' or ''),
             '--bind',
             set_label(tildefy_home('{2}') .. ':{3}:{4}: \\[{5}\\] {6}'),
+            '--bind',
+            'ctrl-/:change-preview-window(right,60%|hidden|)',
         }),
     }
 
@@ -2173,6 +2178,8 @@ local function qf_history_fzf(win_local, from_resume)
             'cat {2}',
             '--bind',
             set_label('{3..}'),
+            '--bind',
+            'ctrl-/:change-preview-window(right,60%|hidden|)',
         }),
     }
 
@@ -2326,6 +2333,8 @@ local function build_live_grep_opts(rg, rg_query, path, prompt, extra_opts, from
         'ctrl-l:print(ctrl-l)+' .. print_qf_title .. '+accept',
         '--bind',
         'ctrl-q:print(ctrl-q)+' .. print_qf_title .. '+accept',
+        '--bind',
+        'ctrl-/:change-preview-window(right,60%|hidden|)',
         '--preview-window',
         '+{2}-/2' .. (theme.name == 'default' and ',down,45%' or ''),
         '--preview',
@@ -2496,6 +2505,8 @@ local function grep_cur_word(from_resume)
             'ctrl-q:print(ctrl-q)+' .. print_qf_title .. '+accept',
             '--bind',
             'ctrl-l:print(ctrl-l)+' .. print_qf_title .. '+accept',
+            '--bind',
+            'ctrl-/:change-preview-window(right,60%|hidden|)',
         }),
     }
 
@@ -2729,6 +2740,8 @@ local function lsp_symbols(method, params, title, symbol_query, from_resume)
             fzf_preview_window,
             '--bind',
             set_label(tildefy_home('{3}:{4}:{5}')),
+            '--bind',
+            'ctrl-/:change-preview-window(right,60%|hidden|)',
         }),
     }
 
@@ -2875,6 +2888,8 @@ local function lsp_locations(method, title, from_resume)
             '+{4}-/2' .. (theme.name == 'default' and ',down,45%' or ''),
             '--bind',
             set_label(tildefy_home('{3}:{4}:{5}')),
+            '--bind',
+            'ctrl-/:change-preview-window(right,60%|hidden|)',
         }),
     }
 
@@ -3442,7 +3457,7 @@ local function git_branches(from_resume)
             '--preview',
             "git log --oneline --graph --date=short --color=always --pretty='format:%C(auto)%cd %h%d %s' $(" .. extract_branch_cmd .. ")",
             '--bind',
-            'ctrl-/:change-preview-window(right,50%|hidden|)+refresh-preview',
+            'ctrl-/:change-preview-window(right,60%|hidden|)+refresh-preview',
             '--bind',
             set_label('Branch: $(' .. extract_branch_cmd .. ')'),
             '--bind',
@@ -3508,15 +3523,19 @@ local function get_preview_cmd_git_commits(root_dir, range)
     return preview_cmd .. ' | ' .. diff_pager
 end
 
----@param hash_list string[]
-local function copy_hashes(hash_list)
-    local hashes = table.concat(hash_list, ' ')
-    local reg
+---Copy a list of items (e.g., list of commit hashes) into the register.
+---Items are joined into a single string using the given separator.
+---@param items string[]
+---@param sep? string
+local function copy_items(items, sep)
+    sep = sep or ' '
+    local text = table.concat(items, sep)
+
     local selection_regs = { unnamed = [[*]], unnamedplus = [[+]] }
-    reg = selection_regs[vim.o.clipboard] and selection_regs[vim.o.clipboard] or [["]]
-    vim.fn.setreg(reg, hashes)
-    vim.fn.setreg([[0]], hashes)
-    notify.info(string.format('Commit hashes copied to register %s', reg))
+    local reg = selection_regs[vim.o.clipboard] or [["]]
+    vim.fn.setreg(reg, text)
+    vim.fn.setreg([[0]], text)
+    notify.info(string.format('Copied %d item(s) to register %s', #items, reg))
 end
 
 ---@param hash string
@@ -3550,7 +3569,7 @@ end
 local function git_commits_sink(lines)
     local key = lines[1]
     if key == 'ctrl-y' then
-        copy_hashes(vim.list_slice(lines, 2))
+        copy_items(vim.list_slice(lines, 2))
     elseif key == '' then -- Enter key to checkout commit
         if #lines > 2 then
             notify.warn('To checkout a commit, select only one and do not choose multiple.')
@@ -3640,7 +3659,7 @@ local function git_buf_commits_sink(lines)
 
     if key == 'ctrl-y' then
         -- CTRL-Y to copy the commit hashes
-        copy_hashes(vim.list_slice(lines, 2))
+        copy_items(vim.list_slice(lines, 2))
     elseif key == 'alt-d' then
         -- ALT-D to diff against the commits
         for i = 2, #lines do
@@ -3859,6 +3878,8 @@ local function git_stash(from_resume)
             '--bind',
             set_label('{1}'),
             '--bind',
+            'ctrl-/:change-preview-window(right,60%|hidden|)',
+            '--bind',
             "alt-bs:execute-silent(" ..
                 remote_call('drop_stashes', '{+f}') .. " \
             )+reload( \
@@ -3919,6 +3940,8 @@ local function git_worktrees(from_resume)
             theme.name == 'default' and 'down,60%' or '',
             '--bind',
             set_label('{}'),
+            '--bind',
+            'ctrl-/:change-preview-window(right,60%|hidden|)',
         })
     }
 
@@ -4012,6 +4035,8 @@ local function git_remotes(from_resume)
             '--bind',
             set_label('{1} {2}'),
             '--bind',
+            'ctrl-/:change-preview-window(down,45%|hidden|)',
+            '--bind',
             'alt-o:execute-silent( \
                 open-giturl remote {1} \
             )',
@@ -4023,6 +4048,54 @@ end
 
 function M.git_remotes()
     run(git_remotes)
+end
+
+--------------------------------------------------------------------------------
+-- Git reflogs
+--------------------------------------------------------------------------------
+
+local function git_reflogs(from_resume)
+    local root_dir = get_git_root()
+    if root_dir == nil then
+        return
+    end
+    fzf_ctx.origin_git_root = root_dir
+
+    local cmd = 'git reflog --color=always --format="%C(blue)%gD %C(yellow)%h%C(auto)%d %gs"'
+
+    local spec = {
+        ['sink*'] = function(lines)
+            local key = lines[1]
+            if key == 'ctrl-y' then
+                -- CTRL-Y to copy reflog selectors
+                local selectors = {}
+                for i = 2, #lines do
+                    local selector = string.match(lines[i], '^%S+')
+                    selectors[#selectors + 1] = selector
+                end
+                copy_items(selectors)
+            end
+        end,
+        options = get_fzf_opts(from_resume, {
+            '--prompt',
+            'Git Reflogs> ',
+            '--header',
+            ':: CTRL-Y (copy reflog selector)',
+            '--expect',
+            expect_keys({
+                extra = { 'ctrl-y' },
+                include_defaults = false,
+            }),
+            '--preview',
+            'git show --color=always {1} | ' .. diff_pager,
+        })
+    }
+
+    fzf(spec, cmd)
+end
+
+function M.git_reflogs()
+    run(git_reflogs)
 end
 
 --------------------------------------------------------------------------------

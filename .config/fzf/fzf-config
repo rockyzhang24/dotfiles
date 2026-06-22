@@ -103,7 +103,7 @@ theme_gruvbox_light="`
 # - alt-u: move preview half page up
 # - ctrl-a: toggle all
 # - ctrl-s: toggle single selection
-# - ctrl-/: toggle preview window
+# - ctrl-/: change layout of the preview window
 # - ctrl-w: toggle wrap
 # - alt-w: toggle preview wrap
 # - alt-r: toggle raw mode
@@ -123,7 +123,7 @@ export FZF_DEFAULT_OPTS=" \
     --tmux 80%,85% \
     --bind 'ctrl-d:half-page-down,ctrl-u:half-page-up,alt-d:preview-half-page-down,`
         `alt-u:preview-half-page-up,ctrl-a:toggle-all,`
-        `ctrl-/:toggle-preview,`
+        `ctrl-/:change-preview-window(down,45%|hidden|),`
         `ctrl-w:toggle-wrap,`
         `alt-w:toggle-preview-wrap,`
         `ctrl-s:toggle,`

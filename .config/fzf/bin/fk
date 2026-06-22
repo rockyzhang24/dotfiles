@@ -23,6 +23,7 @@ opts=(
     --preview-label '[ Process Information ]'
     --bind 'start:unbind(focus)'
     --bind "ctrl-r:reload($ps_cmd)"
+    --bind 'ctrl-/:change-preview-window(right,60%|hidden|)'
 )
 
 selection="$($ps_cmd | fzf "${opts[@]}")" || exit 0

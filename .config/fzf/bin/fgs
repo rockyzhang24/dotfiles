@@ -113,6 +113,7 @@ fzf \
 --preview "$__fda {}" \
 --preview-window down,60% \
 --prompt="Git Status> " \
+--bind "ctrl-/:change-preview-window(right,60%|hidden|)+refresh-preview" \
 --bind "ctrl-l:execute-silent(
     printf '%s\n' {+} | $cleaner_str | xargs -r $git_str add --
 )+reload($reload_cmd)" \

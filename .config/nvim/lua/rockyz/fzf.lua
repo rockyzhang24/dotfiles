@@ -125,6 +125,7 @@ local mru = require('rockyz.mru')
 
 local M = {}
 local switches = {}
+local actions = {}
 
 local config = {
     theme = 'default',
@@ -236,6 +237,7 @@ local config = {
             [',ft'] = 'git_tags',
             [',fr'] = 'git_remotes',
             [',fl'] = 'git_reflogs',
+            [',fe'] = 'git_each_ref',
 
             ['<Leader>fg'] = 'buffer_tags',
             ['<Leader>fG'] = 'tags',
@@ -621,7 +623,7 @@ end
 local function remote_call(fn, arg)
     arg = arg or ''
     return string.format(
-        "nvim --server $NVIM --remote-expr \"v:lua.require(\'rockyz.fzf\').%s('%s')\"",
+        "nvim --server $NVIM --remote-expr \"v:lua.require(\'rockyz.fzf\').%s(%s)\"",
         fn,
         arg
     )
@@ -910,7 +912,7 @@ local function buffers(from_resume)
             set_label('{4..}'),
             '--bind',
             "alt-bs:execute-silent(" ..
-                remote_call('delete_buffers', '{+f}') .. " \
+                remote_call('delete_buffers', "'{+f}'") .. " \
             )+reload( \
                 cat " .. fifo_path .. " \
             )+execute-silent(" ..
@@ -1067,7 +1069,7 @@ local function bufs_and_mru(from_resume)
             set_label('{4..}'),
             '--bind',
             "alt-bs:execute-silent(" ..
-                remote_call('delete_buffers', '{+f}') .. " \
+                remote_call('delete_buffers', "'{+f}'") .. " \
             )+reload( \
                 cat " .. fifo_path .. " \
             )+execute-silent(" ..
@@ -1329,7 +1331,7 @@ local function marks(from_resume)
             set_label('{2}'),
             '--bind',
             "alt-bs:execute-silent(" ..
-                remote_call('delete_marks', '{+f}') .. " \
+                remote_call('delete_marks', "'{+f}'") .. " \
             )+reload( \
                 cat " .. fifo_path .. " \
             )+execute-silent(" ..
@@ -1453,7 +1455,7 @@ local function tabs(from_resume)
             set_label(tildefy_home('{1}')),
             '--bind',
             "alt-bs:execute-silent(" ..
-                remote_call('close_tabs', '{+f}') .. " \
+                remote_call('close_tabs', "'{+f}'") .. " \
             )+reload( \
                 cat " .. fifo_path .. " \
             )+execute-silent(" ..
@@ -1541,7 +1543,7 @@ local function args(from_resume)
             set_label('{2}'),
             '--bind',
             "alt-bs:execute-silent(" ..
-                remote_call('delete_args', '{+f}') .. " \
+                remote_call('delete_args', "'{+f}'") .. " \
             )+reload( \
                 cat " .. fifo_path .. " \
             )+execute-silent(" ..
@@ -3325,19 +3327,19 @@ local function git_status(from_resume)
             set_label('{1}'),
             '--bind',
             "ctrl-l:execute-silent(" ..
-                remote_call('git_stage', '{+f}') .. " \
+                remote_call('git_stage', "'{+f}'") .. " \
             )+reload(" ..
                 git_status_cmd .. " \
             )",
             '--bind',
             "ctrl-h:execute-silent(" ..
-                remote_call('git_unstage', '{+f}') .. " \
+                remote_call('git_unstage', "'{+f}'") .. " \
             )+reload(" ..
                 git_status_cmd .. " \
             )",
             '--bind',
             "ctrl-alt-r:execute-silent(" ..
-                remote_call('git_reset', '{+f}') .. " \
+                remote_call('git_reset', "'{+f}'") .. " \
             )+reload(" ..
                 git_status_cmd .. " \
             )",
@@ -3462,7 +3464,7 @@ local function git_branches(from_resume)
             set_label('Branch: $(' .. extract_branch_cmd .. ')'),
             '--bind',
             "alt-bs:execute-silent(" ..
-                remote_call('delete_git_branches', '{+f}') .. " \
+                remote_call('delete_git_branches', "'{+f}'") .. " \
             )+reload(" ..
                 git_branch_cmd .. " \
             )",
@@ -3881,7 +3883,7 @@ local function git_stash(from_resume)
             'ctrl-/:change-preview-window(right,60%|hidden|)',
             '--bind',
             "alt-bs:execute-silent(" ..
-                remote_call('drop_stashes', '{+f}') .. " \
+                remote_call('drop_stashes', "'{+f}'") .. " \
             )+reload( \
                 cat " .. fifo_path .. " \
             )+execute-silent(" ..
@@ -4112,6 +4114,116 @@ end
 
 function M.git_reflogs()
     run(git_reflogs)
+end
+
+--------------------------------------------------------------------------------
+-- Git each refs
+--------------------------------------------------------------------------------
+
+local function git_each_ref(from_resume)
+    local root_dir = get_git_root()
+    if root_dir == nil then
+        return
+    end
+    fzf_ctx.origin_git_root = root_dir
+
+    local ref_format = [[--format=$'%(if:equals=refs/remotes)%(refname:rstrip=-2)%(then)%(color:magenta)remote-branch%(else)%(if:equals=refs/heads)%(refname:rstrip=-2)%(then)%(color:brightgreen)branch%(else)%(if:equals=refs/tags)%(refname:rstrip=-2)%(then)%(color:brightcyan)tag%(else)%(if:equals=refs/stash)%(refname:rstrip=-2)%(then)%(color:brightred)stash%(else)%(color:white)%(refname:rstrip=-2)%(end)%(end)%(end)%(end)\t%(color:yellow)%(refname:short) %(color:green)(%(creatordate:relative))\t%(color:blue)%(subject)%(color:reset)' ]]
+
+    local cmd_opts = table.concat({
+        "--sort=-creatordate",
+        "--sort=-HEAD",
+        "--color=always",
+        ref_format,
+    }, " ")
+    local local_refs_cmd = "git for-each-ref --exclude='refs/remotes' " .. cmd_opts .. " | column -ts$'\\t'"
+    local all_refs_cmd = "git for-each-ref " .. cmd_opts .. " | column -ts$'\\t'"
+
+    local spec = {
+        ['sink*'] = function(lines)
+            local key = lines[1]
+            if key == 'ctrl-y' then
+                -- CTRL-Y to copy refs
+                copy_items(vim.list_slice(lines, 2))
+            elseif key == 'ctrl-alt-y' then
+                -- CTRL-ALT-Y to copy refs without remote prefix
+                local refs = {}
+                for i = 2, #lines do
+                    local ref = string.gsub(lines[i], '^[^/]*/', '')
+                    refs[#refs + 1] = ref
+                end
+                copy_items(refs)
+            end
+        end,
+        options = get_fzf_opts(from_resume, {
+            '--tiebreak',
+            'begin',
+            '--no-hscroll',
+            '--accept-nth',
+            2, -- print only refs
+            '--prompt',
+            'Git Each Ref> ',
+            '--header',
+            ':: ALT-A (toggle local/all), ALT-E (examine in tabpage), ALT-O (open in browser)\n' ..
+            ':: CTRL-Y (copy refs), CTRL-ALT-Y (copy refs without remote prefix)',
+            '--expect',
+            expect_keys({
+                extra = { 'ctrl-y', 'ctrl-alt-y' },
+                include_defaults = false,
+            }),
+            '--preview-window',
+            'down,40%',
+            '--preview',
+            "git log --oneline --graph --date=short --color=always --pretty='format:%C(auto)%cd %h%d %s' {2} --",
+            '--bind',
+            'ctrl-/:change-preview-window(down,70%|right,60%|hidden|)',
+            '--bind',
+            'alt-a:transform:case "$FZF_PROMPT" in \
+                *"[ALL]"*) echo "change-prompt(Git Each Ref> )+reload:' .. local_refs_cmd .. '" ;; \
+                *) echo "change-prompt(Git Each Ref [ALL]> )+reload:' .. all_refs_cmd .. '" ;; \
+            esac',
+            '--bind',
+            "alt-e:execute-silent(" ..
+                remote_call('actions.show_ref', '{2}') .. " \
+            )",
+            '--bind',
+            "alt-o:execute-silent( \
+                open-giturl {1} {2} \
+            )",
+        })
+    }
+
+    fzf(spec, local_refs_cmd)
+end
+
+function M.git_each_ref()
+    run(git_each_ref)
+end
+
+---Open the output of `git show <ref>` in a new tabpage
+---@param ref string Git reference (branch, tag, commit, stash, etc)
+function actions.show_ref(ref)
+    vim.system({ 'git', 'show', ref }, { text = true }, function(obj)
+        if obj.code ~= 0 then
+            notify.error({ obj.stderr, obj.stdout })
+            return
+        end
+
+        vim.schedule(function()
+            vim.cmd('tabnew')
+
+            local buf = vim.api.nvim_get_current_buf()
+            vim.bo[buf].buftype = 'nofile'
+            vim.bo[buf].bufhidden = 'wipe'
+            vim.bo[buf].modifiable = true
+            vim.bo[buf].filetype = 'git' -- or 'diff'
+
+            local lines = vim.split(obj.stdout, '\n', { trimempty = true, plain = true })
+
+            vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+            vim.bo[buf].modifiable = false
+            vim.api.nvim_buf_set_name(buf, 'git show with ref: ' .. ref)
+        end)
+    end)
 end
 
 --------------------------------------------------------------------------------
@@ -4575,5 +4687,6 @@ function switches.branch_commits()
     end)
 end
 
+M.actions = actions
 M.switches = switches
 return M

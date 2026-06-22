@@ -347,7 +347,7 @@ _fzf_git_each_ref() {
     --no-hscroll \
     --bind 'ctrl-/:change-preview-window(down,70%|hidden|)' \
     --bind "ctrl-o:execute-silent:bash \"$__fzf_git\" --list {1} {2}" \
-    --bind "alt-e:execute:${EDITOR:-vim} <(git show {2}) < /dev/tty > /dev/tty" \
+    --bind "alt-e:execute:git show {2} | ${EDITOR:-vim} -" \
     --bind "alt-a:change-prompt(🍀 Every ref> )+reload:bash \"$__fzf_git\" --list all-refs" \
     --bind "alt-enter:become:printf '%s\n' {+2} | sed 's@[^/]*/@@'" \
     --preview "git log --oneline --graph --date=short --color=$(__fzf_git_color .) --pretty='format:%C(auto)%cd %h%d %s' {2} --" \

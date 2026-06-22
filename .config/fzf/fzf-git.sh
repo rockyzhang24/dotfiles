@@ -360,8 +360,13 @@ _fzf_git_worktrees() {
   _fzf_git_check || return
   git worktree list | _fzf_git_fzf \
     --prompt '🌴 Worktrees> ' \
-    --header ':: CTRL-X (remove worktree)' \
-    --bind 'ctrl-x:reload(git worktree remove {1} > /dev/null; git worktree list)' \
+    --header ':: CTRL-X (remove worktrees)' \
+    --bind "ctrl-x:reload(
+      for worktree in {+1}; do
+        git worktree remove \$worktree
+      done
+      git worktree list
+    )" \
     --preview "
       git -c color.status=$(__fzf_git_color .) -C {1} status --short --branch
       echo

@@ -234,6 +234,7 @@ local config = {
             [',fh'] = 'git_stash',
             [',fw'] = 'git_worktrees',
             [',ft'] = 'git_tags',
+            [',fr'] = 'git_remotes',
 
             ['<Leader>fg'] = 'buffer_tags',
             ['<Leader>fG'] = 'tags',
@@ -3981,6 +3982,47 @@ end
 
 function M.git_tags()
     run(git_tags)
+end
+
+--------------------------------------------------------------------------------
+-- Git remotes
+--------------------------------------------------------------------------------
+
+local function git_remotes(from_resume)
+    local root_dir = get_git_root()
+    if root_dir == nil then
+        return
+    end
+    fzf_ctx.origin_git_root = root_dir
+
+    local cmd = 'git remote -v | awk \'{print $1 "\t" $2}\' | uniq'
+
+    local spec = {
+        options = get_fzf_opts(from_resume, {
+            '--tac',
+            '--no-multi',
+            '--prompt',
+            'Git Remotes> ',
+            '--header',
+            ':: ALT-O (open in browser)',
+            '--preview',
+            "git log --oneline --graph --date=short --color=always --pretty='format:%C(auto)%cd %h%d %s' {1}/$(git rev-parse --abbrev-ref HEAD)",
+            '--preview-window',
+            'right,70%',
+            '--bind',
+            set_label('{1} {2}'),
+            '--bind',
+            'alt-o:execute-silent( \
+                open-giturl remote {1} \
+            )',
+        })
+    }
+
+    fzf(spec, cmd)
+end
+
+function M.git_remotes()
+    run(git_remotes)
 end
 
 --------------------------------------------------------------------------------

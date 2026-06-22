@@ -4018,16 +4018,32 @@ local function git_remotes(from_resume)
     end
     fzf_ctx.origin_git_root = root_dir
 
-    local cmd = 'git remote -v | awk \'{print $1 "\t" $2}\' | uniq'
+    local cmd = 'git remote -v | awk \'{print $1"\t"$2}\' | uniq'
 
     local spec = {
+        ['sink*'] = function(lines)
+            local key = lines[1]
+            if key == 'ctrl-y' and #lines == 2 then
+                -- CTRL-Y to copy remote name
+                local fields = vim.split(lines[2], '\t', { plain = true })
+                local remote_name = fields[1]
+                copy_items({ remote_name })
+            end
+        end,
         options = get_fzf_opts(from_resume, {
+            '--delimiter',
+            '\t',
             '--tac',
             '--no-multi',
             '--prompt',
             'Git Remotes> ',
             '--header',
-            ':: ALT-O (open in browser)',
+            ':: ALT-O (open in browser), CTRL-Y (copy remote name)',
+            '--expect',
+            expect_keys({
+                extra = { 'ctrl-y' },
+                include_defaults = false,
+            }),
             '--preview',
             "git log --oneline --graph --date=short --color=always --pretty='format:%C(auto)%cd %h%d %s' {1}/$(git rev-parse --abbrev-ref HEAD)",
             '--preview-window',

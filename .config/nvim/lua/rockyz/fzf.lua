@@ -3914,36 +3914,61 @@ local function git_worktrees(from_resume)
 
     local spec = {
         ['sink*'] = function(lines)
-            local path = lines[1]:match('^(.*) %x+ %[[^%]]+%]$'):gsub('^%s+', ''):gsub('%s+$', '')
-            if path == vim.uv.cwd() then
-                notify.warn('[FZF] CWD already set to ' .. path)
+            local key = lines[1]
+            if #lines > 2 then
                 return
             end
-            path = vim.fn.fnamemodify(path, ':p')
-            if vim.uv.fs_stat(path) then
-                -- Instead of changing cwd globally, we can change it locally: lcd (window local) or
-                -- tcd (tab local)
-                local cmd = 'cd'
-                vim.cmd(cmd .. ' ' .. path)
-                notify.info('[FZF] CWD set to ' .. path)
-            else
-                notify.warn('[FZF] Unable to set cwd to ' .. path .. ', directory is not accessible.')
+            local path = lines[2]:match('^(.*) %x+ %[[^%]]+%]$'):gsub('^%s+', ''):gsub('%s+$', '')
+            if key == '' then
+                -- ENTER to cd to the path
+                if path == vim.uv.cwd() then
+                    notify.warn('[FZF] CWD already set to ' .. path)
+                    return
+                end
+                path = vim.fn.fnamemodify(path, ':p')
+                if vim.uv.fs_stat(path) then
+                    -- Instead of changing cwd globally, we can change it locally: lcd (window local) or
+                    -- tcd (tab local)
+                    local cmd = 'cd'
+                    vim.cmd(cmd .. ' ' .. path)
+                    notify.info('[FZF] CWD set to ' .. path)
+                else
+                    notify.warn('[FZF] Unable to set cwd to ' .. path .. ', directory is not accessible.')
+                end
+            elseif key == 'ctrl-y' then
+                -- CTRL-Y to copy the path
+                copy_items({ path })
             end
         end,
         options = get_fzf_opts(from_resume, {
-            '--no-multi',
             '--prompt',
             'Git Worktrees> ',
             '--header',
-            ':: ENTER (cd to path)\n:: CWD: ' .. vim.uv.cwd(),
+            ':: ENTER (cd to path), ALT-BS (remove worktrees), CTRL-Y (copy path)\n' ..
+            ':: CWD: ' .. vim.uv.cwd(),
+            '--expect',
+            expect_keys({
+                extra = { 'ctrl-y' },
+                include_defaults = false,
+            }),
             '--preview',
-            'git log --color --pretty=format:"%C(yellow)%h%Creset %Cgreen(%><(12)%cr%><|(12))%Creset %s %C(blue)<%an>%Creset" {-2}',
+            "git -c color.status=always -C {1} status --short --branch; \
+            echo; \
+            git log --oneline --graph --date=short --color=always --pretty='format:%C(auto)%cd %h%d %s' {2} -- \
+            ",
             '--preview-window',
             theme.name == 'default' and 'down,60%' or '',
             '--bind',
             set_label('{}'),
             '--bind',
             'ctrl-/:change-preview-window(right,60%|hidden|)',
+            '--bind',
+            "alt-bs:reload( \
+                for worktree in {+1}; do \
+                    git worktree remove \"$worktree\" \
+                done \
+                git worktree list \
+            )",
         })
     }
 

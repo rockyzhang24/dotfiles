@@ -128,54 +128,25 @@ local switches = {}
 local actions = {}
 
 local config = {
-    theme = 'default',
-
-    themes = {
-        -- Default theme
-        default = {
-            name = 'default',
-            layout = {
-                window = {
-                    width = 0.8,
-                    height = 0.85,
-                },
+    theme =  {
+        layout = {
+            window = {
+                width = 0.8,
+                height = 0.85,
             },
-            border = 'rounded',
-            preview_window = 'nohidden',
-            label_pos = 'preview',
-            -- Make the layout for vim.ui.select
-            make_select_layout = function(n)
-                return {
-                    window = {
-                        width = 0.4,
-                        height = math.floor(math.min(vim.o.lines * 0.8 - 10, n + 4) + 0.5),
-                    },
-                }
-            end,
         },
-        -- Ivy theme
-        ivy = {
-            name = 'ivy',
-            layout = {
+        border = 'rounded',
+        preview_window = 'nohidden',
+        label_pos = 'preview',
+        -- Make the layout for vim.ui.select
+        make_select_layout = function(n)
+            return {
                 window = {
-                    width = 1,
-                    height = 0.4,
-                    yoffset = 1.1,
+                    width = 0.4,
+                    height = math.floor(math.min(vim.o.lines * 0.8 - 10, n + 4) + 0.5),
                 },
-            },
-            border = 'top',
-            preview_window = 'hidden,border-left',
-            label_pos = 'border',
-            make_select_layout = function(n)
-                return {
-                    window = {
-                        width = 1,
-                        height = math.floor(math.min(vim.o.lines * 0.8 - 10, n + 3) + 0.5),
-                        yoffset = 1.1,
-                    },
-                }
-            end,
-        },
+            }
+        end,
     },
 
     keymaps = {
@@ -252,7 +223,7 @@ local config = {
 }
 
 local open_file_keymaps = config.keymaps.open_file
-local theme = config.themes[config.theme]
+local theme = config.theme
 vim.g.fzf_layout = theme.layout
 
 -- Context captured when fzf is launched
@@ -1713,7 +1684,7 @@ local function commands(from_resume)
             '--preview',
             'echo {3..}',
             '--preview-window',
-            theme.name == 'default' and 'down,3' or '',
+            'down,3',
             '--bind',
             set_label('{1}'),
             '--bind',
@@ -2083,7 +2054,7 @@ local function qf_items_fzf(win_local, from_resume)
             '--preview',
             bat_prefix .. ' --highlight-line {3} -- {2}',
             '--preview-window',
-            '+{3}-/2' .. (theme.name == 'default' and ',down,45%' or ''),
+            '+{3}-/2,down,45%',
             '--bind',
             set_label(tildefy_home('{2}') .. ':{3}:{4}: \\[{5}\\] {6}'),
             '--bind',
@@ -2175,7 +2146,7 @@ local function qf_history_fzf(win_local, from_resume)
             '--header',
             ':: ENTER (switch to selected list)',
             '--preview-window',
-            theme.name == 'default' and 'down,45%' or '',
+            'down,45%',
             '--preview',
             'cat {2}',
             '--bind',
@@ -2338,7 +2309,7 @@ local function build_live_grep_opts(rg, rg_query, path, prompt, extra_opts, from
         '--bind',
         'ctrl-/:change-preview-window(right,60%|hidden|)',
         '--preview-window',
-        '+{2}-/2' .. (theme.name == 'default' and ',down,45%' or ''),
+        '+{2}-/2,down,45%',
         '--preview',
         bat_prefix .. ' --highlight-line {2} -- {1}',
     })
@@ -2494,7 +2465,7 @@ local function grep_cur_word(from_resume)
             '--prompt',
             'Word [Grep]> ',
             '--preview-window',
-            '+{2}-/2' .. (theme.name == 'default' and ',down,45%' or ''),
+            '+{2}-/2,down,45%',
             '--preview',
             bat_prefix .. ' --highlight-line {2} -- {1}',
             '--header',
@@ -2680,7 +2651,7 @@ local function lsp_symbols(method, params, title, symbol_query, from_resume)
     local fzf_preview_window = '+{4}-/2'
     if symbol_query then
         fzf_header = ':: Query: ' .. (symbol_query == '' and '[empty]' or ansi_string(symbol_query, 'FzfRgQuery')) .. '\n' .. fzf_header
-        fzf_preview_window = fzf_preview_window .. (theme.name == 'default' and ',down,45%' or '')
+        fzf_preview_window = fzf_preview_window .. ',down,45%'
     end
 
     local spec = {
@@ -2887,7 +2858,7 @@ local function lsp_locations(method, title, from_resume)
             '--preview',
             bat_prefix .. ' --highlight-line {4} -- {3}',
             '--preview-window',
-            '+{4}-/2' .. (theme.name == 'default' and ',down,45%' or ''),
+            '+{4}-/2,down,45%',
             '--bind',
             set_label(tildefy_home('{3}:{4}:{5}')),
             '--bind',
@@ -3385,7 +3356,7 @@ local function git_branches(from_resume)
                 include_defaults = false,
             }),
             '--preview-window',
-            theme.name == 'default' and 'down,60%' or '',
+            'down,60%',
             '--preview',
             "git log --oneline --graph --date=short --color=always --pretty='format:%C(auto)%cd %h%d %s' $(" .. extract_branch_cmd .. ")",
             '--bind',
@@ -3547,7 +3518,7 @@ local function git_commits(from_resume, branch)
                 include_defaults = false,
             }),
             '--preview-window',
-            theme.name == 'default' and 'down,60%' or '',
+            'down,60%',
             '--preview',
             get_preview_cmd_git_commits(root_dir),
             '--bind',
@@ -3643,7 +3614,7 @@ local function git_buf_commits(from_resume)
                 include_defaults = false,
             }),
             '--preview-window',
-            theme.name == 'default' and 'down,60%' or '',
+            'down,60%',
             '--preview',
             preview_cmd,
             '--bind',
@@ -3778,7 +3749,7 @@ local function git_stash(from_resume)
             '--preview',
             'git --no-pager stash show --patch --color {1} | ' .. diff_pager,
             '--preview-window',
-            theme.name == 'default' and 'down,60%' or '',
+            'down,60%',
             '--bind',
             set_label('{1}'),
             '--bind',
@@ -3859,7 +3830,7 @@ local function git_worktrees(from_resume)
             git log --oneline --graph --date=short --color=always --pretty='format:%C(auto)%cd %h%d %s' {2} -- \
             ",
             '--preview-window',
-            theme.name == 'default' and 'down,60%' or '',
+            'down,60%',
             '--bind',
             set_label('{}'),
             '--bind',

@@ -3201,82 +3201,12 @@ end
 -- Git status
 --------------------------------------------------------------------------------
 
----Run a git command for selected entries.
----@param selection_file string Path to a temporary file containing the selected fzf entries
----@param cmd string Git command, e.g. 'add' or 'reset'
-local function git_exec(selection_file, cmd)
-
-    local lines = read_file(selection_file)
-
-    local filenames = {}
-
-    for _, line in ipairs(lines) do
-        local fields = vim.split(line, '\t', { plain = true })
-        local file = fields[2]
-        if file and file ~= '' then
-            table.insert(filenames, file)
-        end
-    end
-
-    vim.system(
-        {
-            'bash',
-            '-c',
-            string.format(
-                'git -C %s %s -- %s',
-                fzf_ctx.origin_git_root,
-                cmd,
-                table.concat(filenames, ' ')
-            ),
-        },
-        {},
-        function(obj)
-            if obj.code ~= 0 then
-                notify.error({ obj.stderr, obj.stdout })
-            end
-        end
-    )
-end
-
-function M.git_stage(selection_file)
-    git_exec(selection_file, 'add')
-end
-
-function M.git_unstage(selection_file)
-    git_exec(selection_file, 'reset')
-end
-
-function M.git_reset(selection_file)
-    local git_root = fzf_ctx.origin_git_root
-
-    local lines = read_file(selection_file)
-
-    for _, line in ipairs(lines) do
-        local fields = vim.split(line, '\t', { plain = true })
-        local file = fields[2]
-        local is_untracked = fields[1]:match('^%[%?%?%]')
-        local cmd = is_untracked and string.format('git -C %s clean -f %s', git_root, file)
-            or string.format('git -C %s checkout HEAD -- %s', git_root, file)
-        vim.system({ 'bash', '-c', cmd }, {}, function(obj)
-            if obj.code == 0 then
-                vim.schedule(function()
-                    vim.cmd.checktime()
-                end)
-            else
-                notify.error({ obj.stderr, obj.stdout })
-            end
-        end)
-    end
-end
-
 local function git_status(from_resume)
     local root_dir = get_git_root()
     if root_dir == nil then
         return
     end
     fzf_ctx.origin_git_root = root_dir
-
-    local git = 'git -C ' .. root_dir
 
     -- Fzf entry is [<staged><unstaged>] <git status text>\t<filename> with \t as delimiter.
     -- {1} is displayed in fzf and it could be one of
@@ -3308,38 +3238,44 @@ local function git_status(from_resume)
             --   file: git diff --no-index /dev/null <file>
             -- 2) Unstaged: git diff <file>
             -- 3) Staged: git diff --staged <file>
-            'git_status=$(' .. git .. ' status -s -uall -- {2}) \
+            'git_status=$(git -C ' .. root_dir .. ' status -s -uall -- {2}) \
             if (echo $git_status | grep "^??") &>/dev/null; then \
                 if [[ -d {2} ]]; then \
                     tree -C {2} \
                 else \
-                    ' .. git .. ' diff --no-index -- /dev/null {2} | ' .. diff_pager .. ' \
+                    git -C ' .. root_dir .. ' diff --no-index -- /dev/null {2} | ' .. diff_pager .. ' \
                 fi \
             else \
-                diff_output=$(' .. git .. ' diff -- {2}) \
+                diff_output=$(git -C ' .. root_dir .. ' diff -- {2}) \
                 if [[ -n $diff_output ]]; then \
                     echo $diff_output | ' .. diff_pager .. ' \
                 else \
-                    ' .. git .. ' diff --staged -- {2} | ' .. diff_pager .. ' \
+                    git -C ' .. root_dir .. ' diff --staged -- {2} | ' .. diff_pager .. ' \
                 fi \
             fi',
             '--bind',
             set_label('{1}'),
             '--bind',
-            "ctrl-l:execute-silent(" ..
-                remote_call('git_stage', "'{+f}'") .. " \
+            "ctrl-l:execute-silent( \
+                git -C " .. root_dir .. " add {+2} > /dev/null \
             )+reload(" ..
                 git_status_cmd .. " \
             )",
             '--bind',
-            "ctrl-h:execute-silent(" ..
-                remote_call('git_unstage', "'{+f}'") .. " \
+            "ctrl-h:execute-silent( \
+                git -C " .. root_dir .. " reset {+2} > /dev/null \
             )+reload(" ..
                 git_status_cmd .. " \
             )",
             '--bind',
-            "ctrl-alt-r:execute-silent(" ..
-                remote_call('git_reset', "'{+f}'") .. " \
+            "ctrl-alt-r:execute-silent( \
+                cat {+f} | \
+                while IFS=$'\''\t'\'' read -r left file; do \
+                    case \"$left\" in \
+                        \"[??]\"*) git -C " .. root_dir .. " clean -f -- \"$file\" ;; \
+                        *)         git -C " .. root_dir .. " checkout HEAD -- \"$file\" ;; \
+                    esac \
+                done \
             )+reload(" ..
                 git_status_cmd .. " \
             )",
@@ -3357,42 +3293,19 @@ end
 -- Git branches
 --------------------------------------------------------------------------------
 
----@param selection_file string Path to a temporary file containing the selected fzf entries
-function M.delete_git_branches(selection_file)
-    local root_dir = fzf_ctx.origin_git_root
+---Copy a list of items (e.g., list of commit hashes) into the register.
+---Items are joined into a single string using the given separator.
+---@param items string[]
+---@param sep? string
+local function copy_items(items, sep)
+    sep = sep or ' '
+    local text = table.concat(items, sep)
 
-    local git_branch_del_cmd = { 'git', '-C', root_dir, 'branch', '--delete' }
-    local git_cur_branch_cmd = { 'git', '-C', root_dir, 'rev-parse', '--abbrev-ref', 'HEAD' }
-
-    local branch_obj = vim.system(git_cur_branch_cmd, { text = true }):wait()
-    if branch_obj and branch_obj.code ~= 0 then
-        return
-    end
-    local cur_branch = vim.trim(branch_obj.stdout)
-
-    local target_branches = {}
-
-    local lines = read_file(selection_file)
-
-    for _, line in ipairs(lines) do
-        local branch = line:match('[^%s%*]+')
-        if branch and branch ~= cur_branch then
-            table.insert(target_branches, branch)
-        else
-            notify.info("[FZF] Can't delete the active branch")
-        end
-    end
-
-    if vim.tbl_isempty(target_branches) then
-        return
-    end
-
-    local cmd = vim.list_extend(vim.deepcopy(git_branch_del_cmd), target_branches)
-    vim.system(cmd, { text = true }, function(obj)
-        if obj.code ~= 0 then
-            notify.error({ obj.stderr, obj.stdout })
-        end
-    end)
+    local selection_regs = { unnamed = [[*]], unnamedplus = [[+]] }
+    local reg = selection_regs[vim.o.clipboard] or [["]]
+    vim.fn.setreg(reg, text)
+    vim.fn.setreg([[0]], text)
+    notify.info(string.format('Copied %d item(s) to register %s', #items, reg))
 end
 
 local function git_branches(from_resume)
@@ -3420,40 +3333,57 @@ local function git_branches(from_resume)
     '
     local spec = {
         ['sink*'] = function(lines)
-            -- ENTER to checkout the branch
-            if #lines > 1 then
-                notify.warn('[FZF] Multi-select not supported for checkout')
-                return
-            end
-            local cmd = { 'git', '-C', root_dir, 'switch' }
-            local branch = lines[1]:match('[^ ]+')
-            -- Do nothing of the selected branch is the currently active
-            if branch:find('%*') ~= nil then
-                notify.info('[FZF] This branch is already the active one')
-                return
-            end
-            if branch:find('^remotes/') then
-                branch = branch:match('remotes/.-/(.-)$')
-            end
-            table.insert(cmd, branch)
-            notify.info('Switching to ' .. branch .. ' branch...')
-            vim.system(cmd, { text = true }, function(obj)
-                if obj.code ~= 0 then
-                    notify.error({ obj.stderr, obj.stdout })
+            local key = lines[1]
+
+            if key == '' then
+                -- ENTER to checkout the branch
+                if #lines > 2 then
+                    notify.warn('[FZF] Multi-select not supported for checkout')
                     return
                 end
-                vim.schedule(function()
-                    vim.cmd('checktime')
-                    notify.info('Switched to ' .. branch .. ' branch.')
+                local cmd = { 'git', '-C', root_dir, 'switch' }
+                local branch = lines[2]:match('[^ ]+')
+                -- Do nothing of the selected branch is the currently active
+                if branch:find('%*') ~= nil then
+                    notify.info('[FZF] This branch is already the active one')
+                    return
+                end
+                if branch:find('^remotes/') then
+                    branch = branch:match('remotes/.-/(.-)$')
+                end
+                table.insert(cmd, branch)
+                notify.info('Switching to ' .. branch .. ' branch...')
+                vim.system(cmd, { text = true }, function(obj)
+                    if obj.code ~= 0 then
+                        notify.error({ obj.stderr, obj.stdout })
+                        return
+                    end
+                    vim.schedule(function()
+                        vim.cmd('checktime')
+                        notify.info('Switched to ' .. branch .. ' branch.')
+                    end)
                 end)
-            end)
+            elseif key == 'ctrl-y' then
+                -- CTRL-Y to copy branch names
+                local branches = {}
+                for i = 2, #lines do
+                    local branch = string.match(lines[i], '^%s*%*?%s*(.-)%s*%(')
+                    branches[#branches + 1] = branch
+                end
+                copy_items(branches)
+            end
         end,
         options = get_fzf_opts(from_resume, {
             '--prompt',
             'Git Branches> ',
             '--header',
             ':: ENTER (checkout), ALT-BS (delete branches), ALT-O (open in browser)\n' ..
-            ':: ALT-C (list commits), ALT-A (toggle local/all branches)',
+            ':: ALT-C (list commits), ALT-A (toggle local/all branches), CTRL-Y (copy branch name)',
+            '--expect',
+            expect_keys({
+                extra = { 'ctrl-y' },
+                include_defaults = false,
+            }),
             '--preview-window',
             theme.name == 'default' and 'down,60%' or '',
             '--preview',
@@ -3463,8 +3393,10 @@ local function git_branches(from_resume)
             '--bind',
             set_label('Branch: $(' .. extract_branch_cmd .. ')'),
             '--bind',
-            "alt-bs:execute-silent(" ..
-                remote_call('delete_git_branches', "'{+f}'") .. " \
+            "alt-bs:execute-silent( \
+                cat {+f} | \
+                awk '$1 != \"*\" { print $1 }' | \
+                xargs -r git branch --delete \
             )+reload(" ..
                 git_branch_cmd .. " \
             )",
@@ -3525,25 +3457,9 @@ local function get_preview_cmd_git_commits(root_dir, range)
     return preview_cmd .. ' | ' .. diff_pager
 end
 
----Copy a list of items (e.g., list of commit hashes) into the register.
----Items are joined into a single string using the given separator.
----@param items string[]
----@param sep? string
-local function copy_items(items, sep)
-    sep = sep or ' '
-    local text = table.concat(items, sep)
-
-    local selection_regs = { unnamed = [[*]], unnamedplus = [[+]] }
-    local reg = selection_regs[vim.o.clipboard] or [["]]
-    vim.fn.setreg(reg, text)
-    vim.fn.setreg([[0]], text)
-    notify.info(string.format('Copied %d item(s) to register %s', #items, reg))
-end
-
 ---@param hash string
 local function checkout_commit(hash)
-    local root_dir = fzf_ctx.origin_git_root
-    local hash_obj = vim.system({ 'git', '-C', root_dir, 'rev-parse', '--short', 'HEAD' }):wait()
+    local hash_obj = vim.system({ 'git', 'rev-parse', '--short', 'HEAD' }):wait()
     if hash_obj.code ~= 0 then
         notify.error({ hash_obj.stderr, hash_obj.stdout })
         return
@@ -3556,7 +3472,7 @@ local function checkout_commit(hash)
         prompt = 'Checkout commit ' .. hash .. '? (y/N)',
     }, function(input)
         if input and input:lower() == 'y' then
-            local obj = vim.system({ 'git', '-C', root_dir, 'checkout', hash }):wait()
+            local obj = vim.system({ 'git', 'checkout', hash }):wait()
             if obj.code ~= 0 then
                 notify.error({ obj.stderr, obj.stdout })
             else
@@ -3570,9 +3486,21 @@ end
 ---@param lines string[]
 local function git_commits_sink(lines)
     local key = lines[1]
+
     if key == 'ctrl-y' then
+        -- CTRL-Y to copy the commit hashes
         copy_items(vim.list_slice(lines, 2))
-    elseif key == '' then -- Enter key to checkout commit
+    elseif key == 'alt-d' then
+        -- ALT-D to diff against the commits (for buffer commits only)
+        for i = 2, #lines do
+            local hash = lines[i]
+            if hash and hash ~= '' then
+                vim.cmd('tab sb')
+                vim.cmd('Gdiffsplit ' .. hash)
+            end
+        end
+    elseif key == '' then
+        -- ENTER to checkout the commit
         if #lines > 2 then
             notify.warn('To checkout a commit, select only one and do not choose multiple.')
             return
@@ -3655,32 +3583,6 @@ end
 -- Git commit (buffer)
 --------------------------------------------------------------------------------
 
----@param lines string[]
-local function git_buf_commits_sink(lines)
-    local key = lines[1]
-
-    if key == 'ctrl-y' then
-        -- CTRL-Y to copy the commit hashes
-        copy_items(vim.list_slice(lines, 2))
-    elseif key == 'alt-d' then
-        -- ALT-D to diff against the commits
-        for i = 2, #lines do
-            local hash = lines[i]
-            if hash and hash ~= '' then
-                vim.cmd('tab sb')
-                vim.cmd('Gdiffsplit ' .. hash)
-            end
-        end
-    elseif key == 'enter' then
-        -- ENTER to checkout the commit
-        if #lines > 2 then
-            notify.warn('To checkout a commit, select only one and do not choose multiple.')
-            return
-        end
-        checkout_commit(lines[2])
-    end
-end
-
 local function git_buf_commits(from_resume)
     local root_dir = get_git_root()
     if root_dir == nil then
@@ -3722,7 +3624,7 @@ local function git_buf_commits(from_resume)
     end
 
     local spec = {
-        ['sink*'] = git_buf_commits_sink,
+        ['sink*'] = git_commits_sink,
         options = get_fzf_opts(from_resume, {
             '--delimiter',
             '\t',
@@ -3737,7 +3639,7 @@ local function git_buf_commits(from_resume)
             ':: ALT-O (open in browser)',
             '--expect',
             expect_keys({
-                extra = { 'alt-d', 'ctrl-y', 'enter' },
+                extra = { 'alt-d', 'ctrl-y' },
                 include_defaults = false,
             }),
             '--preview-window',
@@ -3963,10 +3865,11 @@ local function git_worktrees(from_resume)
             '--bind',
             'ctrl-/:change-preview-window(right,60%|hidden|)',
             '--bind',
-            "alt-bs:reload( \
+            "alt-bs:execute-silent( \
                 for worktree in {+1}; do \
                     git worktree remove \"$worktree\" \
                 done \
+            )+reload( \
                 git worktree list \
             )",
         })

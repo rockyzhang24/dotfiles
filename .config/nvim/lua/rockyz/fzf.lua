@@ -772,7 +772,7 @@ end
 --------------------------------------------------------------------------------
 
 ---@param selection_file string Path to a temporary file containing the selected fzf entries
-function M.delete_buffers(selection_file)
+function actions.delete_buffers(selection_file)
     local lines = read_file(selection_file)
 
     for _, line in ipairs(lines) do
@@ -883,7 +883,7 @@ local function buffers(from_resume)
             set_label('{4..}'),
             '--bind',
             "alt-bs:execute-silent(" ..
-                remote_call('delete_buffers', "'{+f}'") .. " \
+                remote_call('actions.delete_buffers', "'{+f}'") .. " \
             )+reload( \
                 cat " .. fifo_path .. " \
             )+execute-silent(" ..
@@ -1040,7 +1040,7 @@ local function bufs_and_mru(from_resume)
             set_label('{4..}'),
             '--bind',
             "alt-bs:execute-silent(" ..
-                remote_call('delete_buffers', "'{+f}'") .. " \
+                remote_call('actions.delete_buffers', "'{+f}'") .. " \
             )+reload( \
                 cat " .. fifo_path .. " \
             )+execute-silent(" ..
@@ -1174,7 +1174,7 @@ end
 --------------------------------------------------------------------------------
 
 ---@param selection_file string Path to a temporary file containing the selected fzf entries
-function M.delete_marks(selection_file)
+function actions.delete_marks(selection_file)
     local win = fzf_ctx.origin_winid
     local buf = fzf_ctx.origin_bufnr
     if not win or not buf then
@@ -1302,7 +1302,7 @@ local function marks(from_resume)
             set_label('{2}'),
             '--bind',
             "alt-bs:execute-silent(" ..
-                remote_call('delete_marks', "'{+f}'") .. " \
+                remote_call('actions.delete_marks', "'{+f}'") .. " \
             )+reload( \
                 cat " .. fifo_path .. " \
             )+execute-silent(" ..
@@ -1323,7 +1323,7 @@ end
 --------------------------------------------------------------------------------
 
 ---@param selection_file string Path to a temporary file containing the selected fzf entries
-function M.close_tabs(selection_file)
+function actions.close_tabs(selection_file)
     local lines = read_file(selection_file)
 
     for _, line in ipairs(lines) do
@@ -1426,7 +1426,7 @@ local function tabs(from_resume)
             set_label(tildefy_home('{1}')),
             '--bind',
             "alt-bs:execute-silent(" ..
-                remote_call('close_tabs', "'{+f}'") .. " \
+                remote_call('actions.close_tabs', "'{+f}'") .. " \
             )+reload( \
                 cat " .. fifo_path .. " \
             )+execute-silent(" ..
@@ -1447,7 +1447,7 @@ end
 --------------------------------------------------------------------------------
 
 ---@param selection_file string Path to a temporary file containing the selected fzf entries
-function M.delete_args(selection_file)
+function actions.delete_args(selection_file)
     local lines = read_file(selection_file)
 
     for _, line in ipairs(lines) do
@@ -1514,7 +1514,7 @@ local function args(from_resume)
             set_label('{2}'),
             '--bind',
             "alt-bs:execute-silent(" ..
-                remote_call('delete_args', "'{+f}'") .. " \
+                remote_call('actions.delete_args', "'{+f}'") .. " \
             )+reload( \
                 cat " .. fifo_path .. " \
             )+execute-silent(" ..
@@ -3663,7 +3663,7 @@ function M.git_stash_source()
 end
 
 ---@param selection_file string Path to a temporary file containing the selected fzf entries
-function M.drop_stashes(selection_file)
+function actions.drop_stashes(selection_file)
     local stashes = {}
 
     local lines = read_file(selection_file)
@@ -3756,7 +3756,7 @@ local function git_stash(from_resume)
             'ctrl-/:change-preview-window(right,60%|hidden|)',
             '--bind',
             "alt-bs:execute-silent(" ..
-                remote_call('drop_stashes', "'{+f}'") .. " \
+                remote_call('actions.drop_stashes', "'{+f}'") .. " \
             )+reload( \
                 cat " .. fifo_path .. " \
             )+execute-silent(" ..

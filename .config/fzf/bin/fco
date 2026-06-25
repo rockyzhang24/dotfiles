@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+# MNEMONIC: [F]uzzy search for [C]heck[O]ut
+# SYNOPSIS: fco
+# DESCRIPTION: Fuzzy finder for all refs and checkout the selected ref.
+
+selected=$(bash ~/.config/fzf/fzf-git.sh --run each_ref --no-multi)
+[ -n "$selected" ] && git checkout "$selected"

@@ -4,26 +4,31 @@
 # DESCRIPTION: Move targets into the system trash bin. If no targets are given,
 # fzf will be open for us to select the targets, and then trash them.
 
-target=($@)
-if [[ $# == 0 ]]; then
-    target=($(gls -A -I .DS_Store -I .localized | fzf))
-    if [[ -z $target ]]; then
+target=("$@")
+
+if (( $# == 0 )); then
+target=("${(@f)$(gls -A -I .DS_Store -I .localized | fzf --multi)}")
+    if (( ${#target[@]} == 0 )); then
         return 1
     fi
 fi
 
+for item in "${target[@]}"; do
+    if [[ ! -f "$item" && ! -d "$item" ]]; then
+        echo "Failed! $item is not a file or directory."
+        return 1
+    fi
+done
 
-if [[ ! -f $target && ! -d $target ]]; then
-    echo "Failed! $target is not a file or directory."
-    return 1
-fi
+echo -n "Items to be trashed:\n"
+printf '%s\n' "${target[@]}"
+echo -n "\nTrash? [y/N] "
 
-# `read -p` does not work in Zsh, so we use echo or printf for the prompt message
-echo -n "Items to be trashed:\n$(echo $target | tr ' ' '\n')\n\nTrash? [y/N]"
 read -r ans
-if [[ $ans == "y" ]]; then
-    command trash -F $target && echo "Trash complete!"
-elif [[ $ans == "n" ]]; then
+
+if [[ "$ans" == "y" ]]; then
+    command trash -F -- "${target[@]}" && echo "Trash complete!"
+elif [[ "$ans" == "n" ]]; then
     echo "Canceled!"
 else
     echo "Failed! Use y to trash."

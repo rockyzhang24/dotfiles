@@ -13,8 +13,8 @@ bindkey -M menuselect 'k' vi-up-line-or-history
 bindkey -M menuselect 'l' vi-forward-char
 bindkey -M menuselect 'j' vi-down-line-or-history
 
-bindkey 'ƒ' forward-word  # Option-f
-bindkey '∫' backward-word # Option-b
+bindkey 'ƒ' forward-word    # Option-f
+bindkey '∫' backward-word   # Option-b
 
 # Edit line in vim with ctrl-v
 autoload -Uz edit-command-line;
@@ -23,15 +23,22 @@ bindkey '^v' edit-command-line
 
 # Copy pwd to system clipboard by ctrl-y
 function copypwd {
-  echo $(pwd) | pbcopy
+    echo $(pwd) | pbcopy
 }
 zle -N copypwd
 bindkey '^y' copypwd
 
 # Y in visual mode will copy to system clipboard (same in vim)
 function vi-yank-systemclipboard {
-  zle vi-yank
-  echo "$CUTBUFFER" | pbcopy -i
+    zle vi-yank
+    echo "$CUTBUFFER" | pbcopy -i
 }
 zle -N vi-yank-systemclipboard
 bindkey -M vicmd 'Y' vi-yank-systemclipboard
+
+# Copy the current command to the system clipboard
+copy-current-command() {
+    print -rn -- "$BUFFER" | pbcopy
+}
+zle -N copy-current-command
+bindkey '^Y' copy-current-command

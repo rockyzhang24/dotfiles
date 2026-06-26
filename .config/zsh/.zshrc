@@ -26,11 +26,10 @@ zstyle ':zim:input' double-dot-expand yes
 ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets)
 
 # fzf-tab
-zstyle ':fzf-tab:*' use-fzf-default-opts yes
-zstyle ':fzf-tab:*' fzf-preview 'echo Preview is not available!'
-zstyle ':fzf-tab:*' fzf-pad 4
 zstyle ':completion:*:descriptions' format '[%d]'
+zstyle ':fzf-tab:*' fzf-pad 4
 zstyle ':fzf-tab:*' switch-group '<' '>'
+zstyle ':fzf-tab:*' fzf-command ftb-tmux-popup
 
 # Ensure add-zsh-hook is available
 autoload -Uz add-zsh-hook

@@ -1,5 +1,22 @@
 #!/usr/bin/env bash
 
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ....='cd ../../..'
+alias .....='cd ../../../..'
+alias ......='cd ../../../../..'
+
+# Kill the current background job with SIGKILL
+alias k5='kill -9 %%'
+alias ka="killall"
+
+alias c="clear"
+
+alias gitv='git log --graph --format="%C(auto)%h%d %s %C(black)%C(bold)%cr"'
+
+# Apply a patch from the clipboard
+alias pbpatch='pbpaste | patch -p1'
+
 # GNU version
 alias diff="diff --color=auto" # GNU diffutils required (brew install diffutils)
 alias df="gdf -h"
@@ -9,18 +26,16 @@ alias chmod="gchmod --preserve-root -v"
 alias chown="gchown --preserve-root -v"
 alias find="gfind"
 
-# General
-alias c="clear"
-alias ka="killall"
-
 # ls
 alias ls="gls -hFN --color=auto --group-directories-first --hyperlink=auto" # Use GNU ls (brew install coreutils)
+alias l='ls -alF'
+alias ll='ls -l'
+alias lt='ls -alrt'
 
 # Tmux
 alias s="tmux-sessionizer"
 
 # Misc
-alias iina="open -a 'IINA'"
 alias highlight="highlight --out-format=truecolor --force -s darkplus"
 alias ncdu="ncdu --color dark -rr -x --exclude .git --exclude node_modules"
 alias netspeed="networkQuality" # Internet speed test
@@ -46,7 +61,7 @@ alias -g W='| nvim -c "setlocal buftype=nofile bufhidden=wipe" -c "nnoremap <buf
 
 # Manage dotfiles
 alias dot="git --git-dir=$HOME/dotfiles/ --work-tree=$HOME"
-alias ds="dot status -uall $HOME/.config"
+alias dots="dot status -uall $HOME/.config"
 
 # Convert video to GIF (with 2K resolution) using ffmpeg
 # Usage: vtg input output, then output.gif will be generated

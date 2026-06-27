@@ -1,5 +1,5 @@
 # Reference: https://github.com/junegunn/fzf-git.sh/blob/main/fzf-git.sh
-# till the commit 0f0488331a060cf45aaecb6705a2cf394fb20293 on 3/18/2026
+# Last sync with upstream: 3/18/2026 (0f0488331a060cf45aaecb6705a2cf394fb20293)
 
 # shellcheck disable=SC2039
 [[ $0 == - ]] && return

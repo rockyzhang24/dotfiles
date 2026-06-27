@@ -6,88 +6,13 @@ if [[ ! "$PATH" == */Users/rockyzhang/gitrepos/fzf/bin* ]]; then
 fi
 
 # Enable auto-completion and keybindings
-eval "$(fzf --zsh)"
+source <(fzf --zsh)
 
 # Default fd command
 FD="fd --hidden --follow"
 
 # Use fd instead of default find
 export FZF_DEFAULT_COMMAND="$FD --type f --type l"
-
-# Theme
-theme_arctic="`
-`dark,`
-`fg:-1,bg:-1,`
-`fg+:#ffffff:bold,bg+:#04395e,`
-`hl:#ffdd33:bold,`
-`hl+:#ffdd33:bold,`
-`query:-1,`
-`disabled:#808080,`
-`border:-1,`
-`separator:#454545,`
-`label:#4ec9b0,`
-`header:#f9ae28:underline:bold \
-"
-
-theme_monokai="`
-`dark,`
-`fg:-1,bg:-1,`
-`fg+:#ffffff:bold,bg+:#414339,`
-`hl:#ffdd33:bold,`
-`hl+:#ffdd33:bold,`
-`query:-1,`
-`disabled:#808080,`
-`border:-1,`
-`separator:#454545,`
-`label:#4ec9b0,`
-`header:#f9ae28:underline:bold \
-"
-
-theme_nvim_default_light="`
-`light,`
-`fg:-1,bg:-1,`
-`bg+:#9b9ea4,`
-`hl:#8f6a00:bold,`
-`hl+:#8f6a00:bold,`
-`query:-1,`
-`disabled:#590008:strikethrough,`
-`border:-1,`
-`separator:-1,`
-`label:-1:bold,`
-`header:-1:underline:bold \
-"
-
-theme_gruvbox_dark="`
-`dark,`
-`fg:-1,bg:-1,`
-`fg+:#b8bb26:regular,` # green
-`bg+:#504945,` # bg2
-`hl:#689d6a:bold,` # neutral_aqua
-`hl+:#689d6a:bold,`
-`gutter:#3c3836,` # bg1
-`query:-1,`
-`disabled:#665c54,` # bg3
-`border:-1,`
-`separator:-1,`
-`label:-1:bold,`
-`header:-1:underline:bold \
-"
-
-theme_gruvbox_light="`
-`light,`
-`fg:-1,bg:-1,`
-`fg+:#79740e:regular,` # green
-`bg+:#d5c4a1,` # bg2
-`hl:#689d6a:bold,` # neutral_aqua
-`hl+:#689d6a:bold,`
-`gutter:#ebdbb2,` # bg1
-`query:-1,`
-`disabled:#bdae93,` # bg3
-`border:-1,`
-`separator:-1,`
-`label:-1:bold,`
-`header:-1:underline:bold \
-"
 
 # Config the default options when running fzf
 # Keybindings:
@@ -104,8 +29,6 @@ theme_gruvbox_light="`
 # - ctrl-a: toggle all
 # - ctrl-s: toggle single selection
 # - ctrl-/: change layout of the preview window
-# - ctrl-w: toggle wrap
-# - alt-w: toggle preview wrap
 # - alt-r: toggle raw mode
 # - ctrl-o: open the selections via default application
 # - ctrl-y: copy the selections to system clipboard
@@ -116,29 +39,26 @@ export FZF_DEFAULT_OPTS=" \
     --height 85% \
     --multi \
     --scrollbar ┃ \
+    --info=inline \
+    --no-separator \
     --history /tmp/fzfhistory \
     --prompt 'FZF> ' \
     --tabstop=4 \
     --highlight-line \
-    --tmux 80%,85% \
-    --bind 'ctrl-d:half-page-down,ctrl-u:half-page-up,alt-d:preview-half-page-down,`
-        `alt-u:preview-half-page-up,ctrl-a:toggle-all,`
-        `ctrl-/:change-preview-window(down,45%|hidden|),`
-        `ctrl-w:toggle-wrap,`
-        `alt-w:toggle-preview-wrap,`
-        `ctrl-s:toggle,`
-        `alt-r:toggle-raw,`
-        `alt-n:down-match,`
-        `alt-p:up-match,`
-        `ctrl-o:execute(open {+}),`
-        `ctrl-y:execute-silent(echo -n {+} | pbcopy),`
-        `ctrl-e:execute(\$EDITOR {+} < /dev/tty > /dev/tty 2>&1),`
-        `alt-x:exclude-multi,`
-        `change:first' \
-    --bind 'focus:transform-preview-label:echo ┨ {} ┠' \
+    --tmux 90%,85% \
+    --bind 'ctrl-d:half-page-down,ctrl-u:half-page-up' \
+    --bind 'alt-d:preview-half-page-down,alt-u:preview-half-page-up' \
+    --bind 'ctrl-/:change-preview-window(down,45%|hidden|)' \
+    --bind 'ctrl-s:toggle' \
+    --bind 'alt-r:toggle-raw' \
+    --bind 'alt-n:down-match,alt-p:up-match' \
+    --bind 'ctrl-o:execute(open {+})' \
+    --bind 'ctrl-y:execute-silent(echo -n {+} | pbcopy)' \
+    --bind 'ctrl-e:execute(\$EDITOR {+} < /dev/tty > /dev/tty 2>&1)' \
+    --bind 'alt-x:exclude-multi' \
+    --bind 'focus:transform-preview-label:echo [ {} ]' \
     --preview '~/.config/fzf/fzf-previewer.sh {}' \
     --preview-window 'right,60%,nowrap' \
-    --color=$theme_gruvbox_dark \
 "
 
 # Use fd for FZF completion
@@ -171,8 +91,9 @@ export FZF_CTRL_T_OPTS=" \
 export FZF_CTRL_R_OPTS=" \
     --prompt 'Command History> ' \
     --preview 'echo {}' \
-    --bind 'ctrl-y:execute-silent(echo -n {2..} | pbcopy)' \
-    --header ':: CTRL-Y (copy to clipboard)' \
+    --bind 'ctrl-y:execute-silent(echo -n {2..} | pbcopy)+abort' \
+    --bind 'ctrl-t:track+clear-query' \
+    --header ':: CTRL-Y (copy to clipboard), CTRL-T (track)' \
 "
 
 # CTRL-Z to cd into the selected dir
@@ -197,6 +118,7 @@ export FZF_ALT_C_OPTS=" \
 
 # fzf + git
 # Reference: https://github.com/junegunn/fzf-git.sh
+#
 # CTRL-G F for files
 # CTRL-G B for branches
 # CTRL-G T for tags

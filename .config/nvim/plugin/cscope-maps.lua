@@ -30,6 +30,10 @@ require('cscope_maps').setup({
         project_rooter = {
             enable = true,
         },
+        tag = {
+            -- Don't bind <C-]> to :Cstag
+            keymap = false,
+        },
     },
 })
 
@@ -42,3 +46,5 @@ vim.api.nvim_create_autocmd("BufWritePost", {
         vim.cmd("Cscope db build")
     end,
 })
+
+vim.keymap.set({ 'n', 'v' }, '<Leader>c<C-]>', '<Cmd>Cstag<CR>')

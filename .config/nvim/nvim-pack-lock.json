@@ -5,7 +5,7 @@
       "src": "https://github.com/L3MON4D3/LuaSnip"
     },
     "SchemaStore.nvim": {
-      "rev": "e3a2fc3862fa750603b7067789cb4b90578bcd07",
+      "rev": "490afbd7fd3b316330550405ac74758a971104a4",
       "src": "https://github.com/b0o/SchemaStore.nvim"
     },
     "blink.cmp": {
@@ -97,6 +97,10 @@
     "undotree": {
       "rev": "6fa6b57cda8459e1e4b2ca34df702f55242f4e4d",
       "src": "https://github.com/mbbill/undotree"
+    },
+    "vim-ReplaceWithRegister": {
+      "rev": "a487af6efd1be3fc6fac8da47d00efc9d1f6f724",
+      "src": "https://github.com/inkarkat/vim-ReplaceWithRegister"
     },
     "vim-after-object": {
       "rev": "7f52106",

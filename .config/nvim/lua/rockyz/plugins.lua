@@ -82,6 +82,7 @@ vim.pack.add({
 
     'https://github.com/inkarkat/vim-ingo-library',
     'https://github.com/inkarkat/vim-mark',
+    'https://github.com/inkarkat/vim-ReplaceWithRegister',
 
     'https://github.com/uga-rosa/ccc.nvim',
     'https://github.com/stefandtw/quickfix-reflector.vim',

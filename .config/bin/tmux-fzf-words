@@ -1,0 +1,113 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+#
+# Based on:
+#   https://github.com/junegunn-x/dotfiles/blob/master/bin/tmux-fzf-words
+#
+# Original author:
+#   Junegunn Choi
+#
+# Purpose:
+#   Capture text from tmux panes, extract searchable candidates (lines, words, and chunks), present
+#   them with fzf, and paste the selected item into the current tmux pane.
+#
+
+require 'optparse'
+require 'set'
+require 'English'
+require 'bundler/inline'
+gemfile do
+    source 'https://rubygems.org'
+    gem 'ansi256'
+end
+
+opts = { panes: :visible, scroll: 10_000, min: 5 }
+op = OptionParser.new do |o|
+    o.banner = "usage: #{$PROGRAM_NAME} [OPTIONS]"
+    o.separator ''
+    o.on('-A', '--all', 'All panes') { |_v| opts[:panes] = :all }
+    o.on('-a', '--all-but-current',
+         'All panes but the active one')                    { |_| opts[:panes] = :others }
+    o.on('-s NUM', '--scroll NUM', 'Scroll back') { |v| opts[:scroll] = v }
+    o.on('-p STR', '--prefix STR', 'Prefix')            { |v| opts[:prefix] = v }
+    o.on('-m NUM', '--min NUM', 'Minimum length') { |v| opts[:min] = v.to_i }
+    o.separator ''
+    o.on('-h', '--help', 'Show this message') do
+        puts o
+        exit
+    end
+    o.separator ''
+end
+
+begin
+    op.parse!
+rescue OptionParser::InvalidOption => x
+    warn x
+    warn op
+    exit 1
+end
+
+def list_panes(cond)
+    command =
+        %q(tmux list-panes -a -F '#{window_active}#{pane_active} #{pane_id}')
+    `#{command}`.split($INPUT_RECORD_SEPARATOR).map(&:split).select do |pair|
+        status = pair.first
+        case cond
+        when :all           then true
+        when :visible then status =~ /^1/
+        when :others    then status !~ /^11/
+        end
+    end.map(&:last)
+end
+
+system 'tmux capture-pane -p &> /dev/null'
+if $CHILD_STATUS.exitstatus.zero?
+    def capture_pane(pane_id, scroll)
+        `tmux capture-pane #{"-S -#{scroll}" if scroll} -t #{pane_id} -p`
+    end
+else
+    def capture_pane(pane_id, scroll)
+        `tmux capture-pane #{"-S -#{scroll}" if scroll} -t #{pane_id} &&
+         tmux show-buffer && tmux delete-buffer`
+    end
+end
+
+def tokenize(str, prefix, min)
+    chunks = str.split(/\s+/)
+    result = {
+        'line'.blue => str.split($INPUT_RECORD_SEPARATOR).map(&:strip),
+        'word'.green => str.gsub(/\W/, ' ').split(/\s+/),
+        'chunk'.yellow => chunks + chunks.map { |t| t.gsub(/^\W+|\W+$/, '') }
+    }
+    prefix &&= /^#{Regexp.escape prefix}/
+    result.transform_values do |values|
+        set = values.to_set
+        if prefix && min
+            set.select { |t| t =~ prefix && t.length >= min }
+        elsif prefix
+            set.select { |t| t =~ prefix }
+        elsif min
+            set.select { |t| t.length >= min }
+        else
+            set
+        end.to_set
+    end
+rescue StandardError
+    {}
+end
+
+tokens = list_panes(opts[:panes]).inject({}) do |merged, pane_id|
+    result = tokenize(capture_pane(pane_id, opts[:scroll]),
+                      opts[:prefix], opts[:min])
+    merged.merge(result) { |_key, ov, nv| ov + nv }
+end
+
+io = IO.popen(%[fzf-tmux -p -- --ansi --delimiter "\t" --nth 2.. --multi --reverse --preview-window hidden --bind 'ctrl-/:ignore' | perl -pe 's/.*?\\t//'], 'r+')
+tokens.each do |group, vals|
+    vals.each do |val|
+        io.puts "#{group}\t#{val}"
+    end
+end
+io.close_write
+puts io.readlines.map(&:chomp).join(' ')

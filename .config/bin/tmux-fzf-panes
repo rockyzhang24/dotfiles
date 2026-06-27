@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+#
+# Based on:
+#   https://github.com/junegunn-x/dotfiles/blob/master/bin/tmux-fzf-panes
+#
+# Original author:
+#   Junegunn Choi
+#
+# Purpose:
+#   List tmux panes in fzf and switch to the selected pane.
+#
+
+tmux list-panes -s -F $'#{window_active}#{pane_active}\t#I\t#P\t#{pane_current_path} #{pane_current_command}' |
+    fzf --tmux 100% --tabstop 4 --info inline-right --with-nth 2.. +m --reverse \
+        --preview 'tmux capture-pane -e -p -t {2}.{3}' \
+        --with-shell 'bash -c' \
+        --sync --listen --bind "start:transform:
+            echo -n pos:
+            curl -s localhost:\$FZF_PORT?limit=\$FZF_TOTAL_COUNT | jq '.matches[] | select(.text | startswith(\"11\")) | .index + 1'
+        " \
+        --bind 'enter:become:tmux select-pane -t {2}.{3}; tmux select-window -t {2}' \
+        --bind 'focus:transform-preview-label:echo [ win: {2} \| pane: {3} \| info: {4} {5} ]'

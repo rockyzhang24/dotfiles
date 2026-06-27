@@ -551,6 +551,7 @@ end, { expr = true })
 -- Copy unnamed(") register to system(+) register
 vim.keymap.set('n', 'yc', function()
     vim.fn.setreg('+', vim.fn.getreg('"'))
+    notify.info('Copied " to +')
 end)
 
 -- Copy current file's name, dir and path
@@ -569,6 +570,10 @@ end)
 -- (3). Path (relative)
 vim.keymap.set('n', 'yp', function()
     yank_reg(vim.v.register, vim.fn.expand('%:.'))
+end)
+-- (4). Path (absolute)
+vim.keymap.set('n', 'yP', function()
+    yank_reg(vim.v.register, vim.api.nvim_buf_get_name(0))
 end)
 
 --

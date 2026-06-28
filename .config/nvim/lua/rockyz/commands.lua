@@ -1,14 +1,22 @@
--- CloseWin 1 2 3
--- DiffSplit file1 file2
+-- CloseWin {winid_1} {winid_2} ...
+-- DiffSplit {file1} {file2}
 -- ProfileStart, ProfileStop
 -- Scratch
 -- RedirMsg
 -- CopyCodeBlock
 -- ReorderList
--- Reindent 4 8
+-- Reindent {old} {new}
 -- ToggleAutoFormat[!]
 -- CopyPath [nameonly|relative|absolute]
+-- DiffOrig
 -- Restart
+-- Count {pattern}
+-- Root
+-- LspInfo
+-- LspLog
+-- LspRestart
+
+local notify = require('rockyz.utils.notify')
 
 local function scratch_buf_init()
     for name, value in pairs({
@@ -189,6 +197,33 @@ vim.api.nvim_create_autocmd('VimEnter', {
         end
     end),
 })
+
+-- Count pattern matches without modifying the buffer
+-- Usage: `:Count {pattern}`
+vim.api.nvim_create_user_command('Count', function(opts)
+    local pattern = vim.fn.escape(opts.args, '/')
+    local cmd = string.format('%%s/%s//gn', pattern)
+    local view = vim.fn.winsaveview()
+    vim.cmd(cmd)
+    vim.fn.winrestview(view)
+end, {
+    nargs = 1,
+})
+
+-- Change directory to the root of the git repository
+vim.api.nvim_create_user_command('Root', function()
+    vim.system({ 'git', 'rev-parse', '--show-toplevel' }, { text = true }, function(obj)
+        if obj.code ~= 0 then
+            notify.error({ obj.stderr, obj.stdout })
+            return
+        end
+        local root = obj.stdout:gsub('\n$', '')
+        vim.schedule(function()
+            vim.cmd('lcd ' .. root)
+            notify.info('Changed directory to: ' .. root)
+        end)
+    end)
+end, {})
 
 -- LSP commands
 vim.api.nvim_create_user_command('LspInfo', 'checkhealth vim.lsp', {

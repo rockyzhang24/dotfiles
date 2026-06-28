@@ -1,5 +1,5 @@
 ---Create abbreviation
----@param everywhere boolean? The abbreviation applies everywhere or only at the very beginning.
+---@param everywhere? boolean The abbreviation applies everywhere or only at the very beginning.
 ---Defaults to false.
 local function abbreviate(from, to, everywhere)
     vim.keymap.set('ca', from, function()

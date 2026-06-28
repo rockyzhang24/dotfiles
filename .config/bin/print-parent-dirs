@@ -1,14 +1,27 @@
 #!/usr/bin/env bash
 
-# Output parent directories.
+# Print a path's directory and each parent directory, up to /.
+# If the path is a file, start from its containing directory.
+#
+# Usage:
+#   print-parent-dir [path]
+#   print-parent-dir ./src/main.lua
 
-declare dirs=()
-get_parent_dirs() {
-    if [[ -d "${1}" ]]; then dirs+=("$1"); else return; fi
-    if [[ "${1}" == '/' ]]; then
-        for _dir in "${dirs[@]}"; do echo "$_dir"; done
-    else
-        get_parent_dirs "$(dirname "$1")"
-    fi
-}
-get_parent_dirs "$(realpath "${1:-$PWD}")"
+set -Eeuo pipefail
+
+path="${1:-$PWD}"
+
+if [[ -d "$path" ]]; then
+    dir="$(realpath "$path")"
+elif [[ -e "$path" ]]; then
+    dir="$(dirname "$(realpath "$path")")"
+else
+    echo "error: path does not exist: $path" >&2
+    exit 1
+fi
+
+while :; do
+    printf '%s\n' "$dir"
+    [[ "$dir" == "/" ]] && break
+    dir="$(dirname "$dir")"
+done

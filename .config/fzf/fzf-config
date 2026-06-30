@@ -35,30 +35,30 @@ export FZF_DEFAULT_COMMAND="$FD --type f --type l"
 # - ctrl-e: edit the selections via $EDITOR
 # - alt-x: exclude selected items
 export FZF_DEFAULT_OPTS=" \
-    --reverse \
-    --height 85% \
-    --multi \
-    --scrollbar ┃ \
-    --info=inline \
-    --no-separator \
-    --history /tmp/fzfhistory \
-    --prompt 'FZF> ' \
-    --tabstop=4 \
-    --highlight-line \
-    --tmux 90%,85% \
-    --bind 'ctrl-d:half-page-down,ctrl-u:half-page-up' \
-    --bind 'alt-d:preview-half-page-down,alt-u:preview-half-page-up' \
-    --bind 'ctrl-/:change-preview-window(down,45%|hidden|)' \
-    --bind 'ctrl-s:toggle' \
-    --bind 'alt-r:toggle-raw' \
-    --bind 'alt-n:down-match,alt-p:up-match' \
-    --bind 'ctrl-o:execute(open {+})' \
-    --bind 'ctrl-y:execute-silent(echo -n {+} | pbcopy)' \
-    --bind 'ctrl-e:execute(\$EDITOR {+} < /dev/tty > /dev/tty 2>&1)' \
-    --bind 'alt-x:exclude-multi' \
-    --bind 'focus:transform-preview-label:echo [ {} ]' \
-    --preview '~/.config/fzf/fzf-previewer.sh {}' \
-    --preview-window 'right,60%,nowrap' \
+--reverse
+--height 85%
+--multi
+--scrollbar ┃
+--info=inline
+--no-separator
+--history /tmp/fzfhistory
+--prompt 'FZF> '
+--tabstop=4
+--highlight-line
+--tmux 90%,85%
+--bind 'ctrl-d:half-page-down,ctrl-u:half-page-up'
+--bind 'alt-d:preview-half-page-down,alt-u:preview-half-page-up'
+--bind 'ctrl-/:change-preview-window(down,45%|hidden|)'
+--bind 'ctrl-s:toggle'
+--bind 'alt-r:toggle-raw'
+--bind 'alt-n:down-match,alt-p:up-match'
+--bind 'ctrl-o:execute(open {+})'
+--bind 'ctrl-y:execute-silent(echo -n {+} | pbcopy)'
+--bind 'ctrl-e:execute($EDITOR {+} < /dev/tty > /dev/tty 2>&1)'
+--bind 'alt-x:exclude-multi'
+--bind 'focus:transform-preview-label:echo [ {} ]'
+--preview '~/.config/fzf/fzf-previewer.sh {}'
+--preview-window 'right,60%,nowrap'
 "
 
 # Use fd for FZF completion
@@ -75,16 +75,16 @@ _fzf_compgen_dir() {
 # - ALT-/: toggling listing items under HOME and CWD
 # - ALT-R: list items under system root
 export FZF_CTRL_T_COMMAND="$FD"
-export FZF_CTRL_T_OPTS=" \
-    --prompt 'Fzf [Current]> ' \
-    --header ':: ALT-/ (toggle HOME/CWD), ALT-R (Root)' \
-    --bind 'alt-r:reload($FD . /)+change-prompt(Fzf [Root]> )' \
-    --bind 'alt-/:transform: \
-        [[ ! \$FZF_PROMPT =~ HOME ]] && { \
-            echo \"reload($FD . $HOME)+change-prompt(Fzf [HOME]> )\"; \
-        } || { \
-            echo \"reload($FD)+change-prompt(Fzf [CWD]> )\"; \
-        }' \
+export FZF_CTRL_T_OPTS="
+--prompt 'Fzf [Current]> '
+--header ':: ALT-/ (toggle HOME/CWD), ALT-R (Root)'
+--bind 'alt-r:reload($FD . /)+change-prompt(Fzf [Root]> )'
+--bind 'alt-/:transform:
+    [[ ! \$FZF_PROMPT =~ HOME ]] && {
+        echo \"reload($FD . $HOME)+change-prompt(Fzf [HOME]> )\";
+    } || { \
+        echo \"reload($FD)+change-prompt(Fzf [CWD]> )\";
+    }' \
 "
 
 # CTRL-R to search the command history

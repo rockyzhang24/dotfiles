@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-# Print a path's directory and each parent directory, up to /.
-# If the path is a file, start from its containing directory.
+# Print a path's each parent directory, up to /. If the path is a file, start from its containing
+# directory.
 #
 # Usage:
 #   print-parent-dir [path]
@@ -21,7 +21,7 @@ else
 fi
 
 while :; do
-    printf '%s\n' "$dir"
     [[ "$dir" == "/" ]] && break
     dir="$(dirname "$dir")"
+    printf '%s\n' "$dir"
 done

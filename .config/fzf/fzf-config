@@ -96,24 +96,76 @@ export FZF_CTRL_R_OPTS=" \
     --header ':: CTRL-Y (copy to clipboard), CTRL-T (track)' \
 "
 
-# CTRL-Z to cd into the selected dir
-# - ALT-/: toggle listing dirs under HOME and CWD
-# - ALT-R: list dirs under system root
-# - ALT-.: list dirs under cwd's parent
-bindkey '^z' fzf-cd-widget
-export FZF_ALT_C_COMMAND="$FD --type d"
-export FZF_ALT_C_OPTS=" \
-    --preview '[[ \$(command -v eza) ]] && eza -la --color=always --icons -g --group-directories-first {} || tree -C {} | head -200' \
-    --header ':: ALT-/ (toggle HOME/CWD), ALT-R (Root), ALT-. (Parent)' \
-    --prompt 'SubDirs [Current]> ' \
-    --bind 'alt-r:reload($FD --type d . /)+change-prompt(SubDirs [Root]> )' \
-    --bind 'alt-.:reload(print-parent-dirs)+change-prompt(SubDirs [Parent]> )' \
-    --bind 'alt-/:transform: \
-        [[ ! \$FZF_PROMPT =~ HOME ]] && { \
-            echo \"reload($FD --type d . $HOME)+change-prompt(SubDirs [HOME]> )\"; \
-        } || { \
-            echo \"reload($FD --type d)+change-prompt(SubDirs [CWD]> )\"; \
-        }' \
+#
+# CTRL-J to cd into the selected dir
+#
+# Define several key bindings to browser directories
+#
+# ALT-`: list directories under $HOME
+# ALT-BS: list directories under the original $PWD
+# ALT-/: list directories under the system root (/)
+# ALT-H: list directories under the parent directory
+# ALT-L: list directories under the selected directory
+# ALT-P: list all parent directories of the current directory
+#
+bindkey '^j' fzf-cd-widget
+
+# Each entry in fzf: {absolute_path}\t{relative_path}
+export FZF_ALT_C_COMMAND="
+$FD --type d |
+while IFS= read -r rel; do
+    if [[ \$PWD == / ]]; then
+        printf \"/%s\t%s\n\" \"\$rel\" \"\$rel\"
+    else
+        printf \"%s/%s\t%s\n\" \"\$PWD\" \"\$rel\" \"\$rel\"
+    fi
+done
+"
+export FZF_ALT_C_OPTS="
+--delimiter '\t'
+--with-nth 2..
+--accept-nth 1
+--header ':: ALT-\` (HOME), ALT-BS (PWD), ALT-/ (Root)
+:: ALT-H (Up), ALT-L (Into), ALT-p (Parents)'
+--prompt '$PWD> '
+--preview '[[ \$(command -v eza) ]] && eza -la --color=always --icons -g --group-directories-first {1} || tree -C {1} | head -200'
+--bind 'alt-/:reload(
+    cd -- / && $FD --type d | sed '\''s|.*|/&\\t&|'\''
+)+change-prompt(/> )'
+--bind 'alt-p:transform:
+    base=\${FZF_PROMPT%> }
+    [[ \$base == \"Parents of \"* ]] && base=\${base#Parents of }
+    [[ \$base == / ]] && echo ignore && exit
+
+    echo \"reload(
+        print-parent-dirs \$base | sed '\''s/.*/&\\t&/'\''
+    )+change-prompt(Parents of \$base> )\"
+'
+--bind 'alt-\`:reload(
+    cd -- $HOME && $FD --type d | sed '\''s|.*|\\$HOME/&\\t&|'\''
+)+change-prompt($HOME> )'
+--bind 'alt-bs:reload(
+    cd -- $PWD && $FZF_ALT_C_COMMAND
+)+change-prompt($PWD> )'
+--bind 'alt-h:transform:
+    base=\${FZF_PROMPT%> }
+    [[ \$base == / ]] && echo ignore && exit
+
+    parent=\$(dirname -- \"\$base\")
+    prefix=\${parent%/}
+    prompt=\${prefix:-/}
+
+    echo \"reload(
+        cd -- \"\$parent\" && $FD --type d | sed '\''s|.*|\$prefix/&\\t&|'\''
+    )+change-prompt(\$prompt> )\"
+'
+--bind 'alt-l:transform:
+    target={1}
+    target=\${target%/}
+    echo \"reload(
+        cd -- \"\$target\" && $FD --type d | sed '\''s|.*|\$target/&\\t&|'\''
+    )+change-prompt(\$target> )\"
+'
 "
 
 # fzf + git

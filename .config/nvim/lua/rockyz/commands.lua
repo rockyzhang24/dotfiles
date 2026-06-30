@@ -9,7 +9,6 @@
 -- ToggleAutoFormat[!]
 -- CopyPath [nameonly|relative|absolute]
 -- DiffOrig
--- Restart
 -- Count {pattern}
 -- Root
 -- LspInfo
@@ -171,32 +170,6 @@ end, {
 vim.cmd([[
 command! DiffOrig leftabove vnew | set bt=nofile | r ++edit # | 0d_ | diffthis | wincmd p | diffthis
 ]])
-
--- Restart nvim
--- Thanks @lewis6991
-local session = '/tmp/_session_restart.vim'
-
-vim.api.nvim_create_user_command('Restart', function()
-    vim.cmd.mksession({ session, bang = true })
-    local ok, err = pcall(vim.cmd.restart)
-    if not ok then
-        vim.notify('Restart failed: ' .. err, vim.log.levels.ERROR)
-    end
-end, {})
-
-local group = vim.api.nvim_create_augroup('rockyz.restart', { clear = true })
-vim.api.nvim_create_autocmd('VimEnter', {
-    group = group,
-    callback = vim.schedule_wrap(function()
-        if vim.uv.fs_stat(session) then
-            vim.cmd.source(session)
-            vim.defer_fn(function()
-                vim.notify('Restarted at: ' .. vim.fn.localtime())
-            end, 1000)
-            vim.fs.rm(session)
-        end
-    end),
-})
 
 -- Count pattern matches without modifying the buffer
 -- Usage: `:Count {pattern}`

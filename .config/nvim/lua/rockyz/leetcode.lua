@@ -238,7 +238,7 @@ local function build_question_description(q, question_url)
     }
 
     local stats_ok, stats = pcall(vim.json.decode, q.stats)
-    if stats_ok then
+    if stats_ok and stats.acRate and stats.totalSubmission then
         table.insert(info, string.format('%s of %s', stats.acRate, stats.totalSubmission))
     end
 
@@ -288,19 +288,16 @@ local function build_question_description(q, question_url)
 end
 
 local function build_solution_snippet(q, lang)
-    local snippet = {}
     for _, code_snippet in ipairs(q.code_snippets) do
         if code_snippet.lang_slug == lang then
-            local code_lines = vim.split(code_snippet.code, '\n', {
+            local lines = vim.split(code_snippet.code, '\n', {
                 plain = true,
                 trimempty = true,
             })
-            for _, line in ipairs(code_lines) do
-                table.insert(snippet, line)
-            end
+            return table.concat(lines, '\n')
         end
     end
-    return table.concat(snippet, '\n')
+    return ''
 end
 
 local function get_user_status()
@@ -336,7 +333,7 @@ local function parse_args(args)
     }
 end
 
-local function normalize_question_url(url)
+local function extract_question_url(url)
     return url:match('^(https://leetcode%.com/problems/[^/?#]+)')
 end
 
@@ -344,7 +341,7 @@ end
 ---@param variant string "method-1" in method-1.cpp
 ---@param lang string "cpp" in method-1.cpp
 local function run(question_url, variant, lang)
-    question_url = normalize_question_url(question_url)
+    question_url = extract_question_url(question_url)
     if not question_url then
         notify.error('[LeetCode] Invalid question URL. It should look like "https://leetcode.com/problems/two-sum/".')
         return
@@ -353,6 +350,7 @@ local function run(question_url, variant, lang)
     local cookie_ok, err = get_cookie()
     if not cookie_ok then
         notify.error('[LeetCode] ' .. err)
+        return
     end
 
     -- Check cookie validation
@@ -461,10 +459,10 @@ vim.api.nvim_create_user_command('LeetCode', function(args)
 end, { nargs = '+' })
 
 local function get_url(obj)
-    if obj.code ~= 0 or not obj.stdout:match('^https://leetcode.com/problems/') then
+    if obj.code ~= 0 then
         return
     end
-    return obj.stdout:match('^(https://leetcode%.com/problems/[^/]+)')
+    return extract_question_url(obj.stdout)
 end
 
 local function get_url_from_chrome()

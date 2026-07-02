@@ -153,22 +153,34 @@
 -- different servers in a separate window. The windows are stacked from bottom to top above the
 -- statusline in the bottom-right corner.
 
+local M = {}
+
+local config = {
+    spinner_interval = 4,
+    done_delay = 2000,
+    close_retry_interval = 100,
+    window_zindex = 30,
+}
+
 local icons = {
     spinner = { '⣾', '⣽', '⣻', '⢿', '⡿', '⣟', '⣯', '⣷' },
     done = ' ',
 }
 
--- Maintain properties for each client receiving the progress notifications. It is indexed by the
--- client id and has these fields:
--- * is_done: whether the progress is finished
--- * spinner_idx: current index of the spinner
--- * winid: winid of the floating window
--- * bufnr: bufnr of the floating window
--- * message: the progress message that will be shown in the window
--- * pos: the position of this window counting from bottom to top
--- * timer: used to delay the closing of the window and handle window closure during textlock
+---@class ProgressClient
+---@field is_done boolean Whether the progress has finished
+---@field spinner_idx integer Current spinner frame index
+---@field winid integer|nil Floating window id
+---@field bufnr integer|nil Floating window buffer id
+---@field message string|nil Message shown in the floating window
+---@field pos integer Window position, counted from bottom to top
+---@field timer uv.uv_timer_t|nil Timer used to defer closing, especially during textlock
+
+---State for each LSP client that sends progress notifications, indexed by client id.
+---@type table<integer, ProgressClient>
 local clients = {}
--- Maintain the total number of current windows
+
+---Number of currently visible progress windows
 local total_wins = 0
 
 -- Suppress errors that may occur while render windows. E.g., nvim_buf_set_lines() will throw E565
@@ -199,8 +211,9 @@ local function guard(callable)
     error(err)
 end
 
--- Initialize or reset the properties of the given client
-local function init_or_reset(client)
+---Reset the state of a progress client
+---@param client ProgressClient
+local function reset_client(client)
     client.is_done = false
     client.spinner_idx = 0
     client.winid = nil
@@ -216,8 +229,8 @@ local function get_win_row(pos)
     return vim.o.lines - vim.o.cmdheight - 1 - pos * (vim.g.border_enabled and 3 or 1)
 end
 
--- Update the window config
-local function win_update_config(client)
+---@param client ProgressClient
+local function update_win_config(client)
     vim.api.nvim_win_set_config(client.winid, {
         relative = 'editor',
         width = #client.message,
@@ -263,8 +276,8 @@ local function process_message(client, name, params)
         end
         -- Spinner
         local idx = client.spinner_idx
-        idx = idx == #icons.spinner * 4 and 1 or idx + 1
-        message = icons.spinner[math.ceil(idx / 4)] .. ' ' .. message
+        idx = idx == #icons.spinner * config.spinner_interval and 1 or idx + 1
+        message = icons.spinner[math.ceil(idx / config.spinner_interval)] .. ' ' .. message
         client.spinner_idx = idx
     end
     return message
@@ -290,7 +303,7 @@ local function show_message(client)
                 style = 'minimal',
                 noautocmd = true,
                 border = vim.g.border_style,
-                zindex = 30,
+                zindex = config.window_zindex,
             })
         end)
         if not success then
@@ -299,7 +312,7 @@ local function show_message(client)
         client.winid = winid
         total_wins = total_wins + 1
     else
-        win_update_config(client)
+        update_win_config(client)
     end
     -- vim.wo[winid].winhl = 'Normal:Normal'
     -- Write the message into the buffer
@@ -316,7 +329,7 @@ local function handler(ev)
     -- Initialize the properties
     if clients[client_id] == nil then
         clients[client_id] = {}
-        init_or_reset(clients[client_id])
+        reset_client(clients[client_id])
     end
     local cur_client = clients[client_id]
 
@@ -330,7 +343,11 @@ local function handler(ev)
     end
 
     -- Get the formatted progress message
-    cur_client.message = process_message(cur_client, vim.lsp.get_client_by_id(client_id).name, ev.data.params)
+    local lsp_client = vim.lsp.get_client_by_id(client_id)
+    if lsp_client == nil then
+        return
+    end
+    cur_client.message = process_message(cur_client, lsp_client.name, ev.data.params)
 
     -- Show progress message in floating window
     show_message(cur_client)
@@ -350,7 +367,7 @@ local function handler(ev)
     --    closed twice. In the code below, timer:start() will be called again and it just resets the
     --    timer, so the window will not be closed twice.
     if cur_client.is_done then
-        cur_client.timer:start(2000, 100, vim.schedule_wrap(function()
+        cur_client.timer:start(config.done_delay, config.close_retry_interval, vim.schedule_wrap(function()
             -- To handle the scenario 1
             if not cur_client.is_done and cur_client.winid ~= nil then
                 cur_client.timer:stop()
@@ -373,11 +390,11 @@ local function handler(ev)
                 for _, c in pairs(clients) do
                     if c.winid ~= nil and c.pos > cur_client.pos then
                         c.pos = c.pos - 1
-                        win_update_config(c)
+                        update_win_config(c)
                     end
                 end
                 -- Reset the properties
-                init_or_reset(cur_client)
+                reset_client(cur_client)
             end
         end))
     end
@@ -412,10 +429,12 @@ vim.api.nvim_create_autocmd({ 'VimResized', 'TermLeave' }, {
     group = group,
     pattern = '*',
     callback = function()
-        for _, c in ipairs(clients) do
-            if c.is_done then
-                win_update_config(c)
+        for _, c in pairs(clients) do
+            if c.is_done and c.winid ~= nil and vim.api.nvim_win_is_valid(c.winid) then
+                update_win_config(c)
             end
         end
     end,
 })
+
+return M

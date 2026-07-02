@@ -341,12 +341,14 @@ end
 ---@param variant string "method-1" in method-1.cpp
 ---@param lang string "cpp" in method-1.cpp
 local function run(question_url, variant, lang)
+    -- Validate input
     question_url = extract_question_url(question_url)
     if not question_url then
         notify.error('[LeetCode] Invalid question URL. It should look like "https://leetcode.com/problems/two-sum/".')
         return
     end
 
+    -- Ensure authentication
     local cookie_ok, err = get_cookie()
     if not cookie_ok then
         notify.error('[LeetCode] ' .. err)
@@ -370,6 +372,7 @@ local function run(question_url, variant, lang)
         return
     end
 
+    -- Fetch question
     local q = get_question(title_slug)
     if not q then
         return

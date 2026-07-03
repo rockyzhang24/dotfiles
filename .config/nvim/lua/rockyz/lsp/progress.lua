@@ -173,7 +173,7 @@ local guard_whitelist = {
     'E565: Not allowed to change',
 }
 
----@class ProgressClient
+---@class ProgressState
 ---@field is_done boolean Whether the progress has finished
 ---@field spinner_idx integer Current spinner frame index
 ---@field winid integer|nil Floating window id
@@ -183,8 +183,8 @@ local guard_whitelist = {
 ---@field timer uv.uv_timer_t|nil Timer used to defer closing, especially during textlock
 
 ---State for each LSP client that sends progress notifications, indexed by client id.
----@type table<integer, ProgressClient>
-local clients = {}
+---@type table<integer, ProgressState>
+local progress_states = {}
 
 ---Number of currently visible progress windows
 local total_wins = 0
@@ -213,39 +213,39 @@ local function guard(callable)
 end
 
 ---Reset the state of a progress client
----@param client ProgressClient
-local function reset_client(client)
-    client.is_done = false
-    client.spinner_idx = 0
-    client.message = nil
-    client.winid = nil
-    client.bufnr = nil
-    client.timer = nil
-    client.pos = 0
+---@param state ProgressState
+local function reset_state(state)
+    state.is_done = false
+    state.spinner_idx = 0
+    state.message = nil
+    state.winid = nil
+    state.bufnr = nil
+    state.timer = nil
+    state.pos = 0
 end
 
 ---@param client_id integer
----@return ProgressClient
-local function get_client(client_id)
-    local client = clients[client_id]
-    if client == nil then
-        ---@type ProgressClient
-        client = {}
-        reset_client(client)
-        clients[client_id] = client
+---@return ProgressState
+local function get_state(client_id)
+    local state = progress_states[client_id]
+    if state == nil then
+        ---@type ProgressState
+        state = {}
+        reset_state(state)
+        progress_states[client_id] = state
     end
 
     -- Lazily create the floating window buffer
-    if client.bufnr == nil then
-        client.bufnr = vim.api.nvim_create_buf(false, true)
+    if state.bufnr == nil then
+        state.bufnr = vim.api.nvim_create_buf(false, true)
     end
 
     -- Lazily create the timer to delay window close when progress report is done
-    if client.timer == nil then
-        client.timer = vim.uv.new_timer()
+    if state.timer == nil then
+        state.timer = vim.uv.new_timer()
     end
 
-    return client
+    return state
 end
 
 -- Get the row position of the current floating window. If it is the first one, it is placed just
@@ -254,50 +254,50 @@ local function get_win_row(pos)
     return vim.o.lines - vim.o.cmdheight - 1 - pos * (vim.g.border_enabled and 3 or 1)
 end
 
----@param client ProgressClient
+---@param state ProgressState
 ---@return boolean
-local function need_new_window(client)
-    local winid = client.winid
+local function need_new_window(state)
+    local winid = state.winid
     return winid == nil
     or not vim.api.nvim_win_is_valid(winid)
     or vim.api.nvim_win_get_tabpage(winid) ~= vim.api.nvim_get_current_tabpage()
 end
 
----@param client ProgressClient
+---@param state ProgressState
 ---@return boolean
-local function update_win_config(client)
+local function update_win_config(state)
     return guard(function()
-        vim.api.nvim_win_set_config(client.winid, {
+        vim.api.nvim_win_set_config(state.winid, {
             relative = 'editor',
-            width = #client.message,
+            width = #state.message,
             height = 1,
-            row = get_win_row(client.pos),
-            col = vim.o.columns - #client.message,
+            row = get_win_row(state.pos),
+            col = vim.o.columns - #state.message,
         })
     end)
 end
 
----@param client ProgressClient
+---@param state ProgressState
 ---@return boolean
-local function update_buffer(client)
+local function update_buffer(state)
     return guard(function()
-        vim.api.nvim_buf_set_lines(client.bufnr, 0, 1, false, { client.message })
+        vim.api.nvim_buf_set_lines(state.bufnr, 0, 1, false, { state.message })
     end)
 end
 
----@param client ProgressClient
+---@param state ProgressState
 ---@return boolean
-local function create_window(client)
+local function create_window(state)
     local winid
     local pos = total_wins + 1
 
     local success = guard(function()
-        winid = vim.api.nvim_open_win(client.bufnr, false, {
+        winid = vim.api.nvim_open_win(state.bufnr, false, {
             relative = 'editor',
-            width = #client.message,
+            width = #state.message,
             height = 1,
             row = get_win_row(pos),
-            col = vim.o.columns - #client.message,
+            col = vim.o.columns - #state.message,
             focusable = false,
             style = 'minimal',
             noautocmd = true,
@@ -311,52 +311,52 @@ local function create_window(client)
     end
 
     -- Record this window for future reuse
-    client.winid = winid
-    client.pos = pos
+    state.winid = winid
+    state.pos = pos
     total_wins = total_wins + 1
     return true
 end
 
 ---Close the window and delete the associated buffer
----@param client ProgressClient
+---@param state ProgressState
 ---@return boolean
-local function close_window(client)
+local function close_window(state)
     return guard(function()
-        if client.winid and vim.api.nvim_win_is_valid(client.winid) then
-            vim.api.nvim_win_close(client.winid, true)
+        if state.winid and vim.api.nvim_win_is_valid(state.winid) then
+            vim.api.nvim_win_close(state.winid, true)
         end
-        if client.bufnr and vim.api.nvim_buf_is_valid(client.bufnr) then
-            vim.api.nvim_buf_delete(client.bufnr, { force = true })
+        if state.bufnr and vim.api.nvim_buf_is_valid(state.bufnr) then
+            vim.api.nvim_buf_delete(state.bufnr, { force = true })
         end
     end)
 end
 
 ---Render the current progress message
----Assumes `client.message` and `client.pos` have been initialized
----@param client ProgressClient
+---Assumes `state.message` and `state.pos` have been initialized
+---@param state ProgressState
 ---@return boolean
-local function try_render_message(client)
+local function try_render_message(state)
     -- Create a new window or update the existing one
-    if need_new_window(client) then
-        if not create_window(client) then
+    if need_new_window(state) then
+        if not create_window(state) then
             return false
         end
     else
-        if not update_win_config(client) then
+        if not update_win_config(state) then
             return false
         end
     end
     -- Write the message into the buffer
-    return update_buffer(client)
+    return update_buffer(state)
 end
 
----@param client ProgressClient
-local function next_spinner(client)
-    local idx = client.spinner_idx + 1
+---@param state ProgressState
+local function next_spinner(state)
+    local idx = state.spinner_idx + 1
     if idx > #icons.spinner * config.spinner_interval then
         idx = 1
     end
-    client.spinner_idx = idx
+    state.spinner_idx = idx
     return icons.spinner[math.ceil(idx / config.spinner_interval)]
 end
 
@@ -370,18 +370,18 @@ local function build_base_message(lsp_client, value)
     return message
 end
 
----@param client ProgressClient
+---@param state ProgressState
 ---@param base_message string
 ---@return string
-local function build_done_message(client, base_message)
-    client.is_done = true
+local function build_done_message(state, base_message)
+    state.is_done = true
     return icons.done .. ' ' .. base_message .. ' DONE!'
 end
 
----@param client ProgressClient
+---@param state ProgressState
 ---@param base_message string
-local function build_progress_message(client, base_message, value)
-    client.is_done = false
+local function build_progress_message(state, base_message, value)
+    state.is_done = false
     local message = base_message
 
     if value.message then
@@ -392,79 +392,79 @@ local function build_progress_message(client, base_message, value)
         message = string.format('%s (%3d%%)', message, value.percentage)
     end
 
-    return next_spinner(client) .. ' ' .. message
+    return next_spinner(state) .. ' ' .. message
 end
 
 ---Assemble the output progress message and set the flag to mark if it's completed.
 ---  * General: ⣾ [client_name] title: message ( 5%)
 ---  * Done:     [client_name] title: DONE!
----@param client ProgressClient
+---@param state ProgressState
 ---@param lsp_client vim.lsp.Client
 ---@param params lsp.ProgressParams
 ---@return string
-local function build_message(client, lsp_client, params)
+local function build_message(state, lsp_client, params)
     local value = params.value
     local message = build_base_message(lsp_client, value)
 
     if value.kind == 'end' then
-        return build_done_message(client, message)
+        return build_done_message(state, message)
     end
 
-    return build_progress_message(client, message, value)
+    return build_progress_message(state, message, value)
 end
 
----@param client ProgressClient
-local function should_keep_window(client)
-    return not client.is_done and client.winid ~= nil
+---@param state ProgressState
+local function should_keep_window(state)
+    return not state.is_done and state.winid ~= nil
 end
 
 ---If the window is closed successfully, stop the timer, adjust the positions of other windows and
----reset properties of the client
----@param client ProgressClient
-local function cleanup_client(client)
-    client.timer:stop()
-    client.timer:close()
+---reset state
+---@param state ProgressState
+local function cleanup_state(state)
+    state.timer:stop()
+    state.timer:close()
 
     total_wins = total_wins - 1
 
     -- Move all windows above this closed window down by one position
-    for _, c in pairs(clients) do
-        if c.winid ~= nil and c.pos > client.pos then
-            c.pos = c.pos - 1
-            update_win_config(c)
+    for _, s in pairs(progress_states) do
+        if s.winid ~= nil and s.pos > state.pos then
+            s.pos = s.pos - 1
+            update_win_config(s)
         end
     end
 
-    reset_client(client)
+    reset_state(state)
 end
 
----@param client ProgressClient
-local function close_window_if_done(client)
+---@param state ProgressState
+local function close_window_if_done(state)
     -- A new progress notification arrived before the close timer fired
-    if should_keep_window(client) then
-        client.timer:stop()
+    if should_keep_window(state) then
+        state.timer:stop()
         return
     end
 
     local success = false
 
     -- Close the window if it has not been closed yet
-    if client.winid ~= nil and client.bufnr ~= nil then
-        success = close_window(client)
+    if state.winid ~= nil and state.bufnr ~= nil then
+        success = close_window(state)
     end
 
     if success then
-        cleanup_client(client)
+        cleanup_state(state)
     end
 end
 
----@param client ProgressClient
-local function schedule_close(client)
-    client.timer:start(
+---@param state ProgressState
+local function schedule_close(state)
+    state.timer:start(
         config.done_delay,
         config.close_retry_interval,
         vim.schedule_wrap(function()
-            close_window_if_done(client)
+            close_window_if_done(state)
         end)
     )
 end
@@ -480,13 +480,13 @@ local function handle_progress(ev)
         return
     end
 
-    ---@type ProgressClient
-    local client = get_client(client_id)
+    ---@type ProgressState
+    local state = get_state(client_id)
 
-    client.message = build_message(client, lsp_client, ev.data.params)
+    state.message = build_message(state, lsp_client, ev.data.params)
 
     -- Show progress message in the floating window
-    local rendered = try_render_message(client)
+    local rendered = try_render_message(state)
 
     -- Close the window when progress finishes and adjust the positions of other windows.
     -- Let the window stay briefly on the screen before closing it (say 2s). When closing, attempt
@@ -502,8 +502,8 @@ local function handle_progress(ev)
     -- 2. the new round of progress notification report has finished. We should avoid the window
     --    being closed twice. In the code below, timer:start() will be called again and it just
     --    resets the timer, so the window will not be closed twice.
-    if rendered and client.is_done then
-        schedule_close(client)
+    if rendered and state.is_done then
+        schedule_close(state)
     end
 end
 
@@ -534,9 +534,9 @@ vim.api.nvim_create_autocmd({ 'VimResized', 'TermLeave' }, {
     group = group,
     pattern = '*',
     callback = function()
-        for _, c in pairs(clients) do
-            if c.is_done and c.winid ~= nil and vim.api.nvim_win_is_valid(c.winid) then
-                update_win_config(c)
+        for _, s in pairs(progress_states) do
+            if s.is_done and s.winid ~= nil and vim.api.nvim_win_is_valid(s.winid) then
+                update_win_config(s)
             end
         end
     end,

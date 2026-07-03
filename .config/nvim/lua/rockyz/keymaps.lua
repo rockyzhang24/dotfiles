@@ -374,6 +374,7 @@ vim.keymap.set('n', '<C-l>', function()
     vim.cmd('nohlsearch')
     vim.cmd('diffupdate')
     vim.cmd('syncbind')
+    require('rockyz.scrollbar').clear_search()
     vim.cmd('normal! <C-l>')
 end, { silent = true })
 

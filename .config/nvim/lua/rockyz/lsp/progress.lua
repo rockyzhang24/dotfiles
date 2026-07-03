@@ -167,7 +167,7 @@ local icons = {
     done = ' ',
 }
 
-local guard_whitelist = {
+local guard_error_whitelist = {
     'E11: Invalid in command%-line window',
     'E523: Not allowed here',
     'E565: Not allowed to change',
@@ -182,7 +182,7 @@ local guard_whitelist = {
 ---@field pos integer Window position, counted from bottom to top. 0 if no window is active.
 ---@field timer uv.uv_timer_t|nil Timer used to defer closing, especially during textlock
 
----State for each LSP client that sends progress notifications, indexed by client id.
+---Runtime state for each LSP client that reports progress, indexed by client id.
 ---@type table<integer, ProgressState>
 local progress_states = {}
 
@@ -193,10 +193,12 @@ local total_wins = 0
 -- State
 --------------------------------------------------------------------------------
 
--- Suppress errors that may occur while render windows. E.g., nvim_buf_set_lines() will throw E565
--- when textlock is active. I encounter this issue when I use quick-scope in visual mode and its
--- getchar() brings about textlock.
--- All other errors will be re-thrown.
+-- Suppress expected Neovim API errors that can occur temporarily, such as during textlock. All
+-- other errors are re-thrown.
+--
+-- E.g., nvim_buf_set_lines() will throw E565 when textlock is active. I encounter this issue when
+-- I use quick-scope in visual mode and its getchar() brings about textlock.
+--
 -- Adapted from j-hui/fidget.nvim
 ---@param callable function
 ---@return boolean # If the callable executes successfully or not
@@ -208,7 +210,7 @@ local function guard(callable)
     if type(err) ~= 'string' then
         error(err)
     end
-    for _, msg in ipairs(guard_whitelist) do
+    for _, msg in ipairs(guard_error_whitelist) do
         if string.find(err, msg) then
             return false
         end
@@ -216,7 +218,7 @@ local function guard(callable)
     error(err)
 end
 
----Reset the state of a progress client
+---Reset a progress state to its initial state
 ---@param state ProgressState
 local function reset_state(state)
     state.is_done = false
@@ -272,9 +274,8 @@ local function need_new_window(state)
 end
 
 ---@param state ProgressState
----@return boolean
 local function update_win_config(state)
-    return guard(function()
+    guard(function()
         vim.api.nvim_win_set_config(state.winid, {
             relative = 'editor',
             width = #state.message,
@@ -286,9 +287,8 @@ local function update_win_config(state)
 end
 
 ---@param state ProgressState
----@return boolean
 local function update_buffer(state)
-    return guard(function()
+    guard(function()
         vim.api.nvim_buf_set_lines(state.bufnr, 0, 1, false, { state.message })
     end)
 end
@@ -342,20 +342,15 @@ end
 ---Render the current progress message
 ---Assumes `state.message` and `state.pos` have been initialized
 ---@param state ProgressState
----@return boolean
-local function try_render_message(state)
+local function render_message(state)
     -- Create a new window or update the existing one
     if need_new_window(state) then
-        if not create_window(state) then
-            return false
-        end
+        create_window(state)
     else
-        if not update_win_config(state) then
-            return false
-        end
+        update_win_config(state)
     end
     -- Write the message into the buffer
-    return update_buffer(state)
+    update_buffer(state)
 end
 
 --------------------------------------------------------------------------------
@@ -502,7 +497,7 @@ local function handle_progress(ev)
     state.message = build_message(state, lsp_client, ev.data.params)
 
     -- Show progress message in the floating window
-    local rendered = try_render_message(state)
+    render_message(state)
 
     -- Close the window when progress finishes and adjust the positions of other windows.
     -- Let the window stay briefly on the screen before closing it (say 2s). When closing, attempt
@@ -518,7 +513,7 @@ local function handle_progress(ev)
     -- 2. the new round of progress notification report has finished. We should avoid the window
     --    being closed twice. In the code below, timer:start() will be called again and it just
     --    resets the timer, so the window will not be closed twice.
-    if rendered and state.is_done then
+    if state.is_done then
         schedule_close(state)
     end
 end

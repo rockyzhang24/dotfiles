@@ -189,6 +189,10 @@ local progress_states = {}
 ---Number of currently visible progress windows
 local total_wins = 0
 
+--------------------------------------------------------------------------------
+-- State
+--------------------------------------------------------------------------------
+
 -- Suppress errors that may occur while render windows. E.g., nvim_buf_set_lines() will throw E565
 -- when textlock is active. I encounter this issue when I use quick-scope in visual mode and its
 -- getchar() brings about textlock.
@@ -247,6 +251,10 @@ local function get_state(client_id)
 
     return state
 end
+
+--------------------------------------------------------------------------------
+-- Window management
+--------------------------------------------------------------------------------
 
 -- Get the row position of the current floating window. If it is the first one, it is placed just
 -- right above the statuslien; if not, it is placed on top of others.
@@ -350,6 +358,10 @@ local function try_render_message(state)
     return update_buffer(state)
 end
 
+--------------------------------------------------------------------------------
+-- Message formatting
+--------------------------------------------------------------------------------
+
 ---@param state ProgressState
 local function next_spinner(state)
     local idx = state.spinner_idx + 1
@@ -412,6 +424,10 @@ local function build_message(state, lsp_client, params)
 
     return build_progress_message(state, message, value)
 end
+
+--------------------------------------------------------------------------------
+-- Progress lifecycle
+--------------------------------------------------------------------------------
 
 ---@param state ProgressState
 local function should_keep_window(state)
@@ -506,6 +522,10 @@ local function handle_progress(ev)
         schedule_close(state)
     end
 end
+
+--------------------------------------------------------------------------------
+-- Autocmds
+--------------------------------------------------------------------------------
 
 -- Display the progress message when it comes
 local group = vim.api.nvim_create_augroup('rockyz.lsp_progress', { clear = true })

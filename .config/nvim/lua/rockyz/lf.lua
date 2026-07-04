@@ -6,7 +6,9 @@
 
 local M = {}
 
-local io_utils = require('rockyz.utils.io')
+--------------------------------------------------------------------------------
+-- Configuration
+--------------------------------------------------------------------------------
 
 local config = {
     keymaps = {
@@ -15,82 +17,37 @@ local config = {
         ['<C-t>'] = 'tab',
         ['<C-Enter>'] = 'edit',
         ['<C-q>'] = 'cd',
-    }
+    },
 }
 
+local open_modes = {
+    split = 'belowright split',
+    vsplit = 'belowright vsplit',
+    tab = 'tab split',
+    edit = 'edit',
+}
+
+---@class LfState
+---@field winid integer Floating window id
+---@field bufnr integer Terminal buffer id
+---@field jobid integer Terminal job id
+---@field lf_pid integer Process id of the lf instance
+
+---@type LfState
 local state = {
     winid = -1,
     bufnr = -1,
     jobid = -1,
-    pid = -1, -- pid of lf
+    lf_pid = -1, -- pid of lf
 }
 
-local prev_FZF_DEFAULT_OPTS
+local previous_fzf_default_opts
 
-local function create_keymaps()
-    vim.keymap.set('t', '_', function()
-        M.close()
-    end, { buffer = state.bufnr })
+--------------------------------------------------------------------------------
+-- Helpers
+--------------------------------------------------------------------------------
 
-    vim.keymap.set('n', 'q', '<Cmd>q<CR>', { buffer = state.bufnr, nowait = true })
-
-    for key, action in pairs(config.keymaps) do
-        vim.keymap.set('t', key, function()
-            M[action]()
-        end, { buffer = state.buffer })
-    end
-end
-
----Generate lf remote command that tells the parent Nvim (i.e., the remote server) to run the
----function from lf.lua module via Nvim's RPC.
----Example: tell the parent Nvim to run a function foobar() with the selected files as the argument
----lf -remote 'send lf_pid $nvim --server "$NVIM" --remote-expr "v:lua.require(\'rockyz.lf\').foobar(\'$fx\')"'
----@param fn_name string Function name
----@param args? string A string representation of the argument list passed to the funcion, e.g., "'foo', 'bar'"
-local function build_remote_expr_cmd(fn_name, args)
-    args = args or ''
-    return {
-        'lf',
-        '-remote',
-        string.format(
-            'send %s $nvim --server "$NVIM" --remote-expr "v:lua.require(\'rockyz.lf\').%s(%s)"',
-            state.pid,
-            fn_name,
-            args
-        ),
-    }
-end
-
----@param command string Vim's Ex command to open file, e.g., vsplit
-local function open_file(command)
-    local cmd = build_remote_expr_cmd('remote_open_file', string.format("'$fx', '%s'", command))
-    M.close()
-    vim.system(cmd, { text = true })
-end
-
-function M.split()
-    open_file('belowright split')
-end
-
-function M.vsplit()
-    open_file('belowright vsplit')
-end
-
-function M.tab()
-    open_file('tab split')
-end
-
-function M.edit()
-    open_file('edit')
-end
-
-function M.cd()
-    local cmd = build_remote_expr_cmd('remote_cd', "'$PWD'")
-    M.close()
-    vim.system(cmd, { text = true })
-end
-
-local function calculate_win_pos()
+local function window_config()
 
     local win_width = math.floor(vim.o.columns * 0.8)
     local win_height = math.floor(vim.o.lines * 0.8)
@@ -109,39 +66,140 @@ local function calculate_win_pos()
     }
 end
 
+---@param value string
+---@return string
+local function lua_string(value)
+    return "'" .. value:gsub("\\", "\\\\"):gsub("'", "\\'") .. "'"
+end
+
+---@param ... string
+---@return string
+local function format_lua_args(...)
+    local args = { ... }
+    for i, arg in ipairs(args) do
+        args[i] = lua_string(arg)
+    end
+    return table.concat(args, ', ')
+end
+
+---Generate lf remote command that tells the parent Nvim (i.e., the remote server) to run the
+---function from lf.lua module via Nvim's RPC.
+---
+---Example: tell the parent Nvim to run a function foobar() with the selected files as the argument
+---lf -remote 'send lf_pid $nvim --server "$NVIM" --remote-expr "v:lua.require(\'rockyz.lf\').eoobar(\'$fx\')"'
+---@param function_name string Name of the exported Lua function
+---@param lua_args? string Lua source code representing the function arguments, e.g., "'foo', 'bar'"
+---@return string[] # Command passed to `vim.system()`
+local function build_remote_expr_cmd(function_name, lua_args)
+    lua_args = lua_args or ''
+    return {
+        'lf',
+        '-remote',
+        string.format(
+            'send %s $nvim --server "$NVIM" --remote-expr "v:lua.require(\'rockyz.lf\').%s(%s)"',
+            state.lf_pid,
+            function_name,
+            lua_args
+        ),
+    }
+end
+
+---@param function_name string
+---@param lua_args? string Lua source code representing the function arguments
+local function send_remote_command(function_name, lua_args)
+    M.close()
+    vim.system(build_remote_expr_cmd(function_name, lua_args), { text = true })
+end
+
+---@param command string Vim Ex command used to open the selected files
+local function open_selection(command)
+    send_remote_command('remote_open_selection', format_lua_args('$fx', command))
+end
+
+local function create_keymaps()
+    vim.keymap.set('t', '_', function()
+        M.close()
+    end, { buffer = state.bufnr })
+
+    vim.keymap.set('n', 'q', '<Cmd>q<CR>', { buffer = state.bufnr, nowait = true })
+
+    for key, action in pairs(config.keymaps) do
+        vim.keymap.set('t', key, function()
+            M[action]()
+        end, { buffer = state.bufnr })
+    end
+end
+
+---Create the terminal buffer, start lf, and initialize terminal-local keymaps
+local function create_terminal()
+    state.bufnr = vim.api.nvim_create_buf(false, true)
+    vim.api.nvim_buf_call(state.bufnr, function()
+        state.jobid = vim.fn.jobstart({ 'lf' }, {
+            term = true,
+            on_exit = function()
+                vim.env.FZF_DEFAULT_OPTS = previous_fzf_default_opts
+                -- Delete the terminal buffer Immediately to avoid the redundant "[Process
+                -- exited 0]" message.
+                if vim.api.nvim_buf_is_valid(state.bufnr) then
+                    vim.api.nvim_buf_delete(state.bufnr, { force = true })
+                end
+            end,
+        })
+    end)
+    state.lf_pid = vim.fn.jobpid(state.jobid)
+    create_keymaps()
+end
+
+--------------------------------------------------------------------------------
+-- Public APIs
+--------------------------------------------------------------------------------
+
+function M.split()
+    open_selection(open_modes.split)
+end
+
+function M.vsplit()
+    open_selection(open_modes.vsplit)
+end
+
+function M.tab()
+    open_selection(open_modes.tab)
+end
+
+function M.edit()
+    open_selection(open_modes.edit)
+end
+
+function M.cd()
+    send_remote_command('remote_cd', format_lua_args('$PWD'))
+end
+
 -- Open a floating window running lf
 function M.open()
-    prev_FZF_DEFAULT_OPTS = vim.env.FZF_DEFAULT_OPTS
-    vim.env.FZF_DEFAULT_OPTS = vim.env.FZF_DEFAULT_OPTS:gsub('%-%-tmux%s+%S+', '')
-
-    local bufname = vim.api.nvim_buf_get_name(0)
-    local tmpfile = vim.env.TMPDIR .. '/nvim-lf-bufname'
-    io_utils.write_file_async(tmpfile, bufname)
-
-    if not vim.api.nvim_buf_is_valid(state.bufnr) then
-        state.bufnr = vim.api.nvim_create_buf(false, true)
-        vim.api.nvim_buf_call(state.bufnr, function()
-            state.jobid = vim.fn.jobstart({ 'lf' }, {
-                term = true,
-                on_exit = function()
-                    -- Immediately close the buffer and window to avoid the redundant message "[Process
-                    -- exited 0]"
-                    vim.api.nvim_buf_delete(state.bufnr, { force = true })
-                end,
-            })
-        end)
-        state.pid = vim.fn.jobpid(state.jobid)
-        create_keymaps()
+    if vim.api.nvim_win_is_valid(state.winid) then
+        return
     end
 
-    state.winid = vim.api.nvim_open_win(state.bufnr, true, calculate_win_pos())
+    previous_fzf_default_opts = vim.env.FZF_DEFAULT_OPTS
+
+    if vim.env.FZF_DEFAULT_OPTS then
+        vim.env.FZF_DEFAULT_OPTS = vim.env.FZF_DEFAULT_OPTS:gsub('%-%-tmux%s+%S+', '')
+    end
+
+    if not vim.api.nvim_buf_is_valid(state.bufnr) then
+        create_terminal()
+    end
+
+    state.winid = vim.api.nvim_open_win(state.bufnr, true, window_config())
     vim.cmd.startinsert()
 end
 
 -- Close the window
 function M.close()
-    vim.api.nvim_win_hide(state.winid)
-    vim.env.FZF_DEFAULT_OPTS = prev_FZF_DEFAULT_OPTS
+    if vim.api.nvim_win_is_valid(state.winid) then
+        vim.api.nvim_win_hide(state.winid)
+    end
+    vim.env.FZF_DEFAULT_OPTS = previous_fzf_default_opts
 end
 
 -- Toggle lf window
@@ -153,23 +211,19 @@ function M.toggle()
     end
 end
 
-vim.keymap.set('n', '_', function()
-    M.toggle()
-end)
-
----------------------------------------------------------------
+--------------------------------------------------------------------------------
 -- Functions invoked by lf's remote commands through Nvim's RPC
----------------------------------------------------------------
+--------------------------------------------------------------------------------
 
----@param selection string Selected files that delimited by "\n"
----@param command string Vim's Ex command to open file
-function M.remote_open_file(selection, command)
+---@param selection string Selected files, delimited by "\n"
+---@param command string Vim's Ex command used to open each selected file
+function M.remote_open_selection(selection, command)
     command = command or 'edit'
-    local files = vim.split(selection, '\n')
+    local files = vim.split(selection, '\n', { trimempty = true })
     for _, f in ipairs(files) do
         local stat = vim.uv.fs_stat(f)
         if stat and stat.type == 'file' then
-            vim.cmd(command .. ' ' .. f)
+            vim.cmd(command .. ' ' .. vim.fn.fnameescape(f))
         else
             vim.notify(string.format('[lf] %s is not a file', f), vim.log.levels.WARN)
         end
@@ -184,6 +238,15 @@ function M.remote_cd(pwd)
         return
     end
     vim.cmd.cd(pwd)
+    vim.notify('CWD is changed to: ' .. pwd, vim.log.levels.INFO)
 end
+
+--------------------------------------------------------------------------------
+-- Global keymaps
+--------------------------------------------------------------------------------
+
+vim.keymap.set('n', '_', function()
+    M.toggle()
+end)
 
 return M

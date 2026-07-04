@@ -193,15 +193,17 @@ local total_wins = 0
 -- State
 --------------------------------------------------------------------------------
 
--- Suppress expected Neovim API errors that can occur temporarily, such as during textlock. All
--- other errors are re-thrown.
---
--- E.g., nvim_buf_set_lines() will throw E565 when textlock is active. I encounter this issue when
--- I use quick-scope in visual mode and its getchar() brings about textlock.
---
--- Adapted from j-hui/fidget.nvim
+---Execute a Neovim API call while suppressing expected transient errors.
+---
+---Errors caused by temporary editor states (for example, textlock) are ignored, while all other
+---errors are re-thrown.
+---
+---E.g., nvim_buf_set_lines() will throw E565 when textlock is active. I encounter this issue when
+---I use quick-scope in visual mode and its getchar() brings about textlock.
+---
+---Adapted from j-hui/fidget.nvim
 ---@param callable function
----@return boolean # If the callable executes successfully or not
+---@return boolean # Whether the callable completed successfully
 local function guard(callable)
     local ok, err = pcall(callable)
     if ok then
@@ -339,8 +341,9 @@ local function close_window(state)
     end)
 end
 
----Render the current progress message
----Assumes `state.message` and `state.pos` have been initialized
+---Best-effort render of the current progress message.
+---Creates a floating window if needed, updates its layout, then writes the message.
+---Failures caused by temporary Neovim states such as textlock are suppressed by `guard()`.
 ---@param state ProgressState
 local function render_message(state)
     -- Create a new window or update the existing one
@@ -429,8 +432,10 @@ local function should_keep_window(state)
     return not state.is_done and state.winid ~= nil
 end
 
----If the window is closed successfully, stop the timer, adjust the positions of other windows and
----reset state
+---Clean up a finished progress state.
+---
+---Stops and destroys the close timer, update the position of remaining windows, then reset the
+---state for reuse.
 ---@param state ProgressState
 local function cleanup_state(state)
     state.timer:stop()
@@ -469,6 +474,7 @@ local function close_window_if_done(state)
     end
 end
 
+---Schedule closing of a finished progress window
 ---@param state ProgressState
 local function schedule_close(state)
     state.timer:start(

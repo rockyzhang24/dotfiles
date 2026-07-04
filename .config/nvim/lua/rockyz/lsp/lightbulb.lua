@@ -8,70 +8,185 @@
 -- Reference: the source code of vim.lsp.buf.code_action() in
 -- https://github.com/neovim/neovim/blob/master/runtime/lua/vim/lsp/buf.lua
 
-local ok, icons = pcall(require, 'rockyz.icons')
-local bulb_icon = ok and icons.misc.lightbulb or ''
+local has_icons, icons = pcall(require, 'rockyz.icons')
+local LIGHTBOLB_ICON = has_icons and icons.misc.lightbulb or ''
 
-local method = 'textDocument/codeAction'
+local LIGHTBOLB_TEXT = LIGHTBOLB_ICON .. ' '
+local LIGHTBULB_WIDTH = vim.fn.strdisplaywidth(LIGHTBOLB_TEXT)
 
-local opts = {
+local CODE_ACTION_METHOD = 'textDocument/codeAction'
+
+local default_extmark_opts = {
     virt_text = {
-        { bulb_icon .. ' ', 'LightBulb' },
+        { LIGHTBOLB_TEXT, 'LightBulb' },
     },
     hl_mode = 'combine',
     virt_text_win_col = 0,
 }
 
--- Get the line number where the bulb should be displayed
-local function get_bulb_linenr()
-    local linenr = vim.fn.line('.')
-    if vim.fn.indent('.') <= 2 then
-        if linenr == vim.fn.line('w0') then
-            return linenr + 1
-        else
-            return linenr - 1
-        end
+---Get the 1-based line number where the lightbulb should be displayed
+---@return integer
+local function get_lightbulb_line()
+    local line = vim.fn.line('.')
+    local topline = vim.fn.line('w0')
+    local indent = vim.fn.indent('.')
+
+    if indent > LIGHTBULB_WIDTH then
+        return line
     end
-    return linenr
+
+    if line == topline then
+        return line + 1
+    end
+
+    return line - 1
 end
 
--- Remove the lightbulb
-local function lightbulb_remove(winid, bufnr)
-    if
-        not vim.api.nvim_win_is_valid(winid)
-        or not vim.api.nvim_buf_is_valid(bufnr)
-        or vim.w[winid].bulb_ns_id == nil and vim.w[winid].bulb_mark_id == nil
-    then
+---Remove the lightbulb extmark
+---@param winid integer
+---@param bufnr integer
+local function remove_lightbulb(winid, bufnr)
+    if not vim.api.nvim_win_is_valid(winid) or not vim.api.nvim_buf_is_valid(bufnr) then
         return
     end
-    vim.api.nvim_buf_del_extmark(bufnr, vim.w[winid].bulb_ns_id, vim.w[winid].bulb_mark_id)
-    vim.w[winid].prev_bulb_linenr = nil
+
+    local ns_id = vim.w[winid].bulb_ns_id
+    local mark_id = vim.w[winid].bulb_mark_id
+
+    if ns_id == nil or mark_id == nil then
+        return
+    end
+
+    pcall(vim.api.nvim_buf_del_extmark, bufnr, ns_id, mark_id)
+
+    vim.w[winid].prev_lightbulb_line = nil
 end
 
--- Create or update the lightbulb
-local function lightbulb_update(winid, bufnr, bulb_linenr)
+---Show the lightbulb extmark
+---@param winid integer
+---@param bufnr integer
+---@param lightbulb_line integer 0-based line number
+local function show_lightbulb(winid, bufnr, lightbulb_line)
     -- No need to update the bulb if its position does not change
-    if not vim.api.nvim_win_is_valid(winid) or bulb_linenr == vim.w[winid].prev_bulb_linenr then
+    if not vim.api.nvim_win_is_valid(winid) or not vim.api.nvim_buf_is_valid(bufnr) then
         return
     end
+
+    if lightbulb_line == vim.w[winid].prev_lightbulb_line then
+        return
+    end
+
     -- Create a window-local namespace for the extmark
     if vim.w[winid].bulb_ns_id == nil then
         local ns_id = vim.api.nvim_create_namespace('rockyz.bulb.' .. winid)
         vim.api.nvim__ns_set(ns_id, { wins = { winid } })
         vim.w[winid].bulb_ns_id = ns_id
     end
-    -- Create an extmark or update the existing one
-    if vim.w[winid].bulb_mark_id == nil then
-        vim.w[winid].bulb_mark_id = vim.api.nvim_buf_set_extmark(bufnr, vim.w[winid].bulb_ns_id, bulb_linenr, 0, opts)
-        vim.w[winid].bulb_mark_opts = vim.tbl_extend('keep', opts, {
-            id = vim.w[winid].bulb_mark_id,
-        })
-    else
-        vim.api.nvim_buf_set_extmark(bufnr, vim.w[winid].bulb_ns_id, bulb_linenr, 0, vim.w[winid].bulb_mark_opts)
-    end
-    vim.w[winid].prev_bulb_linenr = bulb_linenr
+
+    -- Create or move the lightbulb extmark
+    local extmark_opts = vim.tbl_extend('keep', default_extmark_opts, {
+        id = vim.w[winid].bulb_mark_id,
+    })
+    vim.w[winid].bulb_mark_id = vim.api.nvim_buf_set_extmark(
+        bufnr,
+        vim.w[winid].bulb_ns_id,
+        lightbulb_line,
+        0,
+        extmark_opts
+    )
+
+    vim.w[winid].prev_lightbulb_line = lightbulb_line
 end
 
-local function lightbulb()
+---Return the diagnostics on the given line that belong to the client
+---@param client vim.lsp.Client
+---@param bufnr integer
+---@param cursor_lnum integer 0-based line number
+---@return vim.Diagnostic[]
+local function get_client_diagnostics(client, bufnr, cursor_lnum)
+    -- For each client, only retrieve the diagnostics that belong to it. They are the ones that are
+    -- pushed to this client by the server and ones this client pulls from the server.
+
+    ---@type vim.Diagnostic[]
+    local diagnostics = {}
+    local ns_push = vim.lsp.diagnostic.get_namespace(client.id, false)
+
+    -- vim.diagnostic.get() returns vim.Diagnostic[].
+    --
+    -- Internally, the diagnostics, i.e., lsp.Diagnostic[], returned from the server are converted
+    -- to vim.Diagnostic[] and cached, but the original lsp.Diagnostic is stored to
+    -- vim.Diagnostic.user_data.lsp.
+    --
+    -- Reference: the source code of handle_diagnostics() in
+    -- https://github.com/neovim/neovim/blob/master/runtime/lua/vim/lsp/diagnostic.lua
+
+    client:_provider_foreach('textDocument/diagnostic', function(cap)
+        local ns_pull = vim.lsp.diagnostic.get_namespace(client.id, true, cap.identifier)
+        vim.list_extend(
+            diagnostics,
+            vim.diagnostic.get(bufnr, {
+                namespace = ns_pull,
+                lnum = cursor_lnum,
+            })
+        )
+    end)
+
+    vim.list_extend(
+        diagnostics,
+        vim.diagnostic.get(bufnr, {
+            namespace = ns_push,
+            lnum = cursor_lnum,
+        })
+    )
+    return diagnostics
+end
+
+---Returns whether the diagnostic contains the cursor position
+---@param diagnostic vim.Diagnostic
+---@param cursor_lnum integer 0-based line number
+---@param cursor_col integer 0-based byte offset
+---@return boolean
+local function diagnostic_contains_cursor(diagnostic, cursor_lnum, cursor_col)
+    -- Filter the diagnostics at the cursor position
+    -- TODO: use vim.pos once it becomes stable, see diagnostic_contains_cursor() in
+    -- https://github.com/neovim/neovim/blob/master/runtime/lua/vim/lsp/buf.lua
+    return (
+        diagnostic.lnum < cursor_lnum
+        or diagnostic.lnum == cursor_lnum and diagnostic.col <= cursor_col
+    ) and (
+        diagnostic.end_lnum > cursor_lnum
+        or diagnostic.end_lnum == cursor_lnum and diagnostic.end_col > cursor_col
+    )
+end
+
+---Builds the code action request parameters for the given client
+---@param client vim.lsp.Client
+---@param winid integer
+---@param bufnr integer
+---@param cursor_lnum integer 0-based line number
+---@param cursor_col integer 0-based byte offset
+---@return lsp.CodeActionParams
+local function make_code_action_params(client, winid, bufnr, cursor_lnum, cursor_col)
+    local context = {
+        triggerKind = vim.lsp.protocol.CodeActionTriggerKind.Invoked
+    }
+
+    local diagnostics = get_client_diagnostics(client, bufnr, cursor_lnum)
+
+    local params = vim.lsp.util.make_range_params(winid, client.offset_encoding)
+    ---@cast params lsp.CodeActionParams
+    params.context = vim.tbl_extend('force', context, {
+        diagnostics = vim.iter(diagnostics):map(function(diagnostic)
+            if diagnostic_contains_cursor(diagnostic, cursor_lnum, cursor_col) then
+                return diagnostic.user_data.lsp
+            end
+        end):totable()
+    })
+
+    return params
+end
+
+local function update_lightbulb()
     -- Don't display the bulb in diff window
     if vim.wo.diff then
         return
@@ -79,73 +194,48 @@ local function lightbulb()
 
     local winid = vim.api.nvim_get_current_win()
     local bufnr = vim.api.nvim_get_current_buf()
-    local bulb_linenr = get_bulb_linenr() - 1 -- 0-based for extmark
-    local clients = vim.lsp.get_clients({ bufnr = bufnr, method = method })
+    local lightbulb_line = get_lightbulb_line() - 1 -- 0-based for extmark
+    local clients = vim.lsp.get_clients({ bufnr = bufnr, method = CODE_ACTION_METHOD })
+
+    -- Ignore stale LSP responses. Code action requests are asynchronous, so an older request may
+    -- finish after the cursor has already moved.
+    vim.w[winid].bulb_version = (vim.w[winid].bulb_version or 0) + 1
+    local request_id = vim.w[winid].bulb_version
+
+    if #clients == 0 then
+        remove_lightbulb(winid, bufnr)
+    end
+
     local has_action = false
     local cursor_row, cursor_col = unpack(vim.api.nvim_win_get_cursor(0))
     local cursor_lnum = cursor_row - 1 -- 0-indexed
 
     for _, client in ipairs(clients) do
-        local context = {}
-        context.triggerKind = vim.lsp.protocol.CodeActionTriggerKind.Invoked
+        local params = make_code_action_params(client, winid, bufnr, cursor_lnum, cursor_col)
+        client:request(CODE_ACTION_METHOD, params, function(_, result, _)
+            if
+                not vim.api.nvim_win_is_valid(winid)
+                or not vim.api.nvim_buf_is_valid(bufnr)
+                or vim.w[winid].bulb_version ~= request_id
+            then
+                return
+            end
 
-        -- For each client, only retrieve the diagnostics that belong to it. They are the ones that are
-        -- pushed to this client by the server and ones this client pulls from the server.
-
-        local ns_push = vim.lsp.diagnostic.get_namespace(client.id, false)
-        ---@type vim.Diagnostic[]
-        local diagnostics = {}
-
-        -- vim.diagnostic.get() returns vim.Diagnostic[].
-        --
-        -- Internally, the diagnostics, i.e., lsp.Diagnostic[], returned from the server are
-        -- converted to vim.Diagnostic[] and cached, but the original lsp.Diagnostic is stored to
-        -- vim.Diagnostic.user_data.lsp.
-        -- Reference: the source code of handle_diagnostics() in
-        -- https://github.com/neovim/neovim/blob/master/runtime/lua/vim/lsp/diagnostic.lua
-
-        client:_provider_foreach('textDocument/diagnostic', function(cap)
-            local ns_pull = vim.lsp.diagnostic.get_namespace(client.id, true, cap.identifier)
-            vim.list_extend(
-                diagnostics,
-                vim.diagnostic.get(bufnr, { namespace = ns_pull, lnum = cursor_lnum })
-            )
-        end)
-
-        vim.list_extend(
-            diagnostics,
-            vim.diagnostic.get(bufnr, { namespace = ns_push, lnum = cursor_lnum })
-        )
-
-        local params = vim.lsp.util.make_range_params(winid, client.offset_encoding)
-        ---@cast params lsp.CodeActionParams
-        params.context = vim.tbl_extend('force', context, {
-            diagnostics = vim.iter(diagnostics):map(function(d)
-                -- Filter the diagnostics at the cursor position
-                -- TODO: use vim.pos once it gets stable, see diagnostic_contains_cursor() in
-                -- https://github.com/neovim/neovim/blob/master/runtime/lua/vim/lsp/buf.lua
-                if
-                    (d.lnum < cursor_lnum or d.lnum == cursor_lnum and d.col <= cursor_col)
-                    and (d.end_lnum > cursor_lnum or d.end_lnum == cursor_lnum and d.end_col > cursor_col)
-                then
-                    return d.user_data.lsp
-                end
-            end):totable()
-        })
-
-        client:request(method, params, function(_, result, _)
             if has_action then
                 return
             end
-            for _, action in pairs(result or {}) do
+
+            for _, action in ipairs(result or {}) do
                 if action then
                     has_action = true
+                    break
                 end
             end
-            if has_action and bulb_linenr < vim.fn.line('$') then
-                lightbulb_update(winid, bufnr, bulb_linenr)
+
+            if has_action and lightbulb_line < vim.api.nvim_buf_line_count(bufnr) then
+                show_lightbulb(winid, bufnr, lightbulb_line)
             else
-                lightbulb_remove(winid, bufnr)
+                remove_lightbulb(winid, bufnr)
             end
         end, bufnr)
     end
@@ -154,5 +244,5 @@ end
 vim.api.nvim_create_augroup('rockyz.lightbulb', { clear = true })
 vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
     group = 'rockyz.lightbulb',
-    callback = lightbulb,
+    callback = update_lightbulb,
 })

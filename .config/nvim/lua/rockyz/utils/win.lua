@@ -95,7 +95,7 @@ local function win_maximize()
     vim.cmd('normal! ze')
     -- Record whetehr the current window is maximized. This is used to display the "maximized"
     -- status in winbar.
-    vim.w.maximized = 1
+    vim.w.maximized = true
     vim.t.maximized_win = cur_win
     -- Disable scrollbars of other windows
     for _, winid in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
@@ -113,7 +113,7 @@ local function win_restore()
         end
         vim.t.maximizer_sizes = nil
         vim.cmd('normal! ze')
-        vim.w[vim.t.maximized_win].maximized = 0
+        vim.w[vim.t.maximized_win].maximized = false
         -- Enable scrollbars of other windows
         local cur_win = vim.api.nvim_get_current_win()
         for _, winid in ipairs(vim.api.nvim_tabpage_list_wins(0)) do

@@ -11,7 +11,7 @@ local M = {}
 
 ---Cache statusline highlight groups created for filetype icons
 ---@type table<string, boolean>
-local filetype_icon_hl_cache = {}
+local icon_highlight_cache = {}
 
 ---Hide less important statusline component when the screen is narrower than this
 local truncation_width = 120
@@ -417,10 +417,10 @@ function M.filetype()
     local icon, icon_color = devicons.get_icon_color_by_filetype(filetype, { default = true })
     local icon_hl = 'StlIcon-' .. filetype
 
-    if not filetype_icon_hl_cache[icon_hl] then
+    if not icon_highlight_cache[icon_hl] then
         local bg_color = vim.api.nvim_get_hl(0, { name = 'StatusLine' }).bg
         vim.api.nvim_set_hl(0, icon_hl, { fg = icon_color, bg = bg_color })
-        filetype_icon_hl_cache[icon_hl] = true
+        icon_highlight_cache[icon_hl] = true
     end
 
     return string.format('%%#%s#%s %%#StlFiletype#%s%%*', icon_hl, icon, filetype)

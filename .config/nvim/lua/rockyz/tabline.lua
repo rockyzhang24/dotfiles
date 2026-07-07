@@ -27,7 +27,7 @@ local icon_highlight_cache = {}
 ---@param winid integer
 ---@param bufnr integer
 ---@param filetype string
----@return table|nil
+---@return rockyz.SpecialFiletype|nil
 local function find_special_filetype(winid, bufnr, filetype)
     local win_type = vim.fn.win_gettype(winid)
     local bufname = vim.api.nvim_buf_get_name(bufnr)

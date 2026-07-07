@@ -2,6 +2,12 @@
 
 local icons = require('rockyz.icons')
 
+---@class rockyz.SpecialFiletype
+---@field icon string Icon displayed for the filetype
+---@field title string Human-readable title shown in UI components
+---@field icon_hl? string Highlight group for the icon
+
+---@type table <string, rockyz.SpecialFiletype>
 local special_filetypes = {
     aerial = {
         icon = icons.misc.outline,

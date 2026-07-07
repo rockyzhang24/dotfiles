@@ -400,7 +400,9 @@ function M.filetype()
         return string.format('%%#StlComponentInactive#%s [Empty]%%*', icons.misc.file)
     end
 
-    -- Handle special filetype
+    -- Special filetype
+
+    ---@type rockyz.SpecialFiletype
     local special = special_filetypes[filetype]
     if special then
         local icon = special.icon

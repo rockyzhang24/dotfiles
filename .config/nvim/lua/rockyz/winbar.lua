@@ -77,6 +77,7 @@ local function get_special_component(ft, winid)
         ft = 'cmdwin'
     end
 
+    ---@type rockyz.SpecialFiletype
     local special = special_filetypes[ft]
     local icon = special.icon
     local icon_hl = special.icon_hl or 'WinbarPath'

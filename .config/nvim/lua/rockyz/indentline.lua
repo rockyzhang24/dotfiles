@@ -1,49 +1,66 @@
--- I am using tab and leadmultispace in listchars to display the indent line. The chars for tab and
--- leadmultispace should be updated based on whether the indentation has been changed.
--- 1. If using space as indentation: set tab to a special character for denotation and
---    leadmultispace to the indent line character followed by multiple spaces whose amounts depends
---    on the number of spaces to use in each step of indent.
--- 2. If using tab as indentation: set leadmultispace to a special character for denotation and tab
---    to the indent line character.
+-- Display indent guides using Neovim's builtin 'listchars'.
+--
+-- This module updates the 'tab' and 'leadmultispace' listchars according to the current indentation
+-- style:
+--
+-- - Space indentation:
+--   Use 'leadmultispace' as the indent guide, and use 'tab' only as a marker for literal tab
+--   characters.
+--
+-- - Tab indentation:
+--   Use 'tab' as the indent guide, and use 'leadmultispace' only as a marker for leading spaces.
 
 local ok, icons = pcall(require, 'rockyz.icons')
-local symbol_icon = ok and icons.lines.double_dash_vertical or '╎'
+local indentline_char = ok and icons.lines.double_dash_vertical or '╎'
 
-local function indentchar_update(is_local)
-    local tab
-    local leadmultispace
-    if vim.api.nvim_get_option_value('expandtab', {}) then
-        -- For space indentation
-        local spaces = vim.api.nvim_get_option_value('shiftwidth', {})
-        -- If shiftwidth is 0, vim will use tabstop value
-        if spaces == 0 then
-            spaces = vim.api.nvim_get_option_value('tabstop', {})
-        end
-        tab = '› '
-        leadmultispace = symbol_icon .. string.rep(' ', spaces - 1)
-    else
-        -- For tab indentation
-        tab = symbol_icon .. ' '
-        leadmultispace = '␣'
+local tab_marker = '› '
+local space_marker = '␣'
+
+---@return integer
+local function get_indent_width()
+    local shiftwidth = vim.api.nvim_get_option_value('shiftwidth', {})
+    if shiftwidth > 0 then
+        return shiftwidth
     end
-
-    -- Update
-    local opt = is_local and vim.opt_local or vim.opt
-    opt.listchars:append({ tab = tab })
-    opt.listchars:append({ leadmultispace = leadmultispace })
+    -- 'shiftwidth = 0' means to use 'tabstop'
+    return vim.api.nvim_get_option_value('tabstop', {})
 end
 
-vim.api.nvim_create_augroup('rockyz.indentline', { clear = true })
+---@return table<string, string>
+local function build_indent_listchars()
+    if vim.api.nvim_get_option_value('expandtab', {}) then
+        local indent_width = get_indent_width()
+        return {
+            tab = tab_marker,
+            leadmultispace = indentline_char .. string.rep(' ', indent_width - 1),
+        }
+    end
+
+    return {
+        tab = indentline_char .. ' ',
+        leadmultispace = space_marker,
+    }
+end
+
+---@param opt table vim.opt, vim.opt_local, vim.opt_global
+local function update_listchars(opt)
+    local listchars = build_indent_listchars()
+    opt.listchars:append(listchars)
+end
+
+local augroup = vim.api.nvim_create_augroup('rockyz.indentline', { clear = true })
+
 vim.api.nvim_create_autocmd({ 'VimEnter' }, {
-    group = 'rockyz.indentline',
+    group = augroup,
     callback = function()
-        indentchar_update(false)
+        update_listchars(vim.opt)
     end,
 })
+
 vim.api.nvim_create_autocmd({ 'OptionSet' }, {
-    group = 'rockyz.indentline',
+    group = augroup,
     pattern = { 'shiftwidth', 'expandtab', 'tabstop' },
     callback = function()
-        indentchar_update(vim.v.option_type == 'local')
+        update_listchars(vim.v.option_type == 'local' and vim.opt_local or vim.opt)
     end,
 })

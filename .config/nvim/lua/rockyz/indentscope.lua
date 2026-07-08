@@ -28,10 +28,10 @@
 -- 5| end                 <-- border.bottom
 --
 
--- Global config
+-- Default config
 -- Use vim.b.indentscope_config for buffer-local config, e.g., setting border_pos to 'top' for
 -- filetype python.
-local config = {
+local default_config = {
     -- Position of scope's border: both, top (for python)
     border_pos = 'both',
     -- Symbol priority. Increase to display on top of more symbols.
@@ -87,27 +87,23 @@ local config = {
 local ok, icons = pcall(require, 'rockyz.icons')
 local symbol_icon = ok and icons.lines.double_dash_vertical or '╎'
 
-local ns_id = vim.api.nvim_create_namespace('rockyz.indentscope.symbols')
+local namespace = vim.api.nvim_create_namespace('rockyz.indentscope.symbols')
 
 local current = {
-    -- Rendering has two steps: undraw the old scope line and draw the new scope. As the cursor
-    -- moves aground, the renderings are scheduled by vim.defer_fn. Only the most recently scheduled
-    -- rendering event will be executed; those scheduled before it will not be executed. Each
-    -- rendering is assigned an unique id, which is used to determine whether the rendering event
-    -- being executing is the most recent one or not.
+    -- Rendering is deferred to avoid redrawing on every cursor event. Each scheduled render gets an
+    -- id; when it runs, it is skipped if a newer render has already been scheduled.
     event_id = 0,
     -- The scope that has currently been rendered
-    scope = {
-    },
-    -- 'none' or 'finished'
-    draw_status = 'none',
+    scope = {},
+    -- Whether a scope is currently rendered
+    is_drawn = false,
 }
 
 local function get_config(new_conf)
-    return vim.tbl_deep_extend('force', config, vim.b.indentscope_config or {}, new_conf or {})
+    return vim.tbl_deep_extend('force', vim.deepcopy(default_config), vim.b.indentscope_config or {}, new_conf or {})
 end
 
-local get_blank_indent_funcs = {
+local blank_indent_resolvers = {
     ['both'] = function(top_indent, bottom_indent)
         return math.max(top_indent, bottom_indent)
     end,
@@ -116,31 +112,33 @@ local get_blank_indent_funcs = {
     end,
 }
 
----Get the indent (a number) of the given line. For blank line, use the greater indent of the
----nearest non-blank line above or below it.
----@param line number Input line
+---Get the effective indent of a line .
+---For blank lines, derive the indent from adjacent non-blank lines according to `border.pos`.
+---For example, if `border.pos = 'both'`, use the greater indent of the adjacent non-blank lines.
+---Returns -1 when the requested side has no adjacent non-blank line.
+---@param line integer Input line
 ---@param border_pos string
----@return number
+---@return integer
 local function get_line_indent(line, border_pos)
-    local pre_nonblank_line = vim.fn.prevnonblank(line)
-    local indent = vim.fn.indent(pre_nonblank_line)
+    local prev_nonblank_line = vim.fn.prevnonblank(line)
+    local indent = vim.fn.indent(prev_nonblank_line)
 
     -- Compute the indent of the blank line
-    if line ~= pre_nonblank_line then
+    if line ~= prev_nonblank_line then
         local next_indent = vim.fn.indent(vim.fn.nextnonblank(line))
-        indent = get_blank_indent_funcs[border_pos](indent, next_indent)
+        indent = blank_indent_resolvers[border_pos](indent, next_indent)
     end
 
-    -- Return -1 if line is invalid, i.e., line is less than 1 and larger than vim.fn.line('$')
+    -- `vim.fn.indent(0)` returns -1 when prevnonblank()/nextnonblank() finds no line.
     return indent
 end
 
-local border_adjuster_funcs = {
+local border_line_resolvers = {
     ---If the line happens to be a scope border, return the line with greater indent between the two
     ---adjacent lines.
-    ---@param line number
+    ---@param line integer
     ---@param border_pos string
-    ---@return number
+    ---@return integer
     ['both'] = function(line, border_pos)
         local prev_indent, cur_indent, next_indent =
         get_line_indent(line - 1, border_pos), get_line_indent(line, border_pos), get_line_indent(line + 1, border_pos)
@@ -159,11 +157,11 @@ local border_adjuster_funcs = {
 }
 
 ---Find the boundary of the scope that the input line belongs to.
----@param line number Input line number
----@param indent number Indent of the input line
+---@param line integer Input line number
+---@param indent integer Indent of the input line
 ---@param side string Which boundary to find, 'top' or 'bottom'
 ---@param border_pos string
----@return number # Line number of the boundary in the specified direction
+---@return integer # Line number of the boundary in the specified direction
 local function search_scope_boundary(line, indent, side, border_pos)
     local final_line, increment = 1, -1
     if side == 'bottom' then
@@ -179,7 +177,7 @@ local function search_scope_boundary(line, indent, side, border_pos)
 end
 
 -- Functions to get the scope borders given a scope body
-local get_border_from_body_funcs = {
+local border_resolvers = {
     ---@param body table Scope body
     ---@param border_pos string
     ---@return table
@@ -204,21 +202,25 @@ local get_border_from_body_funcs = {
     end,
 }
 
----@param line number? Input line number
----@param col number?
----@param opts table?
+---@param line? integer Input line number. Defaults to the cursor line.
+---@param col? integer Input column. Defaults to the cursor column only when using the cursor line.
+---@param opts? table
 ---@return table
 local function get_scope(line, col, opts)
     opts = get_config(opts)
+
     if not (line and col) then
         local curpos = vim.fn.getcurpos()
         line = line or curpos[2]
-        line = opts.show_body_at_border and border_adjuster_funcs[opts.border_pos](line, opts.border_pos) or line
+        line = opts.show_body_at_border and border_line_resolvers[opts.border_pos](line, opts.border_pos) or line
         col = col or (opts.indent_at_cursor_col and curpos[5] or math.huge)
     end
+
     local line_indent = get_line_indent(line, opts.border_pos)
     local indent = math.min(col, line_indent)
+
     local body = {}
+
     if indent <= 0 then
         body.top, body.bottom, body.indent = 1, vim.fn.line('$'), line_indent
     else
@@ -226,15 +228,19 @@ local function get_scope(line, col, opts)
         body.bottom = search_scope_boundary(line, indent, 'bottom', opts.border_pos)
         body.indent = indent
     end
+
     return {
         body = body,
-        border = get_border_from_body_funcs[opts.border_pos](body, opts.border_pos),
-        buf_id = vim.api.nvim_get_current_buf(),
+        border = border_resolvers[opts.border_pos](body, opts.border_pos),
+        bufnr = vim.api.nvim_get_current_buf(),
+        winid = vim.api.nvim_get_current_win(),
     }
 end
 
----Get the indent of the scope symbol
-local function get_draw_indent(scope)
+---Get the indent column where the scope symbol should be drawn.
+---@param scope table
+---@return integer
+local function get_symbol_indent(scope)
     return scope.border.indent
 end
 
@@ -243,18 +249,18 @@ end
 ---@param scope_2 table
 ---@return boolean
 local function scopes_are_equal(scope_1, scope_2)
-    return scope_1.buf_id == scope_2.buf_id
-        and get_draw_indent(scope_1) == get_draw_indent(scope_2)
+    return scope_1.bufnr == scope_2.bufnr
+        and get_symbol_indent(scope_1) == get_symbol_indent(scope_2)
         and scope_1.body.top == scope_2.body.top
         and scope_1.body.bottom == scope_2.body.bottom
 end
 
----Check if two scopes have intersect
+---Check whether two scopes overlap on the same drawn indent column
 ---@param scope_1 table
 ---@param scope_2 table
 ---@return boolean
-local function scopes_have_intersect(scope_1, scope_2)
-    if scope_1.buf_id ~= scope_2.buf_id or get_draw_indent(scope_1) ~= get_draw_indent(scope_2) then
+local function scopes_overlap(scope_1, scope_2)
+    if scope_1.bufnr ~= scope_2.bufnr or get_symbol_indent(scope_1) ~= get_symbol_indent(scope_2) then
         return false
     end
     local body_1, body_2 = scope_1.body, scope_2.body
@@ -262,9 +268,12 @@ local function scopes_have_intersect(scope_1, scope_2)
         or (body_1.top <= body_2.top and body_2.top <= body_1.bottom)
 end
 
----Check whether or not displaying indent scope is enabled globally/buffer-locally
-local function is_disabled()
-    return vim.b.indentscope_enabled == false or vim.g.indentscope_enabled == false
+---Check whether indent scope is disabled globally or for a given buffer
+---@param bufnr? integer
+---@return boolean
+local function is_indentscope_disabled(bufnr)
+    bufnr = bufnr or vim.api.nvim_get_current_buf()
+    return vim.b[bufnr].indentscope_enabled == false or vim.g.indentscope_enabled == false
 end
 
 local function undraw_scope(opts)
@@ -272,64 +281,86 @@ local function undraw_scope(opts)
     if opts.event_id and opts.event_id ~= current.event_id then
         return
     end
-    pcall(vim.api.nvim_buf_clear_namespace, current.scope.buf_id or 0, ns_id, 0, -1)
-    current.draw_status = 'none'
+    pcall(vim.api.nvim_buf_clear_namespace, current.scope.bufnr or 0, namespace, 0, -1)
+    current.is_drawn = false
     current.scope = {}
 end
 
 local function draw_scope(scope, opts)
-    -- This function is deferred to be called. When it gets called, a buffer with indentscope
-    -- disabled maybe open.
-    if is_disabled() then
-        return
-    end
     scope = scope or {}
     opts = opts or {}
-    local indent = get_draw_indent(scope)
+
+    -- This function runs later via vim.defer_fn(); by then, the source buffer may be invalid or
+    -- disabled.
+    if
+        not scope.bufnr
+        or not vim.api.nvim_buf_is_valid(scope.bufnr)
+        or is_indentscope_disabled(scope.bufnr)
+    then
+        return
+    end
+
+    if
+        not scope.winid
+        or not vim.api.nvim_win_is_valid(scope.winid)
+        or vim.api.nvim_win_get_buf(scope.winid) ~= scope.bufnr
+    then
+        return
+    end
+
+    local indent = get_symbol_indent(scope)
     if indent < 0 then
         return
     end
-    local col = indent - vim.fn.winsaveview().leftcol
+
+    local leftcol = vim.api.nvim_win_call(scope.winid, function()
+        return vim.fn.winsaveview().leftcol
+    end)
+
+    local col = indent - leftcol
     if col < 0 then
         return
     end
+
     local extmark_opts = {
         hl_mode = 'combine',
-        priority = config.priority,
+        priority = opts.priority,
         right_gravity = false,
         virt_text = { { symbol_icon, 'IndentScopeSymbol' } },
         virt_text_win_col = col,
         virt_text_pos = 'overlay',
         virt_text_repeat_linebreak = true,
     }
-    local bufnr = vim.api.nvim_get_current_buf()
+    local bufnr = scope.bufnr
     for l = scope.body.top, scope.body.bottom do
-        vim.api.nvim_buf_set_extmark(bufnr, ns_id, l - 1, 0, extmark_opts)
+        vim.api.nvim_buf_set_extmark(bufnr, namespace, l - 1, 0, extmark_opts)
     end
-    current.draw_status = 'finished'
+    current.is_drawn = true
 end
 
 local function auto_draw(opts)
-    if is_disabled() then
+    if is_indentscope_disabled() then
         undraw_scope()
         return
     end
 
     opts = opts or {}
-    local scope = get_scope()
+    local conf = get_config()
+    local scope = get_scope(nil, nil, conf)
 
-    if opts.lazy and current.draw_status ~= 'none' and scopes_are_equal(scope, current.scope) then
+    if opts.lazy and current.is_drawn and scopes_are_equal(scope, current.scope) then
         return
     end
 
-    local local_event_id = current.event_id + 1
-    current.event_id = local_event_id
+    local render_id = current.event_id + 1
+    current.event_id = render_id
 
     local draw_opts = {
         event_id = current.event_id,
-        delay = config.delay,
+        delay = conf.delay,
+        priority = conf.priority,
     }
-    if scopes_have_intersect(scope, current.scope) then
+    if scopes_overlap(scope, current.scope) then
         draw_opts.delay = 0
     end
 
@@ -339,7 +370,7 @@ local function auto_draw(opts)
 
     vim.defer_fn(function()
         -- This rendering is obsolete (i.e., it's not the most recently scheduled one)
-        if current.event_id ~= local_event_id then
+        if current.event_id ~= render_id then
             return
         end
         undraw_scope(draw_opts)
@@ -384,7 +415,8 @@ vim.api.nvim_create_autocmd({ 'TextChanged', 'TextChangedI', 'TextChangedP', 'Wi
 ---@param include_border boolean Whether to jump to the border or just to the boundary of the scope body
 local function jump_to_side(scope, side, include_border)
     scope = scope or get_scope()
-    local target_line = include_border and scope.border[side] or scope.body[side]
+    local target_line = include_border and scope.border[side] or nil
+    target_line = target_line or scope.body[side]
     target_line = math.min(math.max(target_line, 1), vim.fn.line('$'))
     vim.api.nvim_win_set_cursor(0, { target_line, 0 })
     -- Move to the first non-blank character to allow next jump if count > 1
@@ -400,10 +432,10 @@ local function jump(side, update_jumplist)
     end
     -- If the current line happens to be a border of a scope, jump to the certain side of its
     -- surrounding scope
-    local cur_line = vim.fn.line('.')
+    local current_line = vim.fn.line('.')
     if
-        cur_line == scope.border.top and side == 'top'
-        or cur_line == scope.border.bottom and side == 'bottom'
+        current_line == scope.border.top and side == 'top'
+        or current_line == scope.border.bottom and side == 'bottom'
     then
         -- Expand the scope to the outer scope
         scope = get_scope(scope.border[side], nil, { show_body_at_border = false })
@@ -418,7 +450,7 @@ local function jump(side, update_jumplist)
         jump_to_side(scope, side, true)
         -- Use `show_body_at_border = false` for continuous jump when count > 1
         scope = get_scope(nil, nil, { show_body_at_border = false })
-        if get_draw_indent(scope) < 0 then
+        if get_symbol_indent(scope) < 0 then
             return
         end
     end
@@ -426,11 +458,13 @@ end
 
 local function exit_visual_mode()
     local ctrl_v = vim.api.nvim_replace_termcodes('<C-v>', true, false, true)
-    local cur_mode = vim.fn.mode()
-    if cur_mode == 'v' or cur_mode == 'V' or cur_mode == ctrl_v then vim.cmd('noautocmd normal! ' .. cur_mode) end
+    local current_mode = vim.fn.mode()
+    if current_mode == 'v' or current_mode == 'V' or current_mode == ctrl_v then
+        vim.cmd('noautocmd normal! ' .. current_mode)
+    end
 end
 
----@param from string Which border the visual selecton starts from
+---@param from string Which border the visual selection starts from
 ---@param to string Which border the visual selection ends at
 local function visual_select_scope(scope, from, to, include_border)
     exit_visual_mode()
@@ -443,7 +477,7 @@ end
 local function textobject(include_border)
     local scope = get_scope()
 
-    if get_draw_indent(scope) < 0 then
+    if get_symbol_indent(scope) < 0 then
         return
     end
 
@@ -462,7 +496,7 @@ local function textobject(include_border)
 
         -- Use `show_body_at_border = false` for continuous jump when count > 1
         scope = get_scope(nil, nil, { show_body_at_border = false })
-        if get_draw_indent(scope) < 0 then
+        if get_symbol_indent(scope) < 0 then
             return
         end
     end
@@ -499,48 +533,51 @@ end)
 -- <C-.> to shrink
 --
 
----Push when expand and pop when shrink
----Top refers to the scope that is currently selected
-local stack = {}
+---Selection history used by incremental expand/shrink.
+---The top entry represents the currently selected scope.
+local selection_stack = {}
 
--- Reset the stack when incremental selection finishes
-local group = vim.api.nvim_create_augroup('rockyz.indentscope.reset_stack', { clear = true })
+-- Reset the selection stack when incremental selection finishes
+local group = vim.api.nvim_create_augroup('rockyz.indentscope.reset_selection_stack', { clear = true })
 vim.api.nvim_create_autocmd('ModeChanged', {
     group = group,
     pattern = '[vV\x22]*:[ni]',
     callback = function()
-        stack = {}
+        selection_stack = {}
     end,
 })
 
 local function incremental_selection()
-    local curr_select = stack[#stack]
+    local current_selection = selection_stack[#selection_stack]
     local next_scope
     local opts = {
         show_body_at_border = false,
-        indent_at_cursor_col = false
+        indent_at_cursor_col = false,
     }
-    local select_border = false
-    if not curr_select then
+    local include_border = false
+    if not current_selection then
         -- Empty stack means incremental selection hasn't started yet
         next_scope = get_scope(vim.fn.line('.'), nil, opts)
-    elseif not curr_select.select_border then
+    elseif not current_selection.include_border then
         -- If current selection is the body of a scope, we select this entire scope including its
         -- borders
-        next_scope = vim.deepcopy(curr_select.scope)
-        select_border = true
+        next_scope = vim.deepcopy(current_selection.scope)
+        include_border = true
     else
         -- If current selection is already an entire scope, we select its outer scope
-        local top, bottom = curr_select.scope.border.top, curr_select.scope.border.bottom
-        local line = vim.fn.indent(top) < vim.fn.indent(bottom) and top or bottom
+        local top, bottom = current_selection.scope.border.top, current_selection.scope.border.bottom
+        local line = top
+        if bottom then
+            line = vim.fn.indent(top) < vim.fn.indent(bottom) and top or bottom
+        end
         next_scope = get_scope(line, nil, opts)
     end
     -- Skip the special case where the body of the scope is the entire buffer
     if next_scope.border.indent < 0 then
         return
     end
-    visual_select_scope(next_scope, 'top', 'bottom', select_border)
-    stack[#stack + 1] = { scope = next_scope, select_border = select_border } -- push
+    visual_select_scope(next_scope, 'top', 'bottom', include_border)
+    selection_stack[#selection_stack + 1] = { scope = next_scope, include_border = include_border } -- push
 end
 
 -- Expand
@@ -550,12 +587,12 @@ end)
 
 -- Shrink
 vim.keymap.set('x', '<C-.>', function()
-    if #stack < 2 then
+    if #selection_stack < 2 then
         return
     end
-    stack[#stack] = nil -- pop
-    local top = stack[#stack] -- peek
-    visual_select_scope(top.scope, 'top', 'bottom', top.select_border)
+    selection_stack[#selection_stack] = nil -- pop
+    local top = selection_stack[#selection_stack] -- peek
+    visual_select_scope(top.scope, 'top', 'bottom', top.include_border)
 end)
 
 -- Exclude filetypes

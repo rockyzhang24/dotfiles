@@ -222,7 +222,7 @@ local function render_normal()
     -- (2). "Modified" indicator
     local bufnr = vim.api.nvim_get_current_buf()
     local is_modified = vim.bo[bufnr].modified
-    if is_modified ~= 0 then
+    if is_modified then
         local modified_hl = diagnostic_total == 0 and 'WinbarModified' or file_status_hl
         table.insert(indicators, '%#' .. modified_hl .. '#[+]%*')
     end

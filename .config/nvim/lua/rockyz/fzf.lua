@@ -34,7 +34,7 @@
 --     emit(entries)
 -- end
 --
--- funcion M.demo_delete(selection_file)
+-- function M.demo_delete(selection_file)
 --     local f = assert(io.open(selection_file, 'r'))
 --     local lines = vim.split(f:read('*a'), '\n', { trimempty = true, plain = true })
 --     for _, line in ipairs(lines) do
@@ -128,7 +128,7 @@ local switches = {}
 local actions = {}
 
 local config = {
-    theme =  {
+    theme = {
         layout = {
             window = {
                 width = 0.8,
@@ -226,7 +226,18 @@ local open_file_keymaps = config.keymaps.open_file
 local theme = config.theme
 vim.g.fzf_layout = theme.layout
 
--- Context captured when fzf is launched
+---@class rockyz.fzf.Context
+---@field bufnr? integer
+---@field winid? integer
+---@field origin_bufnr? integer
+---@field origin_winid? integer
+---@field origin_tabpage? integer
+---@field origin_git_root? string
+---@field cwd? string
+---@field cur_session_id integer
+
+---Context captured when fzf is launched
+---@type rockyz.fzf.Context
 local fzf_ctx = {
     -- Buffer id and window id of fzf window
     bufnr = nil,
@@ -236,7 +247,7 @@ local fzf_ctx = {
     origin_winid = nil,
     origin_tabpage = nil,
     origin_git_root = nil,
-    -- Working directory as launch time
+    -- Working directory at launch time
     cwd = nil,
     -- Session ids are used to discard stale async callbacks from previous finders
     cur_session_id = 0
@@ -275,7 +286,9 @@ local bat_prefix = 'bat --color=always --paging=never --style=numbers'
 local fd_prefix = 'fd --hidden --follow --color=never --type f --type l '
 -- A script to preview various types of files (text, image, etc)
 local fzf_previewer = '~/.config/fzf/fzf-previewer.sh'
-local diff_pager = 'delta --width $FZF_PREVIEW_COLUMNS' .. vim.env.DELTA_OPTS
+
+local delta_opts = vim.trim(vim.env.DELTA_OPTS or '')
+local diff_pager = 'delta --width $FZF_PREVIEW_COLUMNS' .. (delta_opts ~= '' and ' ' .. delta_opts or '')
 
 ---Get the command to decorate input lines, e.g., prepend a devicon to the filename. This command
 ---gets input through a pipe.
@@ -296,8 +309,8 @@ local cached_ansi = {}
 ---Color a string by ANSI color code that is converted from a highlight group
 ---@param str string string to be colored
 ---@param hl string highlight group name
----@param from_type string? which color type in the highlight group will be used, 'fg', 'bg' or 'sp'
----@param to_type string? which ANSI color type will be output, 'fg' or 'bg'
+---@param from_type? string which color type in the highlight group will be used, 'fg', 'bg' or 'sp'
+---@param to_type? string which ANSI color type will be output, 'fg' or 'bg'
 local function ansi_string(str, hl, from_type, to_type)
     from_type = from_type or 'fg'
     to_type = to_type or 'fg'
@@ -330,6 +343,12 @@ local function shortpath(path)
     return short == '' and '~/' or (short:match('/$') and short or short .. '/')
 end
 
+---@param value string
+---@return string
+local function shellescape(value)
+    return vim.fn.shellescape(value)
+end
+
 ---Set quickfix or location list and open its window without focus
 ---@param what table The "what" parameter for vim.fn.setqflist
 ---@param is_local boolean? Location list or not
@@ -346,9 +365,9 @@ local function setqflist(what, is_local, action)
     vim.cmd('silent wincmd p')
 end
 
-local cached_fzf_query = vim.fn.tempname() -- cached the last fzf query
-local cached_rg_query = vim.fn.tempname() -- cached the last rg query (for live greps)
-local cached_finder -- cached the last executed fzf finder
+local cached_fzf_query = vim.fn.tempname() -- Cache the last fzf query
+local cached_rg_query = vim.fn.tempname() -- Cache the last rg query (for live greps)
+local cached_finder -- Cache the last executed fzf finder
 
 -- Record whether Rg is in fzf mode or not
 local in_fzf_mode = ''
@@ -365,8 +384,9 @@ local common_opts = {
 }
 
 ---Get fzf options
----@param from_resume boolean? Whether the finder is called by fzf resume
----@param extra? table Extra options
+---@param from_resume? boolean Whether the finder is called by fzf resume
+---@param extra? string[] Extra options
+---@return string[]
 local function get_fzf_opts(from_resume, extra)
     extra = extra or {}
     local fzf_opts = vim.list_extend(vim.deepcopy(common_opts), {
@@ -386,7 +406,7 @@ end
 
 ---@param label string|fun(): string
 ---@return string
-local function set_label(label)
+local function make_label_bind(label)
     local cmd = ''
     if type(label) == 'string' then
         cmd = string.format('echo [ %s ]', label)
@@ -394,7 +414,6 @@ local function set_label(label)
         cmd = label()
     end
     return string.format('load,focus:transform-%s-label(%s)', theme.label_pos, cmd)
-
 end
 
 ---Bash command to replace $HOME with tilde
@@ -403,11 +422,16 @@ local function tildefy_home(path)
     return '$(echo ' .. path .. ' | sed "s|^$HOME|~|")'
 end
 
----Build a comma-separated string for fzf --expect option
+---@class rockyz.fzf.ExpectKeysOpts
+---@field extra? string[]
+---@field include_defaults? boolean
+
+---Build a comma-separated string for fzf --expect
 ---
 ---This helper merges default fzf expect keys with optional extra keys.
 ---
 ---Default keys (unless disabled):
+---  - enter
 ---  - ctrl-x
 ---  - ctrl-v
 ---  - ctrl-t
@@ -415,13 +439,14 @@ end
 ---Example:
 ---
 ---opts = {
----    extra = { 'ctrl-m ', 'ctrl-n' },
+---    extra = { 'ctrl-m', 'ctrl-n' },
 ---    include_defaults = true,
 ---}
 ---
----expect_keys(opts) returns { 'ctrl-x', 'ctrl-v', 'ctrl-t', 'ctrl-m', 'ctrl-n' }
+---expect_keys(opts) returns 'enter,ctrl-x,ctrl-v,ctrl-t,ctrl-m,ctrl-n'
 ---
----@param opts table
+---@param opts rockyz.fzf.ExpectKeysOpts
+---@return string
 local function expect_keys(opts)
     local default = { 'enter', 'ctrl-x', 'ctrl-v', 'ctrl-t' }
     local keys = {}
@@ -494,8 +519,8 @@ local function open_pipe(cb)
 end
 
 ---Write fzf entries to the pipe
----@param entries table Fzf entries
----@param is_multiline boolean? Whether each entry is a multiline item
+---@param entries string[] Fzf entries
+---@param is_multiline? boolean Whether each entry is a multiline item
 local function write(entries, is_multiline)
     if not output_pipe then
         return
@@ -510,6 +535,8 @@ local function write(entries, is_multiline)
     end)
 end
 
+---@param entries string[] Fzf entries
+---@param is_multiline? boolean Whether each entry is a multiline item
 local function emit(entries, is_multiline)
     open_pipe(function()
         write(entries, is_multiline)
@@ -577,7 +604,7 @@ local function open(key, filepaths)
     end
     for _, filepath in ipairs(filepaths) do
         if vim.fn.fnamemodify(filepath, ':p') ~= vim.fn.expand('%:p') then
-            vim.cmd(action .. ' ' .. filepath)
+            vim.cmd(action .. ' ' .. vim.fn.fnameescape(filepath))
         end
     end
 end
@@ -604,8 +631,9 @@ end
 ---@return string[]
 local function read_file(file)
     local f = assert(io.open(file, 'r'))
-    local lines = vim.split(f:read('*a'), '\n', { trimempty = true })
-    return lines
+    local content = f:read('*a')
+    f:close()
+    return vim.split(content, '\n', { trimempty = true })
 end
 
 --------------------------------------------------------------------------------
@@ -636,7 +664,7 @@ local function files(from_resume)
             '--header',
             ':: ALT-F (reveal in Finder), ALT-/ (toggle HOME/CWD)',
             '--bind',
-            set_label(tildefy_home('{2}')),
+            make_label_bind(tildefy_home('{2}')),
             '--bind',
             'alt-/:transform:[[ ! $FZF_PROMPT == "~/" ]] && {' ..
                 'echo "reload(' .. vim.fn.escape(fd_home, '"') .. ')+change-prompt(~/)";' ..
@@ -698,7 +726,7 @@ local function old_files(from_resume)
             '--preview',
             fzf_previewer .. ' {2}',
             '--bind',
-            set_label('{1}'),
+            make_label_bind('{1}'),
             '--accept-nth',
             '2',
             '--bind',
@@ -751,7 +779,7 @@ local function dot_files(from_resume)
             '--accept-nth',
             '{3}',
             '--bind',
-            set_label('{1}'),
+            make_label_bind('{1}'),
             '--bind',
             "alt-f:execute-silent( \
                 open -R {3} \
@@ -827,7 +855,7 @@ local function buffers_build_entries()
             #fullname == 0 and '[No Name]' or fullname,
             lnum,
             bufnr,
-            '[' .. ansi_string(bufnr, hls.bufnr) .. ']',
+            '[' .. ansi_string(tostring(bufnr), hls.bufnr) .. ']',
             table.concat(flags, ''),
             icon,
             dispname,
@@ -868,7 +896,7 @@ local function buffers(from_resume)
             '--with-nth',
             '4..',
             '--accept-nth',
-            3,
+            '3',
             '--prompt',
             'Buffers> ',
             '--header',
@@ -880,7 +908,7 @@ local function buffers(from_resume)
             '--preview-window',
             '+{2}-/2',
             '--bind',
-            set_label('{4..}'),
+            make_label_bind('{4..}'),
             '--bind',
             "alt-bs:execute-silent(" ..
                 remote_call('actions.delete_buffers', "'{+f}'") .. " \
@@ -905,7 +933,7 @@ end
 --------------------------------------------------------------------------------
 
 local function get_bufinfo_list()
-    local raw = vim.fn.getbufinfo( { buflisted = 1 } )
+    local raw = vim.fn.getbufinfo({ buflisted = 1 })
     local bufinfo_list = {}
 
     for _, buf in ipairs(raw) do
@@ -937,7 +965,7 @@ local function mru_build_entries()
             max_bufnr = b.bufnr
         end
     end
-    local max_digit = math.floor(math.log10(max_bufnr)) + 1
+    local max_digit = #tostring(math.max(max_bufnr, 1))
     local mru_list = mru.list()
     local entries = {}
     local entry_fmt = '%s\t%s\t%s\t%s[%s] %s'
@@ -966,7 +994,7 @@ local function mru_build_entries()
 
             sname = flag .. icon .. ' ' .. sname
             local bufnr_str = ansi_string(tostring(bufnr), 'Number')
-            local digit = math.floor(math.log10(bufnr)) + 1
+            local digit = #tostring(bufnr)
             local padding = (' '):rep(max_digit - digit)
             -- Entry: <fullname>\t<lnum>\t<bufnr>\t<[bufnr]> <flag> <icon> <bufname>
             -- {4..} will be presented
@@ -1009,7 +1037,7 @@ local function bufs_and_mru(from_resume)
                 local fields = vim.split(lines[i], '\t', { plain = true, trimempty = true })
                 local filename = fields[1]
                 local bufnr = tonumber(fields[3])
-                local cmd = bufnr ~= 0 and ('buffer ' .. bufnr) or ('edit ' .. filename)
+                local cmd = bufnr ~= 0 and ('buffer ' .. bufnr) or ('edit ' .. vim.fn.fnameescape(filename))
                 if key ~= 'enter' then
                     vim.cmd(action)
                 end
@@ -1037,7 +1065,7 @@ local function bufs_and_mru(from_resume)
             '--preview-window',
             '+{2}-/2',
             '--bind',
-            set_label('{4..}'),
+            make_label_bind('{4..}'),
             '--bind',
             "alt-bs:execute-silent(" ..
                 remote_call('actions.delete_buffers', "'{+f}'") .. " \
@@ -1080,20 +1108,23 @@ end
 local function search_history(from_resume)
     local spec = {
         ['sink*'] = function(lines)
+            local key = lines[1]
             -- ENTER to execute selected search
             -- CTRL-E to edit selected search in cmdline
-            local key = lines[1]
-            if key == 'enter' or key == 'ctrl-e' then
-                local query = lines[2]
-                vim.cmd('stopinsert')
-                vim.api.nvim_feedkeys('/' .. query, 'n', true)
+            if key ~= 'enter' and key ~= 'ctrl-e' then
+                return
             end
+
+            local query = lines[2]
+            vim.cmd('stopinsert')
+            vim.api.nvim_feedkeys('/' .. query, 'n', true)
+
             if key == 'enter' then
-            vim.api.nvim_feedkeys(
-                vim.api.nvim_replace_termcodes('<CR>', true, false, true),
-                'n',
-                false
-            )
+                vim.api.nvim_feedkeys(
+                    vim.api.nvim_replace_termcodes('<CR>', true, false, true),
+                    'n',
+                    false
+                )
             end
         end,
         options = get_fzf_opts(from_resume, {
@@ -1285,7 +1316,7 @@ local function marks(from_resume)
             '--with-nth',
             '4..',
             '--accept-nth',
-            1,
+            '1',
             '--header-lines',
             '1',
             '--prompt',
@@ -1299,7 +1330,7 @@ local function marks(from_resume)
             '--preview-window',
             '+{3}-/2',
             '--bind',
-            set_label('{2}'),
+            make_label_bind('{2}'),
             '--bind',
             "alt-bs:execute-silent(" ..
                 remote_call('actions.delete_marks', "'{+f}'") .. " \
@@ -1415,7 +1446,7 @@ local function tabs(from_resume)
             '--with-nth',
             '5',
             '--accept-nth',
-            3,
+            '3',
             '--prompt',
             'Tabs> ',
             '--header',
@@ -1423,7 +1454,7 @@ local function tabs(from_resume)
             '--preview',
             'file={1}; [[ -f $file ]] && ' .. bat_prefix .. ' --highlight-line {2} -- $file || echo "No preview support!"',
             '--bind',
-            set_label(tildefy_home('{1}')),
+            make_label_bind(tildefy_home('{1}')),
             '--bind',
             "alt-bs:execute-silent(" ..
                 remote_call('actions.close_tabs', "'{+f}'") .. " \
@@ -1453,7 +1484,7 @@ function actions.delete_args(selection_file)
     for _, line in ipairs(lines) do
         local fields = vim.split(line, '\t', { plain = true })
         local filename = fields[2]
-        vim.cmd.argdelete(filename)
+        vim.cmd.argdelete(vim.fn.fnameescape(filename))
     end
 end
 
@@ -1501,7 +1532,7 @@ local function args(from_resume)
             '--with-nth',
             '3..',
             '--accept-nth',
-            1,
+            '1',
             '--prompt',
             'Args> ',
             '--header',
@@ -1511,7 +1542,7 @@ local function args(from_resume)
             '--preview',
             bat_prefix .. ' -- {2}',
             '--bind',
-            set_label('{2}'),
+            make_label_bind('{2}'),
             '--bind',
             "alt-bs:execute-silent(" ..
                 remote_call('actions.delete_args', "'{+f}'") .. " \
@@ -1577,7 +1608,7 @@ local function helptags(from_resume)
             (( START_LINE <= 0 )) && START_LINE=1; \
             END_LINE="$(( START_LINE + FZF_PREVIEW_LINES - 1 ))"; ' .. bat_prefix .. ' --style plain --language VimHelp --highlight-line "${TARGET_LINE}" --line-range="${START_LINE}:${END_LINE}" -- {2}',
             '--bind',
-            set_label('{4}'),
+            make_label_bind('{4}'),
         }),
     }
 
@@ -1686,7 +1717,7 @@ local function commands(from_resume)
             '--preview-window',
             'down,3',
             '--bind',
-            set_label('{1}'),
+            make_label_bind('{1}'),
             '--bind',
             'ctrl-/:toggle-preview',
         }),
@@ -1747,11 +1778,8 @@ local function commands(from_resume)
             return entries
         end
 
-        fzf_entries = vim.tbl_extend(
-            'force',
-            build_entries(sorted_global_cmds),
-            build_entries(sorted_buf_cmds, true)
-        )
+        fzf_entries = build_entries(sorted_global_cmds)
+        vim.list_extend(fzf_entries, build_entries(sorted_buf_cmds, true))
 
         -- 2. Process builtin commands
         local help = vim.fn.globpath(vim.o.runtimepath, 'doc/index.txt')
@@ -1802,7 +1830,7 @@ end
 local function registers(from_resume)
     local spec = {
         ['sink*'] = function(lines)
-            -- ENTER will paster the content in the selected register at the cursor position
+            -- ENTER pastes the selected register at the cursor position
             local reg = lines[1]:match("%[(.-)%]")
             local ok, text = pcall(vim.fn.getreg, reg)
             if ok and #text > 0 then
@@ -1820,7 +1848,7 @@ local function registers(from_resume)
             '--preview', -- show register content in preview
             "echo {} | sed '1s/^\\[[0-9A-Z\"-\\#\\=_/\\*\\+:\\.%]\\] //'",
             '--bind',
-            set_label('Register {1}'),
+            make_label_bind('Register {1}'),
         }),
     }
 
@@ -1896,7 +1924,7 @@ local function zoxide(from_resume)
                 -- Instead of changing cwd globally, we can change it locally: lcd (window local) or
                 -- tcd (tab local)
                 local cmd = 'cd'
-                vim.cmd(cmd .. ' ' .. cwd)
+                vim.cmd(cmd .. ' ' .. vim.fn.fnameescape(cwd))
                 notify.info('[FZF] CWD is changed to ' .. cwd)
             end
         end,
@@ -1915,7 +1943,7 @@ local function zoxide(from_resume)
             '--preview',
             preview_cmd,
             '--bind',
-            set_label('{2}'),
+            make_label_bind('{2}'),
         }),
     }
 
@@ -2030,7 +2058,7 @@ local function qf_items_fzf(win_local, from_resume)
                     if vim.api.nvim_buf_is_loaded(bufnr) then
                         vim.cmd('buffer! ' .. bufnr)
                     else
-                        vim.cmd('edit! ' .. vim.fn.bufname(bufnr))
+                        vim.cmd('edit! ' .. vim.fn.fnameescape(vim.fn.bufname(bufnr)))
                     end
                     vim.api.nvim_win_set_cursor(0, { item.lnum, item.col - 1 })
                     vim.cmd('normal! zvzz')
@@ -2041,7 +2069,7 @@ local function qf_items_fzf(win_local, from_resume)
             '--delimiter',
             '\t',
             '--prompt',
-            win_local and 'Location List' or 'Quickfix List' .. '> ',
+            (win_local and 'Location List' or 'Quickfix List') .. '> ',
             '--header',
             ':: ENTER (display the error), CTRL-R (refine the current ' .. (win_local and 'loclist' or 'quickfix') .. ')\n:: CTRL-Q (send to quickfix), CTRL-L (send to loclist)',
             '--with-nth',
@@ -2056,7 +2084,7 @@ local function qf_items_fzf(win_local, from_resume)
             '--preview-window',
             '+{3}-/2,down,45%',
             '--bind',
-            set_label(tildefy_home('{2}') .. ':{3}:{4}: \\[{5}\\] {6}'),
+            make_label_bind(tildefy_home('{2}') .. ':{3}:{4}: \\[{5}\\] {6}'),
             '--bind',
             'ctrl-/:change-preview-window(right,60%|hidden|)',
         }),
@@ -2150,7 +2178,7 @@ local function qf_history_fzf(win_local, from_resume)
             '--preview',
             'cat {2}',
             '--bind',
-            set_label('{3..}'),
+            make_label_bind('{3..}'),
             '--bind',
             'ctrl-/:change-preview-window(right,60%|hidden|)',
         }),
@@ -2237,9 +2265,9 @@ end
 ---@param rg_query string The initial query for rg
 ---@param path string File or directory for rg to search
 ---@param prompt string Fzf prompt string
----@param extra_opts? table Extra fzf options
----@param from_resume? boolean Whether or not the finder is called from fzf resume
----@return table Fzf options for live grep
+---@param extra_opts? string[] Extra fzf options
+---@param from_resume? boolean Whether the finder is called from fzf resume
+---@return string[] Fzf options for live grep
 local function build_live_grep_opts(rg, rg_query, path, prompt, extra_opts, from_resume)
     extra_opts = extra_opts or {}
     if not from_resume then
@@ -2295,7 +2323,7 @@ local function build_live_grep_opts(rg, rg_query, path, prompt, extra_opts, from
             echo "change-prompt(' .. prompt .. ' [RG]> )+disable-search+reload(' .. rg .. ' {q} || true)+rebind(change)+transform-query(cat ' .. cached_rg_query .. ')"\
         }',
         '--bind',
-        set_label(tildefy_home('{1}') .. ':{2}:{3}'),
+        make_label_bind(tildefy_home('{1}') .. ':{2}:{3}'),
         '--delimiter',
         ':',
         '--header',
@@ -2373,9 +2401,7 @@ local function grep_sink(lines)
         for i = 2, #lines do
             local filename, lnum, col = lines[i]:match('^([^:]+):([^:]+):([^:]+):.*$')
             local cmd = open_file_keymaps[key] or 'edit'
-            -- if vim.fn.fnamemodify(lines[i], ':p') ~= vim.fn.expand('%:p') then
-            -- end
-            vim.cmd(cmd .. ' ' .. filename)
+            vim.cmd(cmd .. ' ' .. vim.fn.fnameescape(filename))
             vim.api.nvim_win_set_cursor(0, { tonumber(lnum), tonumber(col) - 1 })
         end
     end
@@ -2471,7 +2497,7 @@ local function grep_cur_word(from_resume)
             '--header',
             ':: Word/Selection: ' .. ansi_string(rg_query, 'FzfRgQuery'),
             '--bind',
-            set_label('{1}:{2}:{3}'),
+            make_label_bind('{1}:{2}:{3}'),
             '--bind',
             'enter:print()+accept,ctrl-x:print(ctrl-x)+accept,ctrl-v:print(ctrl-v)+accept,ctrl-t:print(ctrl-t)+accept',
             '--bind',
@@ -2712,7 +2738,7 @@ local function lsp_symbols(method, params, title, symbol_query, from_resume)
             '--preview-window',
             fzf_preview_window,
             '--bind',
-            set_label(tildefy_home('{3}:{4}:{5}')),
+            make_label_bind(tildefy_home('{3}:{4}:{5}')),
             '--bind',
             'ctrl-/:change-preview-window(right,60%|hidden|)',
         }),
@@ -2860,7 +2886,7 @@ local function lsp_locations(method, title, from_resume)
             '--preview-window',
             '+{4}-/2,down,45%',
             '--bind',
-            set_label(tildefy_home('{3}:{4}:{5}')),
+            make_label_bind(tildefy_home('{3}:{4}:{5}')),
             '--bind',
             'ctrl-/:change-preview-window(right,60%|hidden|)',
         }),
@@ -2977,7 +3003,7 @@ local function diagnostics(from_resume, opts)
                         if bufnr and vim.api.nvim_buf_is_loaded(bufnr) then
                             vim.cmd('buffer! ' .. bufnr)
                         else
-                            vim.cmd('edit! ' .. vim.fn.bufname(bufnr))
+                            vim.cmd('edit! ' .. vim.fn.fnameescape(vim.fn.bufname(bufnr)))
                         end
                         vim.api.nvim_win_set_cursor(0, { diag.lnum + 1, diag.col })
                         vim.cmd('normal! zvzz')
@@ -3006,7 +3032,7 @@ local function diagnostics(from_resume, opts)
             '--preview-window',
             '+{3}-/2',
             '--bind',
-            set_label(tildefy_home('{2}:{3}:{4}')),
+            make_label_bind(tildefy_home('{2}:{3}:{4}')),
         }),
     }
 
@@ -3116,7 +3142,9 @@ local function git_files(from_resume)
     if not git_root then
         return
     end
+
     fzf_ctx.origin_git_root = git_root
+    local escaped_git_root = shellescape(git_root)
 
     local arg = (vim.env.GIT_DIR == vim.env.HOME .. '/dotfiles') and 'dot' or ''
     local git_cmd = 'ls-gitfiles ' .. arg .. ' | ' .. dressup_cmd('ls_gitfiles')
@@ -3135,8 +3163,8 @@ local function git_files(from_resume)
             '--preview',
             'line={} \
             if [[ "${line:1:2}" =~ D ]]; then \
-                if git show HEAD:{3} | file - | grep -q text; then \
-                    git show HEAD:{3} | bat --color=always --style=numbers \
+                if git -C ' .. escaped_git_root .. ' show HEAD:{3} | file - | grep -q text; then \
+                    git -C ' .. escaped_git_root .. ' show HEAD:{3} | bat --color=always --style=numbers \
                 else \
                     echo "No preview for this deleted file" \
                 fi \
@@ -3149,7 +3177,7 @@ local function git_files(from_resume)
             '--header',
             ':: ALT-F (reveal in Finder), ALT-O (open in browser)\nGit Root: ' .. vim.fn.fnamemodify(git_root, ':~'),
             '--bind',
-            set_label('{1}'),
+            make_label_bind('{1}'),
             '--bind',
             "alt-f:execute-silent( \
                 open -R {3} \
@@ -3177,7 +3205,9 @@ local function git_status(from_resume)
     if root_dir == nil then
         return
     end
+
     fzf_ctx.origin_git_root = root_dir
+    local escaped_root_dir = shellescape(root_dir)
 
     -- Fzf entry is [<staged><unstaged>] <git status text>\t<filename> with \t as delimiter.
     -- {1} is displayed in fzf and it could be one of
@@ -3197,7 +3227,7 @@ local function git_status(from_resume)
             '--delimiter',
             '\t',
             '--with-nth',
-            1,
+            '1',
             '--prompt',
             'Git Status> ',
             '--header',
@@ -3209,32 +3239,32 @@ local function git_status(from_resume)
             --   file: git diff --no-index /dev/null <file>
             -- 2) Unstaged: git diff <file>
             -- 3) Staged: git diff --staged <file>
-            'git_status=$(git -C ' .. root_dir .. ' status -s -uall -- {2}) \
+            'git_status=$(git -C ' .. escaped_root_dir .. ' status -s -uall -- {2}) \
             if (echo $git_status | grep "^??") &>/dev/null; then \
                 if [[ -d {2} ]]; then \
                     tree -C {2} \
                 else \
-                    git -C ' .. root_dir .. ' diff --no-index -- /dev/null {2} | ' .. diff_pager .. ' \
+                    git -C ' .. escaped_root_dir .. ' diff --no-index -- /dev/null {2} | ' .. diff_pager .. ' \
                 fi \
             else \
-                diff_output=$(git -C ' .. root_dir .. ' diff -- {2}) \
+                diff_output=$(git -C ' .. escaped_root_dir .. ' diff -- {2}) \
                 if [[ -n $diff_output ]]; then \
                     echo $diff_output | ' .. diff_pager .. ' \
                 else \
-                    git -C ' .. root_dir .. ' diff --staged -- {2} | ' .. diff_pager .. ' \
+                    git -C ' .. escaped_root_dir .. ' diff --staged -- {2} | ' .. diff_pager .. ' \
                 fi \
             fi',
             '--bind',
-            set_label('{1}'),
+            make_label_bind('{1}'),
             '--bind',
             "ctrl-l:execute-silent( \
-                git -C " .. root_dir .. " add {+2} > /dev/null \
+                git -C " .. escaped_root_dir .. " add {+2} > /dev/null \
             )+reload(" ..
                 git_status_cmd .. " \
             )",
             '--bind',
             "ctrl-h:execute-silent( \
-                git -C " .. root_dir .. " reset {+2} > /dev/null \
+                git -C " .. escaped_root_dir .. " reset {+2} > /dev/null \
             )+reload(" ..
                 git_status_cmd .. " \
             )",
@@ -3243,8 +3273,8 @@ local function git_status(from_resume)
                 cat {+f} | \
                 while IFS=$'\''\t'\'' read -r left file; do \
                     case \"$left\" in \
-                        \"[??]\"*) git -C " .. root_dir .. " clean -f -- \"$file\" ;; \
-                        *)         git -C " .. root_dir .. " checkout HEAD -- \"$file\" ;; \
+                        \"[??]\"*) git -C " .. escaped_root_dir .. " clean -f -- \"$file\" ;; \
+                        *)         git -C " .. escaped_root_dir .. " checkout HEAD -- \"$file\" ;; \
                     esac \
                 done \
             )+reload(" ..
@@ -3284,9 +3314,11 @@ local function git_branches(from_resume)
     if root_dir == nil then
         return
     end
-    fzf_ctx.origin_git_root = root_dir
 
-    local git_branch_cmd = "git branch --sort=-committerdate --sort='refname:rstrip=-2' --sort=-HEAD -vv --color=always --format=$'%(HEAD) %(color:yellow)%(refname:short) %(color:green)(%(committerdate:relative))\t%(color:blue)%(subject)%(color:reset)'"
+    fzf_ctx.origin_git_root = root_dir
+    local escaped_root_dir = shellescape(root_dir)
+
+    local git_branch_cmd = "git -C " .. escaped_root_dir .. " branch --sort=-committerdate --sort='refname:rstrip=-2' --sort=-HEAD -vv --color=always --format=$'%(HEAD) %(color:yellow)%(refname:short) %(color:green)(%(committerdate:relative))\t%(color:blue)%(subject)%(color:reset)'"
 
     --
     -- Extract the branch name for fzf preview and border label
@@ -3302,6 +3334,7 @@ local function git_branches(from_resume)
         [[ $branch == "(HEAD" ]] && entry={} && branch=${entry#*\\(HEAD detached at } && branch=${branch%%\\)*}; \
         echo $branch \
     '
+    local selected_branch_file = shellescape(vim.fn.stdpath('cache') .. '/fzf-selected-branch')
     local spec = {
         ['sink*'] = function(lines)
             local key = lines[1]
@@ -3358,16 +3391,16 @@ local function git_branches(from_resume)
             '--preview-window',
             'down,60%',
             '--preview',
-            "git log --oneline --graph --date=short --color=always --pretty='format:%C(auto)%cd %h%d %s' $(" .. extract_branch_cmd .. ")",
+            "git -C " .. escaped_root_dir .. " log --oneline --graph --date=short --color=always --pretty='format:%C(auto)%cd %h%d %s' $(" .. extract_branch_cmd .. ")",
             '--bind',
             'ctrl-/:change-preview-window(right,60%|hidden|)+refresh-preview',
             '--bind',
-            set_label('Branch: $(' .. extract_branch_cmd .. ')'),
+            make_label_bind('Branch: $(' .. extract_branch_cmd .. ')'),
             '--bind',
             "alt-bs:execute-silent( \
                 cat {+f} | \
                 awk '$1 != \"*\" { print $1 }' | \
-                xargs -r git branch --delete \
+                xargs -r git -C " .. escaped_root_dir .. " branch --delete \
             )+reload(" ..
                 git_branch_cmd .. " \
             )",
@@ -3382,7 +3415,7 @@ local function git_branches(from_resume)
             esac',
             '--bind',
             "alt-c:execute-silent( \
-                cut -c3- <<< {} | cut -d' ' -f1 > " .. vim.fn.stdpath('cache') .. "/fzf-selected-branch; " ..
+                cut -c3- <<< {} | cut -d' ' -f1 > " .. selected_branch_file .. "; " ..
                 remote_call('switches.branch_commits') .. " \
             )+abort",
         }),
@@ -3416,26 +3449,36 @@ local function get_preview_cmd_git_commits(root_dir, range)
     file:write(bufname:sub(#root_dir + 2))
     file:close()
 
+    local escaped_bufname = shellescape(bufname)
+    local escaped_orderfile = shellescape(orderfile)
+
+    local escaped_root_dir = shellescape(root_dir)
+
     local preview_cmd = ''
 
     if range then
-        preview_cmd = string.format('git log -L %d,%d:%s', range[1], range[2], bufname)
+        preview_cmd = string.format('git -C %s log -L %d,%d:%s', escaped_root_dir, range[1], range[2], escaped_bufname)
         preview_cmd = preview_cmd .. " | awk '/commit {2}/ {flag=1;print;next} /^[^ ]*commit/{flag=0} flag' "
     else
         -- Extract the hash commit and use git show to preview it
-        preview_cmd = 'grep -o "[a-f0-9]\\{7,\\}" <<< {1} | head -n 1 | xargs git show --color=always --format=format: -O' .. orderfile
+        preview_cmd = 'grep -o "[a-f0-9]\\{7,\\}" <<< {1} | head -n 1 | xargs git -C ' .. escaped_root_dir .. ' show --color=always --format=format: -O' .. escaped_orderfile
     end
     return preview_cmd .. ' | ' .. diff_pager
 end
 
 ---@param hash string
 local function checkout_commit(hash)
-    local hash_obj = vim.system({ 'git', 'rev-parse', '--short', 'HEAD' }):wait()
+    local root_dir = fzf_ctx.origin_git_root or get_git_root()
+    if root_dir == nil then
+        return
+    end
+
+    local hash_obj = vim.system({ 'git', '-C', root_dir, 'rev-parse', '--short', 'HEAD' }):wait()
     if hash_obj.code ~= 0 then
         notify.error({ hash_obj.stderr, hash_obj.stdout })
         return
     end
-    local cur_commit_hash = hash_obj.stdout
+    local cur_commit_hash = vim.trim(hash_obj.stdout)
     if hash == cur_commit_hash then
         return
     end
@@ -3443,7 +3486,7 @@ local function checkout_commit(hash)
         prompt = 'Checkout commit ' .. hash .. '? (y/N)',
     }, function(input)
         if input and input:lower() == 'y' then
-            local obj = vim.system({ 'git', 'checkout', hash }):wait()
+            local obj = vim.system({ 'git', '-C', root_dir, 'checkout', hash }):wait()
             if obj.code ~= 0 then
                 notify.error({ obj.stderr, obj.stdout })
             else
@@ -3485,18 +3528,22 @@ local function git_commits(from_resume, branch)
     if root_dir == nil then
         return
     end
+
     fzf_ctx.origin_git_root = root_dir
+    local escaped_root_dir = shellescape(root_dir)
 
     -- Format of each entry: `* 2026-06-14 ff2cb51 feat(xxx): xxxxxxx (Rocky Zhang)\tff2cb51`
     -- We append `\t` and the hash string to the output of `git log`
-    local git_commits_cmd = 'git log --date=short --format="%C(green)%C(bold)%cd %C(auto)%h%d %s (%an)%C(reset)%x09%h" --graph --color=always'
+    local git_commits_cmd = 'git -C ' .. escaped_root_dir .. ' log --date=short --format="%C(green)%C(bold)%cd %C(auto)%h%d %s (%an)%C(reset)%x09%h" --graph --color=always'
 
     local prompt = 'Git Commits'
 
     if branch then
-        git_commits_cmd = git_commits_cmd .. ' ' .. branch
+        git_commits_cmd = git_commits_cmd .. ' ' .. shellescape(branch)
         prompt = prompt .. ' in ' .. branch .. ' branch'
     end
+
+    local selected_commits_file = shellescape(vim.fn.stdpath('cache') .. '/fzf-selected-commits')
 
     local spec = {
         ['sink*'] = git_commits_sink,
@@ -3504,9 +3551,9 @@ local function git_commits(from_resume, branch)
             '--delimiter',
             '\t',
             '--with-nth',
-            1,
+            '1',
             '--accept-nth',
-            2,
+            '2',
             '--prompt',
             prompt .. '> ',
             '--header',
@@ -3522,7 +3569,7 @@ local function git_commits(from_resume, branch)
             '--preview',
             get_preview_cmd_git_commits(root_dir),
             '--bind',
-            set_label('Preview'),
+            make_label_bind('Preview'),
             '--bind',
             'ctrl-/:change-preview-window(right,80%|hidden|)+refresh-preview',
             '--bind',
@@ -3531,7 +3578,7 @@ local function git_commits(from_resume, branch)
             )',
             '--bind',
             "alt-f:execute-silent( \
-                awk 'match($0, /[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]*/) { print substr($0, RSTART, RLENGTH) }' {+f} > " .. vim.fn.stdpath('cache') .. "/fzf-selected-commits; " ..
+                awk 'match($0, /[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]*/) { print substr($0, RSTART, RLENGTH) }' {+f} > " .. selected_commits_file .. "; " ..
                 remote_call('switches.tree_files') .. " \
             )+abort",
         }),
@@ -3559,13 +3606,17 @@ local function git_buf_commits(from_resume)
     if root_dir == nil then
         return
     end
+
     fzf_ctx.origin_git_root = root_dir
+    local escaped_root_dir = shellescape(root_dir)
 
     local bufname = vim.api.nvim_buf_get_name(0)
     if #bufname == 0 then
         notify.info('Git commits (buffer) is not available for unnamed buffers.')
         return
     end
+
+    local escaped_bufname = shellescape(bufname)
 
     local obj = vim.system({ 'git', '-C', root_dir, 'ls-files', '--error-unmatch', bufname }):wait()
     if obj.code ~= 0 then
@@ -3575,7 +3626,7 @@ local function git_buf_commits(from_resume)
 
     -- Format of each entry: `* 2026-06-14 ff2cb51 feat(xxx): xxxxxxx (Rocky Zhang)\tff2cb51`
     -- We append `\t` and the hash string to the output of `git log`
-    local git_cmd = 'git log --date=short --format="%C(green)%C(bold)%cd %C(auto)%h%d %s (%an)%C(reset)%x09%h" --color=always'
+    local git_cmd = 'git -C ' .. escaped_root_dir .. ' log --date=short --format="%C(green)%C(bold)%cd %C(auto)%h%d %s (%an)%C(reset)%x09%h" --color=always'
 
     local preview_cmd
 
@@ -3586,11 +3637,11 @@ local function git_buf_commits(from_resume)
         if end_line < start_line then
             start_line, end_line = end_line, start_line
         end
-        local range = string.format('-L %d,%d:%s --no-patch', start_line, end_line, bufname)
+        local range = string.format('-L %d,%d:%s --no-patch', start_line, end_line, escaped_bufname)
         git_cmd = git_cmd .. ' ' .. range
         preview_cmd = get_preview_cmd_git_commits(root_dir, { start_line, end_line })
     else
-        git_cmd = git_cmd .. ' --follow ' .. bufname
+        git_cmd = git_cmd .. ' --follow ' .. escaped_bufname
         preview_cmd = get_preview_cmd_git_commits(root_dir)
     end
 
@@ -3600,9 +3651,9 @@ local function git_buf_commits(from_resume)
             '--delimiter',
             '\t',
             '--with-nth',
-            1,
+            '1',
             '--accept-nth',
-            2,
+            '2',
             '--prompt',
             'Git Commits (buffer)> ',
             '--header',
@@ -3618,7 +3669,7 @@ local function git_buf_commits(from_resume)
             '--preview',
             preview_cmd,
             '--bind',
-            set_label('Preview'),
+            make_label_bind('Preview'),
             '--bind',
             'ctrl-/:change-preview-window(right,80%|hidden|)+refresh-preview',
             '--bind',
@@ -3640,8 +3691,13 @@ end
 --------------------------------------------------------------------------------
 
 function M.git_stash_source()
+    local root_dir = fzf_ctx.origin_git_root or get_git_root()
+    if root_dir == nil then
+        return
+    end
+
     local entries = {}
-    vim.system({ 'git', '--no-pager', 'stash', 'list' }, { text = true }, function(obj)
+    vim.system({ 'git', '-C', root_dir, '--no-pager', 'stash', 'list' }, { text = true }, function(obj)
         if obj.code ~= 0 then
             notify.error({ obj.stderr, obj.stdout })
             return
@@ -3664,13 +3720,20 @@ end
 
 ---@param selection_file string Path to a temporary file containing the selected fzf entries
 function actions.drop_stashes(selection_file)
+    local root_dir = fzf_ctx.origin_git_root or get_git_root()
+    if root_dir == nil then
+        return
+    end
+
     local stashes = {}
 
     local lines = read_file(selection_file)
 
     for _, line in ipairs(lines) do
         local stash = line:match('^(%S+):')
-        table.insert(stashes, stash)
+        if stash then
+            table.insert(stashes, stash)
+        end
     end
     -- Stash indices are renumbered after each deletion, so stashes must be dropped in descending
     -- order to avoid deleting the wrong entries.
@@ -3680,7 +3743,7 @@ function actions.drop_stashes(selection_file)
         return a_idx > b_idx
     end)
     for _, stash in ipairs(stashes) do
-        local obj = vim.system({ 'git', 'stash', 'drop', stash }):wait()
+        local obj = vim.system({ 'git', '-C', root_dir, 'stash', 'drop', stash }):wait()
         if obj.code ~= 0 then
             system_on_error(obj.stderr, obj.stdout)
         end
@@ -3692,7 +3755,9 @@ local function git_stash(from_resume)
     if root_dir == nil then
         return
     end
+
     fzf_ctx.origin_git_root = root_dir
+    local escaped_root_dir = shellescape(root_dir)
 
     local spec = {
         ['sink*'] = function(lines)
@@ -3705,7 +3770,7 @@ local function git_stash(from_resume)
                     if input and input:lower() == 'y' then
                         -- Extract the stash name , e.g., stash@{1}
                         local name = lines[2]:match('^(%S+):')
-                        vim.system({ 'git', 'stash', 'apply', name }, { text = true }, function(obj)
+                        vim.system({ 'git', '-C', root_dir, 'stash', 'apply', name }, { text = true }, function(obj)
                             if obj.code ~= 0 then
                                 notify.error({ obj.stderr, obj.stdout })
                                 return
@@ -3722,7 +3787,7 @@ local function git_stash(from_resume)
                 }, function(input)
                     if input and input:lower() == 'y' then
                         local name = lines[2]:match('^(%S+):')
-                        vim.system({ 'git', 'stash', 'pop', name }, { text = true }, function(obj)
+                        vim.system({ 'git', '-C', root_dir, 'stash', 'pop', name }, { text = true }, function(obj)
                             if obj.code ~= 0 then
                                 notify.error({ obj.stderr, obj.stdout })
                                 return
@@ -3747,11 +3812,11 @@ local function git_stash(from_resume)
                 include_defaults = false,
             }),
             '--preview',
-            'git --no-pager stash show --patch --color {1} | ' .. diff_pager,
+            'git -C ' .. escaped_root_dir .. ' --no-pager stash show --patch --color {1} | ' .. diff_pager,
             '--preview-window',
             'down,60%',
             '--bind',
-            set_label('{1}'),
+            make_label_bind('{1}'),
             '--bind',
             'ctrl-/:change-preview-window(right,60%|hidden|)',
             '--bind',
@@ -3781,9 +3846,11 @@ local function git_worktrees(from_resume)
     if root_dir == nil then
         return
     end
-    fzf_ctx.origin_git_root = root_dir
 
-    local git_cmd = 'git worktree list'
+    fzf_ctx.origin_git_root = root_dir
+    local escaped_root_dir = shellescape(root_dir)
+
+    local git_cmd = 'git -C ' .. escaped_root_dir .. ' worktree list'
 
     local spec = {
         ['sink*'] = function(lines)
@@ -3803,7 +3870,7 @@ local function git_worktrees(from_resume)
                     -- Instead of changing cwd globally, we can change it locally: lcd (window local) or
                     -- tcd (tab local)
                     local cmd = 'cd'
-                    vim.cmd(cmd .. ' ' .. path)
+                    vim.cmd(cmd .. ' ' .. vim.fn.fnameescape(path))
                     notify.info('[FZF] CWD set to ' .. path)
                 else
                     notify.warn('[FZF] Unable to set cwd to ' .. path .. ', directory is not accessible.')
@@ -3827,21 +3894,21 @@ local function git_worktrees(from_resume)
             '--preview',
             "git -c color.status=always -C {1} status --short --branch; \
             echo; \
-            git log --oneline --graph --date=short --color=always --pretty='format:%C(auto)%cd %h%d %s' {2} -- \
+            git -C {1} log --oneline --graph --date=short --color=always --pretty='format:%C(auto)%cd %h%d %s' {2} -- \
             ",
             '--preview-window',
             'down,60%',
             '--bind',
-            set_label('{}'),
+            make_label_bind('{}'),
             '--bind',
             'ctrl-/:change-preview-window(right,60%|hidden|)',
             '--bind',
             "alt-bs:execute-silent( \
                 for worktree in {+1}; do \
-                    git worktree remove \"$worktree\" \
+                    git -C " .. escaped_root_dir .. " worktree remove \"$worktree\" \
                 done \
             )+reload( \
-                git worktree list \
+                git -C " .. escaped_root_dir .. " worktree list \
             )",
         })
     }
@@ -3862,9 +3929,11 @@ local function git_tags(from_resume)
     if root_dir == nil then
         return
     end
-    fzf_ctx.origin_git_root = root_dir
 
-    local cmd = 'git tag --sort -version:refname'
+    fzf_ctx.origin_git_root = root_dir
+    local escaped_root_dir = shellescape(root_dir)
+
+    local cmd = 'git -C ' .. escaped_root_dir .. ' tag --sort -version:refname'
 
     local spec = {
         ['sink*'] = function(lines)
@@ -3891,9 +3960,9 @@ local function git_tags(from_resume)
             '--header',
             ':: ALT-O (open in browser), ALT-R (toggle raw)',
             '--preview',
-            'git show --color=always {} | ' .. diff_pager,
+            'git -C ' .. escaped_root_dir .. ' show --color=always {} | ' .. diff_pager,
             '--bind',
-            set_label('{}'),
+            make_label_bind('{}'),
             '--bind',
             'alt-o:execute-silent( \
                 open-giturl tag {} \
@@ -3917,9 +3986,11 @@ local function git_remotes(from_resume)
     if root_dir == nil then
         return
     end
-    fzf_ctx.origin_git_root = root_dir
 
-    local cmd = 'git remote -v | awk \'{print $1"\t"$2}\' | uniq'
+    fzf_ctx.origin_git_root = root_dir
+    local escaped_root_dir = shellescape(root_dir)
+
+    local cmd = 'git -C ' .. escaped_root_dir .. ' remote -v | awk \'{print $1"\t"$2}\' | uniq'
 
     local spec = {
         ['sink*'] = function(lines)
@@ -3946,11 +4017,11 @@ local function git_remotes(from_resume)
                 include_defaults = false,
             }),
             '--preview',
-            "git log --oneline --graph --date=short --color=always --pretty='format:%C(auto)%cd %h%d %s' {1}/$(git rev-parse --abbrev-ref HEAD)",
+            "git -C " .. escaped_root_dir .. " log --oneline --graph --date=short --color=always --pretty='format:%C(auto)%cd %h%d %s' {1}/$(git -C " .. escaped_root_dir .. " rev-parse --abbrev-ref HEAD)",
             '--preview-window',
             'right,70%',
             '--bind',
-            set_label('{1} {2}'),
+            make_label_bind('{1} {2}'),
             '--bind',
             'ctrl-/:change-preview-window(down,45%|hidden|)',
             '--bind',
@@ -3976,9 +4047,11 @@ local function git_reflogs(from_resume)
     if root_dir == nil then
         return
     end
-    fzf_ctx.origin_git_root = root_dir
 
-    local cmd = 'git reflog --color=always --format="%C(blue)%gD %C(yellow)%h%C(auto)%d %gs"'
+    fzf_ctx.origin_git_root = root_dir
+    local escaped_root_dir = shellescape(root_dir)
+
+    local cmd = 'git -C ' .. escaped_root_dir .. ' reflog --color=always --format="%C(blue)%gD %C(yellow)%h%C(auto)%d %gs"'
 
     local spec = {
         ['sink*'] = function(lines)
@@ -4004,7 +4077,7 @@ local function git_reflogs(from_resume)
                 include_defaults = false,
             }),
             '--preview',
-            'git show --color=always {1} | ' .. diff_pager,
+            'git -C ' .. escaped_root_dir .. ' show --color=always {1} | ' .. diff_pager,
         })
     }
 
@@ -4024,7 +4097,9 @@ local function git_each_ref(from_resume)
     if root_dir == nil then
         return
     end
+
     fzf_ctx.origin_git_root = root_dir
+    local escaped_root_dir = shellescape(root_dir)
 
     local ref_format = [[--format=$'%(if:equals=refs/remotes)%(refname:rstrip=-2)%(then)%(color:magenta)remote-branch%(else)%(if:equals=refs/heads)%(refname:rstrip=-2)%(then)%(color:brightgreen)branch%(else)%(if:equals=refs/tags)%(refname:rstrip=-2)%(then)%(color:brightcyan)tag%(else)%(if:equals=refs/stash)%(refname:rstrip=-2)%(then)%(color:brightred)stash%(else)%(color:white)%(refname:rstrip=-2)%(end)%(end)%(end)%(end)\t%(color:yellow)%(refname:short) %(color:green)(%(creatordate:relative))\t%(color:blue)%(subject)%(color:reset)' ]]
 
@@ -4034,8 +4109,8 @@ local function git_each_ref(from_resume)
         "--color=always",
         ref_format,
     }, " ")
-    local local_refs_cmd = "git for-each-ref --exclude='refs/remotes' " .. cmd_opts .. " | column -ts$'\\t'"
-    local all_refs_cmd = "git for-each-ref " .. cmd_opts .. " | column -ts$'\\t'"
+    local local_refs_cmd = "git -C " .. escaped_root_dir .. " for-each-ref --exclude='refs/remotes' " .. cmd_opts .. " | column -ts$'\\t'"
+    local all_refs_cmd = "git -C " .. escaped_root_dir .. " for-each-ref " .. cmd_opts .. " | column -ts$'\\t'"
 
     local spec = {
         ['sink*'] = function(lines)
@@ -4058,7 +4133,7 @@ local function git_each_ref(from_resume)
             'begin',
             '--no-hscroll',
             '--accept-nth',
-            2, -- print only refs
+            '2', -- print only refs
             '--prompt',
             'Git Each Ref> ',
             '--header',
@@ -4072,7 +4147,7 @@ local function git_each_ref(from_resume)
             '--preview-window',
             'down,40%',
             '--preview',
-            "git log --oneline --graph --date=short --color=always --pretty='format:%C(auto)%cd %h%d %s' {2} --",
+            "git -C " .. escaped_root_dir .. " log --oneline --graph --date=short --color=always --pretty='format:%C(auto)%cd %h%d %s' {2} --",
             '--bind',
             'ctrl-/:change-preview-window(down,70%|right,60%|hidden|)',
             '--bind',
@@ -4101,7 +4176,12 @@ end
 ---Open the output of `git show <ref>` in a new tabpage
 ---@param ref string Git reference (branch, tag, commit, stash, etc)
 function actions.show_ref(ref)
-    vim.system({ 'git', 'show', ref }, { text = true }, function(obj)
+    local root_dir = fzf_ctx.origin_git_root or get_git_root()
+    if root_dir == nil then
+        return
+    end
+
+    vim.system({ 'git', '-C', root_dir, 'show', ref }, { text = true }, function(obj)
         if obj.code ~= 0 then
             notify.error({ obj.stderr, obj.stdout })
             return
@@ -4150,26 +4230,32 @@ local function tags(from_resume)
             local magic, wrapscan, autochdir = vim.o.magic, vim.o.wrapscan, vim.o.autochdir
             vim.o.magic, vim.o.wrapscan, vim.o.autochdir = false, true, false
 
-            for i = 2, #lines do
-                local filename, excmd = lines[i]:match('^(.+)' .. special_delimiter .. '(.*)' .. special_delimiter .. '.*' .. special_delimiter)
-                if filename ~= vim.fn.expand('%:p') then
-                    vim.cmd(action .. ' ' .. filename)
-                elseif key == 'ctrl-x' or key == 'ctrl-v' or key == 'ctrl-t' then
-                    vim.cmd(action)
+            local ok, err = xpcall(function()
+                for i = 2, #lines do
+                    local filename, excmd = lines[i]:match('^(.+)' .. special_delimiter .. '(.*)' .. special_delimiter .. '.*' .. special_delimiter)
+                    if filename ~= vim.fn.expand('%:p') then
+                        vim.cmd(action .. ' ' .. vim.fn.fnameescape(filename))
+                    elseif key == 'ctrl-x' or key == 'ctrl-v' or key == 'ctrl-t' then
+                        vim.cmd(action)
+                    end
+                    if key == 'ctrl-q' or key == 'ctrl-l' then
+                        vim.cmd('silent keepjumps keepalt execute "' .. excmd .. '"')
+                        table.insert(items, {
+                            filename = vim.fn.expand('%'),
+                            lnum = vim.fn.line('.'),
+                            text = vim.fn.getline('.'),
+                        })
+                    else
+                        vim.cmd('silent execute "' .. excmd .. '"')
+                    end
                 end
-                if key == 'ctrl-q' or key == 'ctrl-l' then
-                    vim.cmd('silent keepjumps keepalt execute "' .. excmd .. '"')
-                    table.insert(items, {
-                        filename = vim.fn.expand('%'),
-                        lnum = vim.fn.line('.'),
-                        text = vim.fn.getline('.'),
-                    })
-                else
-                    vim.cmd('silent execute "' .. excmd .. '"')
-                end
-            end
+            end, debug.traceback)
 
             vim.o.magic, vim.o.wrapscan, vim.o.autochdir = magic, wrapscan, autochdir
+
+            if not ok then
+                error(err)
+            end
 
             if #items > 0 then
                 local what = { title = 'Tags', items = items }
@@ -4201,7 +4287,7 @@ local function tags(from_resume)
             end_line="$(( start_line + FZF_PREVIEW_LINES - 1 ))";'
             .. bat_prefix .. ' --line-range="$start_line:$end_line" --highlight-line="$center" -- {1}',
             '--bind',
-            set_label('{3} \\| ' .. tildefy_home('{1}')), -- show "tagname | filename" on the preview label
+            make_label_bind('{3} \\| ' .. tildefy_home('{1}')), -- show "tagname | filename" on the preview label
         }),
     }
 
@@ -4316,7 +4402,7 @@ local function buffer_tags(from_resume)
             '--preview-window',
             '+{2}-/2',
             '--bind',
-            set_label(tildefy_home(filename .. ':{2} \\({1}\\)')),
+            make_label_bind(tildefy_home(filename .. ':{2} \\({1}\\)')),
         }),
     }
 
@@ -4412,13 +4498,13 @@ local function select(items, opts, on_choice)
 
     local spec = {
         ['sink*'] = function(lines)
-            local choice = tonumber(lines[1]:match('^(%d+)%.'))
-            on_choice(items[choice], choice)
+            local choice = lines[1] and tonumber(lines[1]:match('^(%d+)%.')) or nil
+            on_choice(choice and items[choice] or nil, choice)
         end,
         options = get_fzf_opts(nil, {
             '--no-multi',
             '--nth',
-            1,
+            '1',
             '--prompt',
             title .. '> ',
             '--preview-window',
@@ -4430,7 +4516,7 @@ local function select(items, opts, on_choice)
 
     local function ui_select_build_entries()
         local num_hl = 'Number'
-        local num_width = math.floor(math.log10(#items)) + 1 -- number of digits #items has
+        local num_width = #tostring(math.max(#items, 1)) -- number of digits #items has
         local num_ansi_width = #ansi_string('', num_hl)
         local format_item = opts.format_item or tostring
         local kind = opts.kind
@@ -4477,8 +4563,9 @@ end
 
 ---@param entries string[]
 ---@param action_map table<string, function> A map from a key that fzf supports to an action
----@param opts string[], fzf options
+---@param opts? string[] fzf options
 function M.fzf(entries, action_map, opts)
+    opts = opts or {}
     local keys = {}
     for key, _ in pairs(action_map) do
         table.insert(keys, key)
@@ -4490,7 +4577,11 @@ function M.fzf(entries, action_map, opts)
             for i = 2, #lines do
                 selections[#selections + 1] = lines[i]
             end
-            action_map[key](selections)
+
+            local action = action_map[key]
+            if action then
+                action(selections)
+            end
         end,
         options = get_fzf_opts(false, vim.list_extend({
             '--expect',
@@ -4520,14 +4611,16 @@ local function tree_files(from_resume)
     local commits = read_file(path)
     local commits_str = table.concat(commits, ' ')
 
+    local escaped_git_root = shellescape(fzf_ctx.origin_git_root)
+
     -- Each entry: <icon> <relative_path>\t<relative_path>\t<absolute_path>
     local cmd = " \
         printf '%s\n' " .. commits_str .. " | \
         while IFS= read -r treeish; do \
-            git diff-tree --no-commit-id --name-only \"$treeish\" -r; \
+            git -C " .. escaped_git_root .. " diff-tree --no-commit-id --name-only \"$treeish\" -r; \
         done | sort -u | \
         while IFS= read -r relpath; do \
-            printf '%s\t%s\n' \"$relpath\" " .. fzf_ctx.origin_git_root .. "/\"$relpath\" \
+            printf '%s\t%s\n' \"$relpath\" " .. escaped_git_root .. "/\"$relpath\" \
         done | " .. dressup_cmd('git_lsfiles_fullname') .. " \
     "
 
@@ -4537,9 +4630,9 @@ local function tree_files(from_resume)
             '--delimiter',
             '\t',
             '--with-nth',
-            1,
+            '1',
             '--accept-nth',
-            3,
+            '3',
             '--prompt',
             'Files in ' .. commits_str .. '> ',
             '--header',
@@ -4549,7 +4642,7 @@ local function tree_files(from_resume)
             '--preview',
             " \
             diff_output=$( \
-                git -C " .. fzf_ctx.origin_git_root ..
+                git -C " .. escaped_git_root ..
                 " -c core.quotePath=false diff --no-ext-diff --color=always -- {3} | " ..
                 diff_pager .. " \
             ) \
@@ -4560,7 +4653,7 @@ local function tree_files(from_resume)
             fi \
             ",
             '--bind',
-            set_label('{1}'),
+            make_label_bind('{1}'),
             '--bind',
             'alt-o:execute-silent( \
                 open-giturl file {2} \

@@ -1,8 +1,8 @@
 vim.o.termguicolors = true
 vim.o.background = 'dark'
 
--- Remove the background color for transparent background
-if vim.g.transparent then
+-- Clear the Normal background when transparent background is enabled
+if vim.g.transparent_background then
     vim.api.nvim_create_augroup('rockyz.color.bg_clean', { clear = true })
     vim.api.nvim_create_autocmd({ 'ColorScheme' }, {
         group = 'rockyz.color.bg_clean',

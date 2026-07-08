@@ -4,7 +4,7 @@
 
 local utils = require('rockyz.utils.color')
 
-vim.o.background = vim.g.is_dark and 'dark' or 'light'
+vim.o.background = vim.g.dark_background and 'dark' or 'light'
 
 -- Gruvbox palette
 
@@ -62,7 +62,7 @@ local bg0, bg1, bg2, bg3, bg4
 local fg0, fg1, fg2, fg3, fg4
 local red, green, yellow, blue, purple, aqua, orange
 local coral_pink, mint_cyan
-if vim.g.is_dark then
+if vim.g.dark_background then
     bg0 = dark0
     if vim.g.gruvbox_contrast == 'soft' then
         bg0 = dark0_soft
@@ -212,7 +212,7 @@ local groups = {
     LineNrBelow = 'LineNr',
     SignColumn = 'LineNr',
     CursorLineSign = 'SignColumn',
-    Folded = { fg = gray, bg = bg1, italic = vim.g.italic },
+    Folded = { fg = gray, bg = bg1, italic = vim.g.italic_enabled },
     FoldColumn = 'SignColumn',
     CursorLineFold = 'FoldColumn',
     Cursor = { reverse = true },
@@ -292,7 +292,7 @@ local groups = {
 
     -- Syntax
 
-    Comment = { fg = gray, italic = vim.g.italic },
+    Comment = { fg = gray, italic = vim.g.italic_enabled },
 
     Constant = { fg = purple },
     String = { fg = green },
@@ -333,7 +333,7 @@ local groups = {
     Underlined = { fg = blue, underline = true },
     Ignore = 'Normal',
     Error = { fg = 'bg', bg = red, bold = true },
-    Todo = { fg = bg0, bg = yellow, bold = true, italic = vim.g.italic },
+    Todo = { fg = bg0, bg = yellow, bold = true, italic = vim.g.italic_enabled },
 
     Added = 'DiffAdd', -- added line in a diff
     Changed = 'DiffChange', -- changed line in a diff
@@ -529,7 +529,7 @@ local groups = {
 
     -- Winbar
     WinbarHeader = 'WinBar',
-    WinbarPath = { fg = winbar_fg, bg = winbar_bg, italic = vim.g.italic },
+    WinbarPath = { fg = winbar_fg, bg = winbar_bg, italic = vim.g.italic_enabled },
     WinbarFilename = 'WinBar',
     WinbarModified = 'WinBar',
     WinbarError = { fg = red, bg = winbar_bg },

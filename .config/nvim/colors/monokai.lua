@@ -159,7 +159,7 @@ local groups = {
     -- Winbar
     WinbarHeader = { fg = stl_mode_fg, bg = stl_normal }, -- the very beginning part of winbar
     WinbarTriangleSep = { fg = stl_normal }, -- the triangle separator in winbar
-    WinbarPath = { fg = icon_fg, bg = norm_bg, italic = vim.g.italic },
+    WinbarPath = { fg = icon_fg, bg = norm_bg, italic = vim.g.italic_enabled },
     WinbarFilename = { fg = winbar_fg, bg = norm_bg }, -- filename
     WinbarModified = { fg = norm_fg, bg = norm_bg }, -- the modification indicator
     WinbarError = { fg = error_list, bg = norm_bg }, -- the filename color if the current buffer has errors
@@ -204,11 +204,11 @@ local groups = {
     DiagnosticInfo = { fg = info_blue },
     DiagnosticHint = { fg = hint_gray },
     DiagnosticOk = { fg = ok_green },
-    DiagnosticVirtualTextError = { fg = error_red, bg = utils.blend(error_red, 0.9, norm_bg), italic = vim.g.italic },
-    DiagnosticVirtualTextWarn = { fg = warn_yellow, bg = utils.blend(warn_yellow, 0.9, norm_bg), italic = vim.g.italic },
-    DiagnosticVirtualTextInfo = { fg = info_blue, bg = utils.blend(info_blue, 0.9, norm_bg), italic = vim.g.italic },
-    DiagnosticVirtualTextHint = { fg = utils.darken(hint_gray, 0.4), bg = utils.blend(hint_gray, 0.9, norm_bg), italic = vim.g.italic },
-    DiagnosticVirtualTextOk = { fg = ok_green, bg = '#31392c', italic = vim.g.italic },
+    DiagnosticVirtualTextError = { fg = error_red, bg = utils.blend(error_red, 0.9, norm_bg), italic = vim.g.italic_enabled },
+    DiagnosticVirtualTextWarn = { fg = warn_yellow, bg = utils.blend(warn_yellow, 0.9, norm_bg), italic = vim.g.italic_enabled },
+    DiagnosticVirtualTextInfo = { fg = info_blue, bg = utils.blend(info_blue, 0.9, norm_bg), italic = vim.g.italic_enabled },
+    DiagnosticVirtualTextHint = { fg = utils.darken(hint_gray, 0.4), bg = utils.blend(hint_gray, 0.9, norm_bg), italic = vim.g.italic_enabled },
+    DiagnosticVirtualTextOk = { fg = ok_green, bg = '#31392c', italic = vim.g.italic_enabled },
     DiagnosticVirtualLinesError = 'DiagnosticVirtualTextError',
     DiagnosticVirtualLinesWarn = 'DiagnosticVirtualTextWarn',
     DiagnosticVirtualLinesInfo = 'DiagnosticVirtualTextInfo',
@@ -444,8 +444,8 @@ local groups = {
     Macro = 'PreProc', -- Same as Define.
     PreCondit = 'PreProc', -- Preprocessor #if, #else, #endif, etc.
 
-    Type = { fg = blue, italic = vim.g.italic }, -- int, long, char, etc. (storage.type)
-    StorageClass = { fg = red, italic = vim.g.italic }, -- static, register, volatile, etc. (storage.modifier)
+    Type = { fg = blue, italic = vim.g.italic_enabled }, -- int, long, char, etc. (storage.type)
+    StorageClass = { fg = red, italic = vim.g.italic_enabled }, -- static, register, volatile, etc. (storage.modifier)
     Structure = 'Type', -- struct, union, enum, etc.
     Typedef = 'Keyword', -- A typedef
 
@@ -471,7 +471,7 @@ local groups = {
     -- Identifiers
     ['@variable'] = 'Identifier', -- various variable names
     ['@variable.builtin'] = { fg = orange }, -- built-in variable names (e.g. `this`). (variable.language)
-    ['@variable.parameter'] = { fg = orange, italic = vim.g.italic }, -- parameters of a function. (variable.parameter)
+    ['@variable.parameter'] = { fg = orange, italic = vim.g.italic_enabled }, -- parameters of a function. (variable.parameter)
     ['@variable.parameter.builtin'] = '@variable.parameter', -- special parameters (e.g. `_`, `it`)
     ['@variable.member'] = '@variable', -- object and struct fields. (variable.other.member)
 
@@ -529,7 +529,7 @@ local groups = {
     ['@keyword.operator'] = '@keyword', -- operators that are English words (e.g. `and` / `or`). (keyword.operator.word)
     ['@keyword.import'] = '@keyword', -- keywords for including modules (e.g. `import` / `from` in Python). (keyword.control.import)
     ['@keyword.type'] = 'Type', -- keywords describing composite types (e.g. `struct`, `enum`). (keyword.declaration.struct, falls back to storage.type.struct)
-    ['@keyword.modifier'] = { fg = red, italic = vim.g.italic }, -- keywords modifying other constructs (e.g. `const`, `static`, `public`). (storage.modifier)
+    ['@keyword.modifier'] = { fg = red, italic = vim.g.italic_enabled }, -- keywords modifying other constructs (e.g. `const`, `static`, `public`). (storage.modifier)
     ['@keyword.repeat'] = 'Repeat', -- keywords related to loops (e.g. `for` / `while`)
     ['@keyword.return'] = '@keyword', --  keywords like `return` and `yield`
     ['@keyword.debug'] = 'Debug', -- keywords related to debugging
@@ -572,7 +572,7 @@ local groups = {
     ['@markup.heading.6'] = '@markup.heading',
 
     ['@markup.quote'] = { fg = norm_fg }, -- block quotes. (markup.quote)
-    ['@markup.math'] = { fg = blue, italic = vim.g.italic }, -- math environments (e.g. `$ ... $` in LaTeX)
+    ['@markup.math'] = { fg = blue, italic = vim.g.italic_enabled }, -- math environments (e.g. `$ ... $` in LaTeX)
 
     ['@markup.link'] = { fg = blue }, -- text references, footnotes, citations, etc. (markup.underline.link)
     ['@markup.link.label'] = '@markup.link', -- non-url links
@@ -644,8 +644,8 @@ local groups = {
 
     -- Predefined in vscode
     -- (https://code.visualstudio.com/api/language-extensions/semantic-highlight-guide#predefined-textmate-scope-mappings)
-    ['@lsp.typemod.type.defaultLibrary'] = { fg = blue, italic = vim.g.italic }, -- (support.type)
-    ['@lsp.typemod.class.defaultLibrary'] = { fg = blue, italic = vim.g.italic }, -- (support.class)
+    ['@lsp.typemod.type.defaultLibrary'] = { fg = blue, italic = vim.g.italic_enabled }, -- (support.type)
+    ['@lsp.typemod.class.defaultLibrary'] = { fg = blue, italic = vim.g.italic_enabled }, -- (support.class)
     ['@lsp.typemod.function.defaultLibrary'] = { fg = blue }, -- (support.function)
     ['@lsp.typemod.variable.readonly'] = '@variable', -- immutable variables, often via const. (variable.other.constant, or entity.name.constant)
     ['@lsp.typemod.variable.readonly.defaultLibrary'] = { fg = blue }, -- (support.constant)
@@ -934,7 +934,7 @@ local groups = {
     UfoPreviewCursorLine = 'PeekViewCursorLine',
     UfoFoldedFg = { fg = norm_fg },
     UfoFoldedBg = { bg = folded_line_bg },
-    UfoCursorFoldedLine = { bg = gray4, bold = true, italic = vim.g.italic },
+    UfoCursorFoldedLine = { bg = gray4, bold = true, italic = vim.g.italic_enabled },
     UfoPreviewSbar = 'PeekViewNormal',
     UfoPreviewThumb = 'ScrollbarSlider',
     UfoFoldedEllipsis = 'Whitespace',

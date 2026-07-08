@@ -392,7 +392,7 @@ local groups = {
 
     -- Winbar
     WinbarHeader = 'WinBar',
-    WinbarPath = { fg = winbar_fg, bg = winbar_bg, italic = vim.g.italic },
+    WinbarPath = { fg = winbar_fg, bg = winbar_bg, italic = vim.g.italic_enabled },
     WinbarFilename = 'WinBar',
     WinbarModified = 'WinBar',
     WinbarError = { fg = dark_red, bg = winbar_bg },

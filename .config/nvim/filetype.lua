@@ -13,13 +13,13 @@ vim.filetype.add({
             if size <= 0 then
                 return
             end
-            if size > vim.g.bigfile_size then
+            if size > vim.g.bigfile_size_threshold then
                 return 'bigfile'
             end
             local lines = vim.api.nvim_buf_line_count(bufnr)
             -- (size - lines) / lines: This gives the average length (i.e., average bytes) of the
             -- content per line, excluding the newline character
-            return (size - lines) / lines > vim.g.bigfile_line_length and 'bigfile' or nil
+            return (size - lines) / lines > vim.g.bigfile_line_length_threshold and 'bigfile' or nil
         end,
     },
 })

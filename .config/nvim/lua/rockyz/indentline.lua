@@ -10,8 +10,8 @@
 -- - Tab indentation:
 --   Use 'tab' as the indent guide, and use 'leadmultispace' only as a marker for leading spaces.
 
-local ok, icons = pcall(require, 'rockyz.icons')
-local indentline_char = ok and icons.lines.double_dash_vertical or '╎'
+local has_icons, icons = pcall(require, 'rockyz.icons')
+local indentline_char = has_icons and icons.lines.double_dash_vertical or '╎'
 
 local tab_marker = '› '
 local space_marker = '␣'
@@ -22,7 +22,7 @@ local function get_indent_width()
     if shiftwidth > 0 then
         return shiftwidth
     end
-    -- 'shiftwidth = 0' means to use 'tabstop'
+    -- 'shiftwidth=0' means to use 'tabstop'
     return vim.api.nvim_get_option_value('tabstop', {})
 end
 
@@ -48,17 +48,17 @@ local function update_listchars(opt)
     opt.listchars:append(listchars)
 end
 
-local augroup = vim.api.nvim_create_augroup('rockyz.indentline', { clear = true })
+local indentline_augroup = vim.api.nvim_create_augroup('rockyz.indentline', { clear = true })
 
-vim.api.nvim_create_autocmd({ 'VimEnter' }, {
-    group = augroup,
+vim.api.nvim_create_autocmd('VimEnter', {
+    group = indentline_augroup,
     callback = function()
         update_listchars(vim.opt)
     end,
 })
 
-vim.api.nvim_create_autocmd({ 'OptionSet' }, {
-    group = augroup,
+vim.api.nvim_create_autocmd('OptionSet', {
+    group = indentline_augroup,
     pattern = { 'shiftwidth', 'expandtab', 'tabstop' },
     callback = function()
         update_listchars(vim.v.option_type == 'local' and vim.opt_local or vim.opt)

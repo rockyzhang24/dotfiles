@@ -3,17 +3,28 @@ local notify = require('rockyz.utils.notify')
 -- Dotfiles setup
 local function update_git_env()
     local cwd = vim.fn.getcwd()
-    local ok1, inside_config = pcall(vim.startswith, cwd, vim.env.XDG_CONFIG_HOME)
-    if not ok1 or not inside_config then
+    local config_home = vim.env.XDG_CONFIG_HOME
+    local home = vim.env.HOME
+
+    if not config_home or not home then
         return
     end
-    local ok2, inside_pack = pcall(vim.startswith, cwd, vim.env.XDG_CONFIG_HOME .. '/nvim/pack')
-    if not ok2 or inside_pack then
+
+    local ok, inside_config = pcall(vim.startswith, cwd, config_home)
+    if not ok or not inside_config then
         return
     end
-    vim.env.GIT_DIR = vim.env.HOME .. '/dotfiles'
-    vim.env.GIT_WORK_TREE = vim.env.HOME
+
+    local nvim_pack_dir = vim.fs.joinpath(config_home, 'nvim', 'pack')
+    local pack_ok, inside_pack = pcall(vim.startswith, cwd, nvim_pack_dir)
+    if not pack_ok or inside_pack then
+        return
+    end
+
+    vim.env.GIT_DIR = vim.fs.joinpath(home, 'dotfiles')
+    vim.env.GIT_WORK_TREE = home
 end
+
 vim.api.nvim_create_autocmd('VimEnter', {
     group = vim.api.nvim_create_augroup('rockyz.dotfiles', {}),
     callback = function()
@@ -21,20 +32,28 @@ vim.api.nvim_create_autocmd('VimEnter', {
     end,
 })
 
--- Karabiner Element maps CTRL-[ to ESC system wide except we're in Neovim. We need a variable to
--- tell if we're in Neovim or not.
-vim.api.nvim_create_autocmd({ 'FocusGained' }, {
+-- Karabiner-Elements maps CTRL-[ to ESC system wide except in Neovim
+
+local karabiner_cli = '/Library/Application Support/org.pqrs/Karabiner-Elements/bin/karabiner_cli'
+
+local function set_karabiner_in_nvim(enabled)
+    local value = enabled and '{"in_nvim":1}' or '{"in_nvim":0}'
+    vim.system({ karabiner_cli, '--set-variables', value })
+end
+
+vim.api.nvim_create_autocmd('FocusGained', {
     group = vim.api.nvim_create_augroup('rockyz.karabiner', { clear = true }),
     callback = function()
-        vim.system({'/Library/Application Support/org.pqrs/Karabiner-Elements/bin/karabiner_cli', '--set-variables', '{"in_nvim":1}'})
+        set_karabiner_in_nvim(true)
     end,
 })
+
 vim.api.nvim_create_autocmd({ 'FocusLost', 'VimLeave' }, {
     group = 'rockyz.karabiner',
     callback = function(ev)
         if ev.event ~= 'VimLeave' or not vim.env.NVIM then
-            -- If it occurs in VimLeave, ensure it's not the terminal nested nvim.
-            vim.system({'/Library/Application Support/org.pqrs/Karabiner-Elements/bin/karabiner_cli', '--set-variables', '{"in_nvim":0}'})
+            -- If it occurs in VimLeave, ensure it's not the terminal nested nvim
+            set_karabiner_in_nvim(false)
         end
     end,
 })
@@ -56,9 +75,10 @@ vim.api.nvim_create_autocmd('FileType', {
         local bufnr = ev.buf
         local filetype = ev.match
         local lang = vim.treesitter.language.get_lang(filetype)
-        if lang and vim.treesitter.language.add(lang) then
-            vim.treesitter.start(bufnr, lang)
+        if not lang or not vim.treesitter.language.add(lang) then
+            return
         end
+        vim.treesitter.start(bufnr, lang)
     end,
 })
 
@@ -70,13 +90,15 @@ vim.api.nvim_create_autocmd('BufRead', {
             buffer = 0,
             once = true,
             callback = function()
-                local line = vim.fn.line('\'"')
+                local last_pos_line = vim.fn.line('\'"')
+                local last_line = vim.fn.line('$')
+                local filetype = vim.bo.filetype
                 if
-                    line >= 1
-                    and line <= vim.fn.line('$')
-                    and string.find(vim.bo.filetype, 'commit') == nil
-                    and vim.fn.index({ 'xxd', 'gitrebase' }, vim.bo.filetype) == -1
-                    and vim.o.diff == false
+                    last_pos_line >= 1
+                    and last_pos_line <= last_line
+                    and not filetype:find('commit')
+                    and not vim.tbl_contains({ 'xxd', 'gitrebase' }, filetype)
+                    and not vim.o.diff
                 then
                     vim.cmd([[normal! g`"]])
                 end
@@ -86,18 +108,17 @@ vim.api.nvim_create_autocmd('BufRead', {
 })
 
 -- Auto-create dir when saving a file, in case some intermediate directory does not exist
-vim.api.nvim_create_autocmd({ 'BufWritePre' }, {
+vim.api.nvim_create_autocmd('BufWritePre', {
     pattern = '*',
     group = vim.api.nvim_create_augroup('rockyz.auto_create_dir', {}),
     callback = function(ctx)
-        -- Prevent oil.nivm from creating an extra oil:/ dir when we create a file/dir
-        if vim.bo.ft == 'oil' then
+        -- Prevent oil.nvim from creating an extra oil:/ dir when we create a file/dir
+        if vim.bo[ctx.buf].filetype == 'oil' then
             return
         end
-        local dir = vim.fn.fnamemodify(ctx.file, ':p:h')
-        local res = vim.fn.isdirectory(dir)
-        if res == 0 then
-            vim.fn.mkdir(dir, 'p')
+        local target_dir = vim.fn.fnamemodify(ctx.file, ':p:h')
+        if vim.fn.isdirectory(target_dir) == 0 then
+            vim.fn.mkdir(target_dir, 'p')
         end
     end,
 })
@@ -126,23 +147,18 @@ vim.api.nvim_create_autocmd({
 
 -- Automatically toggle relative number
 -- Ref: https://github.com/MariaSolOs/dotfiles
-local exclude_ft = {
+
+local relative_number_excluded_filetypes = {
     'qf',
 }
-local function tbl_contains(t, value)
-    for _, v in ipairs(t) do
-        if v == value then
-            return true
-        end
-    end
-    return false
-end
-local rnu_augroup = vim.api.nvim_create_augroup('rockyz.toggle_relative_number', {})
+
+local relative_number_augroup = vim.api.nvim_create_augroup('rockyz.toggle_relative_number', {})
+
 -- Toggle relative number on
 vim.api.nvim_create_autocmd({ 'BufEnter', 'FocusGained', 'InsertLeave', 'CmdlineLeave', 'WinEnter' }, {
-    group = rnu_augroup,
+    group = relative_number_augroup,
     callback = function()
-        if tbl_contains(exclude_ft, vim.bo.filetype) then
+        if vim.tbl_contains(relative_number_excluded_filetypes, vim.bo.filetype) then
             return
         end
         if vim.wo.nu and not vim.startswith(vim.api.nvim_get_mode().mode, 'i') then
@@ -150,11 +166,12 @@ vim.api.nvim_create_autocmd({ 'BufEnter', 'FocusGained', 'InsertLeave', 'Cmdline
         end
     end,
 })
+
 -- Toggle relative number off
 vim.api.nvim_create_autocmd({ 'BufLeave', 'FocusLost', 'InsertEnter', 'CmdlineEnter', 'WinLeave' }, {
-    group = rnu_augroup,
+    group = relative_number_augroup,
     callback = function(ev)
-        if tbl_contains(exclude_ft, vim.bo.filetype) then
+        if vim.tbl_contains(relative_number_excluded_filetypes, vim.bo.filetype) then
             return
         end
         if vim.wo.nu then
@@ -179,19 +196,19 @@ vim.api.nvim_create_autocmd('CmdwinEnter', {
     end,
 })
 
--- Disable wezterm shell integration if vim is launched in tmux in wezterm.
+-- Disable WezTerm shell integration if Vim is launched in tmux in WezTerm
 -- Ref: https://github.com/wez/wezterm/issues/5986
 vim.api.nvim_create_autocmd('VimEnter', {
     group = vim.api.nvim_create_augroup('rockyz.wezterm.shell_integration_disable', {}),
     callback = function()
-        if vim.env.WEZTERM_PANE and vim.env.TERM:match('tmux') then
+        if vim.env.WEZTERM_PANE and (vim.env.TERM or ''):match('tmux') then
             vim.env.WEZTERM_SHELL_SKIP_ALL = 1
         end
     end,
 })
 
--- Reset maximize status
--- Close window by :quit will resize all windows so the maximization status should be reset
+-- Reset window maximization state
+-- :quit resizes all windows, so cached maximization state needs to be cleared
 vim.api.nvim_create_autocmd('QuitPre', {
     group = vim.api.nvim_create_augroup('rockyz.reset_win_maximize', { clear = true }),
     callback = function()
@@ -220,23 +237,24 @@ vim.api.nvim_create_autocmd('QuitPre', {
 --     end,
 -- })
 
--- Set CursorLine of not-current windows
-vim.api.nvim_create_augroup('rockyz.cursorlinenc', {})
+-- Set CursorLineNC in inactive windows
+local cursorline_nc_augroup = vim.api.nvim_create_augroup('rockyz.cursorlinenc', {})
+
 vim.api.nvim_create_autocmd({ 'VimEnter', 'WinEnter', 'TabEnter', 'BufEnter' }, {
-    group = 'rockyz.cursorlinenc',
+    group = cursorline_nc_augroup,
     callback = function()
         vim.opt_local.winhighlight:remove('CursorLine')
     end,
 })
 vim.api.nvim_create_autocmd('WinLeave', {
-    group = 'rockyz.cursorlinenc',
+    group = cursorline_nc_augroup,
     callback = function()
         vim.opt_local.winhighlight:append({ CursorLine = 'CursorLineNC' })
     end,
 })
 
--- In large file, only use vim syntax (LSP semantic highlight and treesitter highlight will be
--- disabled).
+-- In big files, only use Vim syntax highlighting
+-- LSP semantic highlighting and Treesitter highlighting are disabled
 vim.api.nvim_create_autocmd('FileType', {
     group = vim.api.nvim_create_augroup('rockyz.big_file', { clear = true }),
     pattern = 'bigfile',
@@ -256,7 +274,7 @@ vim.api.nvim_create_autocmd('FileType', {
 -- Examples: https://codeberg.org/mfussenegger/dotfiles/src/branch/master/vim/dot-config/nvim/templates
 --
 -- For example, we run :edit foo.lua to edit a new file. It tries to find the first existing
--- template file in the following order and read it into the buffer.
+-- template file in the following order and reads it into the buffer.
 -- foo.lua.tpl      --> template exact matching the file name
 -- lua.tpl          --> template matching the file extension
 -- foo.lua.stpl     --> template with snippets matching the file name
@@ -268,22 +286,26 @@ vim.api.nvim_create_autocmd('BufNewFile', {
         if not vim.bo[ev.buf].modifiable then
             return
         end
-        local home = os.getenv('HOME')
-        local fname = vim.fn.fnamemodify(ev.file, ':t')
-        local ext = vim.fn.fnamemodify(ev.file, ':e')
-        local candidates = { fname, ext }
+
+        local template_dir = vim.fs.joinpath(vim.fn.stdpath('config'), 'templates')
+        local filename = vim.fn.fnamemodify(ev.file, ':t')
+        local extension = vim.fn.fnamemodify(ev.file, ':e')
+        local candidates = { filename, extension }
+
         for _, candidate in ipairs(candidates) do
-            local tmpl = table.concat({ home, '/.config/nvim/templates/', candidate, '.tpl' })
+            local tmpl = vim.fs.joinpath(template_dir, candidate .. '.tpl')
             if vim.uv.fs_stat(tmpl) then
-                vim.cmd('0r ' .. tmpl)
+                vim.cmd('0r ' .. vim.fn.fnameescape(tmpl))
                 return
             end
         end
+
         for _, candidate in ipairs(candidates) do
-            local tmpl = table.concat({ home, '/.config/nvim/templates/', candidate, '.stpl' })
+            local tmpl = vim.fs.joinpath(template_dir, candidate .. '.stpl')
             local f = io.open(tmpl, 'r')
             if f then
                 local content = f:read('*a')
+                f:close()
                 vim.snippet.expand(content)
                 return
             end

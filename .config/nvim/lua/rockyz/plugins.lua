@@ -1,37 +1,38 @@
 local notify = require('rockyz.utils.notify')
 
-vim.api.nvim_create_autocmd({ 'PackChanged' }, {
+local function packadd(plugin_name, active)
+    if not active then
+        vim.cmd.packadd(plugin_name)
+    end
+end
+
+vim.api.nvim_create_autocmd('PackChanged', {
     group = vim.api.nvim_create_augroup('rockyz.pack', { clear = true }),
     callback = function(event)
         local kind = event.data.kind
         local name = event.data.spec.name
         local active = event.data.active
         if kind == 'install' or kind == 'update' then
-            -- saghen/blink.cmp
             if name == 'blink.cmp' then
-                if not active then
-                    vim.cmd.packadd('blink.cmp')
-                end
-                notify.info('[Pack] blink.cmp: building ...')
+                -- saghen/blink.cmp
+                packadd('blink.cmp', active)
+                notify.info('[Pack] blink.cmp: building...')
                 vim.cmd('BlinkCmp build')
-                notify.info('[Pack] blink.cmp: building done')
-            end
-            -- L3MON4D3/LuaSnip
-            if name == 'LuaSnip' then
+                notify.info('[Pack] blink.cmp: build complete')
+            elseif name == 'LuaSnip' then
+                -- L3MON4D3/LuaSnip
                 notify.info('[Pack] LuaSnip: installing jsregexp')
                 local obj = vim.system({ 'make', 'install_jsregexp' }, { cwd = event.data.path }):wait()
                 if obj.code == 0 then
-                    notify.info('[Pack] LuaSnip: successfully to install jsregexp')
+                    notify.info('[Pack] LuaSnip: installed jsregexp')
                 else
                     notify.error('[Pack] LuaSnip: failed to install jsregexp')
                 end
             end
         end
         -- nvim-treesitter/nvim-treesitter
-        if name == 'nvim-treesitter' and kind == 'update' then
-            if not active then
-                vim.cmd.packadd('nvim-treesitter')
-            end
+        if kind == 'update' and name == 'nvim-treesitter' then
+            packadd('nvim-treesitter', active)
             notify.info('[Pack] nvim-treesitter: updating installed parsers')
             vim.cmd('TSUpdate')
         end
@@ -50,7 +51,7 @@ vim.pack.add({
     'https://github.com/tpope/vim-sleuth',
     'https://github.com/tpope/vim-repeat',
     'https://github.com/tpope/vim-apathy',
-    'https://github.com/tpope/vim-dispatch', -- async build and text
+    'https://github.com/tpope/vim-dispatch', -- async build and test
     'https://github.com/tpope/vim-projectionist',
     'https://github.com/tpope/vim-obsession',
     'https://github.com/barrettruth/diffs.nvim',
@@ -94,7 +95,7 @@ vim.pack.add({
     -- Autocomplete
     {
         src = 'https://github.com/saghen/blink.cmp',
-        version = vim.version.range('1.*')
+        version = vim.version.range('1.*'),
     },
 
     -- Snippets
@@ -109,9 +110,10 @@ vim.pack.add({
     -- Git
     'https://github.com/lewis6991/gitsigns.nvim',
     'https://github.com/tpope/vim-fugitive',
+
     'https://github.com/tpope/vim-rhubarb',
-    -- It providesa command :GBrowse to open the current file, blob, tree, commit, or tag in the
-    -- browser.
+    -- It provides :GBrowse to open the current file, blob, tree, commit, or tag in the browser
+
     'https://github.com/rbong/vim-flog',
     {
         src = 'https://github.com/rockyzhang24/git-messenger.vim',

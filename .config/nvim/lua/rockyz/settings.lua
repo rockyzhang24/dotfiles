@@ -1,12 +1,24 @@
 local icons = require('rockyz.icons')
 
+--------------------------------------------------------------------------------
+-- Editor options
+--------------------------------------------------------------------------------
+
 vim.o.breakindent = true
 vim.o.cindent = true
 vim.o.cmdheight = 1
 vim.o.completeopt = 'menuone,noselect,noinsert,fuzzy,popup'
 vim.opt.cpoptions:remove('_')
 vim.o.cursorline = true
-vim.opt.diffopt = {'algorithm:patience', 'closeoff', 'filler', 'inline:word', 'internal', 'linematch:60', 'vertical'}
+vim.opt.diffopt = {
+    'algorithm:patience',
+    'closeoff',
+    'filler',
+    'inline:word',
+    'internal',
+    'linematch:60',
+    'vertical',
+}
 vim.o.expandtab = true
 vim.o.exrc = true
 vim.opt.fillchars = {
@@ -21,7 +33,7 @@ vim.opt.fillchars = {
 vim.o.foldcolumn = '1'
 vim.o.foldlevel = 99
 vim.o.foldlevelstart = 99
--- vim.opt.guicursor = "i:block" -- use block cursor in insert mode
+-- vim.opt.guicursor = 'i:block' -- Use block cursor in insert mode
 vim.o.ignorecase = true
 vim.o.inccommand = 'split'
 vim.opt.isfname:remove('=')
@@ -56,7 +68,7 @@ vim.o.showmode = false
 vim.opt.shortmess:append('acS')
 vim.o.signcolumn = 'yes'
 vim.o.smartcase = true
-vim.o.softtabstop = -1 -- fall back to shiftwidth
+vim.o.softtabstop = -1 -- Fall back to shiftwidth
 vim.o.spelllang = 'en_us'
 vim.o.splitbelow = true
 vim.o.splitright = true
@@ -68,34 +80,45 @@ vim.o.textwidth = 100
 vim.o.timeoutlen = 500
 vim.o.title = true
 vim.cmd([[let &titlestring = (exists('$SSH_TTY') ? 'SSH ' : '') .. '%{fnamemodify(getcwd(),":t")}']])
--- Presistent undo (use set undodir=... to change the undodir, default is ~/.local/share/nvim/undo)
+-- Persistent undo. Use 'undodir' to change the undo directory; the default is
+-- ~/.local/share/nvim/undo.
 vim.o.undofile = true
 vim.o.updatetime = 250
 vim.o.wildmode = 'longest:full,full'
 
 -- Avoid highlighting the last search when sourcing vimrc
 vim.cmd('nohlsearch')
--- Latex
+
+-- Plugin globals
 vim.g.tex_flavor = 'latex'
--- Soft wrap in Man page
-vim.g.man_hardwrap = 0
--- Disable health checks for these providers
+vim.g.man_hardwrap = 0 -- Soft wrap man pages
+
+-- Disable unused language providers
 vim.g.loaded_python3_provider = 0
 vim.g.loaded_ruby_provider = 0
 vim.g.loaded_perl_provider = 0
 vim.g.loaded_node_provider = 0
+
 -- Netrw
 vim.g.netrw_banner = 0
 vim.g.netrw_winsize = 25
 vim.g.netrw_localcopydircmd = 'cp -r'
 
--- Fold
--- Use LSP folding if it's available; otherwise, fall back to treesitter folding.
-vim.o.foldmethod = 'indent' -- default
-vim.o.foldtext = '' -- transparent foldtext (https://github.com/neovim/neovim/pull/20750)
-local augroup = vim.api.nvim_create_augroup('rockyz.fold', { clear = true })
+--------------------------------------------------------------------------------
+-- Folding
+--------------------------------------------------------------------------------
+
+-- Prefer LSP folding when available; otherwise, fall back to Treesitter.
+
+-- Default until an LSP or Treesitter foldexpr is available
+vim.o.foldmethod = 'indent'
+-- Use transparent foldtext
+vim.o.foldtext = ''
+
+local fold_augroup = vim.api.nvim_create_augroup('rockyz.fold', { clear = true })
+
 vim.api.nvim_create_autocmd('LspAttach', {
-    group = augroup,
+    group = fold_augroup,
     callback = function(ev)
         local bufnr = ev.buf
         local client = vim.lsp.get_client_by_id(ev.data.client_id)
@@ -107,8 +130,9 @@ vim.api.nvim_create_autocmd('LspAttach', {
         end
     end,
 })
+
 vim.api.nvim_create_autocmd('FileType', {
-    group = augroup,
+    group = fold_augroup,
     callback = function(ev)
         local bufnr = ev.buf
         if vim.bo[bufnr].filetype ~= 'bigfile' and not vim.b[bufnr].lsp_folding_enabled then
@@ -121,19 +145,22 @@ vim.api.nvim_create_autocmd('FileType', {
     end,
 })
 
--- statuscolumn
-function _G.stc()
+-- Statuscolumn
+function _G.rockyz_statuscolumn()
     local lnum = vim.v.virtnum ~= 0 and '%=' or '%l'
     return lnum .. '%s%C' .. ' '
 end
-vim.o.statuscolumn = '%!v:lua.stc()'
 
--- Terminal config
+vim.o.statuscolumn = '%!v:lua.rockyz_statuscolumn()'
+
+--------------------------------------------------------------------------------
+-- Terminal
+--------------------------------------------------------------------------------
 
 -- Inspired by @justinmk
 -- In terminal, map <C-[> to <C-\><C-n> to go back to NORMAL. <ESC> can send literal ESC.
 -- In the terminal-nested nvim, map <C-[> back to <ESC>
-local function config_term_esc()
+local function setup_terminal_escape()
     vim.keymap.set('t', '<C-[>', [[<C-\><C-N>]])
 
     -- Send literal ESC
@@ -142,7 +169,7 @@ local function config_term_esc()
     -- In terminal-nested Nvim, we should map <C-[> back to <ESC>
     if vim.env.NVIM then
         local function parent_chan()
-            local ok, chan = pcall(vim.fn.sockconnect, 'pipe', vim.env.NVIM, {rpc=true})
+            local ok, chan = pcall(vim.fn.sockconnect, 'pipe', vim.env.NVIM, { rpc = true })
             if not ok then
                 vim.notify(('failed to create channel to $NVIM: %s'):format(chan))
             end
@@ -150,7 +177,10 @@ local function config_term_esc()
         end
 
         local didset = false
-        local chan = assert(parent_chan())
+        local chan = parent_chan()
+        if not chan then
+            return
+        end
 
         local function map_parent(lhs)
             -- Map `lhs` in the parent so it gets sent to the child (this) Nvim.
@@ -165,10 +195,14 @@ local function config_term_esc()
 
         -- Restore the mapping(s) on VimLeave.
         if didset then
-            vim.api.nvim_create_autocmd({'VimLeave'}, {
+            vim.api.nvim_create_autocmd('VimLeave', {
                 group = vim.api.nvim_create_augroup('rockyz.terminal.config_esc', { clear = true }),
                 callback = function()
-                    local chan2 = assert(parent_chan())
+                    local chan2 = parent_chan()
+                    if not chan2 then
+                        return
+                    end
+
                     vim.rpcrequest(chan2, 'nvim_exec2', [=[
                     tunmap <buffer> <C-[>
                     ]=], {})
@@ -177,63 +211,65 @@ local function config_term_esc()
         end
     end
 end
-config_term_esc()
+setup_terminal_escape()
 
 -- Inspired by @justinmk
 -- In terminal, mark the start of each prompt in signcolumn; change the current working directory of
 -- the terminal window to match the terminal's pwd.
-local function config_term()
+local function setup_terminal()
     vim.api.nvim_create_autocmd('TermOpen', {
         pattern = {
             '{term,shell}://*',
             ':shell*',
         },
         callback = function()
-            vim.cmd[=[
+            vim.cmd([=[
             nnoremap <silent><buffer> <cr> i<cr><c-\><c-n>
             nnoremap <silent><buffer> <c-c> i<c-c><c-\><c-n>
-            ]=]
-        end
+            ]=])
+        end,
     })
-    local ns = vim.api.nvim_create_namespace('rockyz.terminal.osc133')
+
+    local osc_namespace = vim.api.nvim_create_namespace('rockyz.terminal.osc')
+
     vim.api.nvim_create_autocmd('TermRequest', {
-        group = vim.api.nvim_create_augroup('rockyz.terminal.termrequest_osc', { clear = true }),
+        group = vim.api.nvim_create_augroup('rockyz.terminal.osc', { clear = true }),
         callback = function(ev)
             if string.match(ev.data.sequence, '^\027]133;A') then
-                -- OSC 133: shell-prompt
-                local extmarks = vim.b[ev.buf].osc133_extmarks or {}
-                local lnum = ev.data.cursor[1]
+                -- OSC 133: shell prompt
+                local prompt_marks = vim.b[ev.buf].osc133_extmarks or {}
+                local prompt_lnum = ev.data.cursor[1]
 
-                for id, l in pairs(extmarks) do
-                    if l < lnum then
-                        vim.api.nvim_buf_set_extmark(ev.buf, ns, l, 0, {
+                for id, l in pairs(prompt_marks) do
+                    if l < prompt_lnum then
+                        vim.api.nvim_buf_set_extmark(ev.buf, osc_namespace, l, 0, {
                             id = id,
                             sign_text = icons.misc.circle_filled,
                         })
                     end
                 end
 
-                local new_id = vim.api.nvim_buf_set_extmark(ev.buf, ns, lnum, 0, {
+                local new_id = vim.api.nvim_buf_set_extmark(ev.buf, osc_namespace, prompt_lnum, 0, {
                     sign_text = icons.misc.circle,
                     -- sign_hl_group = 'SpecialChar',
                 })
 
-                extmarks[new_id] = lnum
-                vim.b[ev.buf].osc133_extmarks = extmarks
+                prompt_marks[new_id] = prompt_lnum
+                vim.b[ev.buf].osc133_extmarks = prompt_marks
 
-                for id, l in pairs(extmarks) do
-                    if l > lnum then
-                        vim.api.nvim_buf_del_extmark(ev.buf, ns, id)
+                for id, l in pairs(prompt_marks) do
+                    if l > prompt_lnum then
+                        vim.api.nvim_buf_del_extmark(ev.buf, osc_namespace, id)
+                        prompt_marks[id] = nil
                     end
                 end
             end
 
-            local val, n = string.gsub(ev.data.sequence, '^\027]7;file://[^/]*', '')
-            if n > 0 then
-                -- OSC 7: dir-change
-                local dir = val
+            local dir, count = string.gsub(ev.data.sequence, '^\027]7;file://[^/]*', '')
+            if count > 0 then
+                -- OSC 7: current directory
                 if vim.fn.isdirectory(dir) == 0 then
-                    vim.notify('invalid dir: '..dir)
+                    vim.notify('invalid dir: ' .. dir)
                     return
                 end
                 vim.b[ev.buf].osc7_dir = dir
@@ -244,4 +280,4 @@ local function config_term()
         end,
     })
 end
-config_term()
+setup_terminal()

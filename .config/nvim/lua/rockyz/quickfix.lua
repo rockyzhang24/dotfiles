@@ -2,38 +2,47 @@ local M = {}
 
 local ok, icons = pcall(require, 'rockyz.icons')
 
-local MAX_FNAME_LEN = 50
+local MAX_FILENAME_WIDTH = 50
 local TRUNCATE_PREFIX = ok and icons.misc.ellipsis or ''
 
-function M.normalize(item)
-    local fname_fmt1 = '%-' .. MAX_FNAME_LEN .. 's'
-    local fname_fmt2 = TRUNCATE_PREFIX .. ' %.' .. (MAX_FNAME_LEN - 2) .. 's'
-    local fname = ''
+local FILENAME_FORMAT = '%-' .. MAX_FILENAME_WIDTH .. 's'
+local TRUNCATED_FILENAME_FORMAT = TRUNCATE_PREFIX .. ' %.' .. (MAX_FILENAME_WIDTH - 2) .. 's'
+
+local QUICKFIX_LINE_FORMAT = '%s |%5d:%-3d|%s %s'
+
+function M.normalize_item(item)
+    local filename = ''
     if item.bufnr > 0 then
-        fname = vim.api.nvim_buf_get_name(item.bufnr)
-        if fname == '' then
-            fname = '[No Name]'
+        filename = vim.api.nvim_buf_get_name(item.bufnr)
+        if filename == '' then
+            filename = '[No Name]'
         else
-            fname = fname:gsub('^' .. vim.env.HOME, '~')
+            local home = vim.env.HOME
+            local home_relative_path = home and vim.fs.relpath(home, filename)
+            filename = home_relative_path and ('~/' .. home_relative_path) or filename
         end
-        if #fname <= MAX_FNAME_LEN then
-            fname = fname_fmt1:format(fname)
+        if #filename <= MAX_FILENAME_WIDTH then
+            filename = FILENAME_FORMAT:format(filename)
         else
-            fname = fname_fmt2:format(fname)
+            filename = TRUNCATED_FILENAME_FORMAT:format(filename)
         end
     end
+
+    local item_type = item.type or ''
+    local item_text = item.text or ''
+
     -- Is showing end_lnum and end_col in quickfix helpful? I don't think so!
     return {
-        filename = fname,
+        filename = filename,
         lnum = item.lnum or -1,
         col = item.col or -1,
-        type = item.type == '' and '' or item.type:sub(1, 1):upper(),
-        text = item.text:gsub('\n', ' '),
+        type = item_type == '' and '' or item_type:sub(1, 1):upper(),
+        text = item_text:gsub('\n', ' '),
     }
 end
 
--- To avoid performance issue, qftf should be kept as simple as possible
-function M.qftf(info)
+-- To avoid performance issues, quickfixtextfunc should be kept as simple as possible
+function M.quickfix_textfunc(info)
     local items
     local lines = {}
     if info.quickfix == 1 then
@@ -41,23 +50,26 @@ function M.qftf(info)
     else
         items = vim.fn.getloclist(info.winid, { id = info.id, items = 0 }).items
     end
-    local fmt = '%s |%5d:%-3d|%s %s'
     for i = info.start_idx, info.end_idx do
-        local item = M.normalize(items[i])
+        local qf_item = items[i]
+        local item = M.normalize_item(qf_item)
+        local item_type = item.type == '' and '' or ' ' .. item.type
         local line
-        if items[i].valid == 1 then
-            line = fmt:format(item.filename, item.lnum, item.col, item.type == '' and '' or ' ' .. item.type, item.text)
+
+        if qf_item.valid == 1 then
+            line = QUICKFIX_LINE_FORMAT:format(item.filename, item.lnum, item.col, item_type, item.text)
         else
             line = item.text
         end
+
         table.insert(lines, line)
     end
     return lines
 end
 
-vim.o.quickfixtextfunc = [[{info -> v:lua.require('rockyz.quickfix').qftf(info)}]]
+vim.o.quickfixtextfunc = [[{info -> v:lua.require('rockyz.quickfix').quickfix_textfunc(info)}]]
 -- NOTE: if we use a normal function as the value of quickfixtextfunc instead of this lambda, only
 -- single quote form to get the package is allowed:
--- vim.o.quickfixtextfunc = "v:lua.require'rockyz.quickfix'.qftf"
+-- vim.o.quickfixtextfunc = "v:lua.require'rockyz.quickfix'.quickfix_textfunc"
 
 return M

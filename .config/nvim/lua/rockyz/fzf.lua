@@ -1995,7 +1995,7 @@ local qf_line_fmt = '%s |%' .. (tostring(5) + ansi_lnum_len) .. 's:%-' .. (tostr
 ---<filename> |<lnum>:<col>| <type> <text>
 ---@param item table
 local function build_qf_fzf_line(item)
-    item = qf.normalize(item)
+    item = qf.normalize_item(item)
     local type = item.type
     local text = item.text
     local type_hl = qf_type_hl[type]

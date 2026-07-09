@@ -861,7 +861,7 @@ end
 -- Go to the previous window
 -- (The builtin ctrl-w p has a bug. It considers the window that is currently invalid)
 vim.keymap.set('n', '<M-BS>', function()
-    require('rockyz.mru_win').goto_recent()
+    require('rockyz.mru_win').goto_recent_window()
 end)
 
 -- Split (use [count] to set the width or height)

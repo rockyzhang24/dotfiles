@@ -1,45 +1,51 @@
 local M = {}
 
-local mru_list = {}
+local recent_windows = {}
 
-function M.record()
-    local cur_winid = vim.api.nvim_get_current_win()
-    local new_list = {}
-    local win_set = {}
+---Record the current window as the most recently used window
+function M.record_current_window()
+    local current_winid = vim.api.nvim_get_current_win()
+    local updated_recent_windows = {}
+    local seen_windows = {}
 
-    local add_to_new = function(winid)
-        if not win_set[winid] and vim.api.nvim_win_is_valid(winid) then
-            table.insert(new_list, winid)
-            win_set[winid] = true
+    local function add_window(winid)
+        if not seen_windows[winid] and vim.api.nvim_win_is_valid(winid) then
+            table.insert(updated_recent_windows, winid)
+            seen_windows[winid] = true
         end
     end
 
-    add_to_new(cur_winid)
+    add_window(current_winid)
 
-    for _, winid in ipairs(mru_list) do
-        add_to_new(winid)
+    for _, winid in ipairs(recent_windows) do
+        add_window(winid)
     end
 
-    mru_list = new_list
+    recent_windows = updated_recent_windows
 end
 
-function M.goto_recent()
-    local cur_winid = vim.api.nvim_get_current_win()
-    for _, winid in ipairs(mru_list) do
-        if cur_winid ~= winid and vim.api.nvim_win_is_valid(winid) then
-            local wintype = vim.fn.win_gettype(winid)
-            if wintype ~= 'popup' then
-                vim.fn.win_gotoid(winid)
-                break
+---Go to the most recently used non-popup window
+function M.goto_recent_window()
+    local current_winid = vim.api.nvim_get_current_win()
+
+    for _, winid in ipairs(recent_windows) do
+        if current_winid ~= winid and vim.api.nvim_win_is_valid(winid) then
+            local window_type = vim.fn.win_gettype(winid)
+            if window_type ~= 'popup' then
+                if vim.fn.win_gotoid(winid) == 1 then
+                    return
+                end
             end
         end
     end
 end
 
+local mru_win_augroup = vim.api.nvim_create_augroup('rockyz.mru_win', { clear = true })
+
 vim.api.nvim_create_autocmd('WinLeave', {
-    group = vim.api.nvim_create_augroup('rockyz.mru_win', { clear = true }),
+    group = mru_win_augroup,
     callback = function()
-        require('rockyz.mru_win').record()
+        M.record_current_window()
     end,
 })
 

@@ -606,10 +606,10 @@ vim.keymap.set('n', 'P', 'P=`]')
 vim.keymap.set('x', 'p', '"_c<ESC>p')
 
 vim.keymap.set('n', '<Leader>p', function()
-    require('rockyz.utils.misc').putline(vim.v.count1 .. ']p')
+    require('rockyz.utils.misc').put_linewise(vim.v.count1 .. ']p')
 end)
 vim.keymap.set('n', '<Leader>P', function()
-    require('rockyz.utils.misc').putline(vim.v.count1 .. '[p')
+    require('rockyz.utils.misc').put_linewise(vim.v.count1 .. '[p')
 end)
 
 -- Select the last changed (or pasted) text

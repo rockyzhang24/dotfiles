@@ -6,7 +6,7 @@ local opts = {
 }
 
 -- Align the markdown table when typing |
-vim.keymap.set('i', '<Bar>', "<Bar><Esc>:lua require('rockyz.utils.misc').md_table_bar_align()<CR>a", opts)
+vim.keymap.set('i', '<Bar>', "<Bar><Esc>:lua require('rockyz.utils.misc').align_markdown_table()<CR>a", opts)
 
 local function open_preview(file)
     -- Applescript to open Marked 2 and arrange it side by side with terminal

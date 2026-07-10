@@ -1,32 +1,54 @@
--- FIFO queue implementation
+-- Implement a FIFO queue.
 
+---@class Queue
+---@field private first_index integer
+---@field private last_index integer
 local Queue = {}
 
 Queue.__index = Queue
 
+---Create an empty queue.
+---@return Queue
 function Queue.new()
-    local self = setmetatable({}, Queue)
-    self.first = 0
-    self.last = -1
-    return self
+    return setmetatable({
+        first_index = 1,
+        last_index = 0,
+    }, Queue)
 end
 
+---Return whether the queue contains no values.
+---@return boolean
 function Queue:is_empty()
-    return self.first > self.last
+    return self.first_index > self.last_index
 end
 
+---Append a value to the end of the queue.
+---@param value any
 function Queue:push(value)
-    self.last = self.last + 1
-    self[self.last] = value
+    if value == nil then
+        error('Queue does not support nil values')
+    end
+
+    self.last_index = self.last_index + 1
+    self[self.last_index] = value
 end
 
+---Remove and return the value at the front of the queue.
+---@return any?
 function Queue:pop()
     if self:is_empty() then
         return nil
     end
-    local value = self[self.first]
-    self[self.first] = nil
-    self.first = self.first + 1
+    local value = self[self.first_index]
+    self[self.first_index] = nil
+
+    if self.first_index == self.last_index then
+        self.first_index = 1
+        self.last_index = 0
+    else
+        self.first_index = self.first_index + 1
+    end
+
     return value
 end
 

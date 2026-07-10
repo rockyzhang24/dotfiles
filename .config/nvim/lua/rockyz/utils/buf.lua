@@ -1,41 +1,53 @@
--- Buffer-delete is highly inspired by folke/snackes.nvim's bufdelete
--- https://github.com/folke/snacks.nvim/blob/main/lua/snacks/bufdelete.lua @914c900 on Oct 13 2025
+-- Buffer deletion is inspired by folke/snacks.nvim.
+-- https://github.com/folke/snacks.nvim/blob/main/lua/snacks/bufdelete.lua @914c900 (Oct 13, 2025).
 
 local M = {}
 
+---@alias rockyz.bufdelete.Filter fun(bufnr: integer): boolean
+
 ---@class rockyz.bufdelete.Opts
----@field bufnr? number Buffer to delete. Defaults to the current buffer
----@field file? string Delete buffer by file name. If provided, `buf` is ignored
+---@field bufnr? integer Buffer to delete. Defaults to the current buffer.
+---@field file? string Delete the buffer for this file. If provided, `bufnr` is ignored.
 ---@field force? boolean Delete the buffer even if it is modified
----@field filter? fun(buf: number): boolean Filter buffers to delete
+---@field filter? rockyz.bufdelete.Filter Return true for each buffer to delete
 ---@field wipe? boolean Wipe the buffer instead of deleting it
 
 ---Delete a buffer:
 --- - either the current buffer if `bufnr` is not provided
 --- - or the buffer `bufnr` if it is a number
---- - or every buffer filtered out by the filter
----@param opts number|rockyz.bufdelete.Opts
+--- - or every buffer for which the filter returns true
+---@param opts? integer|rockyz.bufdelete.Filter|rockyz.bufdelete.Opts
 function M.bufdelete(opts)
-    opts = opts or {}
-    opts = type(opts) == 'number' and { bufnr = opts } or opts
-    opts = type(opts) == 'function' and { filter = opts } or opts
+    if type(opts) == 'number' then
+        opts = { bufnr = opts }
+    elseif type(opts) == 'function' then
+        opts = { filter = opts }
+    else
+        opts = opts or {}
+    end
 
     if type(opts.filter) == 'function' then
-        for _, b in ipairs(vim.tbl_filter(opts.filter, vim.api.nvim_list_bufs())) do
-            if vim.bo[b].buflisted then
-                M.bufdelete(vim.tbl_extend('force', {}, opts, { bufnr = b, filter = false }))
+        for _, candidate_bufnr in ipairs(vim.tbl_filter(opts.filter, vim.api.nvim_list_bufs())) do
+            if vim.api.nvim_buf_is_valid(candidate_bufnr) and vim.bo[candidate_bufnr].buflisted then
+                local child_opts = vim.tbl_extend('force', {}, opts, { bufnr = candidate_bufnr })
+                child_opts.filter = nil
+                child_opts.file = nil
+                M.bufdelete(child_opts)
             end
         end
+
         return
     end
 
     local bufnr = opts.bufnr or 0
+
     if opts.file then
         bufnr = vim.fn.bufnr(opts.file)
         if bufnr == -1 then
             return
         end
     end
+
     bufnr = bufnr == 0 and vim.api.nvim_get_current_buf() or bufnr
 
     if not vim.api.nvim_buf_is_valid(bufnr) then
@@ -53,25 +65,39 @@ function M.bufdelete(opts)
     end
 
     -- Get the most recently used listed buffer that is not the one being deleted
-    local info = vim.fn.getbufinfo({ buflisted = 1 })
-    ---@param b vim.fn.getbufinfo.ret.item
-    info = vim.tbl_filter(function(b)
-        return b.bufnr ~= bufnr
-    end, info)
-    table.sort(info, function(a, b)
-        return a.lastused > b.lastused
+    local buffer_info = vim.fn.getbufinfo({ buflisted = 1 })
+
+    ---@param buffer vim.fn.getbufinfo.ret.item
+    buffer_info = vim.tbl_filter(function(buffer)
+        return buffer.bufnr ~= bufnr
+    end, buffer_info)
+
+    table.sort(buffer_info, function(first, second)
+        return first.lastused > second.lastused
     end)
 
-    local new_bufnr = info[1] and info[1].bufnr or vim.api.nvim_create_buf(true, false)
+    local replacement_bufnr = buffer_info[1] and buffer_info[1].bufnr or vim.api.nvim_create_buf(true, false)
 
-    -- replace the buffer in all windows showing it, trying to use the alternate buffer if possible
-    for _, win in ipairs(vim.fn.win_findbuf(bufnr)) do
-        local win_bufnr = new_bufnr
-        vim.api.nvim_win_call(win, function() -- Try using alternative buffer
-            local alt = vim.fn.bufnr('#')
-            win_bufnr = alt >= 0 and alt ~= bufnr and vim.bo[alt].buflisted and alt or win_bufnr
-        end)
-        vim.api.nvim_win_set_buf(win, win_bufnr)
+    -- Replace the buffer in every window showing it, preferring the alternate buffer.
+    for _, winid in ipairs(vim.fn.win_findbuf(bufnr)) do
+        if vim.api.nvim_win_is_valid(winid) then
+            local replacement_for_window = replacement_bufnr
+
+            -- Prefer the alternate buffer for this window
+            vim.api.nvim_win_call(winid, function()
+                local alternate_bufnr = vim.fn.bufnr('#')
+                local has_alternate_buffer = alternate_bufnr > 0
+                    and alternate_bufnr ~= bufnr
+                    and vim.api.nvim_buf_is_valid(alternate_bufnr)
+                    and vim.bo[alternate_bufnr].buflisted
+
+                if has_alternate_buffer then
+                    replacement_for_window = alternate_bufnr
+                end
+            end)
+
+            vim.api.nvim_win_set_buf(winid, replacement_for_window)
+        end
     end
 
     if vim.api.nvim_buf_is_valid(bufnr) then
@@ -94,25 +120,31 @@ end
 ---@param opts rockyz.bufdelete.Opts?
 function M.bufdelete_other(opts)
     M.bufdelete(vim.tbl_extend('force', {}, opts or {}, {
-        filter = function(b)
-            return b ~= vim.api.nvim_get_current_buf()
+        filter = function(candidate_bufnr)
+            return candidate_bufnr ~= vim.api.nvim_get_current_buf()
         end,
         wipe = true,
     }))
 end
 
--- Switch to the alternate buffer or the first available file in MRU list
+-- Switch to the alternate buffer or the first available MRU file
 function M.switch_last_buf()
-    local alt_bufnr = vim.fn.bufnr('#')
-    local curr_bufnr = vim.api.nvim_get_current_buf()
-    if alt_bufnr ~= -1 and alt_bufnr ~= curr_bufnr then
+    local alternate_bufnr = vim.fn.bufnr('#')
+    local current_bufnr = vim.api.nvim_get_current_buf()
+
+    local has_alternate_buffer = alternate_bufnr > 0
+        and alternate_bufnr ~= current_bufnr
+        and vim.api.nvim_buf_is_valid(alternate_bufnr)
+
+    if has_alternate_buffer then
         vim.cmd('buffer #')
     else
-        local mru_list = require('rockyz.mru').list()
-        local cur_bufname = vim.api.nvim_buf_get_name(curr_bufnr)
-        for _, f in ipairs(mru_list) do
-            if cur_bufname ~= f then
-                vim.cmd('edit ' .. vim.fn.fnameescape(f))
+        local mru_files = require('rockyz.mru').list()
+        local current_buffer_name = vim.api.nvim_buf_get_name(current_bufnr)
+
+        for _, filename in ipairs(mru_files) do
+            if current_buffer_name ~= filename then
+                vim.cmd('edit ' .. vim.fn.fnameescape(filename))
                 vim.cmd('silent! normal! `"')
                 break
             end

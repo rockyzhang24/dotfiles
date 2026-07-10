@@ -1,47 +1,58 @@
--- 1. Define three functions notify.error, notify.warn and notify.info.
--- 2. Each accepts a string or string[] for multiline strings.
--- 3. Empty string and empty table are handled. So when invoking them somewhere, just directly
---    pass the msg string and the emptiness check is not necessary there.
+---Provide error, warning, and informational notification helpers.
+---
+---Each helper accepts a string or an array of lines.
+---Nil and empty messages are ignored, and notifications from fast events are scheduled.
 
 local M = {}
 
-local function handle_fast_event(msg, level)
-    if not msg or msg == '' or (type(msg) == 'table' and #msg == 0) then
+---Normalize and display a notification message
+---@param message? string|string[]
+---@param log_level integer
+local function notify(message, log_level)
+    if not message or message == '' or (type(message) == 'table' and #message == 0) then
         return
     end
-    if type(msg) == 'table' then
-        local filtered = {}
-        for _, m in ipairs(msg) do
-            if m ~= '' then
-                table.insert(filtered, m)
+
+    if type(message) == 'table' then
+        local nonempty_lines = {}
+        for _, line in ipairs(message) do
+            if line ~= '' then
+                table.insert(nonempty_lines, line)
             end
         end
-        msg = table.concat(filtered, '\n')
+
+        if #nonempty_lines == 0 then
+            return
+        end
+
+        message = table.concat(nonempty_lines, '\n')
     end
 
     if vim.in_fast_event() then
         vim.schedule(function()
-            vim.notify(msg, level)
+            vim.notify(message, log_level)
         end)
     else
-        vim.notify(msg, level)
+        vim.notify(message, log_level)
     end
 end
 
-
----@param msg string|string[]
-function M.error(msg)
-    handle_fast_event(msg, vim.log.levels.ERROR)
+---Notify an error message
+---@param message? string|string[]
+function M.error(message)
+    notify(message, vim.log.levels.ERROR)
 end
 
----@param msg string|string[]
-function M.warn(msg)
-    handle_fast_event(msg, vim.log.levels.WARN)
+---Notify a warning message
+---@param message? string|string[]
+function M.warn(message)
+    notify(message, vim.log.levels.WARN)
 end
 
----@param msg string|string[]
-function M.info(msg)
-    handle_fast_event(msg, vim.log.levels.INFO)
+---Notify an informational message
+---@param message? string|string[]
+function M.info(message)
+    notify(message, vim.log.levels.INFO)
 end
 
 return M

@@ -207,21 +207,6 @@ vim.api.nvim_create_autocmd('VimEnter', {
     end,
 })
 
--- Reset window maximization state
--- :quit resizes all windows, so cached maximization state needs to be cleared
-vim.api.nvim_create_autocmd('QuitPre', {
-    group = vim.api.nvim_create_augroup('rockyz.reset_win_maximize', { clear = true }),
-    callback = function()
-        local tab = vim.api.nvim_get_current_tabpage()
-        vim.t[tab].maximized_win = nil
-        for _, win in ipairs(vim.api.nvim_tabpage_list_wins(tab)) do
-            if vim.w[win].maximized then
-                vim.w[win].maximized = nil
-            end
-        end
-    end,
-})
-
 -- Show colorcolumn in INSERT mode
 -- vim.api.nvim_create_augroup('rockyz.colorcol', {})
 -- vim.api.nvim_create_autocmd('InsertEnter', {

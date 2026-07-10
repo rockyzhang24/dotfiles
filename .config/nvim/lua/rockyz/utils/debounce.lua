@@ -1,65 +1,72 @@
 -- Usage:
 --
 --[[
+local debounce = require('rockyz.utils.debounce')
 
-local debounce = require('rockyz.debounce')
-
-local func = function()
+local function print_hello()
     print('hello')
 end
 
--- Create a debounced funciton that delays invoking func until after 500ms have elapsed since the
--- last time the debounced function was invoked.
-local debounced = debounce(func, 500, false, true)
+-- Create a debounced function that waits 500 ms after the last invocation
+local debounced = debounce(print_hello, 500, false, true)
 
--- Debounced function maybe invoked repeatedly as other's callback
+-- The debounced function can be used as an event callback
 demo.on('event', debounced)
-
 --]]
 
 ---@class Debounce
----@field timer userdata
----@field fn function
----@field args table
+---@field timer? uv.uv_timer_t
+---@field callback fun(...)
+---@field arguments? any[]
 ---@field wait number
----@field leading boolean?
----@field trailing boolean?
+---@field leading? boolean
+---@field trailing? boolean
 local Debounce = {}
 
----@param fn function
+---@param callback fun(...)
 ---@param wait number The delay time (in milliseconds)
----@param leading boolean? Whether the function is executed immediately on the first trigger
----@param trailing boolean? Whether the function is executed after the wait time passed since the
----last trigger
-function Debounce:new(fn, wait, leading, trailing)
-    vim.validate('fn', fn, 'function')
+---@param leading boolean? Whether to schedule the callback without waiting on the first trigger
+---@param trailing boolean? Whether to schedule the callback after the delay since the last trigger
+function Debounce:new(callback, wait, leading, trailing)
+    vim.validate('callback', callback, 'function')
     vim.validate('wait', wait, 'number')
     vim.validate('leading', leading, 'boolean', true)
     vim.validate('trailing', trailing, 'boolean', true)
-    local o = setmetatable({}, self)
-    o.timer = nil
-    o.fn = vim.schedule_wrap(fn)
-    o.args = nil
-    o.wait = wait
-    o.leading = leading
-    o.trailing = trailing
-    return o
+
+    local instance = setmetatable({}, self)
+
+    instance.timer = nil
+    instance.callback = vim.schedule_wrap(callback)
+    instance.arguments = nil
+    instance.wait = wait
+    instance.leading = leading
+    instance.trailing = trailing
+
+    return instance
 end
 
 function Debounce:call(...)
     local timer = self.timer
-    self.args = {...}
+    self.arguments = {...}
+
     if not timer then
         timer = vim.uv.new_timer()
         self.timer = timer
-        local wait = self.wait
-        timer:start(wait, wait, not self.trailing and function()
-            self:cancel()
-        end or function()
-            self:flush()
-        end)
+
+        local on_timer
+        if self.trailing then
+            on_timer = function()
+                self:flush()
+            end
+        else
+            on_timer = function()
+                self:cancel()
+            end
+        end
+        timer:start(self.wait, self.wait, on_timer)
+
         if self.leading then
-            self.fn(...)
+            self.callback(...)
         end
     else
         timer:again()
@@ -68,22 +75,22 @@ end
 
 function Debounce:cancel()
     local timer = self.timer
-    if timer then
-        if timer:has_ref() then
-            timer:stop()
-            if not timer:is_closing() then
-                timer:close()
-            end
-        end
-        self.timer = nil
+    if timer and not timer:is_closing() then
+        timer:stop()
+        timer:close()
     end
+    self.timer = nil
+    self.arguments = nil
 end
 
 function Debounce:flush()
-    if self.timer then
-        self:cancel()
-        self.fn(unpack(self.args))
+    if not self.timer then
+        return
     end
+
+    local arguments = self.arguments
+    self:cancel()
+    self.callback(unpack(arguments))
 end
 
 Debounce.__index = Debounce

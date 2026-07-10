@@ -2,7 +2,7 @@ local M = {}
 
 ---This is the get_lines() function from https://github.com/neovim/neovim/blob/master/runtime/lua/vim/lsp/util.lua
 ---
----Gets the zero-indexed lines from the given buffer.
+---Gets the zero-indexed lines from abuffer.
 ---Works on unloaded buffers by reading the file and bypass buf reading events.
 ---Falls back to loading the buffer and nvim_buf_get_lines for buffers with non-file URI.
 ---

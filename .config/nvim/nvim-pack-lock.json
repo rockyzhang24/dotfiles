@@ -22,11 +22,11 @@
       "src": "https://github.com/stevearc/conform.nvim"
     },
     "cscope_maps.nvim": {
-      "rev": "037b87b259340dc257cd207f6f58fbf9cf84e863",
+      "rev": "2304cc91fc226b8dd0f7074a7c14873061e2ccb9",
       "src": "https://github.com/dhananjaylatkar/cscope_maps.nvim"
     },
     "diffs.nvim": {
-      "rev": "7ab445c39224160203ae692d3c883e2f51f2d442",
+      "rev": "5198772a48d6d782e8b04f7084d373094d29798c",
       "src": "https://github.com/barrettruth/diffs.nvim"
     },
     "eregex.vim": {

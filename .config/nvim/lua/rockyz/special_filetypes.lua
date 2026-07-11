@@ -1,13 +1,13 @@
--- Define icons, titles and highlight groups for special filetypes
+---Define UI metadata for special buffers and window types.
 
 local icons = require('rockyz.icons')
 
 ---@class rockyz.SpecialFiletype
----@field icon string Icon displayed for the filetype
----@field title string Human-readable title shown in UI components
+---@field icon string Icon displayed in UI components
+---@field title string Title displayed in UI components
 ---@field icon_hl? string Highlight group for the icon
 
----@type table <string, rockyz.SpecialFiletype>
+---@type table<string, rockyz.SpecialFiletype>
 local special_filetypes = {
     aerial = {
         icon = icons.misc.outline,
@@ -22,7 +22,7 @@ local special_filetypes = {
         title = 'Call Hierarchy',
         icon_hl = 'Special',
     },
-    cmdwin = { -- for Command-line window
+    cmdwin = { -- Command-line window
         icon = icons.misc.code,
         title = 'Command-line',
     },
@@ -67,7 +67,7 @@ local special_filetypes = {
         icon = icons.misc.book,
         title = 'Man',
     },
-    noname = { -- for nvim_buf_get_name() is empty
+    noname = { -- Unnamed buffer
         icon = icons.misc.file,
         title = 'No Name',
     },

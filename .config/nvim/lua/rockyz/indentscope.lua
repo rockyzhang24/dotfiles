@@ -3,7 +3,7 @@
 --
 -- A scope consists of two parts: the body and the border.
 --
--- get_scope(line) returns a table that contains the information about the scope of the line.
+-- get_scope(line, col, opts) returns a table that contains the information about the scope of the line.
 -- A scope may have top and bottom border, or just one top border (e.g., the scope in python)
 --
 -- {
@@ -28,9 +28,20 @@
 -- 5| end                 <-- border.bottom
 --
 
--- Default config
--- Use vim.b.indentscope_config for buffer-local config, e.g., setting border_pos to 'top' for
--- filetype python.
+---@alias IndentScopeBorderPosition 'both'|'top'
+---@alias IndentScopeSide 'top'|'bottom'
+
+---@class IndentScopeConfig
+---@field border_pos IndentScopeBorderPosition
+---@field priority integer
+---@field delay integer
+---@field show_body_at_border boolean
+---@field indent_at_cursor_col boolean
+
+---Default configuration
+---Use vim.b.indentscope_config for buffer-local config, e.g., setting border_pos to 'top' for
+---filetype python.
+---@type IndentScopeConfig
 local default_config = {
     -- Position of scope's border: both, top (for python)
     border_pos = 'both',
@@ -89,6 +100,22 @@ local symbol_icon = ok and icons.lines.double_dash_vertical or '╎'
 
 local namespace = vim.api.nvim_create_namespace('rockyz.indentscope.symbols')
 
+---@class IndentScopeBody
+---@field top integer
+---@field bottom integer
+---@field indent integer
+
+---@class IndentScopeBorder
+---@field top integer
+---@field bottom? integer
+---@field indent integer
+
+---@class IndentScope
+---@field body IndentScopeBody
+---@field border IndentScopeBorder
+---@field bufnr integer
+---@field winid integer
+
 local current = {
     -- Rendering is deferred to avoid redrawing on every cursor event. Each scheduled render gets an
     -- id; when it runs, it is skipped if a newer render has already been scheduled.
@@ -99,22 +126,24 @@ local current = {
     is_drawn = false,
 }
 
-local function get_config(new_conf)
-    return vim.tbl_deep_extend('force', vim.deepcopy(default_config), vim.b.indentscope_config or {}, new_conf or {})
+---@param overrides? IndentScopeConfig
+---@return IndentScopeConfig
+local function get_config(overrides)
+    return vim.tbl_deep_extend('force', vim.deepcopy(default_config), vim.b.indentscope_config or {}, overrides or {})
 end
 
 local blank_indent_resolvers = {
     ['both'] = function(top_indent, bottom_indent)
         return math.max(top_indent, bottom_indent)
     end,
-    ['top'] = function(top_indent, bottom_indent)
+    ['top'] = function(_, bottom_indent)
         return bottom_indent
     end,
 }
 
 ---Get the effective indent of a line .
----For blank lines, derive the indent from adjacent non-blank lines according to `border.pos`.
----For example, if `border.pos = 'both'`, use the greater indent of the adjacent non-blank lines.
+---For blank lines, derive the indent from adjacent non-blank lines according to `border_pos`.
+---For example, if `border_pos = 'both'`, use the greater indent of the adjacent non-blank lines.
 ---Returns -1 when the requested side has no adjacent non-blank line.
 ---@param line integer Input line
 ---@param border_pos string
@@ -159,7 +188,7 @@ local border_line_resolvers = {
 ---Find the boundary of the scope that the input line belongs to.
 ---@param line integer Input line number
 ---@param indent integer Indent of the input line
----@param side string Which boundary to find, 'top' or 'bottom'
+---@param side IndentScopeSide Which boundary to find, 'top' or 'bottom'
 ---@param border_pos string
 ---@return integer # Line number of the boundary in the specified direction
 local function search_scope_boundary(line, indent, side, border_pos)
@@ -178,9 +207,9 @@ end
 
 -- Functions to get the scope borders given a scope body
 local border_resolvers = {
-    ---@param body table Scope body
+    ---@param body IndentScopeBody
     ---@param border_pos string
-    ---@return table
+    ---@return IndentScopeBorder
     ['both'] = function(body, border_pos)
         return {
             -- border's top can be line 0 (i.e., the line above the first line in the buffer)
@@ -203,9 +232,9 @@ local border_resolvers = {
 }
 
 ---@param line? integer Input line number. Defaults to the cursor line.
----@param col? integer Input column. Defaults to the cursor column only when using the cursor line.
----@param opts? table
----@return table
+---@param col? integer Input column. Defaults to the cursor column when `indent_at_cursor_col` is enabled.
+---@param opts? IndentScopeConfig
+---@return IndentScope
 local function get_scope(line, col, opts)
     opts = get_config(opts)
 
@@ -238,15 +267,15 @@ local function get_scope(line, col, opts)
 end
 
 ---Get the indent column where the scope symbol should be drawn.
----@param scope table
+---@param scope IndentScope
 ---@return integer
 local function get_symbol_indent(scope)
     return scope.border.indent
 end
 
 ---Check if two scopes are identical
----@param scope_1 table
----@param scope_2 table
+---@param scope_1 IndentScope
+---@param scope_2 IndentScope
 ---@return boolean
 local function scopes_are_equal(scope_1, scope_2)
     return scope_1.bufnr == scope_2.bufnr
@@ -256,8 +285,8 @@ local function scopes_are_equal(scope_1, scope_2)
 end
 
 ---Check whether two scopes overlap on the same drawn indent column
----@param scope_1 table
----@param scope_2 table
+---@param scope_1 IndentScope
+---@param scope_2 IndentScope
 ---@return boolean
 local function scopes_overlap(scope_1, scope_2)
     if scope_1.bufnr ~= scope_2.bufnr or get_symbol_indent(scope_1) ~= get_symbol_indent(scope_2) then
@@ -410,8 +439,8 @@ vim.api.nvim_create_autocmd({ 'TextChanged', 'TextChangedI', 'TextChangedP', 'Wi
 
 ---Jump to certain side of a scope. Cursor will be placed on the first non-blank character of the
 ---target line
----@param scope table
----@param side string 'top' or 'bottom'
+---@param scope IndentScope
+---@param side IndentScopeSide 'top' or 'bottom'
 ---@param include_border boolean Whether to jump to the border or just to the boundary of the scope body
 local function jump_to_side(scope, side, include_border)
     scope = scope or get_scope()
@@ -423,7 +452,7 @@ local function jump_to_side(scope, side, include_border)
     vim.cmd('normal! ^')
 end
 
----@param side string 'top' or 'bottom'
+---@param side IndentScopeSide 'top' or 'bottom'
 ---@param update_jumplist boolean? Whether to add movement to jumplist
 local function jump(side, update_jumplist)
     local scope = get_scope()
@@ -464,13 +493,15 @@ local function exit_visual_mode()
     end
 end
 
----@param from string Which border the visual selection starts from
----@param to string Which border the visual selection ends at
-local function visual_select_scope(scope, from, to, include_border)
+---@param scope IndentScope
+---@param start_side IndentScopeSide Which border the visual selection starts from
+---@param end_side IndentScopeSide Which border the visual selection ends at
+---@param include_border boolean Whether to include the scope border in the selection
+local function visual_select_scope(scope, start_side, end_side, include_border)
     exit_visual_mode()
-    jump_to_side(scope, from, include_border)
+    jump_to_side(scope, start_side, include_border)
     vim.cmd('normal! V')
-    jump_to_side(scope, to, include_border)
+    jump_to_side(scope, end_side, include_border)
 end
 
 ---@param include_border boolean Whether to include the border of the scope in textobject
@@ -533,8 +564,13 @@ end)
 -- <C-.> to shrink
 --
 
+---@class IndentScopeSelection
+---@field scope IndentScope
+---@field include_border boolean
+
 ---Selection history used by incremental expand/shrink.
 ---The top entry represents the currently selected scope.
+---@type IndentScopeSelection[]
 local selection_stack = {}
 
 -- Reset the selection stack when incremental selection finishes

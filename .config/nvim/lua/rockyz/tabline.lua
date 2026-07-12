@@ -1,3 +1,5 @@
+-- Render the tabline with per-tab metadata and a centered viewport.
+--
 -- The structure of each tab:
 -- Indicator Tab_number. Icon Title Diagnostic_info Modification_indicator
 --                        ^     ^
@@ -11,7 +13,17 @@ local special_filetypes = require('rockyz.special_filetypes')
 
 local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
 
+---@type table<string, boolean>
 local icon_highlight_cache = {}
+
+local icon_highlight_augroup = vim.api.nvim_create_augroup('rockyz.tabline.icon_highlight', { clear = true })
+
+vim.api.nvim_create_autocmd('ColorScheme', {
+    group = icon_highlight_augroup,
+    callback = function()
+        icon_highlight_cache = {}
+    end,
+})
 
 ---@class DiagnosticCounts
 ---@field current_window integer Number of errors and warnings in the current window
@@ -95,9 +107,9 @@ end
 local function collect_diagnostic_counts(tabpage)
     local current_winid = vim.api.nvim_tabpage_get_win(tabpage)
 
-    local current_window = 0 -- diagnostic count of the current window in the tab
-    local total_error = 0 -- total error count across all wins in the tab
-    local total_warn = 0 -- total warn count across all wins in the tab
+    local current_window = 0 -- Diagnostic count of the current window in the tabpage
+    local total_error = 0 -- Total error count across all windows in the tabpage
+    local total_warn = 0 -- Total warning count across all windows in the tabpage
 
     for _, winid in ipairs(vim.api.nvim_tabpage_list_wins(tabpage)) do
         local bufnr = vim.api.nvim_win_get_buf(winid)
@@ -172,13 +184,12 @@ local function ensure_icon_highlight(icon_highlight, base_highlight, icon_color)
     if icon_highlight_cache[icon_highlight] then
         return
     end
-    local base_hl_def = vim.api.nvim_get_hl(0, { name = base_highlight })
-    vim.api.nvim_set_hl( 0, icon_highlight, {
-        fg = icon_color,
-        bg = base_hl_def.bg,
-        underline = base_hl_def.underline,
-        sp = base_hl_def.sp,
+    local base_highlight_definition = vim.api.nvim_get_hl(0, {
+        name = base_highlight,
+        link = false,
     })
+    base_highlight_definition.fg = icon_color
+    vim.api.nvim_set_hl( 0, icon_highlight, base_highlight_definition)
     icon_highlight_cache[icon_highlight] = true
 end
 
@@ -246,8 +257,7 @@ local function build_status(diagnostic_counts, diagnostic_highlight, tab_highlig
     local visible_parts = {}
 
     -- (1). Diagnostic info
-    -- Display the diagnostic count for the current window in this tabpage and the total diagnostic
-    -- count across all windows
+    -- Display current-window and tabpage-wide diagnostic counts
     if diagnostic_counts.total > 0 then
         table.insert(
             formatted_parts,
@@ -302,20 +312,19 @@ end
 local function build_tab(index, tabpage, current_tabpage)
     local winid = vim.api.nvim_tabpage_get_win(tabpage)
     local bufnr = vim.api.nvim_win_get_buf(winid)
-    local is_current = tabpage == current_tabpage -- current tab or not
+    local is_current = tabpage == current_tabpage
     local tab_highlight = is_current and 'TabLineSel' or 'TabLine'
 
     local diagnostic_counts = collect_diagnostic_counts(tabpage)
 
     local diagnostic_highlight = get_diagnostic_highlight(diagnostic_counts, is_current)
 
-    -- Sections of this tab that include format sequences such as highlight group. It's the real
-    -- tabline string for this tab.
+    -- Formatted sections contain tabline format sequences
     local parts = {}
-    -- Plain text for this tab.
+    -- Visible sections (i.e., plain text) are used for width calculation
     local visible_parts = {}
 
-    -- Indicator, the bar on the leftmost of the tab.
+    -- Indicator is the vertical bar on the leftmost of each tab
     -- %iT label at the beginning of each tab is used for mouse click
     local indicator = build_indicator(index, is_current, tab_highlight)
     append_section(parts, visible_parts, indicator)
@@ -345,10 +354,11 @@ local function build_tab(index, tabpage, current_tabpage)
             tab_highlight,
             table.concat(parts, ' ')
         ),
-        visible = table.concat(visible_parts, ' '),
+        visible = table.concat(visible_parts, ' ') .. ' ',
     }
 end
 
+---@return string
 function M.render()
     local tabpages = vim.api.nvim_list_tabpages()
     local current_tabpage = vim.api.nvim_get_current_tabpage()
@@ -356,9 +366,7 @@ function M.render()
     ---@type TablineSection[]
     local tabs = {}
 
-    -- For each tab, build:
-    -- 1) a render string (with format sequences such as highlight group)
-    -- 2) a visible string (for viewport calculation)
+    -- Build formatted and visible sections for each tab
     for i, tabpage in ipairs(tabpages) do
         local tab = build_tab(i, tabpage, current_tabpage)
         table.insert(tabs, tab)
@@ -368,7 +376,9 @@ function M.render()
     local total = #tabs
     local current_tab_index = vim.api.nvim_tabpage_get_number(current_tabpage)
 
+    ---@type table<integer, integer>
     local widths = {}
+
     for i, tab in ipairs(tabs) do
         widths[i] = display_width(tab.visible)
     end
@@ -378,19 +388,28 @@ function M.render()
 
     local available_width = vim.o.columns - count_width
     local has_left, has_right = false, false
+    local left, right
 
-    local left, right = compute_viewport(current_tab_index, widths, available_width)
+    -- Adding an overflow indicator reduces available width and may hide tabs on the other side
+    -- Recalculate until both indicators reflect the final viewport
+    while true do
+        left, right = compute_viewport(current_tab_index, widths, available_width)
 
-    if left > 1 then
-        has_left = true
-        available_width = available_width - display_width(icons.misc.left_double_chevron)
+        local needs_left = left > 1
+        local needs_right = right < total
+        if needs_left == has_left and needs_right == has_right then
+            break
+        end
+
+        if needs_left and not has_left then
+            has_left = true
+            available_width = available_width - display_width(icons.misc.left_double_chevron .. '  ')
+        end
+        if needs_right and not has_right then
+            has_right = true
+            available_width = available_width - display_width(icons.misc.right_double_chevron)
+        end
     end
-    if right < total then
-        has_right = true
-        available_width = available_width - display_width(icons.misc.right_double_chevron)
-    end
-
-    left, right = compute_viewport(current_tab_index, widths, available_width)
 
     -- Assemble the final tabline string:
     -- [optional 󰄽] [tab1] [tab2] ... [tabn] [optional 󰄾]          [right-aligned count]

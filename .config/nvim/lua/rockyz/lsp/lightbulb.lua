@@ -44,22 +44,26 @@ end
 
 ---Remove the lightbulb extmark
 ---@param winid integer
----@param bufnr integer
-local function remove_lightbulb(winid, bufnr)
-    if not vim.api.nvim_win_is_valid(winid) or not vim.api.nvim_buf_is_valid(bufnr) then
+local function remove_lightbulb(winid)
+    if not vim.api.nvim_win_is_valid(winid) then
         return
     end
 
+    local bufnr = vim.w[winid].bulb_bufnr
     local ns_id = vim.w[winid].bulb_ns_id
     local mark_id = vim.w[winid].bulb_mark_id
 
-    if ns_id == nil or mark_id == nil then
+    if bufnr == nil or ns_id == nil or mark_id == nil then
         return
     end
 
-    pcall(vim.api.nvim_buf_del_extmark, bufnr, ns_id, mark_id)
+    if vim.api.nvim_buf_is_valid(bufnr) then
+        pcall(vim.api.nvim_buf_del_extmark, bufnr, ns_id, mark_id)
+    end
 
     vim.w[winid].prev_lightbulb_line = nil
+    vim.w[winid].bulb_mark_id = nil
+    vim.w[winid].bulb_bufnr = nil
 end
 
 ---Show the lightbulb extmark
@@ -70,6 +74,10 @@ local function show_lightbulb(winid, bufnr, lightbulb_line)
     -- No need to update the bulb if its position does not change
     if not vim.api.nvim_win_is_valid(winid) or not vim.api.nvim_buf_is_valid(bufnr) then
         return
+    end
+
+    if vim.w[winid].bulb_bufnr ~= bufnr then
+        remove_lightbulb(winid)
     end
 
     if lightbulb_line == vim.w[winid].prev_lightbulb_line then
@@ -96,6 +104,7 @@ local function show_lightbulb(winid, bufnr, lightbulb_line)
     )
 
     vim.w[winid].prev_lightbulb_line = lightbulb_line
+    vim.w[winid].bulb_bufnr = bufnr
 end
 
 ---Return the diagnostics on the given line that belong to the client
@@ -150,12 +159,21 @@ local function diagnostic_contains_cursor(diagnostic, cursor_lnum, cursor_col)
     -- Filter the diagnostics at the cursor position
     -- TODO: use vim.pos once it becomes stable, see diagnostic_contains_cursor() in
     -- https://github.com/neovim/neovim/blob/master/runtime/lua/vim/lsp/buf.lua
+
+    local end_lnum = diagnostic.end_lnum or diagnostic.lnum
+    local end_col = diagnostic.end_col or diagnostic.col
+
+    -- A zero-length diagnostic applies only at its exact position
+    if diagnostic.lnum == end_lnum and diagnostic.col == end_col then
+        return cursor_lnum == diagnostic.lnum and cursor_col == diagnostic.col
+    end
+
     return (
         diagnostic.lnum < cursor_lnum
-        or diagnostic.lnum == cursor_lnum and diagnostic.col <= cursor_col
+            or diagnostic.lnum == cursor_lnum and diagnostic.col <= cursor_col
     ) and (
-        diagnostic.end_lnum > cursor_lnum
-        or diagnostic.end_lnum == cursor_lnum and diagnostic.end_col > cursor_col
+        end_lnum > cursor_lnum
+            or end_lnum == cursor_lnum and end_col > cursor_col
     )
 end
 
@@ -204,7 +222,7 @@ local function update_lightbulb()
     local request_id = vim.w[winid].bulb_version
 
     if #clients == 0 then
-        remove_lightbulb(winid, bufnr)
+        remove_lightbulb(winid)
         return
     end
 
@@ -218,6 +236,7 @@ local function update_lightbulb()
         local request_sent = client:request(CODE_ACTION_METHOD, params, function(_, result, _)
             if
                 not vim.api.nvim_win_is_valid(winid)
+                or vim.wo[winid].diff
                 or not vim.api.nvim_buf_is_valid(bufnr)
                 or vim.api.nvim_win_get_buf(winid) ~= bufnr
                 or vim.w[winid].bulb_version ~= request_id
@@ -242,17 +261,17 @@ local function update_lightbulb()
                 if lightbulb_line < vim.api.nvim_buf_line_count(bufnr) then
                     show_lightbulb(winid, bufnr, lightbulb_line)
                 else
-                    remove_lightbulb(winid, bufnr)
+                    remove_lightbulb(winid)
                 end
             elseif pending_client_count == 0 then
-                remove_lightbulb(winid, bufnr)
+                remove_lightbulb(winid)
             end
         end, bufnr)
 
         if not request_sent then
             pending_client_count = pending_client_count - 1
             if pending_client_count == 0 and not has_code_action then
-                remove_lightbulb(winid, bufnr)
+                remove_lightbulb(winid)
             end
         end
     end

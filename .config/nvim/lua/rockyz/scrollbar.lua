@@ -242,7 +242,7 @@ local function ensure_scrollbar(winid)
         state.winid = vim.api.nvim_open_win(state.bufnr, false, win_opts)
         vim.wo[state.winid].winblend = config.winblend
     else
-        if vim.api.nvim_win_get_height(state.winid) < viewport_height then
+        if vim.api.nvim_buf_line_count(state.bufnr) < viewport_height then
             ensure_valid_buffer(state.bufnr, viewport_height)
         end
         if viewport_height ~= state.last_viewport_height or col ~= state.last_scrollbar_column then

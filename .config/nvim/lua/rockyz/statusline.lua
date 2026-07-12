@@ -78,31 +78,37 @@ local mode_highlights = {
 
     TERMINAL = 'Terminal',
 
-    ['PENDING'] = 'Pending',
+    ['OP-PENDING'] = 'Pending',
 }
 
 ---Return whether the screen is narrower than the given width threshold
 ---@param min_width? integer
 ---@return boolean
 local function is_narrow(min_width)
-    -- Use -1 to default to 'not truncated'
-    return vim.o.columns < (min_width or -1)
+    return min_width ~= nil and vim.o.columns < min_width
+end
+
+---Escape percent signs in dynamic statusline text
+---@param text string
+---@return string
+local function escape_statusline(text)
+    return text:gsub('%%', '%%%%')
 end
 
 ---Return the current buffer file size formatted for the statusline
 ---@return string
 local function format_file_size()
-    local file = vim.api.nvim_buf_get_name(0)
-    if file == nil or #file == 0 then
+    local path = vim.api.nvim_buf_get_name(0)
+    if path == '' then
         return ''
     end
-    local size = vim.fn.getfsize(file)
+    local size = vim.fn.getfsize(path)
     if size < 0 then
         return ''
     end
     local suffixes = { 'b', 'k', 'm', 'g' }
     local i = 1
-    while size > 1024 and i < #suffixes do
+    while size >= 1024 and i < #suffixes do
         size = size / 1024
         i = i + 1
     end
@@ -150,6 +156,7 @@ function M.git_branch(min_width)
     if not head then
         return ''
     end
+    head = escape_statusline(head)
     -- Don't show icon when truncated
     if is_narrow(min_width) then
         return head
@@ -206,7 +213,7 @@ function M.lsp_clients(min_width)
 
     for _, client in ipairs(clients) do
         if client and client.name ~= '' then
-            table.insert(names, string.format('%%#StlComponentOn#%s%%*', client.name))
+            table.insert(names, string.format('%%#StlComponentOn#%s%%*', escape_statusline(client.name)))
         end
     end
 
@@ -231,25 +238,32 @@ end
 ---Return the current buffer filename, file size, and state symbols
 ---@return string
 function M.filename()
-    local ft = vim.bo.filetype
-    if ft == 'fzf' then
+    local filetype = vim.bo.filetype
+    if filetype == 'fzf' then
         return ''
     end
+
     local name = vim.fn.expand('%:~:.')
     if name == '' then
         name = '[No Name]'
     end
+
+    name = escape_statusline(name)
+
     local size = format_file_size()
     if size ~= '' then
         size = '[' .. size .. ']'
     end
+
     local symbols = {}
     if vim.bo.modified then
         table.insert(symbols, '[+]')
     end
+
     if not vim.bo.modifiable or vim.bo.readonly then
         table.insert(symbols, '[-]')
     end
+
     return name .. size .. (#symbols > 0 and table.concat(symbols, '') or '')
 end
 
@@ -279,9 +293,17 @@ function M.search()
         return string.format('%%#StlIcon#%s [?/?]%%*', icons.misc.search)
     end
 
-    local too_many = string.format('>%d', count.maxcount)
-    local current = count.current > count.maxcount and too_many or count.current
-    local total = count.total > count.maxcount and too_many or count.total
+    local current = count.current
+    local total = count.total
+
+    if count.incomplete == 2 then
+        if current > count.maxcount then
+            current = string.format('>%d', current)
+        end
+        if total > count.maxcount then
+            total = string.format('>%d', total)
+        end
+    end
 
     return string.format('%%#StlIcon#%s [%s/%s]%%*', icons.misc.search, current, total)
 end
@@ -302,16 +324,19 @@ end
 ---@return string
 function M.diagnostics()
     local counts = vim.diagnostic.count(0)
+    local diagnostic_enabled = vim.diagnostic.is_enabled({ bufnr = 0 })
+
     local items = {}
+
     for _, level in ipairs(diagnostic_levels) do
-        local n = counts[vim.diagnostic.severity[level]] or 0
-        if n > 0 then
+        local count = counts[vim.diagnostic.severity[level]] or 0
+        if count > 0 then
             local icon = icons.diagnostics[level]
-            if vim.diagnostic.is_enabled() then
-                table.insert(items, string.format('%%#StlDiagnostic%s#%s %s%%*', level, icon, n))
+            if diagnostic_enabled then
+                table.insert(items, string.format('%%#StlDiagnostic%s#%s %s%%*', level, icon, count))
             else
                 -- Use gray color if diagnostic is disabled
-                table.insert(items, string.format('%%#StlComponentInactive#%s %s%%*', icon, n))
+                table.insert(items, string.format('%%#StlComponentInactive#%s %s%%*', icon, count))
             end
         end
     end
@@ -325,7 +350,7 @@ function M.spell(min_width)
     if is_narrow(min_width) then
         return ''
     end
-    return vim.o.spell and string.format('%%#StlComponentOn#%s%%*', icons.misc.check) or ''
+    return vim.wo.spell and string.format('%%#StlComponentOn#%s%%*', icons.misc.check) or ''
 end
 
 ---Render the tpope/vim-obsession session status
@@ -364,9 +389,9 @@ function M.indent(min_width)
         return ''
     end
 
-    local expandtab = vim.api.nvim_get_option_value('expandtab', { scope = 'local' })
-    local shiftwidth = vim.api.nvim_get_option_value('shiftwidth', { scope = 'local' })
-    local tabstop = vim.api.nvim_get_option_value('tabstop', { scope = 'local' })
+    local expandtab = vim.bo.expandtab
+    local shiftwidth = vim.bo.shiftwidth > 0 and vim.bo.shiftwidth or vim.bo.tabstop
+    local tabstop = vim.bo.tabstop
 
     local width = expandtab and shiftwidth or tabstop
     return string.format('[%s:%s]', expandtab and 'S' or 'T', width)
@@ -400,6 +425,8 @@ function M.filetype()
         return string.format('%%#StlComponentInactive#%s [Empty]%%*', icons.misc.file)
     end
 
+    local escaped_filetype = escape_statusline(filetype)
+
     -- Special filetype
 
     ---@type rockyz.SpecialFiletype
@@ -407,13 +434,13 @@ function M.filetype()
     if special then
         local icon = special.icon
         local icon_hl = special.icon_hl or 'StlIcon'
-        return string.format('%%#%s#%s %%#StlFiletype#%s%%*', icon_hl, icon, filetype)
+        return string.format('%%#%s#%s %%#StlFiletype#%s%%*', icon_hl, icon, escaped_filetype)
     end
 
     -- Normal filetype
 
     if not has_devicons then
-        return string.format('%s %%#StlFiletype#%s%%*', icons.misc.file, filetype)
+        return string.format('%s %%#StlFiletype#%s%%*', icons.misc.file, escaped_filetype)
     end
 
     local icon, icon_color = devicons.get_icon_color_by_filetype(filetype, { default = true })
@@ -425,7 +452,7 @@ function M.filetype()
         icon_highlight_cache[icon_hl] = true
     end
 
-    return string.format('%%#%s#%s %%#StlFiletype#%s%%*', icon_hl, icon, filetype)
+    return string.format('%%#%s#%s %%#StlFiletype#%s%%*', icon_hl, icon, escaped_filetype)
 end
 
 ---Render the cursor location
@@ -486,6 +513,13 @@ vim.api.nvim_create_autocmd('User', {
     pattern = 'GitSignsUpdate',
     callback = function()
         vim.cmd.redrawstatus()
+    end,
+})
+
+vim.api.nvim_create_autocmd('ColorScheme', {
+    group = group,
+    callback = function()
+        vim.tbl_clear(icon_highlight_cache)
     end,
 })
 

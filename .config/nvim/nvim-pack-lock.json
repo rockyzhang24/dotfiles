@@ -14,7 +14,7 @@
       "version": "1.0.0 - 2.0.0"
     },
     "ccc.nvim": {
-      "rev": "9d1a256",
+      "rev": "9d1a256e006decc574789dfc7d628ca11644d4c2",
       "src": "https://github.com/uga-rosa/ccc.nvim"
     },
     "conform.nvim": {
@@ -30,11 +30,11 @@
       "src": "https://github.com/barrettruth/diffs.nvim"
     },
     "eregex.vim": {
-      "rev": "950027d",
+      "rev": "950027d5942c7dc5f4cbcfdea7df360da9360697",
       "src": "https://github.com/othree/eregex.vim"
     },
     "git-messenger.vim": {
-      "rev": "6f17ec9",
+      "rev": "6f17ec9cad931dee5b98a600a1083c96363bf47f",
       "src": "https://github.com/rockyzhang24/git-messenger.vim",
       "version": "'dev'"
     },
@@ -79,11 +79,11 @@
       "src": "https://github.com/unblevable/quick-scope"
     },
     "quickfix-reflector.vim": {
-      "rev": "6a6a9e2",
+      "rev": "6a6a9e28e1713b9e9db99eec1e6672e5666c01b9",
       "src": "https://github.com/stefandtw/quickfix-reflector.vim"
     },
     "tabular": {
-      "rev": "12437cd",
+      "rev": "12437cd1b53488e24936ec4b091c9324cafee311",
       "src": "https://github.com/godlygeek/tabular"
     },
     "tagbar": {
@@ -103,7 +103,7 @@
       "src": "https://github.com/inkarkat/vim-ReplaceWithRegister"
     },
     "vim-after-object": {
-      "rev": "7f52106",
+      "rev": "7f52106df8a05e9bc1c53960c31a55f77e303903",
       "src": "https://github.com/junegunn/vim-after-object"
     },
     "vim-apathy": {
@@ -111,7 +111,7 @@
       "src": "https://github.com/tpope/vim-apathy"
     },
     "vim-asterisk": {
-      "rev": "77e9706",
+      "rev": "77e97061d6691637a034258cc415d98670698459",
       "src": "https://github.com/haya14busa/vim-asterisk"
     },
     "vim-dispatch": {
@@ -119,15 +119,15 @@
       "src": "https://github.com/tpope/vim-dispatch"
     },
     "vim-eunuch": {
-      "rev": "e86bb79",
+      "rev": "e86bb794a1c10a2edac130feb0ea590a00d03f1e",
       "src": "https://github.com/tpope/vim-eunuch"
     },
     "vim-exchange": {
-      "rev": "d6c1e97",
+      "rev": "d6c1e9790bcb8df27c483a37167459bbebe0112e",
       "src": "https://github.com/tommcdo/vim-exchange"
     },
     "vim-flog": {
-      "rev": "665b16a",
+      "rev": "665b16ac8915f746bc43c9572b4581a5e9047216",
       "src": "https://github.com/rbong/vim-flog"
     },
     "vim-fugitive": {
@@ -143,7 +143,7 @@
       "src": "https://github.com/inkarkat/vim-ingo-library"
     },
     "vim-mark": {
-      "rev": "a613b06",
+      "rev": "a613b0676fce72960c06e26f8f8f6454bcef4564",
       "src": "https://github.com/inkarkat/vim-mark"
     },
     "vim-obsession": {
@@ -155,15 +155,15 @@
       "src": "https://github.com/tpope/vim-projectionist"
     },
     "vim-repeat": {
-      "rev": "6584602",
+      "rev": "65846025c15494983dafe5e3b46c8f88ab2e9635",
       "src": "https://github.com/tpope/vim-repeat"
     },
     "vim-rhubarb": {
-      "rev": "5496d7c",
+      "rev": "5496d7c94581c4c9ad7430357449bb57fc59f501",
       "src": "https://github.com/tpope/vim-rhubarb"
     },
     "vim-sleuth": {
-      "rev": "be69bff",
+      "rev": "be69bff86754b1aa5adcbb527d7fcd1635a84080",
       "src": "https://github.com/tpope/vim-sleuth"
     },
     "vim-startuptime": {
@@ -171,7 +171,7 @@
       "src": "https://github.com/dstein64/vim-startuptime"
     },
     "vim-surround": {
-      "rev": "3d188ed",
+      "rev": "3d188ed2113431cf8dac77be61b842acb64433d9",
       "src": "https://github.com/tpope/vim-surround"
     }
   }

@@ -9,16 +9,16 @@
 -- https://github.com/neovim/neovim/blob/master/runtime/lua/vim/lsp/buf.lua
 
 local has_icons, icons = pcall(require, 'rockyz.icons')
-local LIGHTBOLB_ICON = has_icons and icons.misc.lightbulb or ''
+local LIGHTBULB_ICON = has_icons and icons.misc.lightbulb or ''
 
-local LIGHTBOLB_TEXT = LIGHTBOLB_ICON .. ' '
-local LIGHTBULB_WIDTH = vim.fn.strdisplaywidth(LIGHTBOLB_TEXT)
+local LIGHTBULB_VIRT_TEXT = LIGHTBULB_ICON .. ' '
+local LIGHTBULB_VIRT_TEXT_WIDTH = vim.fn.strdisplaywidth(LIGHTBULB_VIRT_TEXT)
 
 local CODE_ACTION_METHOD = 'textDocument/codeAction'
 
 local default_extmark_opts = {
     virt_text = {
-        { LIGHTBOLB_TEXT, 'LightBulb' },
+        { LIGHTBULB_VIRT_TEXT, 'LightBulb' },
     },
     hl_mode = 'combine',
     virt_text_win_col = 0,
@@ -31,7 +31,7 @@ local function get_lightbulb_line()
     local topline = vim.fn.line('w0')
     local indent = vim.fn.indent('.')
 
-    if indent > LIGHTBULB_WIDTH then
+    if indent >= LIGHTBULB_VIRT_TEXT_WIDTH then
         return line
     end
 
@@ -186,6 +186,7 @@ local function make_code_action_params(client, winid, bufnr, cursor_lnum, cursor
     return params
 end
 
+-- Update the lightbulb at the current cursor position
 local function update_lightbulb()
     -- Don't display the bulb in diff window
     if vim.wo.diff then
@@ -204,40 +205,56 @@ local function update_lightbulb()
 
     if #clients == 0 then
         remove_lightbulb(winid, bufnr)
+        return
     end
 
-    local has_action = false
+    local has_code_action = false
+    local pending_client_count = #clients
     local cursor_row, cursor_col = unpack(vim.api.nvim_win_get_cursor(0))
     local cursor_lnum = cursor_row - 1 -- 0-indexed
 
     for _, client in ipairs(clients) do
         local params = make_code_action_params(client, winid, bufnr, cursor_lnum, cursor_col)
-        client:request(CODE_ACTION_METHOD, params, function(_, result, _)
+        local request_sent = client:request(CODE_ACTION_METHOD, params, function(_, result, _)
             if
                 not vim.api.nvim_win_is_valid(winid)
                 or not vim.api.nvim_buf_is_valid(bufnr)
+                or vim.api.nvim_win_get_buf(winid) ~= bufnr
                 or vim.w[winid].bulb_version ~= request_id
             then
                 return
             end
 
-            if has_action then
+            pending_client_count = pending_client_count - 1
+
+            if has_code_action then
                 return
             end
 
             for _, action in ipairs(result or {}) do
                 if action then
-                    has_action = true
+                    has_code_action = true
                     break
                 end
             end
 
-            if has_action and lightbulb_line < vim.api.nvim_buf_line_count(bufnr) then
-                show_lightbulb(winid, bufnr, lightbulb_line)
-            else
+            if has_code_action then
+                if lightbulb_line < vim.api.nvim_buf_line_count(bufnr) then
+                    show_lightbulb(winid, bufnr, lightbulb_line)
+                else
+                    remove_lightbulb(winid, bufnr)
+                end
+            elseif pending_client_count == 0 then
                 remove_lightbulb(winid, bufnr)
             end
         end, bufnr)
+
+        if not request_sent then
+            pending_client_count = pending_client_count - 1
+            if pending_client_count == 0 and not has_code_action then
+                remove_lightbulb(winid, bufnr)
+            end
+        end
     end
 end
 

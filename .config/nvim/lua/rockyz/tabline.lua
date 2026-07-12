@@ -209,8 +209,15 @@ local function build_title_section(winid, is_current, title_highlight)
         local icon = special.icon
         local icon_highlight = is_current and 'TabDefaultIconActive' or 'TabDefaultIcon'
         local title = special.title
+        local formatted_title = title:gsub('%%', '%%%%')
         return {
-            formatted = string.format('%%#%s#%s%%#%s# [%s]', icon_highlight, icon, title_highlight, title),
+            formatted = string.format(
+                '%%#%s#%s%%#%s# [%s]',
+                icon_highlight,
+                icon,
+                title_highlight,
+                formatted_title
+            ),
             visible = string.format('%s [%s]', icon, title),
         }
     end
@@ -223,6 +230,7 @@ local function build_title_section(winid, is_current, title_highlight)
     if vim.wo[winid].diff then
         title = title .. '[diff]'
     end
+    local formatted_title = title:gsub('%%', '%%%%')
     if has_devicons then
         local icon, icon_color = devicons.get_icon_color_by_filetype(filetype, { default = true })
         local icon_highlight = string.format('TabIcon%s-%s', is_current and 'Active' or '', filetype)
@@ -235,15 +243,14 @@ local function build_title_section(winid, is_current, title_highlight)
                 icon_highlight,
                 icon,
                 title_highlight,
-                title
+                formatted_title
             ),
             visible = icon .. ' ' .. title,
         }
     end
-    local icon_title = icons.misc.file .. ' ' .. title
     return {
-        formatted = icon_title,
-        visible = icon_title,
+        formatted = icons.misc.file .. ' ' .. formatted_title,
+        visible = icons.misc.file .. ' ' .. title,
     }
 end
 

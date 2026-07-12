@@ -100,6 +100,7 @@ local config = {
 ---@field last_viewport_height? integer Cached viewport height
 ---@field last_scrollbar_column? integer Cached scrollbar column
 ---@field is_enabled? boolean Whether the scrollbar is enabled for this window
+---@field cleanup_autocmd_id? integer WinClosed autocmd ID
 
 local thumb_ns = vim.api.nvim_create_namespace('rockyz.scrollbar.thumb')
 local diagnostic_ns = vim.api.nvim_create_namespace('rockyz.scrollbar.diagnostic')
@@ -211,15 +212,17 @@ local function ensure_scrollbar(winid)
 
     if not state.bufnr or not vim.api.nvim_buf_is_valid(state.bufnr) then
         state.bufnr = create_scrollbar_buffer(viewport_height)
-        vim.api.nvim_create_autocmd({ 'WinClosed' }, {
-            pattern = '' .. winid,
-            once = true,
-            callback = function()
-                if vim.api.nvim_buf_is_valid(state.bufnr) then
-                    vim.api.nvim_buf_delete(state.bufnr, { force = true })
-                end
-            end,
-        })
+        if not state.cleanup_autocmd_id then
+            state.cleanup_autocmd_id = vim.api.nvim_create_autocmd({ 'WinClosed' }, {
+                pattern = '' .. winid,
+                once = true,
+                callback = function()
+                    if vim.api.nvim_buf_is_valid(state.bufnr) then
+                        vim.api.nvim_buf_delete(state.bufnr, { force = true })
+                    end
+                end,
+            })
+        end
     end
 
     local width = vim.api.nvim_win_get_width(winid)
@@ -326,6 +329,8 @@ function M.render_diagnostics(winid)
         end
     end
 
+    clear_extmarks(winid, diagnostic_ns)
+
     -- Abort rendering only when diagnostics were produced for an older buffer state.
     -- An absent changedtick means there is no stale state to reject.
     local diagnostic_changedtick = vim.b[target_bufnr].scrollbar_diagnostic_changedtick
@@ -335,8 +340,6 @@ function M.render_diagnostics(winid)
     then
         return
     end
-
-    clear_extmarks(winid, diagnostic_ns)
 
     local state = vim.w[winid].scrollbar_state
     local scrollbar_buffer_line_count = vim.api.nvim_buf_line_count(state.bufnr)
@@ -399,14 +402,14 @@ function M.render_git(winid)
         end
     end
 
+    clear_extmarks(winid, gitdiff_ns)
+
     -- Abort rendering only when Git diffs were produced for an older buffer state.
     -- An absent changedtick means there is no stale state to reject.
     local git_changedtick = vim.b[target_bufnr].scrollbar_git_changedtick
     if git_changedtick and git_changedtick ~= vim.api.nvim_buf_get_changedtick(target_bufnr) then
         return
     end
-
-    clear_extmarks(winid, gitdiff_ns)
 
     local state = vim.w[winid].scrollbar_state
     local scrollbar_buffer_line_count = vim.api.nvim_buf_line_count(state.bufnr)
@@ -644,6 +647,7 @@ vim.api.nvim_create_autocmd({ 'TextChanged', 'TextChangedI' }, {
         local winids = vim.fn.win_findbuf(event.buf)
         for _, winid in ipairs(winids) do
             dirty.thumb[winid] = true
+            dirty.search[winid] = true
         end
         schedule_flush()
     end,
@@ -692,21 +696,6 @@ vim.api.nvim_create_autocmd({ 'User' }, {
     end,
 })
 
-vim.api.nvim_create_autocmd({ 'CmdlineLeave' }, {
-    group = scrollbar_augroup,
-    callback = function(event)
-        local command_type = vim.fn.getcmdtype()
-        if command_type ~= '/' and command_type ~= '?' then
-            return
-        end
-        local winids = vim.fn.win_findbuf(event.buf)
-        for _, winid in ipairs(winids) do
-            dirty.search[winid] = true
-        end
-        schedule_flush()
-    end,
-})
-
 local function mark_search_dirty()
     local current_bufnr = vim.api.nvim_get_current_buf()
     local winids = vim.fn.win_findbuf(current_bufnr)
@@ -716,15 +705,37 @@ local function mark_search_dirty()
     schedule_flush()
 end
 
--- Handle normal-mode * and #
-local on_key_search_cursor_word = vim.api.nvim_create_namespace('rockyz.scrollbar.on_key.search_cursor_word')
-vim.on_key(function(key)
-    if key ~= '*' and key ~= '#' then
-        return
-    end
-    -- defer: let Neovim finish updating @/ and v:hlsearch
-    vim.schedule(mark_search_dirty)
-end, on_key_search_cursor_word)
+vim.api.nvim_create_autocmd({ 'CmdlineLeave' }, {
+    group = scrollbar_augroup,
+    callback = function()
+        local command_type = vim.fn.getcmdtype()
+
+        if command_type == ':' then
+            local ok, parsed_cmd = pcall(vim.api.nvim_parse_cmd, vim.fn.getcmdline(), {})
+            if not ok then
+                return
+            end
+
+            if parsed_cmd.cmd == 'nohlsearch' then
+                if vim.v.char == '\r' then
+                    M.clear_search()
+                end
+            elseif parsed_cmd.cmd == 'let' and parsed_cmd.args[1] == 'v:searchforward' then
+                -- vim-asterisk completes its search setup before :let v:searchforward
+                -- Remove this `elseif` branch when we stop using vim-asterisk in the future
+                mark_search_dirty()
+            end
+
+            return
+        end
+
+        if command_type ~= '/' and command_type ~= '?' then
+            return
+        end
+
+        mark_search_dirty()
+    end,
+})
 
 -- Handle n and N
 vim.api.nvim_create_autocmd({ 'CursorMoved' }, {

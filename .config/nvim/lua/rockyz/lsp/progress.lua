@@ -20,10 +20,10 @@
 --       ...    -- see below
 --     },
 -- }
--- For work down progress, the value can be of three different forms:
+-- For work done progress, the value can be of three different forms:
 -- (Ref:
 -- https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#workDoneProgress)
--- 1. Work down progress begin
+-- 1. Work done progress begin
 -- {
 --   kind = 'begin',
 --   title = ...,
@@ -31,34 +31,34 @@
 --   message = ...,    -- optional
 --   percentage = ...,    -- optional
 -- }
--- 2. Work down progress report
+-- 2. Work done progress report
 -- {
 --   kind = 'report',
 --   cancellable = ...,     -- optional
 --   message = ...,    -- optional
 --   percentage = ...,    -- optional
 -- }
--- 3. Work down progress end
+-- 3. Work done progress end
 -- {
 --   kind = 'end',
 --   message = ...,    -- optional
 -- }
 --
--- When each progress notification sent by the server is received, $/process handler will be invoked
--- to process the notification. See its source code in runtime/lua/vim/lsp/handler.lua. The pramas
+-- When each progress notification sent by the server is received, $/progress handler will be invoked
+-- to process the notification. See its source code in runtime/lua/vim/lsp/handler.lua. The params
 -- part will be passed to the handler function as the params. The handler pushes the params (i.e.,
--- the pramas) into the ring buffer of the corresponding client (i.e., client.progress) and then
+-- the params) into the ring buffer of the corresponding client (i.e., client.progress) and then
 -- trigger LspProgress autocmd event. When LspProgress is triggered, its callback will be invoked
 -- with a table argument. The argument has a data table with two fields:
 -- 1. data.client_id
--- 2. data.params: the pramas part
+-- 2. data.params: the params part
 -- For details, see the source code `M[ms.dollar_progress]` in runtime/lua/vim/lsp/handler.lua
 --
 -- So we can use the callback function of LspProgress to get the progress information we need.
 -- 1. Directly from the args passed into the callback such as args.data.params.value.title for the
 --    the title of the progress notification. Each time we can print one progress message.
 -- 2. Call vim.lsp.status() in the callback. It gets the progress message in the ring buffer and
---    emptys the ring buffer, and it is called for each arrived notification, so in each call of
+--    empties the ring buffer, and it is called for each arrived notification, so in each call of
 --    status() only a single one message will be printed.
 
 ---------------------------
@@ -75,7 +75,7 @@
 -- In this generic for statement `for ele in xxx do`, xxx is an iterator (An iterator is a function
 -- and each time when the function is called, it returns a "next" element from a collection and nil
 -- when no more elements in the collection). When the for loop is executed, at each iteration, the
--- iterator will be called and the returned value will be asigned to ele, and the loop will
+-- iterator will be called and the returned value will be assigned to ele, and the loop will
 -- terminate when the iterator returns nil.
 -- Take `for k, v in pairs(t) do` as an example. When this for statement is executed, it first calls
 -- pairs() to get an iterator, and then in each iteration this iterator will be called.
@@ -85,11 +85,11 @@
 -- only stores the items pushed in it (self._items) but also maintain necessary variables to keep
 -- track of its own state (self._size, self._idx_read, self._idx_write, etc). In the metatable of
 -- this table, we define __call to pop out the first item by self:pop(), so the table is callable. Back to that
--- tricky for loop `for progress in client.progress do`, in each iteration, client.progres as an
+-- tricky for loop `for progress in client.progress do`, in each iteration, client.progress as an
 -- iterator will be called and it pops out the first item. The for loop terminates when the iterator
 -- returns nil, i.e., no more items in the ring buffer of the client. So for each vim.lsp.status()
 -- call, it will print all the items (i.e., the progress messages) in the ring buffers of all the
--- active clients, and all the ring buffers will be empty. This is what the **COMSUMES** means.
+-- active clients, and all the ring buffers will be empty. This is what the **CONSUMES** means.
 --
 -- More about vim.ringbuf's definition and operations, see its source code
 -- https://github.com/neovim/neovim/blob/master/runtime/lua/vim/shared.lua
@@ -100,9 +100,9 @@
 --
 -- There are three types of communication between the client (i.e., the development tool) and the
 -- language server:
--- 1. The client sends a request, the server gets the request and return the corresponding response.
+-- 1. The client sends a request, the server gets the request and returns the corresponding response.
 --    E.g., the textDocument/definition (Goto Definition) request.
--- 2. The server sends a request, the client gets the request and return the corresponding response.
+-- 2. The server sends a request, the client gets the request and returns the corresponding response.
 --    E.g., the workspace/inlayHint/refresh (Inlay Hint Refresh) request.
 -- 3. Both client and server can send a notification to each other, and must not send a response
 --    back. E.g., the $/progress notification can be sent from the client or the server.
@@ -111,13 +111,13 @@
 -- communicate, see https://microsoft.github.io/language-server-protocol/overviews/lsp/overview/
 --
 -- In Neovim, the client and server communicate through stdio. The process of establishing a
--- connection and communication bewteen the client and server is as follows:
+-- connection and communication between the client and server is as follows:
 -- * Call vim.lsp.start_client({config}). It will create a LSP client (:h vim.lsp.client). The
 -- config parameter has a cmd field that is a command to launch a LSP server.
 -- * In start_client, it calls vim.lsp.rpc.start(cmd). In rpc.start(), it first creates a RPC
 -- client. NOTE: so far we have two kinds of clients, LSP client and RPC client. The LSP client
 -- created in the first step above is upper level for exposing APIs such as
--- vim.lsp.buf_request_all() to uses. Actually it's just a wrapper of the RPC client. The LSP
+-- vim.lsp.buf_request_all() to users. Actually it's just a wrapper of the RPC client. The LSP
 -- operations such as sending request are performed through the underlying RPC client.
 -- * Next, rpc.start() will call vim.system(cmd, {opts}) by passing a system command cmd and an
 -- options {opts} containing three important fields, stdin, stdout and stderr. These three fields
@@ -126,7 +126,7 @@
 -- initialize and start a process to run the server. stdio is used to communicate with the process
 -- running the server.
 --   1. stdin: set to true to create a pipe used to connect to stdin (stdin = uv.new_pipe()). A
---      request to LSP server is send through the stdin. When we send a request to the LSP server by
+--      request to LSP server is sent through the stdin. When we send a request to the LSP server by
 --      calling an APIs such as vim.lsp.buf_request_all(), it uses SystemObj's write() method (which
 --      calls stdin:write(data)) to write the request data into the pipe.
 --   2. stdout: a handler to handle the output from stdout. In vim.system, a pipe will be created
@@ -144,7 +144,7 @@
 -- cmd to vim.lsp.rpc.connect('127.0.0.1', os.getenv('GDScript_Port')) when we call
 -- vim.lsp.start_client(). For details, see the source file (gdscript.lua) in nvim-lspconfig. The
 -- method vim.lsp.rpc.connect() will return a function. vim.lsp.start_client() will call this
--- returned funtion to create a RPC client and connect to the server via tcp:connect(host, port).
+-- returned function to create a RPC client and connect to the server via tcp:connect(host, port).
 -- When we send a request to the server, tcp:write() will be called. To handle the response, it's
 -- almost the same with stdout. See the source code of vim.lsp.rpc.connect() function for details.
 --
@@ -156,18 +156,18 @@
 local M = {}
 
 local config = {
-    spinner_interval = 4,
-    done_delay = 2000,
-    close_retry_interval = 100,
+    spinner_frame_repeats = 4,
+    done_delay_ms = 2000,
+    close_retry_interval_ms = 100,
     window_zindex = 30,
 }
 
 local icons = {
     spinner = { '⣾', '⣽', '⣻', '⢿', '⡿', '⣟', '⣯', '⣷' },
-    done = ' ',
+    done = '',
 }
 
-local guard_error_whitelist = {
+local expected_error_patterns = {
     'E11: Invalid in command%-line window',
     'E523: Not allowed here',
     'E565: Not allowed to change',
@@ -179,15 +179,15 @@ local guard_error_whitelist = {
 ---@field winid integer|nil Floating window id
 ---@field bufnr integer|nil Floating window buffer id
 ---@field message string|nil Message currently shown in the floating window
----@field pos integer Window position, counted from bottom to top. 0 if no window is active.
+---@field pos integer Stack position, counted from bottom to top. 0 before a stack slot is allocated.
 ---@field timer uv.uv_timer_t|nil Timer used to defer closing, especially during textlock
 
 ---Runtime state for each LSP client that reports progress, indexed by client id.
 ---@type table<integer, ProgressState>
 local progress_states = {}
 
----Number of currently visible progress windows
-local total_wins = 0
+---Number of allocated progress float stack slots
+local stack_size = 0
 
 --------------------------------------------------------------------------------
 -- State
@@ -212,8 +212,8 @@ local function guard(callable)
     if type(err) ~= 'string' then
         error(err)
     end
-    for _, msg in ipairs(guard_error_whitelist) do
-        if string.find(err, msg) then
+    for _, pattern in ipairs(expected_error_patterns) do
+        if string.find(err, pattern) then
             return false
         end
     end
@@ -260,30 +260,40 @@ end
 -- Window management
 --------------------------------------------------------------------------------
 
--- Get the row position of the current floating window. If it is the first one, it is placed just
--- right above the statuslien; if not, it is placed on top of others.
+---Return the row for a floating window at the given stack position
+---@param pos integer
+---@return integer
 local function get_win_row(pos)
     return vim.o.lines - vim.o.cmdheight - 1 - pos * (vim.g.border_enabled and 3 or 1)
 end
 
+---Return whether the progress float needs to be opened in the current tabpage
 ---@param state ProgressState
 ---@return boolean
 local function need_new_window(state)
     local winid = state.winid
     return winid == nil
-    or not vim.api.nvim_win_is_valid(winid)
-    or vim.api.nvim_win_get_tabpage(winid) ~= vim.api.nvim_get_current_tabpage()
+        or not vim.api.nvim_win_is_valid(winid)
+        or vim.api.nvim_win_get_tabpage(winid) ~= vim.api.nvim_get_current_tabpage()
 end
 
 ---@param state ProgressState
 local function update_win_config(state)
+    local winid = state.winid
+
+    -- A tabpage switch can leave a stale winid until the float is recreated
+    if winid == nil or not vim.api.nvim_win_is_valid(winid) then
+        return
+    end
+
     guard(function()
-        vim.api.nvim_win_set_config(state.winid, {
+        local width = vim.fn.strdisplaywidth(state.message)
+        vim.api.nvim_win_set_config(winid, {
             relative = 'editor',
-            width = #state.message,
+            width = width,
             height = 1,
             row = get_win_row(state.pos),
-            col = vim.o.columns - #state.message,
+            col = vim.o.columns - width,
         })
     end)
 end
@@ -298,16 +308,24 @@ end
 ---@param state ProgressState
 ---@return boolean
 local function create_window(state)
+    -- Reuse the stack position when recreating a float after a tabpage switch
+    local is_new_state = state.pos == 0
+    local pos = state.pos
+
+    if is_new_state then
+        pos = stack_size + 1
+    end
+
     local winid
-    local pos = total_wins + 1
 
     local success = guard(function()
+        local width = vim.fn.strdisplaywidth(state.message)
         winid = vim.api.nvim_open_win(state.bufnr, false, {
             relative = 'editor',
-            width = #state.message,
+            width = width,
             height = 1,
             row = get_win_row(pos),
-            col = vim.o.columns - #state.message,
+            col = vim.o.columns - width,
             focusable = false,
             style = 'minimal',
             noautocmd = true,
@@ -320,11 +338,25 @@ local function create_window(state)
         return false
     end
 
-    -- Record this window for future reuse
+    -- Record the opened window; a recorded float keeps its existing stack position
     state.winid = winid
-    state.pos = pos
-    total_wins = total_wins + 1
+    if is_new_state then
+        state.pos = pos
+        stack_size = stack_size + 1
+    end
+
     return true
+end
+
+---Close the floating window but keep its associated buffer
+---@param state ProgressState
+---@return boolean
+local function close_float(state)
+    return guard(function()
+        if state.winid and vim.api.nvim_win_is_valid(state.winid) then
+            vim.api.nvim_win_close(state.winid, true)
+        end
+    end)
 end
 
 ---Close the window and delete the associated buffer
@@ -346,8 +378,11 @@ end
 ---Failures caused by temporary Neovim states such as textlock are suppressed by `guard()`.
 ---@param state ProgressState
 local function render_message(state)
-    -- Create a new window or update the existing one
+    -- Float windows belong to a tabpage, so recreate an existing float in the current tabpage.
     if need_new_window(state) then
+        if state.winid ~= nil and not close_float(state) then
+            return
+        end
         create_window(state)
     else
         update_win_config(state)
@@ -361,13 +396,14 @@ end
 --------------------------------------------------------------------------------
 
 ---@param state ProgressState
+---@return string
 local function next_spinner(state)
     local idx = state.spinner_idx + 1
-    if idx > #icons.spinner * config.spinner_interval then
+    if idx > #icons.spinner * config.spinner_frame_repeats then
         idx = 1
     end
     state.spinner_idx = idx
-    return icons.spinner[math.ceil(idx / config.spinner_interval)]
+    return icons.spinner[math.ceil(idx / config.spinner_frame_repeats)]
 end
 
 ---@param lsp_client vim.lsp.Client
@@ -390,6 +426,7 @@ end
 
 ---@param state ProgressState
 ---@param base_message string
+---@return string
 local function build_progress_message(state, base_message, value)
     state.is_done = false
     local message = base_message
@@ -432,26 +469,53 @@ local function should_keep_window(state)
     return not state.is_done and state.winid ~= nil
 end
 
----Clean up a finished progress state.
+---Reset a closed progress state while retaining it for future progress from the same client
 ---
----Stops and destroys the close timer, update the position of remaining windows, then reset the
----state for reuse.
+---Stops and destroys its close timer, reflows remaining floats, then resets its fields
 ---@param state ProgressState
 local function cleanup_state(state)
     state.timer:stop()
     state.timer:close()
 
-    total_wins = total_wins - 1
+    if state.winid ~= nil then
+        stack_size = stack_size - 1
 
-    -- Move all windows above this closed window down by one position
-    for _, s in pairs(progress_states) do
-        if s.winid ~= nil and s.pos > state.pos then
-            s.pos = s.pos - 1
-            update_win_config(s)
+        -- Move all windows above this closed window down by one position
+        for _, s in pairs(progress_states) do
+            if s.winid ~= nil and s.pos > state.pos then
+                s.pos = s.pos - 1
+                update_win_config(s)
+            end
         end
     end
 
     reset_state(state)
+end
+
+---Dispose of a detached client's progress state and remove it from progress_states
+---
+---Retries if a transient editor state prevents the floating window from closing
+---@param client_id integer
+local function cleanup_client_state(client_id)
+    local state = progress_states[client_id]
+    if state == nil then
+        return
+    end
+
+    if state.bufnr == nil then
+        progress_states[client_id] = nil
+        return
+    end
+
+    if close_window(state) then
+        cleanup_state(state)
+        progress_states[client_id] = nil
+        return
+    end
+
+    vim.defer_fn(function()
+        cleanup_client_state(client_id)
+    end, config.close_retry_interval_ms)
 end
 
 ---@param state ProgressState
@@ -462,14 +526,12 @@ local function close_window_if_done(state)
         return
     end
 
-    local success = false
-
-    -- Close the window if it has not been closed yet
-    if state.winid ~= nil and state.bufnr ~= nil then
-        success = close_window(state)
+    if state.bufnr == nil then
+        cleanup_state(state)
+        return
     end
 
-    if success then
+    if close_window(state) then
         cleanup_state(state)
     end
 end
@@ -478,8 +540,8 @@ end
 ---@param state ProgressState
 local function schedule_close(state)
     state.timer:start(
-        config.done_delay,
-        config.close_retry_interval,
+        config.done_delay_ms,
+        config.close_retry_interval_ms,
         vim.schedule_wrap(function()
             close_window_if_done(state)
         end)
@@ -487,9 +549,9 @@ local function schedule_close(state)
 end
 
 ---Callback of LspProgress autocmd: display the progress message
----@param ev table The argument of the callback
-local function handle_progress(ev)
-    local client_id = ev.data.client_id
+---@param event table The argument of the callback
+local function handle_progress(event)
+    local client_id = event.data.client_id
 
     ---@type vim.lsp.Client|nil
     local lsp_client = vim.lsp.get_client_by_id(client_id)
@@ -500,7 +562,7 @@ local function handle_progress(ev)
     ---@type ProgressState
     local state = get_state(client_id)
 
-    state.message = build_message(state, lsp_client, ev.data.params)
+    state.message = build_message(state, lsp_client, event.data.params)
 
     -- Show progress message in the floating window
     render_message(state)
@@ -524,16 +586,40 @@ local function handle_progress(ev)
     end
 end
 
+---Schedule progress-state cleanup after a client detaches from its last buffer
+---@param event table
+local function handle_lsp_detach(event)
+    ---@type vim.event.lspdetach.data
+    local data = event.data
+    local client_id = data.client_id
+
+    -- LspDetach fires before Neovim removes the buffer from client.attached_buffers
+    vim.schedule(function()
+        local client = vim.lsp.get_client_by_id(client_id)
+        if client ~= nil and next(client.attached_buffers) ~= nil then
+            return
+        end
+
+        cleanup_client_state(client_id)
+    end)
+end
+
 --------------------------------------------------------------------------------
 -- Autocmds
 --------------------------------------------------------------------------------
 
--- Display the progress message when it comes
 local group = vim.api.nvim_create_augroup('rockyz.lsp_progress', { clear = true })
-vim.api.nvim_create_autocmd({ 'LspProgress' }, {
+
+-- Display the progress message when it comes
+vim.api.nvim_create_autocmd('LspProgress', {
     group = group,
     pattern = { 'begin', 'report', 'end' },
     callback = handle_progress,
+})
+
+vim.api.nvim_create_autocmd('LspDetach', {
+    group = group,
+    callback = handle_lsp_detach,
 })
 
 -- Update windows.
@@ -558,6 +644,19 @@ vim.api.nvim_create_autocmd({ 'VimResized', 'TermLeave' }, {
         for _, s in pairs(progress_states) do
             if s.is_done and s.winid ~= nil and vim.api.nvim_win_is_valid(s.winid) then
                 update_win_config(s)
+            end
+        end
+    end,
+})
+
+-- Move the single global set of progress floats to the tabpage being entered
+vim.api.nvim_create_autocmd('TabEnter', {
+    group = group,
+    callback = function()
+        for _, state in pairs(progress_states) do
+            -- A nonzero position means this state already owns a stack slot
+            if state.pos > 0 then
+                render_message(state)
             end
         end
     end,

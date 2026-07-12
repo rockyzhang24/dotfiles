@@ -7,38 +7,37 @@ local M = {}
 -- Virtual text, virtual lines and float should all follow this format
 --
 
-local function format(d)
-    return string.format('%s: %s', d.source and d.source or 'Unknown', d.message)
+---@param diagnostic vim.Diagnostic
+---@return string
+local function format_diagnostic(diagnostic)
+    return string.format('%s: %s', diagnostic.source or 'Unknown', diagnostic.message)
 end
 
-local function suffix(d)
-    return string.format(' [%s]', d.code and d.code or 'Unknown')
+---@param diagnostic vim.Diagnostic
+---@return string
+local function format_diagnostic_code(diagnostic)
+    return string.format(' [%s]', diagnostic.code or 'Unknown')
 end
 
 local virtual_text_opts = {
     source = false,
     prefix = '●',
     spacing = 4,
-    format = format,
-    suffix = suffix,
+    format = format_diagnostic,
+    suffix = format_diagnostic_code,
 }
 
 local float_opts = {
     source = false,
     border = vim.g.border_style,
     severity_sort = true,
-    format = format,
-    suffix = suffix,
+    format = format_diagnostic,
+    suffix = format_diagnostic_code,
 }
 
 local virtual_lines_opts = {
-    format = function(d)
-        return string.format(
-            '%s: %s [%s]',
-            d.source and d.source or 'Unknown',
-            d.message,
-            d.code and d.code or 'Unknown'
-        )
+    format = function(diagnostic)
+        return format_diagnostic(diagnostic) .. format_diagnostic_code(diagnostic)
     end,
 }
 
@@ -52,42 +51,45 @@ vim.diagnostic.config({
 
 local hover = vim.lsp.buf.hover
 ---@diagnostic disable-next-line: duplicate-set-field
-vim.lsp.buf.hover = function()
-    return hover {
+vim.lsp.buf.hover = function(config)
+    return hover(vim.tbl_deep_extend('force', {
         border = vim.g.border_style,
         max_height = math.floor(vim.o.lines * 0.5),
         max_width = math.floor(vim.o.columns * 0.4),
-    }
+    }, config or {}))
 end
 
 local signature_help = vim.lsp.buf.signature_help
 ---@diagnostic disable-next-line: duplicate-set-field
-vim.lsp.buf.signature_help = function()
-    return signature_help {
+vim.lsp.buf.signature_help = function(config)
+    return signature_help(vim.tbl_deep_extend('force', {
         border = vim.g.border_style,
         focusable = false,
         max_height = math.floor(vim.o.lines * 0.5),
         max_width = math.floor(vim.o.columns * 0.4),
-    }
+    }, config or {}))
 end
 
--- Return the worst severity
+---Return the worst severity
+---@return integer?
 local function diagnostic_worst_severity()
-    local num_warnings = 0
+    local has_warning = false
+
     for _, d in ipairs(vim.diagnostic.get(0)) do
         if d.severity == vim.diagnostic.severity.ERROR then
             return vim.diagnostic.severity.ERROR
         elseif d.severity == vim.diagnostic.severity.WARN then
-            num_warnings = num_warnings + 1
+            has_warning = true
         end
     end
-    if num_warnings > 0 then
+
+    if has_warning then
         return vim.diagnostic.severity.WARN
-    else
-        return nil
     end
 end
 
+---@param count integer
+---@return table
 local function worst_severity_jump_opts(count)
     local opts = {
         severity = diagnostic_worst_severity(),
@@ -103,20 +105,23 @@ local function worst_severity_jump_opts(count)
     return opts
 end
 
----Convert lsp.Range to range in vim
+---Convert lsp.Range to a Vim range
+---@param bufnr integer
 ---@param lsp_range lsp.Range
-local function to_vim_range(bufnr, lsp_range, offset_encoding)
+---@param offset_encoding 'utf-8'|'utf-16'|'utf-32'
+---@return table Range converted from lsp.Range with byte-indexed characters
+local function lsp_range_to_vim_range(bufnr, lsp_range, offset_encoding)
     local buf_lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
     local start = lsp_range.start
     local _end = lsp_range['end']
-    local line = buf_lines and buf_lines[start.line + 1] or ''
-    local end_line = buf_lines and buf_lines[_end.line + 1] or ''
+    local start_line = buf_lines[start.line + 1] or ''
+    local end_line = buf_lines[_end.line + 1] or ''
     return {
         start = {
             line = start.line,
             -- When on the first character, we can ignore the difference between byte and character
             character = start.character > 0
-                and vim.str_byteindex(line, offset_encoding, start.character, false)
+                and vim.str_byteindex(start_line, offset_encoding, start.character, false)
                 or start.character,
         },
         ['end'] = {
@@ -128,6 +133,7 @@ local function to_vim_range(bufnr, lsp_range, offset_encoding)
     }
 end
 
+---@return boolean
 local function is_before(x, y)
     if x.start.line < y.start.line then
         return true
@@ -138,17 +144,29 @@ local function is_before(x, y)
     end
 end
 
+---@param position table Position converted from lsp.Position with byte-indexed characters
+---@param range table Range converted from lsp.Range with byte-indexed characters
+---@return boolean
+local function is_position_in_range(position, range)
+    return (position.line > range.start.line or (
+        position.line == range.start.line and position.character >= range.start.character
+    )) and (
+        position.line < range['end'].line
+        or (position.line == range['end'].line and position.character < range['end'].character)
+    )
+end
+
 ---@param is_closer fun(table, table): boolean
 local function move_to_highlight(is_closer)
     local method = 'textDocument/documentHighlight'
-    local bufnr = vim.api.nvim_get_current_buf()
-    local clients = vim.lsp.get_clients({ bufnr = bufnr, method = method })
+    local current_bufnr = vim.api.nvim_get_current_buf()
+    local clients = vim.lsp.get_clients({ bufnr = current_bufnr, method = method })
     if not next(clients) then
         return
     end
 
-    local win = vim.api.nvim_get_current_win()
-    local cursor_row, cursor_col = unpack(vim.api.nvim_win_get_cursor(win))
+    local current_winid = vim.api.nvim_get_current_win()
+    local cursor_row, cursor_col = unpack(vim.api.nvim_win_get_cursor(current_winid))
     cursor_row = cursor_row - 1
     local cursor_range = {
         start = { line = cursor_row, character = cursor_col },
@@ -160,35 +178,44 @@ local function move_to_highlight(is_closer)
     ---@param result lsp.DocumentHighlight[]|nil
     local function on_result(_, result, ctx)
         local client = vim.lsp.get_client_by_id(ctx.client_id)
-        local offset_encoding = client.offset_encoding
-        for _, hl in ipairs(result or {}) do
-            local hl_range = to_vim_range(bufnr, hl.range, offset_encoding)
-            local cursor_inside_range = hl_range.start.line <= cursor_row
-                and hl_range.start.character < cursor_col
-                and hl_range['end'].line >= cursor_row
-                and hl_range['end'].character > cursor_col
-            if
-                not cursor_inside_range
-                and is_closer(cursor_range, hl_range)
-                and (closest == nil or is_closer(hl_range, closest))
-            then
-                closest = hl_range
-            end
+        if client then
+            local offset_encoding = client.offset_encoding
+            for _, hl in ipairs(result or {}) do
+                local hl_range = lsp_range_to_vim_range(current_bufnr, hl.range, offset_encoding)
+                local cursor_inside_range = is_position_in_range(cursor_range.start, hl_range)
+                if
+                    not cursor_inside_range
+                    and is_closer(cursor_range, hl_range)
+                    and (closest == nil or is_closer(hl_range, closest))
+                    then
+                        closest = hl_range
+                    end
+                end
         end
         remaining = remaining - 1
     end
 
     for _, client in ipairs(clients) do
-        local param = vim.lsp.util.make_position_params(win, client.offset_encoding)
-        client:request(method, param, on_result, bufnr)
+        local params = vim.lsp.util.make_position_params(current_winid, client.offset_encoding)
+        local request_sent = client:request(method, params, on_result, current_bufnr)
+        if not request_sent then
+            remaining = remaining - 1
+        end
     end
 
     vim.wait(1000, function()
         return remaining == 0
     end)
 
-    if closest then
-        vim.api.nvim_win_set_cursor(win, { closest.start.line + 1, closest.start.character })
+    if
+        vim.api.nvim_win_is_valid(current_winid)
+        and vim.api.nvim_win_get_buf(current_winid) == current_bufnr
+        and closest
+    then
+        vim.api.nvim_win_set_cursor(
+            current_winid,
+            { closest.start.line + 1, closest.start.character }
+        )
     end
 end
 
@@ -204,6 +231,8 @@ function M.prev_highlight()
     end
 end
 
+---@param client vim.lsp.Client
+---@param bufnr integer
 local function on_attach(client, bufnr)
     --
     -- Mappings
@@ -270,7 +299,7 @@ local function on_attach(client, bufnr)
             -- Select a color presentation from rgb, hex, hsl, lch, etc
             -- Try it in a css file
             vim.lsp.document_color.color_presentation()
-        end)
+        end, opts)
     end
 
     -- <M-ENTER> (insert-mode) manually triggers LSP completion
@@ -291,10 +320,10 @@ local function on_attach(client, bufnr)
     end, opts)
     vim.keymap.set('n', '[D', function() -- first
         vim.diagnostic.jump({ count = -math.huge, wrap = false })
-    end)
+    end, opts)
     vim.keymap.set('n', ']D', function() -- last
         vim.diagnostic.jump({ count = math.huge, wrap = false })
-    end)
+    end, opts)
     vim.keymap.set('n', '[w', function() -- previous worst severity, i.e., skip warnings if there are any errors
         vim.diagnostic.jump(worst_severity_jump_opts(-vim.v.count1))
     end, opts)
@@ -381,7 +410,7 @@ local function on_attach(client, bufnr)
 
     -- Document highlight
     if client:supports_method('textDocument/documentHighlight') then
-        local document_highlight_group = vim.api.nvim_create_augroup('rockyz.lsp.document_highlight', { clear = true })
+        local document_highlight_group = vim.api.nvim_create_augroup(('rockyz.lsp.document_highlight.%d'):format(bufnr), { clear = true })
         vim.api.nvim_create_autocmd({ 'CursorHold', 'InsertLeave' }, {
             group = document_highlight_group,
             buffer = bufnr,
@@ -399,10 +428,10 @@ local function on_attach(client, bufnr)
 
         vim.keymap.set('n', '[v', function()
             require('rockyz.lsp').prev_highlight()
-        end)
+        end, opts)
         vim.keymap.set('n', ']v', function()
             require('rockyz.lsp').next_highlight()
-        end)
+        end, opts)
     end
 end
 
@@ -410,19 +439,26 @@ local group = vim.api.nvim_create_augroup('rockyz.lsp', { clear = true })
 
 vim.api.nvim_create_autocmd('LspAttach', {
     group = group,
-    callback = function(ev)
-        local bufnr = ev.buf
-        local client = vim.lsp.get_client_by_id(ev.data.client_id)
+    callback = function(event)
+        local bufnr = event.buf
+        local client = vim.lsp.get_client_by_id(event.data.client_id)
+        if not client then
+            return
+        end
         on_attach(client, bufnr)
     end,
 })
 
--- Auto close imports
+-- Close import folds when an LSP client opens a buffer
 vim.api.nvim_create_autocmd({ 'LspNotify' }, {
     group = group,
-    callback = function(ev)
-        if ev.data.method == 'textDocument/didOpen' then
-            vim.lsp.foldclose('imports', vim.fn.bufwinid(ev.buf))
+    callback = function(event)
+        if event.data.method ~= 'textDocument/didOpen' then
+            return
+        end
+        local winid = vim.fn.bufwinid(event.buf)
+        if winid ~= -1 then
+            vim.lsp.foldclose('imports', vim.fn.bufwinid(event.buf))
         end
     end,
 })

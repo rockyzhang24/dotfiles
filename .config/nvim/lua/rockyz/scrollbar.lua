@@ -329,8 +329,6 @@ function M.render_diagnostics(winid)
         end
     end
 
-    clear_extmarks(winid, diagnostic_ns)
-
     -- Abort rendering only when diagnostics were produced for an older buffer state.
     -- An absent changedtick means there is no stale state to reject.
     local diagnostic_changedtick = vim.b[target_bufnr].scrollbar_diagnostic_changedtick
@@ -340,6 +338,8 @@ function M.render_diagnostics(winid)
     then
         return
     end
+
+    clear_extmarks(winid, diagnostic_ns)
 
     local state = vim.w[winid].scrollbar_state
     local scrollbar_buffer_line_count = vim.api.nvim_buf_line_count(state.bufnr)
@@ -402,14 +402,14 @@ function M.render_git(winid)
         end
     end
 
-    clear_extmarks(winid, gitdiff_ns)
-
     -- Abort rendering only when Git diffs were produced for an older buffer state.
     -- An absent changedtick means there is no stale state to reject.
     local git_changedtick = vim.b[target_bufnr].scrollbar_git_changedtick
     if git_changedtick and git_changedtick ~= vim.api.nvim_buf_get_changedtick(target_bufnr) then
         return
     end
+
+    clear_extmarks(winid, gitdiff_ns)
 
     local state = vim.w[winid].scrollbar_state
     local scrollbar_buffer_line_count = vim.api.nvim_buf_line_count(state.bufnr)

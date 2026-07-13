@@ -26,6 +26,13 @@ local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
 -- Cache the highlight groups of filetype icons
 local icon_highlight_cache = {}
 
+---Escape literal text embedded in the winbar format string
+---@param text string
+---@return string
+local function escape_winbar_text(text)
+    return text:gsub('%%', '%%%%')
+end
+
 ---Render the winbar header for the current window.
 ---@return string
 local function get_header()
@@ -57,7 +64,7 @@ local function render_special_component(icon, icon_hl, title, suffix_items)
         '%%#%s#%s %%#WinbarPath#%s%%*',
         icon_hl,
         icon,
-        title
+        escape_winbar_text(title)
     )
 
     local suffix = table.concat(suffix_items, ' ' .. delimiter .. ' ')
@@ -95,7 +102,10 @@ local function get_special_component(filetype, winid)
         local what = { title = 0, size = 0, idx = 0 }
         local list = is_loclist and vim.fn.getloclist(0, what) or vim.fn.getqflist(what)
         if list.title ~= '' then
-            table.insert(suffix_items, string.format('%%#WinbarQuickfixTitle#%s%%*', list.title))
+            table.insert(
+                suffix_items,
+                string.format('%%#WinbarQuickfixTitle#%s%%*', escape_winbar_text(list.title))
+            )
         end
         table.insert(suffix_items, string.format('[%s/%s]', list.idx, list.size))
     elseif win_type == 'command' then
@@ -118,7 +128,7 @@ local function get_path()
         icon = icons.misc.source_control
     end
     local path = vim.fn.fnamemodify(full_path, ':~:h')
-    return string.format('%%#WinbarPath#%s %s%%*', icon, path)
+    return string.format('%%#WinbarPath#%s %s%%*', icon, escape_winbar_text(path))
 end
 
 ---Get the icon of the current buffer's filetype
@@ -148,7 +158,7 @@ local function get_name()
     if filename == '' then
         filename = '[No Name]'
     end
-    return filename
+    return escape_winbar_text(filename)
 end
 
 ---Render the winbar content for a special buffer
@@ -340,11 +350,19 @@ local function build_symbol_path(
         -- document-symbol request. Its range is stored in document_symbol.location.range rather than
         -- document_symbol.range.
         local symbol_range = document_symbol.range or (document_symbol.location and document_symbol.location.range)
-        if symbol_range and range_contains_cursor(bufnr, symbol_range, cursor_position, offset_encoding) then
+
+        if
+            symbol_range
+            and range_contains_cursor(bufnr, symbol_range, cursor_position, offset_encoding)
+        then
             local symbol_kind = vim.lsp.protocol.SymbolKind[document_symbol.kind] or 'Unknown'
             local symbol_icon = icons.symbol_kinds[symbol_kind]
-            local highlighted_icon = string.format('%%#SymbolKind%s#%s%%*', symbol_kind, symbol_icon)
-            table.insert(symbol_path_components, highlighted_icon .. ' ' .. document_symbol.name)
+            local highlighted_icon =
+                string.format('%%#SymbolKind%s#%s%%*', symbol_kind, symbol_icon)
+            table.insert(
+                symbol_path_components,
+                highlighted_icon .. ' ' .. escape_winbar_text(document_symbol.name)
+            )
             build_symbol_path(
                 bufnr,
                 document_symbol.children,
@@ -383,15 +401,22 @@ local function refresh_breadcrumbs()
     end
 
     local request_cursor_position = vim.api.nvim_win_get_cursor(current_winid)
+    local request_changedtick = vim.api.nvim_buf_get_changedtick(current_bufnr)
 
     vim.lsp.buf_request_all(current_bufnr, method, request_params, function(results, ctx)
         if not vim.api.nvim_win_is_valid(current_winid) then
             return
         end
+
         if not vim.api.nvim_buf_is_valid(ctx.bufnr) then
             return
         end
+
         if ctx.bufnr ~= vim.api.nvim_win_get_buf(current_winid) then
+            return
+        end
+
+        if vim.api.nvim_buf_get_changedtick(ctx.bufnr) ~= request_changedtick then
             return
         end
 
@@ -433,6 +458,13 @@ end
 local breadcrumbs_augroup = vim.api.nvim_create_augroup('rockyz.winbar.breadcrumbs', { clear = true })
 local winbar_augroup = vim.api.nvim_create_augroup('rockyz.winbar', { clear = true })
 
+vim.api.nvim_create_autocmd('ColorScheme', {
+    group = winbar_augroup,
+    callback = function()
+        icon_highlight_cache = {}
+    end,
+})
+
 -- Refresh the breadcrumbs of the current window
 vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI', 'BufWinEnter' }, {
     group = breadcrumbs_augroup,
@@ -441,7 +473,9 @@ vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI', 'BufWinEnter' }, {
 
 -- vim.o.winbar = "%{%v:lua.require('rockyz.winbar').render()%}"
 
-vim.api.nvim_create_autocmd('BufWinEnter', {
+-- WinEnter covers splits from floating windows because BufWinEnter is not triggered for an already
+-- visible buffer
+vim.api.nvim_create_autocmd({ 'BufWinEnter', 'WinEnter' }, {
     group = winbar_augroup,
     callback = function()
         local window_config = vim.api.nvim_win_get_config(0)

@@ -519,7 +519,7 @@ vim.api.nvim_create_autocmd('User', {
 vim.api.nvim_create_autocmd('ColorScheme', {
     group = group,
     callback = function()
-        vim.tbl_clear(icon_highlight_cache)
+        icon_highlight_cache = {}
     end,
 })
 

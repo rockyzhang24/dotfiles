@@ -1296,9 +1296,9 @@ end
 
 ---@param selection_file string Path to a temporary file containing the selected fzf entries
 function actions.delete_marks(selection_file)
-    local win = fzf_ctx.origin_winid
-    local buf = fzf_ctx.origin_bufnr
-    if not win or not buf then
+    local winid = fzf_ctx.origin_winid
+    local bufnr = fzf_ctx.origin_bufnr
+    if not winid or not bufnr then
         return
     end
 
@@ -1307,8 +1307,8 @@ function actions.delete_marks(selection_file)
     for _, line in ipairs(lines) do
         local fields = vim.split(line, '\t', { plain = true })
         local mark = fields[1]
-        vim.api.nvim_win_call(win, function()
-            local ok, res = pcall(vim.api.nvim_buf_del_mark, buf, mark)
+        vim.api.nvim_win_call(winid, function()
+            local ok, res = pcall(vim.api.nvim_buf_del_mark, bufnr, mark)
             if ok and res then
                 return
             end
@@ -1318,18 +1318,18 @@ function actions.delete_marks(selection_file)
 end
 
 local function marks_build_entries()
-    local win = fzf_ctx.origin_winid
-    local buf = fzf_ctx.origin_bufnr
+    local winid = fzf_ctx.origin_winid
+    local bufnr = fzf_ctx.origin_bufnr
 
     local entries = {}
 
-    if not win or not buf then
+    if not winid or not bufnr then
         notify.warn('[FZF] Marks finder should be run in a valid buffer')
         return entries
     end
 
-    local all_marks = vim.api.nvim_win_call(win, function()
-        return vim.api.nvim_buf_call(buf, function()
+    local all_marks = vim.api.nvim_win_call(winid, function()
+        return vim.api.nvim_buf_call(bufnr, function()
             return vim.fn.execute('marks')
         end)
     end)
@@ -1353,11 +1353,11 @@ local function marks_build_entries()
         local filepath = text
         -- nvim_buf_get_mark cannot get `'` mark correctly without curwin
         -- https://github.com/neovim/neovim/issues/29807
-        local pos = vim.api.nvim_win_call(win, function()
-            return vim.api.nvim_buf_get_mark(buf, mark)
+        local pos = vim.api.nvim_win_call(winid, function()
+            return vim.api.nvim_buf_get_mark(bufnr, mark)
         end)
         if pos and pos[1] > 0 then
-            filepath = vim.api.nvim_buf_get_name(buf)
+            filepath = vim.api.nvim_buf_get_name(bufnr)
         end
         if filepath == '' then
             filepath = '[No File]'
@@ -1818,7 +1818,6 @@ local function commands(from_resume)
         --    |            |                  |____________ shown in preview
         --    |            |___ presented in fzf
         --    |___ used for sink
-        local fzf_entries = {}
 
         -- 1. Process user defined commands
         local global_commands = vim.api.nvim_get_commands({})
@@ -1871,7 +1870,7 @@ local function commands(from_resume)
             return entries
         end
 
-        fzf_entries = build_entries(sorted_global_command_names)
+        local fzf_entries = build_entries(sorted_global_command_names)
         vim.list_extend(fzf_entries, build_entries(sorted_buffer_command_names, true))
 
         -- 2. Process builtin commands
@@ -2005,7 +2004,7 @@ end
 --------------------------------------------------------------------------------
 
 local function zoxide(from_resume)
-    local preview_cmd = ''
+    local preview_cmd
     if vim.fn.executable('eza') == 1 then
         preview_cmd = 'eza -la --color=always --icons -g --group-directories-first {2}'
     else
@@ -2158,8 +2157,12 @@ local function qf_items_fzf(win_local, from_resume)
                         goto continue
                     end
 
-                    vim.api.nvim_win_set_cursor(0, { item.lnum, item.col - 1 })
-                    vim.cmd('normal! zvzz')
+                    local lnum = item.lnum or 0
+                    if lnum > 0 then
+                        local col = math.max((item.col or 1) - 1, 0)
+                        vim.api.nvim_win_set_cursor(0, { lnum, col })
+                        vim.cmd('normal! zvzz')
+                    end
 
                     ::continue::
                 end
@@ -2811,6 +2814,8 @@ local function symbol_conversion(symbols, ctx, guide_prev, all_entries, all_item
 end
 
 ---Send request document symbols or workspace symbols and then execute fzf
+---@param method string
+---@param params table
 ---@param title string The title for quickfix list and fzf prompt
 ---@param symbol_query string|nil The query for requesting workspace symbols. It will be nil for
 ---document symbol request
@@ -2899,19 +2904,30 @@ local function lsp_symbols(method, params, title, symbol_query, from_resume)
 
     local function lsp_symbols_source(session_id)
         local remaining = #clients
+
+        local function finish()
+            remaining = remaining - 1
+            if remaining == 0 then
+                if next(all_entries) == nil then
+                    notify.warn('[FZF LSP] No Available Results!')
+                end
+                emit(all_entries)
+            end
+        end
+
         for _, client in ipairs(clients) do
-            client:request(method, params, function(_, result, ctx)
+            local sent = client:request(method, params, function(_, result, ctx)
                 if not is_active_session(session_id) then
                     return
                 end
 
                 symbol_conversion(result, ctx, '', all_entries, all_items)
-                remaining = remaining - 1
-
-                if remaining == 0 then
-                    emit(all_entries)
-                end
+                finish()
             end, bufnr)
+
+            if not sent and is_active_session(session_id) then
+                finish()
+            end
         end
     end
 
@@ -2983,6 +2999,9 @@ local function locations_to_entries_and_items(locations, ctx, all_entries, all_i
     end
 end
 
+---@param method string
+---@param title string
+---@param from_resume? boolean Whether it is called from fzf resume or not
 local function lsp_locations(method, title, from_resume)
     local bufnr = vim.api.nvim_get_current_buf()
     local clients = vim.lsp.get_clients({ method = method, bufnr = bufnr })
@@ -2990,7 +3009,7 @@ local function lsp_locations(method, title, from_resume)
         notify.warn(string.format('[FZF] No active clients supporting %s method', method))
         return
     end
-    local win = vim.api.nvim_get_current_win()
+    local winid = vim.api.nvim_get_current_win()
 
     local all_entries = {}
     local all_items = {}
@@ -3053,27 +3072,36 @@ local function lsp_locations(method, title, from_resume)
 
     local function lsp_locations_source(session_id)
         local remaining = #clients
+
+        local function finish()
+            remaining = remaining - 1
+            if remaining == 0 then
+                if next(all_entries) == nil then
+                    notify.warn('[FZF LSP] No Available Results!')
+                end
+                emit(all_entries)
+            end
+        end
+
         for _, client in ipairs(clients) do
-            local params = vim.lsp.util.make_position_params(win, client.offset_encoding)
+            local params = vim.lsp.util.make_position_params(winid, client.offset_encoding)
             if method == 'textDocument/references' then
                 ---@diagnostic disable-next-line: inject-field
                 params.context = { includeDeclaration = true }
             end
-            client:request(method, params, function(_, result, ctx)
+
+            local sent = client:request(method, params, function(_, result, ctx)
                 if not is_active_session(session_id) then
                     return
                 end
 
                 locations_to_entries_and_items(result or {}, ctx, all_entries, all_items)
-                remaining = remaining - 1
-
-                if remaining == 0 then
-                    if next(all_entries) == nil then
-                        notify.warn('[FZF LSP] No Available Results!')
-                    end
-                    emit(all_entries)
-                end
+                finish()
             end, bufnr)
+
+            if not sent and is_active_session(session_id) then
+                finish()
+            end
         end
     end
 
@@ -3617,7 +3645,7 @@ local function get_preview_cmd_git_commits(root_dir, range)
     local escaped_bufname = shellescape(bufname)
     local escaped_root_dir = shellescape(root_dir)
 
-    local preview_cmd = ''
+    local preview_cmd
 
     if range then
         preview_cmd = string.format('git -C %s log -L %d,%d:%s', escaped_root_dir, range[1], range[2], escaped_bufname)
@@ -4386,17 +4414,17 @@ function actions.show_ref(ref)
         vim.schedule(function()
             vim.cmd('tabnew')
 
-            local buf = vim.api.nvim_get_current_buf()
-            vim.bo[buf].buftype = 'nofile'
-            vim.bo[buf].bufhidden = 'wipe'
-            vim.bo[buf].modifiable = true
-            vim.bo[buf].filetype = 'git' -- or 'diff'
+            local current_bufnr = vim.api.nvim_get_current_buf()
+            vim.bo[current_bufnr].buftype = 'nofile'
+            vim.bo[current_bufnr].bufhidden = 'wipe'
+            vim.bo[current_bufnr].modifiable = true
+            vim.bo[current_bufnr].filetype = 'git' -- or 'diff'
 
             local lines = vim.split(obj.stdout, '\n', { trimempty = true, plain = true })
 
-            vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
-            vim.bo[buf].modifiable = false
-            vim.api.nvim_buf_set_name(buf, 'git show with ref: ' .. ref)
+            vim.api.nvim_buf_set_lines(current_bufnr, 0, -1, false, lines)
+            vim.bo[current_bufnr].modifiable = false
+            vim.api.nvim_buf_set_name(current_bufnr, 'git show with ref: ' .. ref)
         end)
     end)
 end
@@ -4728,6 +4756,12 @@ local function select(items, opts, on_choice)
             '--bind',
             'ctrl-/:ignore',
         }),
+        exit = function(code)
+            -- fzf.vim skips sink* for exit codes >= 2, so report cancellation here
+            if code >= 2 then
+                on_choice(nil, nil)
+            end
+        end,
     }
 
     local function ui_select_build_entries()

@@ -474,8 +474,14 @@ end
 ---Stops and destroys its close timer, reflows remaining floats, then resets its fields
 ---@param state ProgressState
 local function cleanup_state(state)
-    state.timer:stop()
-    state.timer:close()
+    local timer = state.timer
+    -- A queued close callback may run after another path has reset the state
+    if timer == nil then
+        return
+    end
+
+    timer:stop()
+    timer:close()
 
     if state.winid ~= nil then
         stack_size = stack_size - 1

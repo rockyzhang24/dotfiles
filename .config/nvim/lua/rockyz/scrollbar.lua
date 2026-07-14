@@ -122,6 +122,15 @@ local function should_render(winid)
         return false
     end
     local target_bufnr = vim.api.nvim_win_get_buf(winid)
+
+    if
+        vim.bo[target_bufnr].buftype == ''
+        and vim.api.nvim_buf_get_name(target_bufnr) == ''
+        and not vim.bo[target_bufnr].modified
+    then
+        return false
+    end
+
     if config.exclude_filetypes[vim.bo[target_bufnr].filetype] then
         return false
     end

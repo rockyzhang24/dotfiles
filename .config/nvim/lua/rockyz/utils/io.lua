@@ -17,14 +17,14 @@ end
 
 ---@param fd integer
 ---@param filepath string
----@param callback? fun()
+---@param callback? fun(err?: string)
 local function close_file_async(fd, filepath, callback)
     vim.uv.fs_close(fd, function(err_close)
         if err_close then
             notify_file_error('close', filepath, err_close)
         end
         if callback then
-            callback()
+            callback(err_close)
         end
     end)
 end
@@ -108,10 +108,15 @@ end
 ---Write data to a file asynchronously
 ---@param filepath string
 ---@param contents string
-function M.write_file_async(filepath, contents)
+---@param callback? fun(err?: string)
+function M.write_file_async(filepath, contents, callback)
     vim.uv.fs_open(filepath, 'w', file_mode, function(err_open, fd)
         if err_open or not fd then
-            notify_file_error('open', filepath, err_open or 'unknown error')
+            local err = err_open or 'unknown error'
+            notify_file_error('open', filepath, err)
+            if callback then
+                callback(err)
+            end
             return
         end
 
@@ -120,7 +125,11 @@ function M.write_file_async(filepath, contents)
                 notify_file_error('write', filepath, err_write)
             end
 
-            close_file_async(fd, filepath)
+            close_file_async(fd, filepath, function(err_close)
+                if callback then
+                    callback(err_write or err_close)
+                end
+            end)
         end)
     end)
 end

@@ -3,7 +3,14 @@
 -- 2. Supports insert-mode path completion via <C-x><C-f>
 -- 3. Overrides vim.ui.select with a fuzzy finder interface
 -- 4. Exposes `M.fzf()` as a public API
-
+--
+-- Structure:
+--
+-- run() ---> finder() ---> build spec ---> fzf(spec, cmd)
+--                             |
+--                             |----------> fzf(spec, xxx_source)
+--                                           |
+--                                           |---> xxx_source() ---> emit(entries) ---> open_pipe() ---> write(entries)
 --
 -- How to add a new finder
 --
@@ -19,6 +26,10 @@
 -- -----------------------------------------------------------------------------
 -- 1. Use a Lua function
 -- -----------------------------------------------------------------------------
+--
+-- fzf passes a session id as the first argument when it invokes a Lua source.
+-- Only asynchronous sources need to accept it. Their callbacks must check
+-- is_active_session(session_id) before mutating entries or emitting results.
 --
 -- Build fzf entries.
 -- local function demo_build_entries()
@@ -306,6 +317,13 @@ end
 ---@type table<string, string> A map from highlight group to ANSI color code
 local cached_ansi = {}
 
+vim.api.nvim_create_autocmd('ColorScheme', {
+    group = vim.api.nvim_create_augroup('rockyz.fzf.ansi', { clear = true }),
+    callback = function()
+        cached_ansi = {}
+    end,
+})
+
 ---Color a string by ANSI color code that is converted from a highlight group
 ---@param str string string to be colored
 ---@param hl string highlight group name
@@ -314,10 +332,13 @@ local cached_ansi = {}
 local function ansi_string(str, hl, from_type, to_type)
     from_type = from_type or 'fg'
     to_type = to_type or 'fg'
-    if not cached_ansi[hl] then
-        cached_ansi[hl] = color.hl2ansi(hl, from_type, to_type)
+    local cache_key = table.concat({ hl, from_type, to_type }, '\0')
+
+    if not cached_ansi[cache_key] then
+        cached_ansi[cache_key] = color.hl2ansi(hl, from_type, to_type)
     end
-    return cached_ansi[hl] .. str .. '\x1b[m'
+
+    return cached_ansi[cache_key] .. str .. '\x1b[m'
 end
 
 -- Get ANSI colored devicon for a filename
@@ -367,10 +388,18 @@ end
 
 local cached_fzf_query = vim.fn.tempname() -- Cache the last fzf query
 local cached_rg_query = vim.fn.tempname() -- Cache the last rg query (for live greps)
-local cached_finder -- Cache the last executed fzf finder
+
+local live_grep_tempfile_paths = {
+    [cached_fzf_query] = true,
+    [cached_rg_query] = true,
+}
 
 -- Record whether Rg is in fzf mode or not
 local in_fzf_mode = ''
+
+local cached_finder -- Cache the last executed fzf finder
+
+local qf_history_tempfile_paths = {}
 
 local common_opts = {
     '--ansi',
@@ -460,13 +489,23 @@ local function expect_keys(opts)
     return table.concat(keys, ',')
 end
 
+---@return integer
 local function next_session_id()
     fzf_ctx.cur_session_id = fzf_ctx.cur_session_id + 1
     return fzf_ctx.cur_session_id
 end
 
+---@param session_id integer
+---@return boolean
 local function is_active_session(session_id)
     return session_id == fzf_ctx.cur_session_id
+end
+
+local function clear_qf_history_tempfiles()
+    for path in pairs(qf_history_tempfile_paths) do
+        vim.uv.fs_unlink(path)
+        qf_history_tempfile_paths[path] = nil
+    end
 end
 
 --
@@ -482,15 +521,22 @@ end
 local fifo_path = nil
 local output_pipe = nil
 
+---@return boolean
 local function ensure_fifo()
     if fifo_path then
-        return
+        return true
     end
-    fifo_path = vim.fn.tempname()
-    vim.system({ 'mkfifo', fifo_path }):wait()
-end
 
-ensure_fifo()
+    local path = vim.fn.tempname()
+    local result = vim.system({ 'mkfifo', path }):wait()
+    if result.code ~= 0 then
+        notify.error('[FZF] Failed to create fifo: ' .. vim.trim(result.stderr))
+        return false
+    end
+
+    fifo_path = path
+    return true
+end
 
 local function close_pipe()
     if output_pipe then
@@ -499,11 +545,21 @@ local function close_pipe()
     end
 end
 
-local function open_pipe(cb)
-    assert(fifo_path, '[FZF] Fifo path not initialized')
+---@param callback fun()
+local function open_pipe(callback)
+    if not ensure_fifo() then
+        return
+    end
+
+    if not fifo_path then
+        return
+    end
 
     vim.uv.fs_open(fifo_path, 'w', -1, vim.schedule_wrap(function(err, fd)
-        assert(not err, err)
+        if err then
+            notify.error('[FZF] Failed to open fifo: ' .. err)
+            return
+        end
 
         local pipe = vim.uv.new_pipe(false)
         if not pipe then
@@ -514,7 +570,7 @@ local function open_pipe(cb)
         pipe:open(fd)
         output_pipe = pipe
 
-        cb()
+        callback()
     end))
 end
 
@@ -522,16 +578,23 @@ end
 ---@param entries string[] Fzf entries
 ---@param is_multiline? boolean Whether each entry is a multiline item
 local function write(entries, is_multiline)
-    if not output_pipe then
+    local pipe = output_pipe
+    if not pipe then
         return
     end
+
     local data = table.concat(
         vim.tbl_map(function(x)
             return not is_multiline and x .. '\n' or x
         end, entries)
     )
-    output_pipe:write(data, function()
-        close_pipe()
+
+    pipe:write(data, function()
+        if output_pipe == pipe then
+            close_pipe()
+        else
+            pipe:close()
+        end
     end)
 end
 
@@ -542,6 +605,23 @@ local function emit(entries, is_multiline)
         write(entries, is_multiline)
     end)
 end
+
+vim.api.nvim_create_autocmd('VimLeavePre', {
+    group = vim.api.nvim_create_augroup('rockyz.fzf.cleanup', { clear = true }),
+    callback = function()
+        close_pipe()
+
+        if fifo_path then
+            vim.uv.fs_unlink(fifo_path)
+        end
+
+        clear_qf_history_tempfiles()
+
+        for path in pairs(live_grep_tempfile_paths) do
+            vim.uv.fs_unlink(path)
+        end
+    end,
+})
 
 ---Launch fzf with entries from a shell command or an entry builder
 ---@param spec table The spec dictionary for fzf#run(). See: https://github.com/junegunn/fzf/blob/master/README-VIM.md
@@ -563,6 +643,9 @@ local function fzf(spec, source)
     if type(source) == 'string' then
         vim.env.FZF_DEFAULT_COMMAND = source
     elseif type(source) == 'function' then
+        if not ensure_fifo() then
+            return
+        end
         vim.env.FZF_DEFAULT_COMMAND = 'cat ' .. fifo_path
         source(session_id)
     else
@@ -584,6 +667,10 @@ end
 ---@param finder function
 ---@param from_resume? boolean Whether it is called from fzf resume
 local function run(finder, from_resume)
+    if not ensure_fifo() then
+        return
+    end
+
     cached_finder = finder
     finder(from_resume)
 end
@@ -597,7 +684,9 @@ function M.resume()
     run(cached_finder, true)
 end
 
-local function open(key, filepaths)
+---@param key string
+---@param filepaths string[]
+local function open_files(key, filepaths)
     local action = open_file_keymaps[key]
     if not action then
         return
@@ -613,11 +702,12 @@ end
 local function files_sink(lines)
     local key = lines[1]
     local filepaths = vim.list_slice(lines, 2)
-    open(key, filepaths)
+    open_files(key, filepaths)
 end
 
 ---@param fn string
----@param arg? string
+---@param arg? string Lua expression passed to the remote function
+---@return string
 local function remote_call(fn, arg)
     arg = arg or ''
     return string.format(
@@ -627,13 +717,10 @@ local function remote_call(fn, arg)
     )
 end
 
----@param file string File path
+---@param filepath string
 ---@return string[]
-local function read_file(file)
-    local f = assert(io.open(file, 'r'))
-    local content = f:read('*a')
-    f:close()
-    return vim.split(content, '\n', { trimempty = true })
+local function read_file(filepath)
+    return vim.split(io_utils.read_file(filepath), '\n', { trimempty = true })
 end
 
 --------------------------------------------------------------------------------
@@ -642,8 +729,8 @@ end
 
 local function files(from_resume)
     -- Each entry: <icon> <filename>\t<absolute_path>
-    local fd_cwd = fd_prefix .. ' | ' .. dressup_cmd('fd')
-    local fd_home = 'cd $HOME; ' .. fd_prefix .. ' | ' .. dressup_cmd('fd')
+    local fd_cwd_cmd = fd_prefix .. ' | ' .. dressup_cmd('fd')
+    local fd_home_cmd = 'cd "$HOME"; ' .. fd_prefix .. ' | ' .. dressup_cmd('fd')
     local prompt_cwd = shortpath(vim.uv.cwd())
 
     local spec = {
@@ -667,9 +754,9 @@ local function files(from_resume)
             make_label_bind(tildefy_home('{2}')),
             '--bind',
             'alt-/:transform:[[ ! $FZF_PROMPT == "~/" ]] && {' ..
-                'echo "reload(' .. vim.fn.escape(fd_home, '"') .. ')+change-prompt(~/)";' ..
+                'echo "reload(' .. vim.fn.escape(fd_home_cmd, '"') .. ')+change-prompt(~/)";' ..
             '} || {' ..
-                'echo "reload(' .. vim.fn.escape(fd_cwd, '"') .. ')+change-prompt(' .. prompt_cwd .. ')";' ..
+                'echo "reload(' .. vim.fn.escape(fd_cwd_cmd, '"') .. ')+change-prompt(' .. prompt_cwd .. ')";' ..
             '}',
             '--bind',
             "alt-f:execute-silent( \
@@ -678,7 +765,7 @@ local function files(from_resume)
         }),
     }
 
-    fzf(spec, fd_cwd)
+    fzf(spec, fd_cwd_cmd)
 end
 
 function M.files()
@@ -689,7 +776,7 @@ end
 -- Old files
 --------------------------------------------------------------------------------
 
-local function oldfiles_build_entries()
+local function old_files_build_entries()
     local entries = {}
     for _, file in ipairs(vim.v.oldfiles) do
         if vim.fn.filereadable(file) == 1 then
@@ -702,8 +789,8 @@ local function oldfiles_build_entries()
     return entries
 end
 
-function M.oldfiles_source()
-    local entries = oldfiles_build_entries()
+function M.old_files_source()
+    local entries = old_files_build_entries()
     emit(entries)
 end
 
@@ -737,7 +824,7 @@ local function old_files(from_resume)
         }),
     }
 
-    fzf(spec, M.oldfiles_source)
+    fzf(spec, M.old_files_source)
 end
 
 function M.old_files()
@@ -745,7 +832,7 @@ function M.old_files()
 end
 
 --------------------------------------------------------------------------------
--- Find files for my dotfiles
+-- Dotfiles
 --------------------------------------------------------------------------------
 
 local function dot_files(from_resume)
@@ -767,8 +854,8 @@ local function dot_files(from_resume)
             '--preview',
             'line={} \
             if [[ "${line:1:2}" =~ D ]]; then \
-                if git --git-dir=$HOME/dotfiles --work-tree=$HOME show HEAD:{3} | file - | grep -q text; then \
-                    git --git-dir=$HOME/dotfiles --work-tree=$HOME show HEAD:{3} | bat --color=always --style=numbers \
+                if git --git-dir="$HOME/dotfiles" --work-tree="$HOME" show HEAD:{3} | file - | grep -q text; then \
+                    git --git-dir="$HOME/dotfiles" --work-tree="$HOME" show HEAD:{3} | bat --color=always --style=numbers \
                 else \
                     echo "No preview for this deleted file" \
                 fi \
@@ -807,21 +894,28 @@ function actions.delete_buffers(selection_file)
         local fields = vim.split(line, '\t', { plain = true })
         -- The 3rd field is the buffer id
         local bufnr = tonumber(fields[3])
-        require('rockyz.utils.buf').bufdelete({ bufnr = bufnr, wipe = true })
+        -- MRU history entries use 0 as the placeholder because they are not loaded buffers
+        if bufnr and bufnr > 0 then
+            require('rockyz.utils.buf').bufdelete({ bufnr = bufnr, wipe = true })
+        end
     end
 end
 
 local function buffers_build_entries()
-    local buflist = vim.api.nvim_list_bufs()
+    local bufnrs = vim.api.nvim_list_bufs()
     local max_bufnr = 0
-    local bufinfos = vim.iter(buflist):map(function(b)
-        if vim.api.nvim_buf_is_valid(b) and vim.fn.buflisted(b) == 1 and vim.bo[b].filetype ~= 'qf' then
-            max_bufnr = b > max_bufnr and b or max_bufnr
-            return vim.fn.getbufinfo(b)[1]
+    local bufinfo_list = vim.iter(bufnrs):map(function(bufnr)
+        if
+            vim.api.nvim_buf_is_valid(bufnr)
+            and vim.fn.buflisted(bufnr) == 1
+            and vim.bo[bufnr].filetype ~= 'qf'
+        then
+            max_bufnr = bufnr > max_bufnr and bufnr or max_bufnr
+            return vim.fn.getbufinfo(bufnr)[1]
         end
     end):totable()
 
-    table.sort(bufinfos, function(a, b)
+    table.sort(bufinfo_list, function(a, b)
         return a.lastused > b.lastused
     end)
 
@@ -834,16 +928,18 @@ local function buffers_build_entries()
     local max_bufnr_width = #ansi_string('', hls.bufnr) + #tostring(max_bufnr) + 2
 
     local entries = {}
-    for _, bufinfo in ipairs(bufinfos) do
+
+    local current_bufnr = vim.api.nvim_get_current_buf()
+    local alternate_bufnr = vim.fn.bufnr('#')
+
+    for _, bufinfo in ipairs(bufinfo_list) do
         local bufnr = bufinfo.bufnr
         local fullname = bufinfo.name
         local icon = ansi_devicon(fullname)
         local dispname = #fullname == 0 and '[No Name]' or vim.fn.fnamemodify(fullname, ':~:.')
-        local current_buf = vim.api.nvim_get_current_buf()
-        local alternate_buf = vim.fn.bufnr('#')
         local lnum = bufinfo.lnum
         local flags = {
-            bufnr == current_buf and '%' or (bufnr == alternate_buf and '#' or ''),
+            bufnr == current_bufnr and '%' or (bufnr == alternate_bufnr and '#' or ''),
             bufinfo.hidden == 1 and 'h' or 'a',
             vim.bo[bufnr].readonly and '=' or (vim.bo[bufnr].modifiable and '' or '-'),
             bufinfo.changed == 1 and '+' or '',
@@ -933,18 +1029,7 @@ end
 --------------------------------------------------------------------------------
 
 local function get_bufinfo_list()
-    local raw = vim.fn.getbufinfo({ buflisted = 1 })
-    local bufinfo_list = {}
-
-    for _, buf in ipairs(raw) do
-        bufinfo_list[#bufinfo_list + 1] = {
-            bufnr = buf.bufnr,
-            name = buf.name,
-            lnum = buf.lnum,
-            lastused = buf.lastused,
-            changed = buf.changed,
-        }
-    end
+    local bufinfo_list = vim.fn.getbufinfo({ buflisted = 1 })
 
     table.sort(bufinfo_list, function(a, b)
         return a.lastused > b.lastused
@@ -955,20 +1040,20 @@ end
 
 local function mru_build_entries()
     local max_bufnr = 0
-    local buf_names = {}
-    local cur_bufnr = vim.api.nvim_get_current_buf()
-    local alt_bufnr = vim.fn.bufnr('#')
+    local buffer_names = {}
+    local current_bufnr = vim.api.nvim_get_current_buf()
+    local alternate_bufnr = vim.fn.bufnr('#')
     local bufinfo_list = get_bufinfo_list()
     for _, b in ipairs(bufinfo_list) do
-        buf_names[b.name] = true
+        buffer_names[b.name] = true
         if b.bufnr > max_bufnr then
             max_bufnr = b.bufnr
         end
     end
-    local max_digit = #tostring(math.max(max_bufnr, 1))
+    local max_bufnr_digits = #tostring(math.max(max_bufnr, 1))
     local mru_list = mru.list()
     local entries = {}
-    local entry_fmt = '%s\t%s\t%s\t%s[%s] %s'
+    local buffer_entry_fmt = '%s\t%s\t%s\t%s[%s] %s'
     for _, b in ipairs(bufinfo_list) do
         local bufnr = b.bufnr
         local buftype = vim.bo[bufnr].buftype
@@ -985,32 +1070,32 @@ local function mru_build_entries()
                 flag = ansi_string('- ', 'DiagnosticWarn')
             end
 
-            local sname = name == '' and '[No Name]' or vim.fn.fnamemodify(name, ':~:.')
-            if bufnr == cur_bufnr then
-                sname = ansi_string(sname, 'Directory')
-            elseif bufnr == alt_bufnr then
-                sname = ansi_string(sname, 'Conditional')
+            local display_name = name == '' and '[No Name]' or vim.fn.fnamemodify(name, ':~:.')
+            if bufnr == current_bufnr then
+                display_name = ansi_string(display_name, 'Directory')
+            elseif bufnr == alternate_bufnr then
+                display_name = ansi_string(display_name, 'Conditional')
             end
 
-            sname = flag .. icon .. ' ' .. sname
+            display_name = flag .. icon .. ' ' .. display_name
             local bufnr_str = ansi_string(tostring(bufnr), 'Number')
             local digit = #tostring(bufnr)
-            local padding = (' '):rep(max_digit - digit)
+            local padding = (' '):rep(max_bufnr_digits - digit)
             -- Entry: <fullname>\t<lnum>\t<bufnr>\t<[bufnr]> <flag> <icon> <bufname>
             -- {4..} will be presented
-            local entry = entry_fmt:format(name, lnum, bufnr, padding, bufnr_str, sname)
+            local entry = buffer_entry_fmt:format(name, lnum, bufnr, padding, bufnr_str, display_name)
             table.insert(entries, entry)
         end
     end
 
-    entry_fmt = '%s\t0\t0\t' .. (' '):rep(max_digit + 2) .. ' %s'
+    local mru_entry_fmt = '%s\t0\t0\t' .. (' '):rep(max_bufnr_digits + 2) .. ' %s'
     for _, f in ipairs(mru_list) do
-        if not buf_names[f] then
+        if not buffer_names[f] then
             local icon = ansi_devicon(f)
-            local sname = vim.fn.fnamemodify(f, ':~:.')
+            local display_name = vim.fn.fnamemodify(f, ':~:.')
             -- Entry: <fullname>\t<0>\t<0>\t<icon> <bufname>
             -- {4..} will be presented
-            local entry = entry_fmt:format(f, icon .. ' ' .. sname)
+            local entry = mru_entry_fmt:format(f, icon .. ' ' .. display_name)
             table.insert(entries, entry)
         end
     end
@@ -1024,9 +1109,9 @@ function M.mru_source()
 end
 
 local function bufs_and_mru(from_resume)
-    local cur_bufnr = vim.api.nvim_get_current_buf()
+    local current_bufnr = vim.api.nvim_get_current_buf()
     local bufinfo_list = get_bufinfo_list()
-    local header_lines = #bufinfo_list > 0 and bufinfo_list[1].bufnr == cur_bufnr and '1' or '0'
+    local header_lines = #bufinfo_list > 0 and bufinfo_list[1].bufnr == current_bufnr and '1' or '0'
     local spec = {
         ['sink*'] = function(lines)
             -- ENTER/CTRL-X/CTRL-V/CTRL-T to switch to the buffer or edit the file
@@ -1081,6 +1166,7 @@ local function bufs_and_mru(from_resume)
 
         }),
     }
+
     fzf(spec, M.mru_source)
 end
 
@@ -1089,18 +1175,22 @@ function M.mru()
 end
 
 --------------------------------------------------------------------------------
----Helper function to get history
+-- Helper function to get history
 --------------------------------------------------------------------------------
 
-local function history_build_entries(name)
+---@param history_type string
+---@return string[]
+local function history_build_entries(history_type)
     local entries = {}
-    local history = vim.fn.execute('history ' .. name)
-    ---@diagnostic disable-next-line: cast-local-type
-    history = vim.split(history, '\n')
-    for i = #history, 3, -1 do
-        local item = history[i]
-        table.insert(entries, item:match('%d+ +(.+)$'))
+    local history_lines = vim.split(vim.fn.execute('history ' .. history_type), '\n')
+
+    for i = #history_lines, 3, -1 do
+        local entry = history_lines[i]:match('%d+ +(.+)$')
+        if entry then
+            entries[#entries + 1] = entry
+        end
     end
+
     return entries
 end
 
@@ -1497,10 +1587,11 @@ local function args_build_entries()
         local fs = vim.uv.fs_stat(f)
         if fs and fs.type == 'file' then
             local devicon = ansi_devicon(f)
-            -- Entry: <idx>\t<filename>\t<icon> <filename>
+            local arg_index = i + 1
+            -- Entry: <idx>\t<filename>\t<icon> <filename>                    
             -- {3..} will be presented. <idx> is used to switch file; <filename> is used to
             -- delete the file from arglist
-            local entry = string.format('%s\t%s\t%s %s', #entries + 1, f, devicon, f)
+            local entry = string.format('%s\t%s\t%s %s', arg_index, f, devicon, f)
             table.insert(entries, entry)
         end
     end
@@ -1631,8 +1722,6 @@ local function helptags(from_resume)
             end
         end
 
-        ---@type table<string, string> A map from the tag file name to its full path
-        local help_files = {}
         local all_files = vim.fn.globpath(vim.o.runtimepath, 'doc/*', true, true)
         for _, fullpath in ipairs(all_files) do
             local file = vim.fn.fnamemodify(fullpath, ':t')
@@ -1641,8 +1730,6 @@ local function helptags(from_resume)
             elseif file:match('^tags%-..$') then
                 local lang = file:sub(-2)
                 add_tag_file(lang, fullpath)
-            else
-                help_files[file] = fullpath
             end
         end
 
@@ -1651,6 +1738,7 @@ local function helptags(from_resume)
         local delimiter = string.char(9)
         for _, lang in ipairs(langs) do
             for _, file in ipairs(tag_files[lang] or {}) do
+                local doc_dir = vim.fn.fnamemodify(file, ':h')
                 local lines = vim.split(io_utils.read_file(file), '\n')
                 for _, line in ipairs(lines) do
                     if not line:match('^!_TAG_') then
@@ -1662,7 +1750,7 @@ local function helptags(from_resume)
                             local tag = fields[1]
                             local filename = fields[2] -- help file name
                             local excmd = fields[3] -- Ex command
-                            local file_fullpath = help_files[filename] -- help file fullpath
+                            local file_fullpath = vim.fs.joinpath(doc_dir, filename) -- help file fullpath
                             local entry = string.format(
                                 '%s\t%s\t%s\t%s %s',
                                 tag,
@@ -1736,32 +1824,36 @@ local function commands(from_resume)
         local global_commands = vim.api.nvim_get_commands({})
         local buf_commands = vim.api.nvim_buf_get_commands(0, {})
 
-        ---@param cmds table<string, table> Commands associated with their information
+        ---@param command_map table<string, table> Commands associated with their information
         ---@return string[] # A table having sorted command names
-        local function get_sorted_cmds(cmds)
-            local t = {}
-            for k, v in pairs(cmds) do
-                if type(v) == 'table' then
-                    table.insert(t, k)
+        local function get_sorted_command_names(command_map)
+            local command_names = {}
+            for command_name, command_info in pairs(command_map) do
+                if type(command_info) == 'table' then
+                    table.insert(command_names, command_name)
                 end
             end
-            table.sort(t)
-            return t
+            table.sort(command_names)
+            return command_names
         end
 
-        local sorted_buf_cmds = get_sorted_cmds(buf_commands)
-        local sorted_global_cmds = get_sorted_cmds(global_commands)
+        local sorted_buffer_command_names = get_sorted_command_names(buf_commands)
+        local sorted_global_command_names = get_sorted_command_names(global_commands)
 
-        local function build_entries(cmds, buffer_local)
+        ---@param command_names string[]
+        ---@param is_buffer_local? boolean
+        ---@return string[]
+        local function build_entries(command_names, is_buffer_local)
             local entries = {}
-            if vim.tbl_isempty(cmds) then
+            if vim.tbl_isempty(command_names) then
                 return entries
             end
-            for _, cmd in ipairs(cmds) do
+
+            for _, cmd in ipairs(command_names) do
                 local entry = cmd
                 .. '\t'
-                .. (buffer_local and ansi_string(cmd, 'Function') or ansi_string(cmd, 'Directory'))
-                local info = buffer_local and buf_commands[cmd] or global_commands[cmd]
+                .. (is_buffer_local and ansi_string(cmd, 'Function') or ansi_string(cmd, 'Directory'))
+                local info = is_buffer_local and buf_commands[cmd] or global_commands[cmd]
                 local desc = {}
                 if info.bang then
                     table.insert(desc, 'bang: true')
@@ -1775,16 +1867,18 @@ local function commands(from_resume)
                 entry = entry .. '\t' .. table.concat(desc, '\\n')
                 table.insert(entries, entry)
             end
+
             return entries
         end
 
-        fzf_entries = build_entries(sorted_global_cmds)
-        vim.list_extend(fzf_entries, build_entries(sorted_buf_cmds, true))
+        fzf_entries = build_entries(sorted_global_command_names)
+        vim.list_extend(fzf_entries, build_entries(sorted_buffer_command_names, true))
 
         -- 2. Process builtin commands
         local help = vim.fn.globpath(vim.o.runtimepath, 'doc/index.txt')
         if vim.uv.fs_stat(help) then
             local cmd, desc
+
             for line in io_utils.read_file(help):gmatch('[^\n]*\n') do
                 -- Builtin command is in the line starting with `|:FOO`
                 if line:match('^|:[^|]') then
@@ -1803,6 +1897,7 @@ local function commands(from_resume)
                     end
                 end
             end
+
             if cmd then
                 table.insert(fzf_entries, cmd .. '\t' .. ansi_string(cmd, 'PreProc') .. '\tDescription: ' .. desc)
             end
@@ -1921,10 +2016,8 @@ local function zoxide(from_resume)
             -- ENTER will cd to the selected directory
             local cwd = lines[1]:match('[^\t]+$')
             if vim.uv.fs_stat(cwd) then
-                -- Instead of changing cwd globally, we can change it locally: lcd (window local) or
-                -- tcd (tab local)
-                local cmd = 'cd'
-                vim.cmd(cmd .. ' ' .. vim.fn.fnameescape(cwd))
+                -- Change the global working directory to the selected directory
+                vim.cmd('cd ' .. vim.fn.fnameescape(cwd))
                 notify.info('[FZF] CWD is changed to ' .. cwd)
             end
         end,
@@ -2044,10 +2137,11 @@ local function qf_items_fzf(win_local, from_resume)
             elseif key == 'enter' and #lines == 2 then
                 -- ENTER with a single selection: display the error
                 local nr = string.match(lines[2], '^%d+')
-                vim.cmd(nr .. 'cc!')
+                vim.cmd(nr .. (win_local and 'll!' or 'cc!'))
             else
                 -- ENTER/CTRL-X/CTRL-V/CTRL-T with multiple selections
                 local action = open_file_keymaps[key]
+
                 for i = 2, #lines do
                     if action ~= 'edit' then
                         vim.cmd(action)
@@ -2055,13 +2149,19 @@ local function qf_items_fzf(win_local, from_resume)
                     local idx = tonumber(string.match(lines[i], '^%d+'))
                     local item = list.items[idx]
                     local bufnr = item.bufnr
-                    if vim.api.nvim_buf_is_loaded(bufnr) then
+                    if bufnr > 0 and vim.api.nvim_buf_is_loaded(bufnr) then
                         vim.cmd('buffer! ' .. bufnr)
+                    elseif bufnr > 0 then
+                        vim.cmd('edit! ' .. vim.fn.fnameescape(vim.api.nvim_buf_get_name(bufnr)))
                     else
-                        vim.cmd('edit! ' .. vim.fn.fnameescape(vim.fn.bufname(bufnr)))
+                        notify.warn('[FZF] Selected quickfix item has no file')
+                        goto continue
                     end
+
                     vim.api.nvim_win_set_cursor(0, { item.lnum, item.col - 1 })
                     vim.cmd('normal! zvzz')
+
+                    ::continue::
                 end
             end
         end,
@@ -2095,7 +2195,7 @@ local function qf_items_fzf(win_local, from_resume)
         list = win_local and vim.fn.getloclist(0, what) or vim.fn.getqflist(what)
         for _, item in ipairs(list.items) do
             local bufnr = item.bufnr
-            local bufname = vim.api.nvim_buf_get_name(bufnr)
+            local bufname = bufnr > 0 and vim.api.nvim_buf_get_name(bufnr) or ''
             local fzf_line = build_qf_fzf_line(item)
             -- The formatted entries will be fed to fzf.
             -- Each entry is like "index bufname lnum path/to/the/file:134:20 [E] error"
@@ -2145,10 +2245,6 @@ end
 -- Quickfix list history and location list history
 --------------------------------------------------------------------------------
 
--- To preview the list, we dump all errors in the list to a temporary file and cat this file.
-local err_tmpfile_prefix = vim.fn.tempname()
-local err_tmpfile = ''
-
 -- Show list history in fzf with preview support
 -- Dump the errors in each list into a separate temp file, and cat this file to preview the list.
 ---@param win_local boolean Whether it's a window-local location list or quickfix list
@@ -2156,6 +2252,10 @@ local function qf_history_fzf(win_local, from_resume)
     local hist_cmd = win_local and 'lhistory' or 'chistory'
     local open_cmd = win_local and 'lopen' or 'copen'
     local prompt = win_local and 'Location List History' or 'Quickfix List History'
+
+    clear_qf_history_tempfiles()
+    local tempfile_prefix = vim.fn.tempname()
+
     local spec = {
         ['sink*'] = function(lines)
             local count = string.match(lines[1], '^(%d+)\t')
@@ -2175,6 +2275,8 @@ local function qf_history_fzf(win_local, from_resume)
             ':: ENTER (switch to selected list)',
             '--preview-window',
             'down,45%',
+            -- To preview the list, we dump all errors in the list to a temporary file and cat this
+            -- file.
             '--preview',
             'cat {2}',
             '--bind',
@@ -2184,9 +2286,13 @@ local function qf_history_fzf(win_local, from_resume)
         }),
     }
 
-    local function qf_history_build_entries()
+    ---@param session_id integer
+    ---@param callback fun(entries: string[])
+    local function qf_history_build_entries(session_id, callback)
         local cur_nr = win_local and vim.fn.getloclist(0, { nr = 0 }).nr or vim.fn.getqflist({ nr = 0 }).nr
         local entries = {}
+        local preview_files = {}
+
         for i = 1, 10 do
             local what = { nr = i, id = 0, title = true, items = true, size = true }
             local list = win_local and vim.fn.getloclist(0, what) or vim.fn.getqflist(what)
@@ -2194,18 +2300,19 @@ local function qf_history_fzf(win_local, from_resume)
                 break
             end
 
-            -- Build the temporary file name: prefix-rockyz-id for quickfix; prefix-rockyz-id-winid for
-            -- loclist
-            err_tmpfile = err_tmpfile_prefix .. '-rockyz-' .. list.id
+            -- Build the temporary file name: prefix-rockyz-id for quickfix; prefix-rockyz-id-winid
+            -- for loclist
+            local preview_filepath = tempfile_prefix .. '-rockyz-' .. list.id
             if win_local then
-                err_tmpfile = err_tmpfile .. '-' .. vim.api.nvim_get_current_win()
+                preview_filepath = preview_filepath .. '-' .. vim.api.nvim_get_current_win()
             end
+            qf_history_tempfile_paths[preview_filepath] = true
 
-            -- Entry: <quickfix_id>\t<err_tmpfile>\t<[quickfix_id]> <size> items    <title>
+            -- Entry: <quickfix_id>\t<preview_filepath>\t<[quickfix_id]> <size> items    <title>
             -- {3..} will be presented.
-            -- {1} <quickfix_id> is used to switch to the specific quickfix list; {2} <err_tmpfile>
-            -- is the path of the temporary file used by cat in fzf preview.
-            local entry = i .. '\t' .. err_tmpfile .. '\t[' .. i .. '] ' .. list.size .. ' items    ' .. list.title
+            -- {1} <quickfix_id> is used to switch to the specific quickfix list;
+            -- {2} <preview_filepath> is the path of the temporary file used by cat in fzf preview.
+            local entry = i .. '\t' .. preview_filepath .. '\t[' .. i .. '] ' .. list.size .. ' items    ' .. list.title
             if list.nr == cur_nr then
                 entry = entry .. ' ' .. icons.caret.left
             end
@@ -2220,14 +2327,39 @@ local function qf_history_fzf(win_local, from_resume)
                 local str = build_qf_fzf_line(item)
                 table.insert(errors, str)
             end
-            io_utils.write_file_async(err_tmpfile, table.concat(errors, '\n'))
+            table.insert(preview_files, {
+                filepath = preview_filepath,
+                contents = table.concat(errors, '\n'),
+            })
         end
-        return entries
+
+        local pending_writes = #preview_files
+        if pending_writes == 0 then
+            callback(entries)
+            return
+        end
+
+        for _, preview_file in ipairs(preview_files) do
+            io_utils.write_file_async(preview_file.filepath, preview_file.contents, function()
+                if not is_active_session(session_id) then
+                    vim.uv.fs_unlink(preview_file.filepath)
+                    qf_history_tempfile_paths[preview_file.filepath] = nil
+                end
+
+                pending_writes = pending_writes - 1
+                if pending_writes == 0 then
+                    callback(entries)
+                end
+            end)
+        end
     end
 
-    local function qf_history_source()
-        local entries = qf_history_build_entries()
-        emit(entries)
+    local function qf_history_source(session_id)
+        qf_history_build_entries(session_id, function(entries)
+            if is_active_session(session_id) then
+                emit(entries)
+            end
+        end)
     end
 
     fzf(spec, qf_history_source)
@@ -2270,20 +2402,29 @@ end
 ---@return string[] Fzf options for live grep
 local function build_live_grep_opts(rg, rg_query, path, prompt, extra_opts, from_resume)
     extra_opts = extra_opts or {}
+    local escaped_path = path == '' and '' or shellescape(path)
+
     if not from_resume then
         cached_rg_query = vim.fn.tempname()
+        live_grep_tempfile_paths[cached_rg_query] = true
+
         cached_fzf_query = vim.fn.tempname()
+        live_grep_tempfile_paths[cached_fzf_query] = true
+
         in_fzf_mode = vim.fn.tempname() -- tempfile to record whether it is currently in fzf mode
+        live_grep_tempfile_paths[in_fzf_mode] = true
     end
+
     local is_fzf_mode = vim.uv.fs_stat(in_fzf_mode)
     local mode = is_fzf_mode and 'FZF' or 'RG'
-    local search_enabled = is_fzf_mode and true or false
+
     -- Initial rg query
     if from_resume and vim.uv.fs_stat(cached_rg_query) then
         rg_query = '"$(cat ' .. cached_rg_query .. ')"'
     else
-        rg_query = vim.fn.shellescape(rg_query)
+        rg_query = shellescape(rg_query)
     end
+
     -- Initial fzf query
     local set_query = ''
     if from_resume then
@@ -2292,11 +2433,13 @@ local function build_live_grep_opts(rg, rg_query, path, prompt, extra_opts, from
             is_fzf_mode and cached_fzf_query or cached_rg_query
         )
     end
+
     -- Unbind the change event if it is called by fzf resume and rg's initial mode is fzf mode
     local unbind_change = ''
     if from_resume and is_fzf_mode then
         unbind_change = '+unbind(change)'
     end
+
     -- Print quickfix title used in winbar of quickfix window
     -- E.g., "Live Grep: Rg Query foo | Fzf Query bar"
     local print_qf_title = 'transform(rg_query=$(cat ' .. cached_rg_query .. '); rg_query=${rg_query:-[empty]}; fzf_query=$(cat ' .. cached_fzf_query .. '); fzf_query=${fzf_query:-[empty]}; echo "print(' .. prompt .. ': Rg Query $rg_query | Fzf Query $fzf_query)")'
@@ -2307,9 +2450,9 @@ local function build_live_grep_opts(rg, rg_query, path, prompt, extra_opts, from
         '--prompt',
         string.format('%s [%s]> ', prompt, mode),
         '--bind',
-        'start:reload(' .. rg .. ' ' .. rg_query .. ' ' .. path .. ')' .. set_query .. unbind_change,
+        'start:reload(' .. rg .. ' ' .. rg_query .. ' ' .. escaped_path .. ')' .. set_query .. unbind_change,
         '--bind',
-        'change:reload:' .. rg .. ' {q} ' .. path .. ' || true',
+        'change:reload:' .. rg .. ' {q} ' .. escaped_path .. ' || true',
         '--bind',
         -- Cache the query into the specific tempfile based on the current mode
         'result:execute-silent([[ ! $FZF_PROMPT =~ FZF ]] && echo {q} > ' .. cached_rg_query .. ' || echo {q} > ' .. cached_fzf_query .. ')',
@@ -2342,18 +2485,20 @@ local function build_live_grep_opts(rg, rg_query, path, prompt, extra_opts, from
         bat_prefix .. ' --highlight-line {2} -- {1}',
     })
 
-    if not search_enabled then
+    if not is_fzf_mode then
         table.insert(opts, '--disabled')
     end
+
     return vim.list_extend(opts, extra_opts)
 end
 
 ---Send selections in grep to quickfix or location list
----@param lines table lines[1] is the key (ctrl-q or ctrl-l); lines[2] is the title for quickfix or
----loclist; lines[3..] are selected lines.
----@param is_loclist? boolean Send to location list or not
+---@param lines string[] lines[1] is the key, lines[2] is the quickfix title and lines[3..] are
+---selected entries
+---@param is_loclist? boolean Whether to send entries to the location list
 local function grep_send_to_qf(lines, is_loclist)
     local qf_items = {}
+
     for i = 3, #lines do
         local filename, lnum, col, text = lines[i]:match('^([^:]+):([^:]+):([^:]+):(.*)$')
         local bufnr = vim.fn.bufnr(filename)
@@ -2365,6 +2510,7 @@ local function grep_send_to_qf(lines, is_loclist)
             text = text,
         })
     end
+
     table.sort(qf_items, function(a, b)
         if a.filename == b.filename then
             if a.lnum == b.lnum then
@@ -2376,8 +2522,10 @@ local function grep_send_to_qf(lines, is_loclist)
             return a.filename < b.filename
         end
     end)
+
     local title = lines[2]
     local what = { nr = '$', title = title, items = qf_items }
+
     if is_loclist then
         setqflist(what, true)
     else
@@ -2388,9 +2536,8 @@ end
 ---sink* for live grep
 ---ENTER/CTRL-X/CTRL-V/CTRL-T to open files and set cursor position
 ---CTRL-Q/CTRL-L to send selections to quickfix or location list
----@param lines table lines[1] is the query used as the title when sent to qf. For CTRL-Q/CTRL-L,
----lines[2] is the title for quickfix or loclist and lines[3..] are selected lines. For other keys,
----lines[2..] are selected lines.
+---@param lines string[] lines[1] is the key. For CTRL-Q/CTRL-L, lines[2] is the quickfix title and
+---lines[3..] are selected entries. For other keys, lines[2..] are selected entries
 local function grep_sink(lines)
     local key = lines[1]
     if key == 'ctrl-q' then
@@ -2463,20 +2610,25 @@ function M.live_grep_current_buffer()
     run(live_grep_cur_buffer)
 end
 
--- Grep for current word or VISUAL selection
+-- Search the working directory for the current word or visual selection
+
 local cached_grep_word_rg_query = '' -- cache rg query for fzf resume
-local function grep_cur_word(from_resume)
+
+local function get_current_word(from_resume)
+    local mode = vim.fn.mode()
     local rg_query
+
     if from_resume then
         rg_query = cached_grep_word_rg_query
-    elseif vim.fn.mode() == 'v' then
-        local saved_reg = vim.fn.getreg('v')
+    elseif mode == 'v' or mode == 'V' or mode == '\22' then
+        local saved_reg = vim.fn.getreginfo('v')
         vim.cmd([[noautocmd sil norm "vy]])
         rg_query = vim.fn.getreg('v')
         vim.fn.setreg('v', saved_reg)
     else
         rg_query = vim.fn.expand('<cword>')
     end
+
     cached_grep_word_rg_query = rg_query
 
     -- Print quickfix title used in winbar of quickfix window
@@ -2510,13 +2662,13 @@ local function grep_cur_word(from_resume)
     }
 
     rg_query = vim.fn.escape(rg_query, '.*+?()[]{}\\|^$')
-    local rg_cmd = rg_prefix .. ' -- ' .. vim.fn['fzf#shellescape'](rg_query)
+    local rg_cmd = rg_prefix .. ' -- ' .. vim.fn['fzf#shellescape'](rg_query) .. ' || true'
 
     fzf(spec, rg_cmd)
 end
 
 function M.grep_current_word()
-    run(grep_cur_word)
+    run(get_current_word)
 end
 
 --------------------------------------------------------------------------------
@@ -2542,9 +2694,10 @@ end
 -- Reference: the source code of vim.lsp.util.symbols_to_items
 -- (https://github.com/neovim/neovim/blob/master/runtime/lua/vim/lsp/util.lua)
 local function symbol_conversion(symbols, ctx, guide_prev, all_entries, all_items)
-    if symbols == nil then
+    if not symbols or symbols == vim.NIL then
         return
     end
+
     local client = vim.lsp.get_client_by_id(ctx.client_id)
     if not client then
         return
@@ -2751,8 +2904,10 @@ local function lsp_symbols(method, params, title, symbol_query, from_resume)
                 if not is_active_session(session_id) then
                     return
                 end
+
                 symbol_conversion(result, ctx, '', all_entries, all_items)
                 remaining = remaining - 1
+
                 if remaining == 0 then
                     emit(all_entries)
                 end
@@ -2793,6 +2948,10 @@ end
 
 -- Convert lsp.Location[] to fzf entries and quickfix items
 local function locations_to_entries_and_items(locations, ctx, all_entries, all_items)
+    if not locations or locations == vim.NIL then
+        return
+    end
+
     local client = vim.lsp.get_client_by_id(ctx.client_id)
     if not client then
         return
@@ -2904,12 +3063,13 @@ local function lsp_locations(method, title, from_resume)
                 if not is_active_session(session_id) then
                     return
                 end
+
                 locations_to_entries_and_items(result or {}, ctx, all_entries, all_items)
                 remaining = remaining - 1
+
                 if remaining == 0 then
                     if next(all_entries) == nil then
                         notify.warn('[FZF LSP] No Available Results!')
-                        return
                     end
                     emit(all_entries)
                 end
@@ -2957,8 +3117,8 @@ end
 
 local function diagnostics(from_resume, opts)
     opts = opts or {}
-    local curbuf = vim.api.nvim_get_current_buf()
-    local diags = vim.diagnostic.get(not opts.all and curbuf or nil)
+    local current_bufnr = vim.api.nvim_get_current_buf()
+    local diags = vim.diagnostic.get(not opts.all and current_bufnr or nil)
     if vim.tbl_isempty(diags) then
         notify.warn('[FZF] No diagnostics')
         return
@@ -3105,6 +3265,7 @@ end
 --------------------------------------------------------------------------------
 
 ---@param dir? string
+---@return string|nil
 local function get_git_root(dir)
     local buftype = vim.bo.buftype
     if not dir then
@@ -3112,9 +3273,10 @@ local function get_git_root(dir)
         if buftype == '' then
             path = vim.fn.expand('%:p:h')
         elseif buftype == 'terminal' and fzf_ctx.origin_bufnr then
-            -- If this finder is launched from another finder (finder switch), use the original
-            -- buffer as well.
-            path = vim.api.nvim_buf_get_name(fzf_ctx.origin_bufnr)
+            -- If this finder is launched from another finder (finder switch), use the directory of
+            -- the original buffer.
+            local origin_bufname = vim.api.nvim_buf_get_name(fzf_ctx.origin_bufnr)
+            path = vim.fs.dirname(origin_bufname)
         else
             notify.error('Not a git repository')
             return nil
@@ -3216,10 +3378,12 @@ local function git_status(from_resume)
     -- 3. [R ] oldfile -> newfile
     -- 4. [??] newfile
 
-    local git_status_cmd = 'git -c colors.status=false --no-optional-locks status --porcelain=v1'
+    local git_status_cmd = 'git -C ' .. escaped_root_dir .. ' -c colors.status=false --no-optional-locks status --porcelain=v1'
+
     if vim.env.GIT_DIR == vim.env.HOME .. '/dotfiles' then
-        git_status_cmd = git_status_cmd .. ' -uall ' .. vim.env.XDG_CONFIG_HOME
+        git_status_cmd = git_status_cmd .. ' -uall ' .. shellescape(vim.env.XDG_CONFIG_HOME)
     end
+
     git_status_cmd = git_status_cmd .. ' | ' .. dressup_cmd('git_status')
 
     local spec = {
@@ -3302,10 +3466,15 @@ local function copy_items(items, sep)
     sep = sep or ' '
     local text = table.concat(items, sep)
 
-    local selection_regs = { unnamed = [[*]], unnamedplus = [[+]] }
-    local reg = selection_regs[vim.o.clipboard] or [["]]
+    local clipboard = vim.opt.clipboard:get()
+
+    local reg = vim.tbl_contains(clipboard, 'unnamedplus') and [[+]]
+        or vim.tbl_contains(clipboard, 'unnamed') and [[*]]
+        or [["]]
+
     vim.fn.setreg(reg, text)
     vim.fn.setreg([[0]], text)
+
     notify.info(string.format('Copied %d item(s) to register %s', #items, reg))
 end
 
@@ -3318,7 +3487,9 @@ local function git_branches(from_resume)
     fzf_ctx.origin_git_root = root_dir
     local escaped_root_dir = shellescape(root_dir)
 
-    local git_branch_cmd = "git -C " .. escaped_root_dir .. " branch --sort=-committerdate --sort='refname:rstrip=-2' --sort=-HEAD -vv --color=always --format=$'%(HEAD) %(color:yellow)%(refname:short) %(color:green)(%(committerdate:relative))\t%(color:blue)%(subject)%(color:reset)'"
+    local git_branch_cmd = 'git -C '
+        .. escaped_root_dir
+        .. " branch --sort=-committerdate --sort='refname:rstrip=-2' --sort=-HEAD -vv --color=always --format=$'%(HEAD) %(color:yellow)%(refname:short) %(color:green)(%(committerdate:relative))\t%(color:blue)%(subject)%(color:reset)'"
 
     --
     -- Extract the branch name for fzf preview and border label
@@ -3442,16 +3613,8 @@ end
 ---@param root_dir string Git root directory
 ---@param range table? { start_line, end_line } as the range of VISUAL selection
 local function get_preview_cmd_git_commits(root_dir, range)
-    -- orderfile used for "git show -O" to display the current file as the first one
-    local orderfile = vim.fn.tempname()
     local bufname = vim.api.nvim_buf_get_name(0)
-    local file = assert(io.open(orderfile, 'w'))
-    file:write(bufname:sub(#root_dir + 2))
-    file:close()
-
     local escaped_bufname = shellescape(bufname)
-    local escaped_orderfile = shellescape(orderfile)
-
     local escaped_root_dir = shellescape(root_dir)
 
     local preview_cmd = ''
@@ -3460,9 +3623,18 @@ local function get_preview_cmd_git_commits(root_dir, range)
         preview_cmd = string.format('git -C %s log -L %d,%d:%s', escaped_root_dir, range[1], range[2], escaped_bufname)
         preview_cmd = preview_cmd .. " | awk '/commit {2}/ {flag=1;print;next} /^[^ ]*commit/{flag=0} flag' "
     else
+        -- Use an orderfile for "git show -O" to display the current file's commits first
+        local orderfile = vim.fs.joinpath(vim.fn.stdpath('cache'), 'fzf-commit-order')
+        local file = assert(io.open(orderfile, 'w'))
+        file:write(bufname:sub(#root_dir + 2))
+        file:close()
+
+        local escaped_orderfile = shellescape(orderfile)
+
         -- Extract the hash commit and use git show to preview it
         preview_cmd = 'grep -o "[a-f0-9]\\{7,\\}" <<< {1} | head -n 1 | xargs git -C ' .. escaped_root_dir .. ' show --color=always --format=format: -O' .. escaped_orderfile
     end
+
     return preview_cmd .. ' | ' .. diff_pager
 end
 
@@ -3690,7 +3862,10 @@ end
 -- Git stash
 --------------------------------------------------------------------------------
 
-function M.git_stash_source()
+---@param session_id? integer
+function M.git_stash_source(session_id)
+    session_id = session_id or fzf_ctx.cur_session_id
+
     local root_dir = fzf_ctx.origin_git_root or get_git_root()
     if root_dir == nil then
         return
@@ -3698,12 +3873,22 @@ function M.git_stash_source()
 
     local entries = {}
     vim.system({ 'git', '-C', root_dir, '--no-pager', 'stash', 'list' }, { text = true }, function(obj)
+        if not is_active_session(session_id) then
+            return
+        end
+
         if obj.code ~= 0 then
             notify.error({ obj.stderr, obj.stdout })
             return
         end
-        local output = obj.stdout or {}
+
+        local output = obj.stdout or ''
+
         vim.schedule(function()
+            if not is_active_session(session_id) then
+                return
+            end
+
             for line in output:gmatch('[^\n]+') do
                 local stash, revision, rest = line:match('^(%S+)({%d+})(:.*)')
                 if stash then
@@ -3713,6 +3898,7 @@ function M.git_stash_source()
                     table.insert(entries, entry)
                 end
             end
+
             emit(entries)
         end)
     end)
@@ -3855,10 +4041,22 @@ local function git_worktrees(from_resume)
     local spec = {
         ['sink*'] = function(lines)
             local key = lines[1]
+
             if #lines > 2 then
                 return
             end
-            local path = lines[2]:match('^(.*) %x+ %[[^%]]+%]$'):gsub('^%s+', ''):gsub('%s+$', '')
+
+            local worktree = lines[2]
+            local path = worktree:match('^(.-)%s+%x+%s+%[[^%]]+%]$') -- [branch] worktree
+                or worktree:match('^(.-)%s+%x+%s+%([^)]*%)$') -- (detached HEAD)
+
+            if not path then
+                notify.warn('[FZF] Unable to parse selected worktree')
+                return
+            end
+
+            path = vim.trim(path)
+
             if key == '' then
                 -- ENTER to cd to the path
                 if path == vim.uv.cwd() then
@@ -3867,10 +4065,8 @@ local function git_worktrees(from_resume)
                 end
                 path = vim.fn.fnamemodify(path, ':p')
                 if vim.uv.fs_stat(path) then
-                    -- Instead of changing cwd globally, we can change it locally: lcd (window local) or
-                    -- tcd (tab local)
-                    local cmd = 'cd'
-                    vim.cmd(cmd .. ' ' .. vim.fn.fnameescape(path))
+                    -- Change the global working directory to the selected worktree
+                    vim.cmd('cd ' .. vim.fn.fnameescape(path))
                     notify.info('[FZF] CWD set to ' .. path)
                 else
                     notify.warn('[FZF] Unable to set cwd to ' .. path .. ', directory is not accessible.')
@@ -4406,15 +4602,25 @@ local function buffer_tags(from_resume)
         }),
     }
 
-    local function buffer_tags_source()
+    local function buffer_tags_source(session_id)
         local entries = {}
         vim.system({ 'ctags', '-f', '-', '--fields=+n', filename }, { text = true }, function(obj)
+            if not is_active_session(session_id) then
+                return
+            end
+
             if obj.code ~= 0 then
                 notify.error({ obj.stderr, obj.stdout })
                 return
             end
+
             local output = obj.stdout or ''
+
             vim.schedule(function()
+                if not is_active_session(session_id) then
+                    return
+                end
+
                 for line in output:gmatch('[^\n]+') do
                     local tagname, excmd, lnum = line:match('([^\t]+)\t[^\t]+\t(.*);"\t.*line:(%d+)')
                     local fzf_line = string.format(
@@ -4428,6 +4634,7 @@ local function buffer_tags(from_resume)
                         fzf_line
                     }, special_delimiter)
                 end
+
                 emit(entries)
             end)
         end)
@@ -4453,13 +4660,18 @@ local function complete_path(from_resume)
 
     local spec = {
         ['sink*'] = function(lines)
+            if not vim.api.nvim_win_is_valid(winid) or not vim.api.nvim_buf_is_valid(bufnr) then
+                return
+            end
+
             -- ENTER to insert the selected path at cursor
             local row, col = unpack(vim.api.nvim_win_get_cursor(winid))
             local line = vim.api.nvim_buf_get_lines(bufnr, row - 1, row, false)[1]
             local after = #line > col and line:sub(col + 1) or ''
             local newline = line:sub(1, col) .. lines[1] .. after
             local newcol = col + #lines[1]
-            vim.api.nvim_set_current_line(newline)
+
+            vim.api.nvim_buf_set_lines(bufnr, row - 1, row, false, { newline })
             vim.api.nvim_win_set_cursor(winid, { row, newcol })
             vim.api.nvim_feedkeys('a', 'n', true)
         end,
@@ -4489,6 +4701,10 @@ end)
 -- vim.ui.select
 --
 
+---@generic T
+---@param items T[]
+---@param opts? table
+---@param on_choice fun(item: T?, idx: integer?)
 local function select(items, opts, on_choice)
     assert(type(on_choice) == 'function', 'on_choice must be a function')
     opts = opts or {}
@@ -4557,12 +4773,17 @@ vim.ui.select = select
 -- APIs
 --------------------------------------------------------------------------------
 
+---Convert text to an ANSI escape sequence using a highlight group
+---@param str string
+---@param highlight string
+---@return string
 function M.ansi(str, highlight)
     return ansi_string(str, highlight)
 end
 
+---Run a custom fzf finder with static entries
 ---@param entries string[]
----@param action_map table<string, function> A map from a key that fzf supports to an action
+---@param action_map table<string, fun(selections: string[])> A map from a fzf key to its action
 ---@param opts? string[] fzf options
 function M.fzf(entries, action_map, opts)
     opts = opts or {}

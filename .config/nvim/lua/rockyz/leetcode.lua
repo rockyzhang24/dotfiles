@@ -1,20 +1,20 @@
 --
 -- Inspired by https://github.com/kawre/leetcode.nvim
 --
--- Run command :LeetCode <url> [variant] <lang> and it will first create a directory specific this
--- question and then genreate two files:
+-- Run command :LeetCode <url> [variant] <lang>. It first creates a directory for the question and
+-- then generates two files:
 -- (1). a md file containing question description
 -- (2). a solution file with code snippet
 --
 -- The question description is always refreshed from LeetCode so the local markdown stays
--- synchronized with the lastest version.
+-- synchronized with the latest version.
 --
 -- For example, run :LeetCode https://leetcode.com/problems/two-sum/description/ method-1 js
 --
---   - First, it creates a directory ~/oj/leetcode-js to store all javascript solutions if it does
+--   - First, it creates a directory ~/oj/leetcode-js to store all JavaScript solutions if it does
 --     not exist yet
---   - Next, it creates a sub-directory 1-two-sum for the solutions of this specific question
---   - Last, it genreates two files under this directory:
+--   - Next, it creates a subdirectory 1-two-sum for the solutions of this specific question
+--   - Last, it generates two files under this directory:
 --      (1). 1-two-sum.md is the question description
 --      (2). 1-two-sum-method-1.js has the template for us to write the solution
 --
@@ -28,8 +28,8 @@ local notify = require('rockyz.utils.notify')
 local icons = require('rockyz.icons')
 
 local config = {
-    cookie_file = vim.env.HOME .. '/.config/leetcode-cookie',
-    oj_dir = vim.env.HOME ..'/oj',
+    cookie_file = vim.fs.joinpath(vim.env.HOME, '.config/leetcode-cookie'),
+    oj_dir = vim.fs.joinpath(vim.env.HOME, 'oj'),
     graphql_url = 'https://leetcode.com/graphql/',
     referer = 'https://leetcode.com',
     origin = 'https://leetcode.com',
@@ -106,7 +106,11 @@ local function get_cookie()
         return false, 'Cookie not found. Check ' .. config.cookie_file .. '.'
     end
 
-    local _, leetcode_session, _, csrftoken = unpack(vim.split(cookie, '\n'))
+    local cookie_lines = vim.split(cookie, '\n', { plain = true })
+    local _, leetcode_session, _, csrftoken = unpack(cookie_lines)
+
+    leetcode_session = leetcode_session and vim.trim(leetcode_session)
+    csrftoken = csrftoken and vim.trim(csrftoken)
 
     if not leetcode_session or leetcode_session == '' or not csrftoken or csrftoken == '' then
         return false, 'Invalid cookie format. Check ' .. config.cookie_file .. '.'
@@ -127,7 +131,10 @@ end
 
 local function get_curl_command(query)
     local command = {
-        'curl', '-s', '-w', '\nStatus: %{http_code}\n',
+        'curl', '-sS',
+        '--connect-timeout', '10',
+        '--max-time', '30',
+        '-w', '\nStatus: %{http_code}\n',
         '-X', 'POST', config.graphql_url,
         -- Headers
         '-H', 'User-Agent: ' .. config.user_agent,
@@ -150,24 +157,39 @@ local function get_curl_command(query)
     return command
 end
 
+---@param status string
 ---@param res table The result decoded from the JSON data response
-local function handle_http_error(res)
-    if res.error then
-        notify.error('[LeetCode] ' .. tostring(res.error))
+---@return boolean # Whether the response contains an error
+local function handle_query_errors(status, res)
+    local messages = {}
+
+    if status ~= '200' then
+        table.insert(messages, 'HTTP error: ' .. status)
     end
 
-    if res.errors then
-        local err_list = {}
-        for _, e in ipairs(res.errors) do
-            table.insert(err_list, e.message)
-        end
-        notify.error('[LeetCode] ' .. table.concat(err_list, '\n'))
+    if res.error ~= nil then
+        local message = type(res.error) == 'string' and res.error or vim.inspect(res.error)
+        table.insert(messages, message)
     end
+
+    if type(res.errors) == 'table' then
+        for _, err in ipairs(res.errors) do
+            local message = type(err) == 'table' and err.message or nil
+            table.insert(messages, message and tostring(message) or vim.inspect(err))
+        end
+    end
+
+    if #messages == 0 then
+        return false
+    end
+
+    notify.error('[LeetCode] ' .. table.concat(messages, '\n'))
+    return true
 end
 
 local function fulfill_query(query)
-    local cmd = get_curl_command(query)
-    local obj = vim.system(cmd, { text = true }):wait()
+    local command = get_curl_command(query)
+    local obj = vim.system(command, { text = true }):wait()
     if obj.code ~= 0 then
         notify.error({
             '[LeetCode] curl failed',
@@ -184,16 +206,15 @@ local function fulfill_query(query)
     end
 
     local ok, res = pcall(vim.json.decode, body)
-    if not ok then
-        notify.error('[LeetCode] Failed to decode JSON response.')
+    if not ok or type(res) ~= 'table' then
+        notify.error('[LeetCode] Expected a JSON object in HTTP ' .. status .. ' response')
         return
     end
 
-    if status ~= '200' then
-        notify.error('[LeetCode] HTTP error: ' .. status)
-        handle_http_error(res)
+    if handle_query_errors(status, res) then
         return
     end
+
     return res
 end
 
@@ -229,47 +250,58 @@ local function html_to_markdown(html)
         :gsub('%[([^\n]-)%]{%.example%-io}', '%1')
 end
 
-local function build_question_description(q, question_url)
+---@param question table The question returned by the LeetCode GraphQL API
+---@param question_url string
+---@return string[]?
+local function build_question_description(question, question_url)
     -- Build question info
-    local info = {
+    local question_info = {
         string.format('%s [Link](%s)', icons.emoji.link, question_url),
-        icons.emoji.star .. ' ' .. q.difficulty,
-        string.format('%s %s %s %s', icons.emoji.thumbsup, q.likes, icons.emoji.thumbsdown, q.dislikes),
+        icons.emoji.star .. ' ' .. question.difficulty,
+        string.format('%s %s %s %s', icons.emoji.thumbsup, question.likes, icons.emoji.thumbsdown, question.dislikes),
     }
 
-    local stats_ok, stats = pcall(vim.json.decode, q.stats)
+    local stats_ok, stats = pcall(vim.json.decode, question.stats)
     if stats_ok and stats.acRate and stats.totalSubmission then
-        table.insert(info, string.format('%s of %s', stats.acRate, stats.totalSubmission))
+        table.insert(question_info, string.format('%s of %s', stats.acRate, stats.totalSubmission))
     end
 
-    if q.is_paid_only then
-        table.insert(info, icons.emoji.lock)
+    if question.is_paid_only then
+        table.insert(question_info, icons.emoji.lock)
     end
 
     -- Build question content
-    local content = html_to_markdown(q.content)
+    local content = html_to_markdown(question.content)
     if not content then
         return
     end
 
     -- Build the topic tags
     local tags = {}
-    for _, tag in ipairs(q.topic_tags) do
-        local fmt_str = '[%s](https://leetcode.com/problem-list/%s)'
-        table.insert(tags, fmt_str:format(tag.name, tag.slug))
+    for _, tag in ipairs(question.topic_tags) do
+        local format_string = '[%s](https://leetcode.com/problem-list/%s)'
+        table.insert(tags, format_string:format(tag.name, tag.slug))
     end
 
     -- Build the similar questions
-    local similar = {}
-    for _, s in ipairs(q.similar) do
-        local fmt_str = '**[%s. %s](https://leetcode.com/problems/%s)** [%s]'
-        table.insert(similar, fmt_str:format(s.id, s.title, s.title_slug, s.difficulty))
+    local similar_questions = {}
+    for _, similar_question in ipairs(question.similar) do
+        local format_string = '**[%s. %s](https://leetcode.com/problems/%s)** [%s]'
+        table.insert(
+            similar_questions,
+            format_string:format(
+                similar_question.id,
+                similar_question.title,
+                similar_question.title_slug,
+                similar_question.difficulty
+            )
+        )
     end
 
     return {
-        string.format('## %s. %s', q.id, q.title),
+        string.format('## %s. %s', question.id, question.title),
         '',
-        string.format('**%s**', table.concat(info, ' | ')),
+        string.format('**%s**', table.concat(question_info, ' | ')),
         '',
         content,
         '',
@@ -283,12 +315,15 @@ local function build_question_description(q, question_url)
         '',
         '**' .. icons.emoji.puzzle .. ' Similar Questions**',
         '',
-        table.concat(similar, '  \n'),
+        table.concat(similar_questions, '  \n'),
     }
 end
 
-local function build_solution_snippet(q, lang)
-    for _, code_snippet in ipairs(q.code_snippets) do
+---@param question table The question returned by LeetCode GraphQL API
+---@param lang string
+---@return string
+local function build_solution_snippet(question, lang)
+    for _, code_snippet in ipairs(question.code_snippets) do
         if code_snippet.lang_slug == lang then
             local lines = vim.split(code_snippet.code, '\n', {
                 plain = true,
@@ -305,7 +340,7 @@ local function get_user_status()
         query = queries.auth,
     }
     local res = fulfill_query(query)
-    return res and res.data.userStatus or nil
+    return res and res.data and res.data.userStatus or nil
 end
 
 local function get_question(title_slug)
@@ -316,7 +351,13 @@ local function get_question(title_slug)
         },
     }
     local res = fulfill_query(query)
-    return res and res.data.question or nil
+    return res and res.data and res.data.question or nil
+end
+
+---@param value string
+---@return boolean
+local function is_safe_file_component(value)
+    return value:match('^[%w][%w%+._-]*$') ~= nil
 end
 
 local function parse_args(args)
@@ -325,11 +366,21 @@ local function parse_args(args)
     end
 
     local question_url, second, third = unpack(args)
+    local variant = third and second or ''
+    local lang = third or second
+
+    if not is_safe_file_component(lang) then
+        return nil, 'Language can only contain letters, digits, "+", ".", "_", and "-"'
+    end
+
+    if variant ~= '' and not is_safe_file_component(variant) then
+        return nil, 'Variant can only contain letters, digits, "+", ".", "_", and "-"'
+    end
 
     return {
         question_url = question_url,
-        variant = third and second or '',
-        lang = third or second,
+        variant = variant,
+        lang = lang,
     }
 end
 
@@ -358,6 +409,7 @@ local function run(question_url, variant, lang)
     -- Check cookie validation
     local user_status = get_user_status()
     if not user_status then
+        cached_cookie = nil
         return
     end
     if not user_status.is_signed_in then
@@ -373,41 +425,44 @@ local function run(question_url, variant, lang)
     end
 
     -- Fetch question
-    local q = get_question(title_slug)
-    if not q then
+    local question = get_question(title_slug)
+    if not question then
         return
     end
 
-    if q.is_paid_only and not user_status.is_premium then
+    if question.is_paid_only and not user_status.is_premium then
         notify.warn('[LeetCode] Question is for premium users only')
         return
     end
 
-    -- Create question directory
-    local dirpath = string.format('%s/leetcode-%s/%s-%s', config.oj_dir, lang, q.id, q.title_slug)
-    if vim.fn.isdirectory(dirpath) == 0 then
-        local mkdir_ok = vim.fn.mkdir(dirpath, 'p')
-        local dirpath_home = vim.fn.fnamemodify(dirpath, ':~')
-        if mkdir_ok == 1 then
-            notify.info('[LeetCode] Created directory: ' .. dirpath_home)
-        else
-            notify.error('[LeetCode] Failed to create directory: ' .. dirpath_home)
-            return
-        end
-    end
-
     -- Build question description text
-    local question_description = build_question_description(q, question_url)
+    local question_description = build_question_description(question, question_url)
     if not question_description then
         return
     end
 
-    -- Create md file and write question description
-    local md_name = string.format('%s-%s.md', q.id, q.title_slug)
-    local md_path = dirpath .. '/' .. md_name
-    if vim.uv.fs_stat(md_path) then
-        vim.uv.fs_unlink(md_path)
+    -- Create the question directory
+    local question_dir = vim.fs.joinpath(
+        config.oj_dir,
+        'leetcode-' .. lang,
+        string.format('%s-%s', question.id, question.title_slug)
+    )
+
+    if vim.fn.isdirectory(question_dir) == 0 then
+        local mkdir_ok = vim.fn.mkdir(question_dir, 'p')
+        local question_dir_home = vim.fn.fnamemodify(question_dir, ':~')
+        if mkdir_ok == 1 then
+            notify.info('[LeetCode] Created directory: ' .. question_dir_home)
+        else
+            notify.error('[LeetCode] Failed to create directory: ' .. question_dir_home)
+            return
+        end
     end
+
+    -- Write the refreshed question description
+    local md_name = string.format('%s-%s.md', question.id, question.title_slug)
+    local md_path = vim.fs.joinpath(question_dir, md_name)
+
     local write_md_ok, write_md_err = pcall(io_utils.write_file, md_path, table.concat(question_description, '\n'))
     if not write_md_ok then
         notify.error(
@@ -415,21 +470,22 @@ local function run(question_url, variant, lang)
         )
         return
     end
-    notify.info('[LeetCode] Create md file: ' .. md_name)
+
+    notify.info('[LeetCode] Wrote markdown file: ' .. md_name)
 
     -- Create a solution file and open it
-    local basename = string.format('%s-%s', q.id, q.title_slug)
+    local basename = string.format('%s-%s', question.id, question.title_slug)
     if variant ~= '' then
         basename = basename .. '-' .. variant
     end
     local filename = string.format('%s.%s', basename, lang)
-    local filepath = dirpath .. '/' .. filename
-    if not vim.uv.fs_stat(filepath) then
-        local snippet = build_solution_snippet(q, lang)
+    local file_path = vim.fs.joinpath(question_dir, filename)
+    if not vim.uv.fs_stat(file_path) then
+        local snippet = build_solution_snippet(question, lang)
         if snippet == '' then
             notify.warn('[LeetCode] No code snippet found for language: ' .. lang)
         end
-        local write_snippet_ok, write_snippet_err = pcall(io_utils.write_file, filepath, snippet)
+        local write_snippet_ok, write_snippet_err = pcall(io_utils.write_file, file_path, snippet)
         if not write_snippet_ok then
             notify.error(
                 '[LeetCode] Failed to write solution file: '
@@ -443,11 +499,11 @@ local function run(question_url, variant, lang)
     else
         notify.warn('[LeetCode] Solution file already exists: ' .. filename)
     end
-    vim.cmd.edit(vim.fn.fnameescape(filepath))
+    vim.cmd.edit(vim.fn.fnameescape(file_path))
 end
 
 -- User command
--- E.g., :Leetcode https://leetcode.com/problems/two-sum/ method1 cpp
+-- E.g., :LeetCode https://leetcode.com/problems/two-sum/ method1 cpp
 --                      |                                   |      |___ file extension
 --                      |                                   |
 --                      |____ question_url                  |___ solution variant

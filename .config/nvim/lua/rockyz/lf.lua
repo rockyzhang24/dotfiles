@@ -4,6 +4,8 @@
 -- <C-Enter> to open the files in the previous window
 -- <C-q> to change nvim's cwd to the current directory of lf
 
+local notify = require('rockyz.utils.notify')
+
 local M = {}
 
 --------------------------------------------------------------------------------
@@ -38,7 +40,7 @@ local state = {
     winid = -1,
     bufnr = -1,
     jobid = -1,
-    lf_pid = -1, -- pid of lf
+    lf_pid = -1,
 }
 
 local previous_fzf_default_opts
@@ -48,7 +50,6 @@ local previous_fzf_default_opts
 --------------------------------------------------------------------------------
 
 local function window_config()
-
     local win_width = math.floor(vim.o.columns * 0.8)
     local win_height = math.floor(vim.o.lines * 0.8)
 
@@ -86,7 +87,7 @@ end
 ---function from lf.lua module via Nvim's RPC.
 ---
 ---Example: tell the parent Nvim to run a function foobar() with the selected files as the argument
----lf -remote 'send lf_pid $nvim --server "$NVIM" --remote-expr "v:lua.require(\'rockyz.lf\').eoobar(\'$fx\')"'
+---lf -remote 'send lf_pid $nvim --server "$NVIM" --remote-expr "v:lua.require(\'rockyz.lf\').foobar(\'$fx\')"'
 ---@param function_name string Name of the exported Lua function
 ---@param lua_args? string Lua source code representing the function arguments, e.g., "'foo', 'bar'"
 ---@return string[] # Command passed to `vim.system()`
@@ -121,7 +122,7 @@ local function create_keymaps()
         M.close()
     end, { buffer = state.bufnr })
 
-    vim.keymap.set('n', 'q', '<Cmd>q<CR>', { buffer = state.bufnr, nowait = true })
+    vim.keymap.set('n', 'q', 'iq', { buffer = state.bufnr, nowait = true })
 
     for key, action in pairs(config.keymaps) do
         vim.keymap.set('t', key, function()
@@ -131,23 +132,42 @@ local function create_keymaps()
 end
 
 ---Create the terminal buffer, start lf, and initialize terminal-local keymaps
+---@return boolean
 local function create_terminal()
     state.bufnr = vim.api.nvim_create_buf(false, true)
-    vim.api.nvim_buf_call(state.bufnr, function()
-        state.jobid = vim.fn.jobstart({ 'lf' }, {
+    local bufnr = state.bufnr
+
+    local ok, jobid = pcall(vim.api.nvim_buf_call, bufnr, function()
+        return vim.fn.jobstart({ 'lf' }, {
             term = true,
             on_exit = function()
                 vim.env.FZF_DEFAULT_OPTS = previous_fzf_default_opts
                 -- Delete the terminal buffer Immediately to avoid the redundant "[Process
                 -- exited 0]" message.
-                if vim.api.nvim_buf_is_valid(state.bufnr) then
-                    vim.api.nvim_buf_delete(state.bufnr, { force = true })
+                if vim.api.nvim_buf_is_valid(bufnr) then
+                    vim.api.nvim_buf_delete(bufnr, { force = true })
+                end
+
+                if state.bufnr == bufnr then
+                    state.bufnr = -1
+                    state.jobid = -1
+                    state.lf_pid = -1
                 end
             end,
         })
     end)
+
+    if not ok or jobid <= 0 then
+        vim.api.nvim_buf_delete(bufnr, { force = true })
+        state.bufnr = -1
+        notify.error('[lf] Failed to start lf')
+        return false
+    end
+
+    state.jobid = jobid
     state.lf_pid = vim.fn.jobpid(state.jobid)
     create_keymaps()
+    return true
 end
 
 --------------------------------------------------------------------------------
@@ -186,8 +206,8 @@ function M.open()
         vim.env.FZF_DEFAULT_OPTS = vim.env.FZF_DEFAULT_OPTS:gsub('%-%-tmux%s+%S+', '')
     end
 
-    if not vim.api.nvim_buf_is_valid(state.bufnr) then
-        create_terminal()
+    if not vim.api.nvim_buf_is_valid(state.bufnr) and not create_terminal() then
+        return
     end
 
     state.winid = vim.api.nvim_open_win(state.bufnr, true, window_config())
@@ -216,16 +236,17 @@ end
 --------------------------------------------------------------------------------
 
 ---@param selection string Selected files, delimited by "\n"
----@param command string Vim's Ex command used to open each selected file
+---@param command? string Vim's Ex command used to open each selected file
 function M.remote_open_selection(selection, command)
     command = command or 'edit'
     local files = vim.split(selection, '\n', { trimempty = true })
-    for _, f in ipairs(files) do
-        local stat = vim.uv.fs_stat(f)
+
+    for _, file_path in ipairs(files) do
+        local stat = vim.uv.fs_stat(file_path)
         if stat and stat.type == 'file' then
-            vim.cmd(command .. ' ' .. vim.fn.fnameescape(f))
+            vim.cmd(command .. ' ' .. vim.fn.fnameescape(file_path))
         else
-            vim.notify(string.format('[lf] %s is not a file', f), vim.log.levels.WARN)
+            vim.notify(string.format('[lf] %s is not a file', file_path), vim.log.levels.WARN)
         end
     end
 end

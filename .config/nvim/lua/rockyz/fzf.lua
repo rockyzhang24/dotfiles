@@ -508,6 +508,13 @@ local function clear_qf_history_tempfiles()
     end
 end
 
+local function clear_live_grep_tempfiles()
+    for path in pairs(live_grep_tempfile_paths) do
+        vim.uv.fs_unlink(path)
+        live_grep_tempfile_paths[path] = nil
+    end
+end
+
 --
 -- There are two ways to provide input to fzf: raw output from an external command like fd or git,
 -- or feed entries by a Lua table.
@@ -616,10 +623,7 @@ vim.api.nvim_create_autocmd('VimLeavePre', {
         end
 
         clear_qf_history_tempfiles()
-
-        for path in pairs(live_grep_tempfile_paths) do
-            vim.uv.fs_unlink(path)
-        end
+        clear_live_grep_tempfiles()
     end,
 })
 
@@ -1298,7 +1302,13 @@ end
 function actions.delete_marks(selection_file)
     local winid = fzf_ctx.origin_winid
     local bufnr = fzf_ctx.origin_bufnr
-    if not winid or not bufnr then
+
+    if
+        not winid
+        or not bufnr
+        or not vim.api.nvim_win_is_valid(winid)
+        or not vim.api.nvim_buf_is_valid(bufnr)
+    then
         return
     end
 
@@ -1323,7 +1333,12 @@ local function marks_build_entries()
 
     local entries = {}
 
-    if not winid or not bufnr then
+    if
+        not winid
+        or not bufnr
+        or not vim.api.nvim_win_is_valid(winid)
+        or not vim.api.nvim_buf_is_valid(bufnr)
+    then
         notify.warn('[FZF] Marks finder should be run in a valid buffer')
         return entries
     end
@@ -1450,6 +1465,11 @@ function actions.close_tabs(selection_file)
     for _, line in ipairs(lines) do
         local fields = vim.split(line, '\t', { plain = true })
         local tid = tonumber(fields[3])
+
+        if not tid or not vim.api.nvim_tabpage_is_valid(tid) then
+            goto continue
+        end
+
         if tid ~= fzf_ctx.origin_tabpage then
             ---@diagnostic disable-next-line: param-type-mismatch
             local tabnr = vim.api.nvim_tabpage_get_number(tid)
@@ -1457,6 +1477,8 @@ function actions.close_tabs(selection_file)
         else
             notify.info('[FZF] Current tabpage cannot be closed')
         end
+
+        ::continue::
     end
 end
 
@@ -1464,7 +1486,7 @@ local function tabs_build_entries()
     local win = fzf_ctx.origin_winid
     local entries = {}
 
-    if not win then
+    if not win or not vim.api.nvim_win_is_valid(win) then
         notify.warn('[FZF] Tabs finder should be run in a valid window')
         return entries
     end
@@ -2408,6 +2430,8 @@ local function build_live_grep_opts(rg, rg_query, path, prompt, extra_opts, from
     local escaped_path = path == '' and '' or shellescape(path)
 
     if not from_resume then
+        clear_live_grep_tempfiles()
+
         cached_rg_query = vim.fn.tempname()
         live_grep_tempfile_paths[cached_rg_query] = true
 
@@ -2822,6 +2846,8 @@ end
 ---@param from_resume boolean? Whether it is called from fzf resume or not
 local function lsp_symbols(method, params, title, symbol_query, from_resume)
     local bufnr = vim.api.nvim_get_current_buf()
+    local request_changedtick = vim.api.nvim_buf_get_changedtick(bufnr)
+
     local clients = vim.lsp.get_clients({ method = method, bufnr = bufnr })
     if not next(clients) then
         notify.warn(string.format('[FZF] No active clients supporting %s method', method))
@@ -2904,11 +2930,12 @@ local function lsp_symbols(method, params, title, symbol_query, from_resume)
 
     local function lsp_symbols_source(session_id)
         local remaining = #clients
+        local discarded_stale_response = false
 
         local function finish()
             remaining = remaining - 1
             if remaining == 0 then
-                if next(all_entries) == nil then
+                if next(all_entries) == nil and not discarded_stale_response then
                     notify.warn('[FZF LSP] No Available Results!')
                 end
                 emit(all_entries)
@@ -2918,6 +2945,21 @@ local function lsp_symbols(method, params, title, symbol_query, from_resume)
         for _, client in ipairs(clients) do
             local sent = client:request(method, params, function(_, result, ctx)
                 if not is_active_session(session_id) then
+                    return
+                end
+
+                -- Document symbols are tied to the requested buffer contents. Workspace symbols are
+                -- queried from the server's workspace index, so a change in the current buffer
+                -- alone does not invalidate them.
+                if
+                    symbol_query == nil
+                    and (
+                        not vim.api.nvim_buf_is_valid(bufnr)
+                        or vim.api.nvim_buf_get_changedtick(bufnr) ~= request_changedtick
+                    )
+                then
+                    discarded_stale_response = true
+                    finish()
                     return
                 end
 
@@ -3004,11 +3046,14 @@ end
 ---@param from_resume? boolean Whether it is called from fzf resume or not
 local function lsp_locations(method, title, from_resume)
     local bufnr = vim.api.nvim_get_current_buf()
+    local request_changedtick = vim.api.nvim_buf_get_changedtick(bufnr)
+
     local clients = vim.lsp.get_clients({ method = method, bufnr = bufnr })
     if not next(clients) then
         notify.warn(string.format('[FZF] No active clients supporting %s method', method))
         return
     end
+
     local winid = vim.api.nvim_get_current_win()
 
     local all_entries = {}
@@ -3072,11 +3117,12 @@ local function lsp_locations(method, title, from_resume)
 
     local function lsp_locations_source(session_id)
         local remaining = #clients
+        local discarded_stale_response = false
 
         local function finish()
             remaining = remaining - 1
             if remaining == 0 then
-                if next(all_entries) == nil then
+                if next(all_entries) == nil and not discarded_stale_response then
                     notify.warn('[FZF LSP] No Available Results!')
                 end
                 emit(all_entries)
@@ -3092,6 +3138,17 @@ local function lsp_locations(method, title, from_resume)
 
             local sent = client:request(method, params, function(_, result, ctx)
                 if not is_active_session(session_id) then
+                    return
+                end
+
+                -- Locations are resolved from the position in the requested buffer, so discard
+                -- stale responses.
+                if
+                    not vim.api.nvim_buf_is_valid(bufnr)
+                    or vim.api.nvim_buf_get_changedtick(bufnr) ~= request_changedtick
+                then
+                    discarded_stale_response = true
+                    finish()
                     return
                 end
 
@@ -3907,6 +3964,7 @@ function M.git_stash_source(session_id)
 
         if obj.code ~= 0 then
             notify.error({ obj.stderr, obj.stdout })
+            emit({})
             return
         end
 
@@ -4560,16 +4618,23 @@ end
 --------------------------------------------------------------------------------
 
 local function buffer_tags(from_resume)
-    local filename = vim.api.nvim_buf_get_name(0)
+    local bufnr = vim.api.nvim_get_current_buf()
+    local filename = vim.api.nvim_buf_get_name(bufnr)
+
     if #filename == 0 then
         notify.warn('[FZF] Buffer tags is not available for unnamed buffer.')
         return
     end
+
     if vim.fn.filereadable(filename) == 0 then
         notify.warn('[FZF] Save the file first')
         return
     end
-    local bufnr = vim.api.nvim_get_current_buf()
+
+    if vim.bo[bufnr].modified then
+        notify.warn('[FZF] Save the file first')
+        return
+    end
 
     local spec = {
         ['sink*'] = function(lines)
@@ -4639,6 +4704,7 @@ local function buffer_tags(from_resume)
 
             if obj.code ~= 0 then
                 notify.error({ obj.stderr, obj.stdout })
+                emit({})
                 return
             end
 

@@ -2660,7 +2660,17 @@ local function get_current_word(from_resume)
 
     -- Print quickfix title used in winbar of quickfix window
     -- E.g., "Word Grep: Word/Selection foo | Fzf Query bar"
-    local print_qf_title = 'transform(echo "print(Word Grep: Word/Selection ' .. (rg_query == '' and '[empty]' or rg_query) .. ' | Fzf Query xxxxxx)")'
+    local qf_title_prefix = 'print(Word Grep: [Word/Selection] '
+        .. (rg_query == '' and '[empty]' or rg_query)
+        .. ', [Fzf Query] '
+
+    local print_qf_title = 'transform(printf '
+        .. shellescape('%s%s%s\\n')
+        .. ' '
+        .. shellescape(qf_title_prefix)
+        .. ' {q} '
+        .. shellescape(')')
+        .. ')'
 
     local spec = {
         ['sink*'] = grep_sink,

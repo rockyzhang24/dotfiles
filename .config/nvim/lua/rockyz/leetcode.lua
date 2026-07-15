@@ -16,7 +16,7 @@
 --   - Next, it creates a subdirectory 1-two-sum for the solutions of this specific question
 --   - Last, it generates two files under this directory:
 --      (1). 1-two-sum.md is the question description
---      (2). 1-two-sum-method-1.js has the template for us to write the solution
+--      (2). 1-two-sum-method-1-YYMMDD-HHMM.js has the template for us to write the solution
 --
 -- Keymap <Leader>ol (ol means oj leetcode) will try to fetch the question url from Chrome's current
 -- tab or the system clipboard, and then insert partial command ":LeetCode <url> " in the command
@@ -478,27 +478,27 @@ local function run(question_url, variant, lang)
     if variant ~= '' then
         basename = basename .. '-' .. variant
     end
-    local filename = string.format('%s.%s', basename, lang)
+    local timestamp = os.date('%y%m%d-%H%M')
+    local filename = string.format('%s-%s.%s', basename, timestamp, lang)
     local file_path = vim.fs.joinpath(question_dir, filename)
-    if not vim.uv.fs_stat(file_path) then
-        local snippet = build_solution_snippet(question, lang)
-        if snippet == '' then
-            notify.warn('[LeetCode] No code snippet found for language: ' .. lang)
-        end
-        local write_snippet_ok, write_snippet_err = pcall(io_utils.write_file, file_path, snippet)
-        if not write_snippet_ok then
-            notify.error(
-                '[LeetCode] Failed to write solution file: '
-                    .. filename
-                    .. '\n'
-                    .. tostring(write_snippet_err)
-            )
-            return
-        end
-        notify.info('[LeetCode] Created solution file: ' .. filename)
-    else
-        notify.warn('[LeetCode] Solution file already exists: ' .. filename)
+
+    local snippet = build_solution_snippet(question, lang)
+    if snippet == '' then
+        notify.warn('[LeetCode] No code snippet found for language: ' .. lang)
     end
+
+    local write_snippet_ok, write_snippet_err = pcall(io_utils.write_file, file_path, snippet)
+    if not write_snippet_ok then
+        notify.error(
+            '[LeetCode] Failed to write solution file: '
+            .. filename
+            .. '\n'
+            .. tostring(write_snippet_err)
+        )
+        return
+    end
+
+    notify.info('[LeetCode] Created solution file: ' .. filename)
     vim.cmd.edit(vim.fn.fnameescape(file_path))
 end
 

@@ -44,6 +44,7 @@ local state = {
 }
 
 local previous_fzf_default_opts
+local is_hiding = false
 
 --------------------------------------------------------------------------------
 -- Helpers
@@ -108,7 +109,6 @@ end
 ---@param function_name string
 ---@param lua_args? string Lua source code representing the function arguments
 local function send_remote_command(function_name, lua_args)
-    M.close()
     vim.system(build_remote_expr_cmd(function_name, lua_args), { text = true })
 end
 
@@ -117,18 +117,50 @@ local function open_selection(command)
     send_remote_command('remote_open_selection', format_lua_args('$fx', command))
 end
 
-local function create_keymaps()
+---@param bufnr integer
+local function create_keymaps(bufnr)
     vim.keymap.set('t', '_', function()
-        M.close()
-    end, { buffer = state.bufnr })
+        M.hide()
+    end, { buffer = bufnr })
 
-    vim.keymap.set('n', 'q', 'iq', { buffer = state.bufnr, nowait = true })
+    vim.keymap.set('n', 'q', '<Cmd>q<CR>', { buffer = bufnr, nowait = true })
 
     for key, action in pairs(config.keymaps) do
         vim.keymap.set('t', key, function()
             M[action]()
-        end, { buffer = state.bufnr })
+        end, { buffer = bufnr })
     end
+end
+
+---@param bufnr integer
+local function cleanup_terminal(bufnr)
+    vim.env.FZF_DEFAULT_OPTS = previous_fzf_default_opts
+
+    if vim.api.nvim_buf_is_valid(bufnr) then
+        vim.api.nvim_buf_delete(bufnr, { force = true })
+    end
+
+    if state.bufnr == bufnr then
+        state.bufnr = -1
+        state.jobid = -1
+        state.lf_pid = -1
+    end
+end
+
+---@param bufnr integer
+local function create_autocmds(bufnr)
+    local augroup = vim.api.nvim_create_augroup('rockyz.lf', { clear = true })
+
+    vim.api.nvim_create_autocmd('WinClosed', {
+        group = augroup,
+        buffer = bufnr,
+        callback = function()
+            if is_hiding then
+                return
+            end
+            cleanup_terminal(bufnr)
+        end,
+    })
 end
 
 ---Create the terminal buffer, start lf, and initialize terminal-local keymaps
@@ -141,18 +173,7 @@ local function create_terminal()
         return vim.fn.jobstart({ 'lf' }, {
             term = true,
             on_exit = function()
-                vim.env.FZF_DEFAULT_OPTS = previous_fzf_default_opts
-                -- Delete the terminal buffer Immediately to avoid the redundant "[Process
-                -- exited 0]" message.
-                if vim.api.nvim_buf_is_valid(bufnr) then
-                    vim.api.nvim_buf_delete(bufnr, { force = true })
-                end
-
-                if state.bufnr == bufnr then
-                    state.bufnr = -1
-                    state.jobid = -1
-                    state.lf_pid = -1
-                end
+                cleanup_terminal(bufnr)
             end,
         })
     end)
@@ -160,13 +181,16 @@ local function create_terminal()
     if not ok or jobid <= 0 then
         vim.api.nvim_buf_delete(bufnr, { force = true })
         state.bufnr = -1
+        state.jobid = -1
+        state.lf_pid = -1
         notify.error('[lf] Failed to start lf')
         return false
     end
 
     state.jobid = jobid
     state.lf_pid = vim.fn.jobpid(state.jobid)
-    create_keymaps()
+    create_keymaps(bufnr)
+    create_autocmds(bufnr)
     return true
 end
 
@@ -214,10 +238,12 @@ function M.open()
     vim.cmd.startinsert()
 end
 
--- Close the window
-function M.close()
+-- Hide the window
+function M.hide()
     if vim.api.nvim_win_is_valid(state.winid) then
+        is_hiding = true
         vim.api.nvim_win_hide(state.winid)
+        is_hiding = false
     end
     vim.env.FZF_DEFAULT_OPTS = previous_fzf_default_opts
 end
@@ -225,7 +251,7 @@ end
 -- Toggle lf window
 function M.toggle()
     if vim.api.nvim_win_is_valid(state.winid) then
-        M.close()
+        M.hide()
     else
         M.open()
     end
@@ -238,6 +264,7 @@ end
 ---@param selection string Selected files, delimited by "\n"
 ---@param command? string Vim's Ex command used to open each selected file
 function M.remote_open_selection(selection, command)
+    M.hide()
     command = command or 'edit'
     local files = vim.split(selection, '\n', { trimempty = true })
 
@@ -253,6 +280,7 @@ end
 
 ---@param pwd string The present working directory of lf, i.e., lf's $PWD
 function M.remote_cd(pwd)
+    M.hide()
     local stat = vim.uv.fs_stat(pwd)
     if not stat or stat.type ~= 'directory' then
         vim.notify(string.format('[lf] %s is not a directory', pwd), vim.log.levels.WARN)

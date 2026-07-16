@@ -11,15 +11,13 @@
 ---@field prev_buf_state table The info of the previous buffer (e.g., its buftype, filetype, etc)
 ---@field provider string Can be "lsp", "treesitter", "ctags" or "man" (specific for man page)
 ---@field prev_provider string The provider of the previous normal buffer for later restore
+---@field timer uv.uv_timer_t|nil
 
 local icons = require('rockyz.icons')
 local fzf = require('rockyz.fzf')
 local notify = require('rockyz.utils.notify')
 
 local M = {}
-
----@type integer The tabid of the current tabpage
-local tab
 
 ---Store per-tab outline state, indexed by tabid
 ---@type table<integer, rockyz.outline.OutlineStatePerTab>
@@ -300,28 +298,51 @@ local special_filetype_providers = {
     help = 'treesitter',
 }
 
+---@param tabpage integer
+---@return rockyz.outline.OutlineStatePerTab
+local function ensure_state(tabpage)
+    if not states[tabpage] then
+        states[tabpage] = {
+            bufnr = nil,
+            win = nil,
+            source_bufnr = nil,
+            kinds = {},
+            contents = {},
+            highlights = {},
+            jumps = {},
+            follow_cursor = false,
+            timer = nil,
+        }
+    end
+    return states[tabpage]
+end
+
 ---Ignore results from requests that no longer match the current outline state
+---@param tabpage integer
 ---@param bufnr integer
 ---@param provider string
-local function is_stale(bufnr, provider)
-    local state = states[tab]
-    return not state.win
+local function is_stale(tabpage, bufnr, provider)
+    local state = states[tabpage]
+    return not state
+        or not state.win
         or not vim.api.nvim_win_is_valid(state.win)
         or bufnr ~= state.source_bufnr
         or state.provider ~= provider
 end
 
-local function create_outline_buffer()
-    local state = states[tab]
+---@param tabpage integer
+local function create_outline_buffer(tabpage)
+    local state = states[tabpage]
     if not state.bufnr or not vim.api.nvim_buf_is_valid(state.bufnr) then
         state.bufnr = vim.api.nvim_create_buf(false, true)
         vim.bo[state.bufnr].filetype = 'outline'
     end
 end
 
+---@param tabpage integer
 ---@param symbols lsp.DocumentSymbol[]
 ---@param ctx? table LSP provider should provide this
-local function format_symbols(symbols, ctx)
+local function format_symbols(tabpage, symbols, ctx)
     if symbols == nil then
         return
     end
@@ -333,7 +354,7 @@ local function format_symbols(symbols, ctx)
         end
         offset_encoding = client.offset_encoding
     end
-    local state = states[tab]
+    local state = states[tabpage]
     local provider = state.provider
     local filter_kinds = state[provider .. '_filter_kinds']
 
@@ -398,8 +419,9 @@ local function format_symbols(symbols, ctx)
     _format_symbols(symbols, '')
 end
 
-local function apply_highlights()
-    local state = states[tab]
+---@param tabpage integer
+local function apply_highlights(tabpage)
+    local state = states[tabpage]
     local ns = vim.api.nvim_create_namespace('rockyz.outline.highlights')
     for i, hl in ipairs(state.highlights) do
         vim.api.nvim_buf_set_extmark(state.bufnr, ns, i - 1, hl.icon.col, { end_col = hl.icon.end_col, hl_group = 'SymbolKind' .. hl.icon.kind })
@@ -409,9 +431,11 @@ local function apply_highlights()
     end
 end
 
--- Set contents in the outline buffer
-local function set_contents(contents)
-    local state = states[tab]
+---Set contents in the outline buffer
+---@param tabpage integer
+---@param contents string[]
+local function set_contents(tabpage, contents)
+    local state = states[tabpage]
     vim.bo[state.bufnr].modifiable = true
     vim.api.nvim_buf_set_lines(state.bufnr, 0, -1, false, contents)
     vim.bo[state.bufnr].modifiable = false
@@ -419,33 +443,36 @@ end
 
 -- LSP provider
 
-local function lsp_request(bufnr)
+---@param tabpage integer
+---@param bufnr integer
+local function lsp_request(tabpage, bufnr)
     local method = 'textDocument/documentSymbol'
     local filename = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(bufnr), ':t')
     filename = filename ~= '' and filename or '[No Name]'
 
     local clients = vim.lsp.get_clients({ method = method, bufnr = bufnr })
     if not next(clients) then
-        set_contents({ string.format("No LSP symbols found in document '%s'", filename) })
+        set_contents(tabpage, { string.format("No LSP symbols found in document '%s'", filename) })
         return
     else
-        set_contents({ string.format("Loading document symbols for '%s'%s", filename, icons.misc.ellipsis) })
+        set_contents(tabpage, { string.format("Loading document symbols for '%s'%s", filename, icons.misc.ellipsis) })
     end
     local params = { textDocument = vim.lsp.util.make_text_document_params(bufnr) }
 
     local remaining = #clients
     for _, client in ipairs(clients) do
         client:request(method, params, function(_, result, ctx)
-            local state = states[tab]
-            if is_stale(ctx.bufnr, 'lsp') then
+            local state = states[tabpage]
+            if is_stale(tabpage, ctx.bufnr, 'lsp') then
                 return
             end
-            format_symbols(result, ctx)
+
+            format_symbols(tabpage, result, ctx)
             remaining = remaining - 1
             if remaining == 0 then
-                set_contents(state.contents)
-                apply_highlights()
-                vim.t[tab].outline_provider = 'LSP' -- used by winbar
+                set_contents(tabpage, state.contents)
+                apply_highlights(tabpage)
+                vim.t[tabpage].outline_provider = 'LSP' -- used by winbar
             end
         end)
     end
@@ -878,12 +905,13 @@ local function ts_build_symbols(bufnr, lang, query, syntax_tree)
     return symbols
 end
 
+---@param tabpage integer
 ---@param bufnr integer
 ---@param cb fun(lang: string, query: vim.treesitter.Query, syntax_tree: TSNode)
-local function ts_parse_tree(bufnr, cb)
+local function ts_parse_tree(tabpage, bufnr, cb)
     local parser = get_parser(bufnr)
     if not parser then
-        set_contents({ 'No parser for this buffer' })
+        set_contents(tabpage, { 'No parser for this buffer' })
         return
     end
 
@@ -891,16 +919,16 @@ local function ts_parse_tree(bufnr, cb)
 
     local query = get_query(lang)
     if not query then
-        set_contents({ string.format('No runtime query for %s', lang) })
+        set_contents(tabpage, { string.format('No runtime query for %s', lang) })
         return
     end
 
     parser:parse(nil, function(err, syntax_trees)
-        if is_stale(bufnr, 'treesitter') then
+        if is_stale(tabpage, bufnr, 'treesitter') then
             return
         end
         if err then
-            set_contents({ 'Error occurred when parsing the language tree' })
+            set_contents(tabpage, { 'Error occurred when parsing the language tree' })
             notify.error('[Outline] ' .. err)
             return
         else
@@ -909,16 +937,17 @@ local function ts_parse_tree(bufnr, cb)
     end)
 end
 
+---@param tabpage integer
 ---@param bufnr integer
-local function treesitter_request(bufnr)
-    ts_parse_tree(bufnr, function(lang, query, syntax_tree)
+local function treesitter_request(tabpage, bufnr)
+    ts_parse_tree(tabpage, bufnr, function(lang, query, syntax_tree)
         local symbols = ts_build_symbols(bufnr, lang, query, syntax_tree)
-        format_symbols(symbols)
-        set_contents(states[tab].contents)
-        apply_highlights()
+        format_symbols(tabpage, symbols)
+        set_contents(tabpage, states[tabpage].contents)
+        apply_highlights(tabpage)
     end)
 
-    vim.t[tab].outline_provider = 'Treesitter' -- used by winbar
+    vim.t[tabpage].outline_provider = 'Treesitter' -- used by winbar
 end
 
 -- Ctags provider
@@ -932,9 +961,10 @@ end
 --     selectionRange,
 --     children,
 -- }
+---@param tabpage integer
 ---@param text string The output (JSON array) of command `ctags --output-format=json "--fields=*" {file}`
-local function ctags_convert_symbols(text)
-    local state = states[tab]
+local function ctags_convert_symbols(tabpage, text)
+    local state = states[tabpage]
     local ft = vim.bo[state.source_bufnr].filetype
     local ctags_ft_config = ctags_config.filetypes[ft] or {}
     ---@type lsp.DocumentSymbol[]
@@ -1017,24 +1047,26 @@ local function ctags_convert_symbols(text)
     return symbols
 end
 
-local function ctags_request(bufnr)
+---@param tabpage integer
+---@param bufnr integer
+local function ctags_request(tabpage, bufnr)
     local on_exit = vim.schedule_wrap(function(obj)
-        if is_stale(bufnr, 'ctags') then
+        if is_stale(tabpage, bufnr, 'ctags') then
             return
         end
         if obj.code ~= 0 then
             local filename = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(bufnr), ':t')
-            set_contents({ string.format("Error: failed to run ctags for '%s'", filename) })
+            set_contents(tabpage, { string.format("Error: failed to run ctags for '%s'", filename) })
             return
         end
-        local symbols = ctags_convert_symbols(obj.stdout)
-        format_symbols(symbols)
-        set_contents(states[tab].contents)
-        apply_highlights()
-        vim.t[tab].outline_provider = 'Ctags' -- used by winbar
+        local symbols = ctags_convert_symbols(tabpage, obj.stdout)
+        format_symbols(tabpage, symbols)
+        set_contents(tabpage, states[tabpage].contents)
+        apply_highlights(tabpage)
+        vim.t[tabpage].outline_provider = 'Ctags' -- used by winbar
     end)
 
-    local state = states[tab]
+    local state = states[tabpage]
     state.contents, state.highlights, state.jumps = {}, {}, {}
     vim.system({
         'ctags',
@@ -1102,36 +1134,48 @@ local function man_convert_symbols(lines)
     return symbols
 end
 
-local function handle_man(bufnr)
-    local state = states[tab]
+---@param tabpage integer
+---@param bufnr integer
+local function handle_man(tabpage, bufnr)
+    local state = states[tabpage]
     state.contents, state.highlights, state.jumps = {}, {}, {}
     local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, true)
     local symbols = man_convert_symbols(lines)
-    format_symbols(symbols)
-    set_contents(states[tab].contents)
-    apply_highlights()
-    vim.t[tab].outline_provider = 'Man' -- used by winbar
+    format_symbols(tabpage, symbols)
+    set_contents(tabpage, states[tabpage].contents)
+    apply_highlights(tabpage)
+    vim.t[tabpage].outline_provider = 'Man' -- used by winbar
 end
 
-local function request(bufnr)
-    local state = states[tab]
-    states[tab].kinds, states[tab].contents, states[tab].highlights, states[tab].jumps = {}, {}, {}, {}
+---@param tabpage integer
+---@param bufnr integer
+local function request(tabpage, bufnr)
+    local state = states[tabpage]
+    if not state then
+        return
+    end
+
+    state.kinds, state.contents, state.highlights, state.jumps = {}, {}, {}, {}
     if state.provider == 'lsp' then
-        lsp_request(bufnr)
+        lsp_request(tabpage, bufnr)
     elseif state.provider == 'treesitter' then
-        treesitter_request(bufnr)
+        treesitter_request(tabpage, bufnr)
     elseif state.provider == 'ctags' then
-        ctags_request(bufnr)
+        ctags_request(tabpage, bufnr)
     elseif state.provider == 'man' then
-        handle_man(bufnr)
+        handle_man(tabpage, bufnr)
     end
 end
 
 -- The foldexpr set to the outline window
 function M.get_fold()
+    local tabpage = vim.api.nvim_get_current_tabpage()
+    local state = states[tabpage]
+
     local function indent_level(lnum)
-        return vim.fn.indent(lnum) / vim.bo[states[tab].bufnr].shiftwidth
+        return vim.fn.indent(lnum) / vim.bo[state.bufnr].shiftwidth
     end
+
     local this_indent = indent_level(vim.v.lnum)
     local next_indent = indent_level(vim.v.lnum + 1)
     if next_indent == this_indent then
@@ -1143,8 +1187,10 @@ function M.get_fold()
     end
 end
 
-local function select(opts)
-    local state = states[tab]
+---@param tabpage integer
+---@param opts table
+local function select(tabpage, opts)
+    local state = states[tabpage]
     local lnum = vim.fn.line('.')
     local jump = state.jumps[lnum]
     local location = { -- lsp.Location
@@ -1154,12 +1200,14 @@ local function select(opts)
     vim.lsp.util.show_document(location, jump.offset_encoding, { reuse_win = true, focus = opts.focus })
 end
 
--- In outline reveal the symbol that is under the cursor of the source buffer
-local function reveal_symbol()
-    local state = states[tab]
-    if not state.win or not vim.api.nvim_win_is_valid(state.win) then
+---In outline reveal the symbol that is under the cursor of the source buffer
+---@param tabpage integer
+local function reveal_symbol(tabpage)
+    local state = states[tabpage]
+    if not state or not state.win or not vim.api.nvim_win_is_valid(state.win) then
         return
     end
+
     local bufnr = vim.api.nvim_get_current_buf()
     local cursor_pos = vim.pos.cursor(bufnr, vim.api.nvim_win_get_cursor(0))
     local cursor_range = vim.range(cursor_pos, cursor_pos)
@@ -1177,25 +1225,36 @@ local function reveal_symbol()
     end
 end
 
-local function disable_follow_cursor()
-    vim.api.nvim_del_augroup_by_name(string.format('rockyz.outline.tab%s_follow_cursor', tab))
+---@param tabpage integer
+local function disable_follow_cursor(tabpage)
+    pcall(
+        vim.api.nvim_del_augroup_by_name,
+        string.format('rockyz.outline.tab%s_follow_cursor', tabpage)
+    )
 end
 
-local function enable_follow_cursor()
+---@param tabpage integer
+local function enable_follow_cursor(tabpage)
     vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
-        group = vim.api.nvim_create_augroup(string.format('rockyz.outline.tab%s_follow_cursor', tab), { clear = true }),
-        buffer = states[tab].source_bufnr,
+        group = vim.api.nvim_create_augroup(
+            string.format('rockyz.outline.tab%s_follow_cursor', tabpage),
+            { clear = true }
+        ),
+        buffer = states[tabpage].source_bufnr,
         callback = function()
-            reveal_symbol()
+            if vim.api.nvim_get_current_tabpage() == tabpage then
+                reveal_symbol(tabpage)
+            end
         end,
     })
 end
 
-local function set_keymaps()
+---@param tabpage integer
+local function set_keymaps(tabpage)
     for key, action in pairs(config.keymaps['local']) do
         vim.keymap.set('n', key, function()
             M[action]()
-        end, { buffer = states[tab].bufnr })
+        end, { buffer = states[tabpage].bufnr })
     end
     for key, action in pairs(config.keymaps.global) do
         vim.keymap.set('n', key, function()
@@ -1210,49 +1269,90 @@ local function del_keymaps()
     end
 end
 
-local timer
 local debounce_ms = 100
 
-local function ensure_timer()
-    if timer and not timer:is_closing() then
+---@param state rockyz.outline.OutlineStatePerTab
+local function ensure_timer(state)
+    if state.timer and not state.timer:is_closing() then
         return
     end
-    timer = vim.uv.new_timer()
+    state.timer = vim.uv.new_timer()
 end
 
-local function debounce_request(bufnr)
-    ensure_timer()
-    timer:stop()
-    timer:start(debounce_ms, 0, vim.schedule_wrap(function()
-        request(bufnr)
+---@param tabpage integer
+---@param bufnr integer
+local function debounce_request(tabpage, bufnr)
+    local state = states[tabpage]
+    if not state then
+        return
+    end
+
+    ensure_timer(state)
+    state.timer:stop()
+    state.timer:start(debounce_ms, 0, vim.schedule_wrap(function()
+        if states[tabpage] then
+            request(tabpage, bufnr)
+        end
     end))
 end
 
-local function del_autocmd()
-    vim.api.nvim_del_augroup_by_name('rockyz.outline')
+---@param tabpage integer
+local function autocmd_group_name(tabpage)
+    return string.format('rockyz.outline.tab%s', tabpage)
 end
 
-local function set_autocmd()
-    local group = vim.api.nvim_create_augroup('rockyz.outline', { clear = true })
+---@param state rockyz.outline.OutlineStatePerTab
+local function close_timer(state)
+    if state.timer and not state.timer:is_closing() then
+        state.timer:stop()
+        state.timer:close()
+    end
+    state.timer = nil
+end
+
+---@return boolean
+local function has_open_outline()
+    for _, state in pairs(states) do
+        if state.win and vim.api.nvim_win_is_valid(state.win) then
+            return true
+        end
+    end
+    return false
+end
+
+---@param tabpage integer
+local function del_autocmd(tabpage)
+    pcall(vim.api.nvim_del_augroup_by_name, autocmd_group_name(tabpage))
+end
+
+---@param tabpage integer
+local function set_autocmd(tabpage)
+    local group = vim.api.nvim_create_augroup(autocmd_group_name(tabpage), { clear = true })
 
     -- Refresh the outline if switching to a normal buffer, or a special buffer that has a specific
     -- provider.
     vim.api.nvim_create_autocmd({ 'LspAttach', 'BufEnter' }, {
         group = group,
         callback = function(event)
-            local bufnr = event.buf
-            local state = states[tab]
-            if not state.win or not vim.api.nvim_win_is_valid(state.win) then
+            if vim.api.nvim_get_current_tabpage() ~= tabpage then
                 return
             end
+
+            local state = states[tabpage]
+            if not state or not state.win or not vim.api.nvim_win_is_valid(state.win) then
+                return
+            end
+
+            local bufnr = event.buf
             local cur_filetype = vim.bo[bufnr].filetype
             local cur_buftype = vim.bo[bufnr].buftype
             local special_provider = special_filetype_providers[cur_filetype]
             -- Skip refreshing outline if the source buffer is a special buffer and it does not have
-            -- a specific provide
+            -- a specific provider
             if cur_buftype ~= '' and special_provider == nil then
                 return
             end
+
             -- Skip refreshing outline if the source buffer was switched back from a special buffer
             -- that has no specific provider and hasn't been modified. (prev_buf_state will be reset
             -- to nil upon TabEnter)
@@ -1274,12 +1374,11 @@ local function set_autocmd()
             end
 
             state.provider = special_provider or state.prev_provider or config.default_provider
-
             state.source_bufnr = bufnr
-            create_outline_buffer()
-            debounce_request(bufnr)
+            create_outline_buffer(tabpage)
+            debounce_request(tabpage, bufnr)
             if state.follow_cursor then
-                enable_follow_cursor()
+                enable_follow_cursor(tabpage)
             end
         end,
     })
@@ -1287,12 +1386,21 @@ local function set_autocmd()
     vim.api.nvim_create_autocmd({ 'BufLeave' }, {
         group = group,
         callback = function(event)
+            if vim.api.nvim_get_current_tabpage() ~= tabpage then
+                return
+            end
+
+            local state = states[tabpage]
+            if not state then
+                return
+            end
+
             local bufnr = event.buf
             -- Before switching to another buffer, record the state of the current buffer.
             -- It's used to determine whether to refresh the outline after switching buffer. See
             -- BufEnter autocmd above.
             vim.b[bufnr].last_changedtick = vim.b[bufnr].changedtick
-            states[tab].prev_buf_state = {
+            state.prev_buf_state = {
                 filetype = vim.bo[bufnr].filetype,
                 buftype = vim.bo[bufnr].buftype,
             }
@@ -1302,33 +1410,53 @@ local function set_autocmd()
     -- Update the outline upon text change in the source buffer
     vim.api.nvim_create_autocmd({ 'TextChanged' }, {
         group = group,
-        buffer = states[tab].source_bufnr,
         callback = function(event)
-            debounce_request(event.buf)
+            local state = states[tabpage]
+            if not state
+                or vim.api.nvim_get_current_tabpage() ~= tabpage
+                or event.buf ~= state.source_bufnr
+            then
+                return
+            end
+
+            debounce_request(tabpage, event.buf)
         end,
     })
 
     vim.api.nvim_create_autocmd({ 'WinClosed' }, {
         group = group,
-        pattern = tostring(states[tab].win),
+        pattern = tostring(states[tabpage].win),
         callback = function()
-            del_autocmd()
-            del_keymaps()
+            local state = states[tabpage]
+            if not state then
+                return
+            end
+
+            state.win = nil
+            close_timer(state)
+            disable_follow_cursor(tabpage)
+            del_autocmd(tabpage)
+            if not has_open_outline() then
+                del_keymaps()
+            end
         end,
     })
 
 end
 
-local function is_opened()
-    return states[tab] and states[tab].win and vim.api.nvim_win_is_valid(states[tab].win)
+---@param tabpage integer
+local function is_opened(tabpage)
+    return states[tabpage] and states[tabpage].win and vim.api.nvim_win_is_valid(states[tabpage].win)
 end
 
-local function open()
+---@param tabpage integer
+local function open(tabpage)
+    local state = ensure_state(tabpage)
     local bufnr = vim.api.nvim_get_current_buf()
     local ft = vim.bo[bufnr].filetype
-    states[tab].provider = special_filetype_providers[ft] or config.default_provider
-    create_outline_buffer()
-    local win = vim.api.nvim_open_win(states[tab].bufnr, true, {
+    state.provider = special_filetype_providers[ft] or config.default_provider
+    create_outline_buffer(tabpage)
+    local win = vim.api.nvim_open_win(state.bufnr, true, {
         width = config.width,
         split = 'right',
         win = -1,
@@ -1347,69 +1475,77 @@ local function open()
     for option, value in pairs(win_options) do
         vim.wo[option] = value
     end
-    states[tab].win = win
-    states[tab].source_bufnr = bufnr
+    state.win = win
+    state.source_bufnr = bufnr
     vim.cmd('wincmd p')
-    request(bufnr)
-    set_keymaps()
-    set_autocmd()
+    request(tabpage, bufnr)
+    set_keymaps(tabpage)
+    set_autocmd(tabpage)
 end
 
-local function close()
-    if states[tab].win and vim.api.nvim_win_is_valid(states[tab].win) then
-        vim.api.nvim_win_close(states[tab].win, true)
+---@param tabpage integer
+local function close(tabpage)
+    if states[tabpage].win and vim.api.nvim_win_is_valid(states[tabpage].win) then
+        vim.api.nvim_win_close(states[tabpage].win, true)
         -- autocmds will be deleted by the "WinClosed" autocmd
     end
 end
 
 ---Filter symbols for the given kinds
+---@param tabpage integer
 ---@param kinds string[] List of kinds
-local function show_only(kinds)
-    local state = states[tab]
+local function show_only(tabpage, kinds)
+    local state = states[tabpage]
     local provider = state.provider
     state[provider .. '_filter_kinds'] = kinds
-    debounce_request(state.source_bufnr)
-    vim.t[tab].filter_on = true
+    debounce_request(tabpage, state.source_bufnr)
+    vim.t[tabpage].filter_on = true
     vim.api.nvim__redraw({ win = state.win, winbar = true })
 end
 
 function M.jump()
-    select({ focus = true })
+    local tabpage = vim.api.nvim_get_current_tabpage()
+    select(tabpage, { focus = true })
 end
 
 function M.peek()
-    select({ focus = false })
+    local tabpage = vim.api.nvim_get_current_tabpage()
+    select(tabpage, { focus = false })
 end
 
 function M.peek_prev()
+    local tabpage = vim.api.nvim_get_current_tabpage()
     local cur = vim.api.nvim_win_get_cursor(0)
     cur[1] = cur[1] - 1
     pcall(vim.api.nvim_win_set_cursor, 0, cur)
-    select({ focus = false })
+    select(tabpage, { focus = false })
 end
 
 function M.peek_next()
+    local tabpage = vim.api.nvim_get_current_tabpage()
     local cur = vim.api.nvim_win_get_cursor(0)
     cur[1] = cur[1] + 1
     pcall(vim.api.nvim_win_set_cursor, 0, cur)
-    select({ focus = false })
+    select(tabpage, { focus = false })
 end
 
 function M.reveal()
-    local source_win = vim.fn.bufwinid(states[tab].source_bufnr)
+    local tabpage = vim.api.nvim_get_current_tabpage()
+    local source_win = vim.fn.bufwinid(states[tabpage].source_bufnr)
     vim.api.nvim_win_call(source_win, function()
-        reveal_symbol()
+        reveal_symbol(tabpage)
     end)
 end
 
 function M.toggle_follow()
-    local state = states[tab]
+    local tabpage = vim.api.nvim_get_current_tabpage()
+    local state = states[tabpage]
     if state.follow_cursor then
-        disable_follow_cursor()
-        vim.t[tab].is_outline_follow_cursor_enabled = false
+        disable_follow_cursor(tabpage)
+        vim.t[tabpage].is_outline_follow_cursor_enabled = false
     else
-        enable_follow_cursor()
-        vim.t[tab].is_outline_follow_cursor_enabled = true
+        enable_follow_cursor(tabpage)
+        vim.t[tabpage].is_outline_follow_cursor_enabled = true
     end
     state.follow_cursor = not state.follow_cursor
     -- Update the statusline and winbar
@@ -1417,33 +1553,39 @@ function M.toggle_follow()
 end
 
 function M.show_functions_only()
-    show_only({ 'Constructor', 'Function', 'Method' })
+    local tabpage = vim.api.nvim_get_current_tabpage()
+    show_only(tabpage, { 'Constructor', 'Function', 'Method' })
 end
 
 function M.refresh()
-    debounce_request(states[tab].source_bufnr)
+    local tabpage = vim.api.nvim_get_current_tabpage()
+    debounce_request(tabpage, states[tabpage].source_bufnr)
 end
 
 function M.switch_to_ctags()
-    local state = states[tab]
+    local tabpage = vim.api.nvim_get_current_tabpage()
+    local state = states[tabpage]
     state.provider = 'ctags'
-    debounce_request(state.source_bufnr)
+    debounce_request(tabpage, state.source_bufnr)
 end
 
 function M.switch_to_lsp()
-    local state = states[tab]
+    local tabpage = vim.api.nvim_get_current_tabpage()
+    local state = states[tabpage]
     state.provider = 'lsp'
-    debounce_request(state.source_bufnr)
+    debounce_request(tabpage, state.source_bufnr)
 end
 
 function M.switch_to_treesitter()
-    local state = states[tab]
+    local tabpage = vim.api.nvim_get_current_tabpage()
+    local state = states[tabpage]
     state.provider = 'treesitter'
-    debounce_request(state.source_bufnr)
+    debounce_request(tabpage, state.source_bufnr)
 end
 
 function M.filter_kinds()
-    local state = states[tab]
+    local tabpage = vim.api.nvim_get_current_tabpage()
+    local state = states[tabpage]
 
     local kinds = {}
     for kind, _ in pairs(state.kinds) do
@@ -1452,7 +1594,9 @@ function M.filter_kinds()
     end
 
     fzf.fzf(kinds, {
-        enter = show_only,
+        enter = function(selected_kinds)
+            show_only(tabpage, selected_kinds)
+        end,
     }, {
         '--prompt',
         '[Outline] Filter Kinds> ',
@@ -1466,19 +1610,21 @@ function M.filter_kinds()
 end
 
 function M.clear_filter()
-    local state = states[tab]
+    local tabpage = vim.api.nvim_get_current_tabpage()
+    local state = states[tabpage]
     local provider = state.provider
     state[provider .. '_filter_kinds'] = nil
-    debounce_request(state.source_bufnr)
-    vim.t[tab].filter_on = false
+    debounce_request(tabpage, state.source_bufnr)
+    vim.t[tabpage].filter_on = false
     vim.api.nvim__redraw({ win = state.win, winbar = true })
 end
 
 function M.toggle_outline_window()
-    if is_opened() then
-        close()
+    local tabpage = vim.api.nvim_get_current_tabpage()
+    if is_opened(tabpage) then
+        close(tabpage)
     else
-        open()
+        open(tabpage)
     end
 end
 
@@ -1488,27 +1634,29 @@ end)
 
 vim.api.nvim_create_autocmd({ 'VimEnter', 'TabEnter' }, {
     callback = function()
-        tab = vim.api.nvim_get_current_tabpage()
-        if not states[tab] then
-            states[tab] = {
-                bufnr = nil,
-                win = nil,
-                source_bufnr = nil,
-                kinds = {},
-                contents = {},
-                highlights = {},
-                jumps = {},
-                follow_cursor = false,
-            }
-        end
-        -- Reset it upon entering a tab
-        states[tab].prev_buf_state = nil
+        local tabpage = vim.api.nvim_get_current_tabpage()
+        ensure_state(tabpage).prev_buf_state = nil
     end,
 })
 
-vim.api.nvim_create_autocmd({ 'TabClosed' }, {
-    callback = function(event)
-        states[event.file] = nil
+vim.api.nvim_create_autocmd({ 'TabClosedPre' }, {
+    callback = function()
+        local tabpage = vim.api.nvim_get_current_tabpage()
+        local state = states[tabpage]
+        if not state then
+            return
+        end
+
+        local had_outline = state.win and vim.api.nvim_win_is_valid(state.win)
+        state.win = nil
+        close_timer(state)
+        disable_follow_cursor(tabpage)
+        del_autocmd(tabpage)
+        states[tabpage] = nil
+
+        if had_outline and not has_open_outline() then
+            del_keymaps()
+        end
     end,
 })
 

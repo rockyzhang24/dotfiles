@@ -150,6 +150,9 @@ if not vim.g.border_enabled then
     selection_bg = bg3
 end
 
+local border_fg = bg3
+local border_bg = float_norm_bg
+
 -- Background colors for lines that got added, deleted and changed
 local diff_added_line_bg = utils.blend(green, 0.8, norm_bg)
 local diff_deleted_line_bg = utils.blend(red, 0.8, norm_bg)
@@ -163,9 +166,16 @@ local diff_changed_text_bg = utils.blend(blue, 0.6, norm_bg)
 
 local groups = {
 
+    -- Preset
+    Border = { fg = border_fg, bg = border_bg },
+    CursorLineNC = { bg = bg1, underdashed = true, sp = bg3 },
+    Description = { fg = gray },
+    IndentScopeSymbol = 'Delimiter',
+    LightBulb = { fg = neutral_yellow },
+
     Normal = { fg = norm_fg, bg = norm_bg },
     NormalFloat = { bg = float_norm_bg },
-    FloatBorder = 'NormalFloat',
+    FloatBorder = 'Border',
     FloatTitle = 'Title',
     FloatFooter = 'FloatTitle',
     -- FloatShadow = {},
@@ -195,7 +205,7 @@ local groups = {
     -- StatusLineTermNC = 'StatusLineNC',
     WinBar = { fg = winbar_fg, bg = winbar_bg },
     WinBarNC = { fg = winbar_fg, bg = winbar_bg },
-    WinSeparator = { fg = norm_fg },
+    WinSeparator = 'Border',
     MsgSeparator = 'StatueLine',
     -- MsgArea = 'NONE',
     WildMenu = { fg = blue, bg = bg2, bold = true },
@@ -229,7 +239,7 @@ local groups = {
     PmenuExtraSel = 'PmenuSel',
     PmenuKind = 'Pmenu',
     PmenuKindSel = 'PmenuSel',
-    PmenuBorder = 'Pmenu',
+    PmenuBorder = 'Border',
     PmenuShadow = 'FloatShadow',
     PmenuShadowThrough = 'FloatShadowThrough',
     -- ComplMatchIns = 'NONE',
@@ -510,12 +520,6 @@ local groups = {
     ['@lsp.typemod.operator.injected'] = '@operator',
     ['@lsp.typemod.string.injected'] = '@string',
     ['@lsp.typemod.variable.injected'] = '@variable',
-
-    -- Misc
-    CursorLineNC = { bg = bg1, underdashed = true, sp = bg3 },
-    Description = { fg = gray },
-    IndentScopeSymbol = 'Delimiter',
-    LightBulb = { fg = neutral_yellow },
 
     -- Tabline
     TabDefaultIcon = { fg = tab_inactive_fg, bg = tab_inactive_bg }, -- icon for special filetype on inactive tab

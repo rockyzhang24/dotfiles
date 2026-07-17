@@ -50,7 +50,7 @@ local modules = {
     'yank',
     'terminal',
     'outline',
-    'easymotion',
+    -- 'easymotion',
     'scrollbar',
     'call_hierarchy',
 }

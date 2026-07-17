@@ -5,7 +5,7 @@
       "src": "https://github.com/L3MON4D3/LuaSnip"
     },
     "SchemaStore.nvim": {
-      "rev": "e954496f8ef22904e8a84f5078f4a110fdc7a0d3",
+      "rev": "0df41ab13b54151fcb6ab023cc2a761482070f76",
       "src": "https://github.com/b0o/SchemaStore.nvim"
     },
     "blink.cmp": {
@@ -26,7 +26,7 @@
       "src": "https://github.com/dhananjaylatkar/cscope_maps.nvim"
     },
     "diffs.nvim": {
-      "rev": "5198772a48d6d782e8b04f7084d373094d29798c",
+      "rev": "283261cdd0700581a21a8697ac526f9967dfd75a",
       "src": "https://github.com/barrettruth/diffs.nvim"
     },
     "eregex.vim": {
@@ -39,7 +39,7 @@
       "version": "'dev'"
     },
     "gitsigns.nvim": {
-      "rev": "eb60cc7b94c46005237fd34170d76f3a089a90aa",
+      "rev": "31d6fb2d618bca1482b9f274751ead5f03461408",
       "src": "https://github.com/lewis6991/gitsigns.nvim"
     },
     "inc-rename.nvim": {
@@ -71,7 +71,7 @@
       "src": "https://github.com/nvim-treesitter/nvim-treesitter-textobjects"
     },
     "nvim-web-devicons": {
-      "rev": "dad71387de386a946b123079d0e53f23028f3abd",
+      "rev": "0ca28b61a04fe7426cefbdd52c2647ef0e335b5f",
       "src": "https://github.com/kyazdani42/nvim-web-devicons"
     },
     "quick-scope": {
@@ -127,7 +127,7 @@
       "src": "https://github.com/tommcdo/vim-exchange"
     },
     "vim-flog": {
-      "rev": "665b16ac8915f746bc43c9572b4581a5e9047216",
+      "rev": "c8a573b5a829d0a3ed1b72c87dd62d832b665e87",
       "src": "https://github.com/rbong/vim-flog"
     },
     "vim-fugitive": {
@@ -165,6 +165,10 @@
     "vim-sleuth": {
       "rev": "be69bff86754b1aa5adcbb527d7fcd1635a84080",
       "src": "https://github.com/tpope/vim-sleuth"
+    },
+    "vim-sneak": {
+      "rev": "feea86adcfbf8e6b5e71fdd5f4f5736fd8819fdb",
+      "src": "https://github.com/justinmk/vim-sneak"
     },
     "vim-startuptime": {
       "rev": "5f33e50f1e2e2a80370c9094e4c303ea54cd2aea",

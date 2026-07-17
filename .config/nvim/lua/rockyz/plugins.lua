@@ -55,6 +55,7 @@ vim.pack.add({
     'https://github.com/tpope/vim-projectionist',
     'https://github.com/tpope/vim-obsession',
     'https://github.com/barrettruth/diffs.nvim',
+    'https://github.com/justinmk/vim-sneak',
 
     -- gof/goF: Go to the directory of the current file/working directory in the File manager (Finder on macOS)
     -- got/goT: Go to the directory of the current file/working directory in the Terminal

@@ -24,9 +24,10 @@
 -- Use the new lua module loader
 vim.loader.enable()
 
--- Global variables may be needed by other file, so load it first.
+-- Global variables may be needed by other modules, so load them first.
 require('rockyz.globals')
 
+---@type string[]
 local modules = {
     'settings',
     'keymaps',

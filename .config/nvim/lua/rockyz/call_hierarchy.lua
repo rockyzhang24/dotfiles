@@ -2,7 +2,7 @@
 ---@field name string
 ---@field kind string|number
 ---@field detail string|nil
----@field item table
+---@field item lsp.CallHierarchyItem
 ---@field expanded boolean
 ---@field loading boolean Whether a children request is currently in progress
 --
@@ -303,7 +303,7 @@ local function run_next(state)
     end
 end
 
----Add an async job to the bounce queue
+---Add an async job to the bounded request queue
 ---@param state CallHierarchyState
 ---@param fn fun(done: function)
 local function enqueue(state, fn)
@@ -347,7 +347,7 @@ local function load_children(state, node, cb)
     local item = node.item
 
     enqueue(state, function(done)
-        client:request(method, { item = item }, function(err, result)
+        local success = client:request(method, { item = item }, function(err, result)
             done()
 
             local callbacks = state.inflight[key] or {}
@@ -390,6 +390,21 @@ local function load_children(state, node, cb)
                 callback(children)
             end
         end, source_buf)
+
+        if not success then
+            done()
+
+            local callbacks = state.inflight[key] or {}
+            state.inflight[key] = nil
+
+            local request_error = {
+                message = 'Failed to send call hierarchy request',
+            }
+
+            for _, callback in ipairs(callbacks) do
+                callback(nil, request_error)
+            end
+        end
     end)
 end
 
@@ -519,58 +534,56 @@ local function expand_at(state, idx)
 end
 
 ---@param buf integer buffer handle
----@return vim.lsp.Client|nil
-local function get_client(buf)
+---@param callback fun(client: vim.lsp.Client|nil)
+local function select_client(buf, callback)
     local method = 'textDocument/prepareCallHierarchy'
     local clients = vim.lsp.get_clients({ method = method, bufnr = buf })
+
     if #clients == 0 then
-        notify.warn('[Call Hierarchy] callhierarchy is not supported by the clients of the current buffer')
+        notify.warn('[Call Hierarchy] Call hierarchy is not supported by the clients of the current buffer')
+        callback(nil)
         return
     end
-    local client
+
     if #clients == 1 then
-        client = clients[1]
-    else
-        local items = {}
-        for i, c in ipairs(clients) do
-            table.insert(items, string.format('%d. %s', i, c.name))
-        end
-        table.insert(items, 'Select client: ')
-        vim.ui.input({
-            prompt = table.concat(items, '\n'),
-        }, function(input)
-            input = tonumber(input)
-            if input == nil or type(input) ~= 'number' or (input == 0 or input > #clients) then
-                notify.warn('[Call Hierarchy] Input to select a client is invalid')
-                return
-            end
-            client = clients[input]
-        end)
+        callback(clients[1])
+        return
     end
-    return client
+
+    vim.ui.select(clients, {
+        prompt = 'Select call hierarchy client:',
+        format_item = function(client)
+            return string.format('%s (id: %d)', client.name, client.id)
+        end,
+    }, callback)
 end
 
----@param client vim.lsp.Client
----@param buf integer
-local function client_attach_to_buf(client, buf)
-    return client
-        and not client:is_stopped()
-        and client.attached_buffers
-        and client.attached_buffers[buf]
+---@param client vim.lsp.Client|nil
+---@param buf integer buffer handle
+---@return boolean
+local function is_client_attached_to_buffer(client, buf)
+    if not client or client:is_stopped() or not client.attached_buffers then
+        return false
+    end
+
+    return client.attached_buffers[buf] ~= nil
 end
 
 ---@param state CallHierarchyState
----@param buf integer
-local function ensure_client(state, buf)
-    if client_attach_to_buf(state.client, buf) then
-        return state.client
+---@param buf integer buffer handle
+---@param callback fun(client: vim.lsp.Client|nil)
+local function ensure_client(state, buf, callback)
+    if is_client_attached_to_buffer(state.client, buf) then
+        callback(state.client)
+        return
     end
-    local client = get_client(buf)
-    if not client then
-        return nil
-    end
-    state.client = client
-    return client
+
+    select_client(buf, function(client)
+        if client then
+            state.client = client
+        end
+        callback(client)
+    end)
 end
 
 ---@param state CallHierarchyState
@@ -580,6 +593,8 @@ local function prepare_root(state)
     state.view = {}
     state.inflight = {}
     state.queue = {}
+
+    redraw_all(state)
 
     ---@type vim.lsp.Client
     local client = state.client
@@ -592,8 +607,13 @@ local function prepare_root(state)
 
     local version = state.version
 
-    client:request(method, state.root_params, function(err, result)
-        if err or version ~= state.version then
+    local success = client:request(method, state.root_params, function(err, result)
+        if version ~= state.version then
+            return
+        end
+
+        if err then
+            notify.warn('[Call Hierarchy] Failed to prepare call hierarchy')
             return
         end
 
@@ -624,6 +644,10 @@ local function prepare_root(state)
             end)
         end
     end, state.source_buf)
+
+    if not success then
+        notify.warn('[Call Hierarchy] Failed to send prepare call hierarchy request')
+    end
 end
 
 ---Return a valid source window
@@ -672,8 +696,8 @@ local function get_current_location(state)
 end
 
 ---@param state CallHierarchyState
----@param opts table|nil
-local function select(state, opts)
+---@param opts { focus?: boolean }|nil
+local function open_location_in_source_window(state, opts)
     opts = opts or {}
 
     local location = get_current_location(state)
@@ -766,7 +790,7 @@ end
 ---
 ---@param state CallHierarchyState
 ---@param cmd 'split'|'vsplit'
----@param opts table|nil
+---@param opts { focus?: boolean }|nil
 local function open_in_split_like(state, cmd, opts)
     opts = opts or {}
     local location = get_current_location(state)
@@ -819,7 +843,7 @@ end
 ---@param state CallHierarchyState|nil
 function M.jump(state)
     state = state or get_state()
-    select(state, { focus = true })
+    open_location_in_source_window(state, { focus = true })
 end
 
 ---@param state CallHierarchyState|nil
@@ -853,7 +877,7 @@ end
 ---@param state CallHierarchyState|nil
 function M.peek(state)
     state = state or get_state()
-    select(state)
+    open_location_in_source_window(state)
 end
 
 ---@param state CallHierarchyState|nil
@@ -1083,7 +1107,7 @@ end
 ---
 ---When invoked from the source window, rebuild the hierarchy from the current cursor position.
 ---
----When invokded from the hierarchy window, rebuild the hierarchy from the currently selected
+---When invoked from the hierarchy window, rebuild the hierarchy from the currently selected
 ---hierarchy item.
 ---
 ---If the hierarchy window already exists, reuse it and replace the tree. Otherwise, open a new
@@ -1097,10 +1121,15 @@ local function show_from_cursor(state)
             notify.warn('[Call Hierarchy] Cannot reload from selected hierarchy item')
             return
         end
-    else
-        local current_buf = vim.api.nvim_get_current_buf()
 
-        local client = ensure_client(state, current_buf)
+        update_winbar(state)
+        prepare_root(state)
+        return
+    end
+
+    local current_buf = vim.api.nvim_get_current_buf()
+
+    ensure_client(state, current_buf, function(client)
         if not client then
             return
         end
@@ -1116,10 +1145,10 @@ local function show_from_cursor(state)
             open(state)
             set_buf_keymaps(state)
         end
-    end
 
-    update_winbar(state)
-    prepare_root(state)
+        update_winbar(state)
+        prepare_root(state)
+    end)
 end
 
 ---@param state CallHierarchyState|nil

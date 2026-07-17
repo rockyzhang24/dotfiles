@@ -2,7 +2,8 @@ local icons = {}
 icons.minimal = {}
 
 icons.symbol_kinds = {
-    -- Predefined in CompletionItemKind from runtime/lua/vim/lsp/protocl.lua
+    -- Standard LSP CompletionItemKind values from vim.lsp.protocol (defined in
+    -- runtime/lua/vim/lsp/protocol.lua)
     Text = '',
     Method = '',
     Function = '',
@@ -28,7 +29,7 @@ icons.symbol_kinds = {
     Event = '',
     Operator = '',
     TypeParameter = '',
-    -- cod-symbols-* form Nerd Fonts
+    -- Additional cod-symbols-* Nerd Font glyphs
     Array = '',
     Boolean = '',
     Key = '',
@@ -39,21 +40,21 @@ icons.symbol_kinds = {
     Ruler = '',
     String = '',
     Structure = '',
-    -- Others
+    -- Additional symbols
     Null = '',
     Number = '',
     Object = '',
     Package = '',
-    -- Specials
+    -- Fallback symbol
     Unknown = '',
-    -- For ctags
+    -- Ctags symbols
     Chapter = '󰂺',
     Subsection = '',
 }
 
 icons.lines = {
     vertical = '|',
-    vertical_heavy = '┃', -- unicode U+2503
+    vertical_heavy = '┃', -- Unicode U+2503
     double_dash_vertical = '╎',
     triple_dash_vertical = '┆',
     quadruple_dash_vertical = '┊',
@@ -117,8 +118,8 @@ icons.tree = {
 }
 
 icons.block = {
-    left_one_quarter = '▎', -- U+258E Left One Quarter Block
-    right_middle_half ='🬇', -- U+1FB07 Block Sextant-4
+    left_one_quarter = '▎', -- Unicode U+258E Left One Quarter Block
+    right_middle_half ='🬇', -- Unicode U+1FB07 Block Sextant-4
 }
 
 icons.misc = {
@@ -141,13 +142,13 @@ icons.misc = {
     format = '',
     graph = '',
     help = '',
+    indent = '',
     left_double_chevron = '󰄽',
     lightbulb = '',
     lightning_bolt = '󱐋',
     list = '',
     location = '',
     lock = '',
-    indent = '',
     logo = '󰀘',
     maximized = '',
     neovim = '',

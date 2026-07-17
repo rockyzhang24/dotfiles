@@ -1,6 +1,6 @@
----@class CallHierarchyNode
+---@class rockyz.CallHierarchyNode
 ---@field name string
----@field kind string|number
+---@field kind integer
 ---@field detail string|nil
 ---@field item lsp.CallHierarchyItem
 ---@field expanded boolean
@@ -20,24 +20,24 @@
 ---
 ---This field also acts as the children cache.
 ---Once loaded, children will be reused and no additional LSP request will be sent for this node.
----@field children CallHierarchyNode[]|nil
+---@field children rockyz.CallHierarchyNode[]|nil
 
----@class CallHierarchyEntry
----@field node CallHierarchyNode
+---@class rockyz.CallHierarchyEntry
+---@field node rockyz.CallHierarchyNode
 ---@field depth integer
 
----@class CallHierarchyState
+---@class rockyz.CallHierarchyState
 ---@field win integer|nil window id of the hierarchy window
 ---@field buf integer|nil buffer id of the hierarchy buffer
 ---@field source_win integer|nil
 ---@field source_buf integer|nil
 ---@field client vim.lsp.Client|nil
 ---@field mode 'incoming'|'outgoing'
----@field view CallHierarchyEntry[] Flattened visible tree
+---@field view rockyz.CallHierarchyEntry[] Flattened visible tree
 ---
 ---In-flight request sharing
 ---inflight[key] = callbacks
----@field inflight table<string, fun(children: CallHierarchyNode[]|nil, err?: table)[]>
+---@field inflight table<string, fun(children: rockyz.CallHierarchyNode[]|nil, err?: table)[]>
 ---
 ---Number of currently running async jobs
 ---@field pending integer
@@ -51,10 +51,21 @@
 ---@field ns integer
 ---@field root_params lsp.TextDocumentPositionParams|nil
 
+---@class rockyz.CallHierarchyHighlightRange
+---@field symbol_kind string
+---@field col integer
+---@field end_col integer
+
+---@class rockyz.CallHierarchyLineHighlights
+---@field icon rockyz.CallHierarchyHighlightRange
+---@field detail rockyz.CallHierarchyHighlightRange|nil
+
 local icons = require('rockyz.icons')
 local notify = require('rockyz.utils.notify')
 
 local M = {}
+
+local call_hierarchy_augroup = vim.api.nvim_create_augroup('rockyz.call_hierarchy', { clear = true })
 
 local config = {
     width = 50,
@@ -84,10 +95,10 @@ local config = {
 }
 
 ---Per-tabpage call hierarchy state
----@type table<integer, CallHierarchyState>
+---@type table<integer, rockyz.CallHierarchyState>
 local states = {}
 
----@return CallHierarchyState
+---@return rockyz.CallHierarchyState
 local function new_state()
     return {
         win = nil,
@@ -106,7 +117,7 @@ local function new_state()
     }
 end
 
----@return CallHierarchyState
+---@return rockyz.CallHierarchyState
 local function get_state()
     local tab = vim.api.nvim_get_current_tabpage()
     if not states[tab] then
@@ -115,7 +126,7 @@ local function get_state()
     return states[tab]
 end
 
----@param state CallHierarchyState
+---@param state rockyz.CallHierarchyState
 local function update_winbar(state)
     vim.t.call_hierarchy_mode = state.mode
     if state.win and vim.api.nvim_win_is_valid(state.win) then
@@ -123,8 +134,8 @@ local function update_winbar(state)
     end
 end
 
----@param state CallHierarchyState
----@param node CallHierarchyNode
+---@param state rockyz.CallHierarchyState
+---@param node rockyz.CallHierarchyNode
 ---@return string
 local function cache_key(state, node)
     local item = node.item
@@ -132,12 +143,27 @@ local function cache_key(state, node)
     return state.mode .. ':' .. item.uri .. ':' .. range.start.line .. ':' .. range.start.character
 end
 
----@param entry CallHierarchyEntry
----@return string,table
+---@param item lsp.CallHierarchyItem
+---@return rockyz.CallHierarchyNode
+local function create_node(item)
+    return {
+        name = item.name,
+        kind = item.kind,
+        detail = item.detail,
+        item = item,
+        expanded = false,
+        loading = false,
+        show_loading = false,
+        children = nil,
+    }
+end
+
+---@param entry rockyz.CallHierarchyEntry
+---@return string, rockyz.CallHierarchyLineHighlights
 local function render_line(entry)
     local node = entry.node
     local indent = string.rep('  ', entry.depth)
-    ---@type table<string, table>
+    ---@type rockyz.CallHierarchyLineHighlights
     local highlight = {}
 
     local disclosure_icon = node.expanded and icons.caret.down or icons.caret.right
@@ -147,14 +173,14 @@ local function render_line(entry)
 
     local prefix = indent .. disclosure_icon
 
-    local kind = vim.lsp.protocol.SymbolKind[node.kind]
-    local kind_icon = icons.symbol_kinds[kind] or icons.symbol_kinds['Unknown'] or ''
+    local symbol_kind = vim.lsp.protocol.SymbolKind[node.kind] or 'Unknown'
+    local kind_icon = icons.symbol_kinds[symbol_kind] or icons.symbol_kinds['Unknown'] or ''
 
     local icon_col = #prefix + 1
     local line = prefix .. ' ' .. kind_icon .. ' ' .. node.name
 
     highlight.icon = {
-        kind = kind,
+        symbol_kind = symbol_kind,
         col = icon_col,
         end_col = icon_col + #kind_icon,
     }
@@ -172,7 +198,7 @@ local function render_line(entry)
     return line, highlight
 end
 
----@param state CallHierarchyState
+---@param state rockyz.CallHierarchyState
 ---@param value boolean
 local function set_modifiable(state, value)
     if state.buf and vim.api.nvim_buf_is_valid(state.buf) then
@@ -180,14 +206,14 @@ local function set_modifiable(state, value)
     end
 end
 
----@param state CallHierarchyState
+---@param state rockyz.CallHierarchyState
 ---@param start integer 0-based
----@param highlights table<string, table>
+---@param highlights rockyz.CallHierarchyLineHighlights[]
 local function apply_highlights(state, start, highlights)
     for i, hl in ipairs(highlights) do
         vim.api.nvim_buf_set_extmark(state.buf, state.ns, start + i - 1, hl.icon.col, {
             end_col = hl.icon.end_col,
-            hl_group = 'SymbolKind' .. hl.icon.kind
+            hl_group = 'SymbolKind' .. hl.icon.symbol_kind
         })
         if hl.detail then
             vim.api.nvim_buf_set_extmark(state.buf, state.ns, start + i - 1, hl.detail.col, {
@@ -198,16 +224,17 @@ local function apply_highlights(state, start, highlights)
     end
 end
 
----@param state CallHierarchyState
+---@param state rockyz.CallHierarchyState
 ---@param start integer 0-based
 ---@param finish integer 0-based exclusive
----@param entries CallHierarchyEntry[]
+---@param entries rockyz.CallHierarchyEntry[]
 local function set_lines(state, start, finish, entries)
     if not state.buf or not vim.api.nvim_buf_is_valid(state.buf) then
         return
     end
 
     local lines = {}
+    ---@type rockyz.CallHierarchyLineHighlights[]
     local highlights = {}
 
     for _, entry in ipairs(entries) do
@@ -224,7 +251,7 @@ local function set_lines(state, start, finish, entries)
     apply_highlights(state, start, highlights)
 end
 
----@param state CallHierarchyState
+---@param state rockyz.CallHierarchyState
 ---@param idx integer 1-based view index
 local function update_line(state, idx)
     local entry = state.view[idx]
@@ -241,8 +268,8 @@ end
 ---with identical contents will not work because lookup is based on table identity (reference
 ---equality).
 ---
----@param state CallHierarchyState
----@param entry CallHierarchyEntry
+---@param state rockyz.CallHierarchyState
+---@param entry rockyz.CallHierarchyEntry
 ---@return integer|nil
 local function find_entry_index_by_ref(state, entry)
     for i, e in ipairs(state.view) do
@@ -252,8 +279,8 @@ local function find_entry_index_by_ref(state, entry)
     end
 end
 
----@param state CallHierarchyState
----@param entry CallHierarchyEntry
+---@param state rockyz.CallHierarchyState
+---@param entry rockyz.CallHierarchyEntry
 local function start_loading(state, entry)
     local node = entry.node
 
@@ -279,19 +306,19 @@ local function start_loading(state, entry)
     end, 1000)
 end
 
----@param state CallHierarchyState
+---@param state rockyz.CallHierarchyState
 local function redraw_all(state)
     set_lines(state, 0, -1, state.view)
 end
 
----@param state CallHierarchyState
+---@param state rockyz.CallHierarchyState
 ---@return integer 1-based
 local function cursor_index(state)
     return vim.api.nvim_win_get_cursor(state.win)[1]
 end
 
 ---Run queued async jobs without exceeding max_concurrent
----@param state CallHierarchyState
+---@param state rockyz.CallHierarchyState
 local function run_next(state)
     while state.pending < config.max_concurrent and #state.queue > 0 do
         local job = table.remove(state.queue, 1)
@@ -304,7 +331,7 @@ local function run_next(state)
 end
 
 ---Add an async job to the bounded request queue
----@param state CallHierarchyState
+---@param state rockyz.CallHierarchyState
 ---@param fn fun(done: function)
 local function enqueue(state, fn)
     state.queue[#state.queue + 1] = fn
@@ -316,9 +343,9 @@ end
 ---If children have already been loaded, the cached node.children value is returned immediately.
 ---Otherwise an LSP request is issued
 ---
----@param state CallHierarchyState
----@param node CallHierarchyNode
----@param cb fun(children: CallHierarchyNode[]|nil, err?: table)
+---@param state rockyz.CallHierarchyState
+---@param node rockyz.CallHierarchyNode
+---@param cb fun(children: rockyz.CallHierarchyNode[]|nil, err?: table)
 local function load_children(state, node, cb)
     local key = cache_key(state, node)
 
@@ -373,16 +400,7 @@ local function load_children(state, node, cb)
                 local target = mode == 'incoming' and call.from or call.to
 
                 if target then
-                    children[#children + 1] = {
-                        name = target.name,
-                        kind = target.kind,
-                        detail = target.detail,
-                        item = target,
-                        expanded = false,
-                        loading = false,
-                        show_loading = false,
-                        children = nil,
-                    }
+                    children[#children + 1] = create_node(target)
                 end
             end
 
@@ -408,7 +426,7 @@ local function load_children(state, node, cb)
     end)
 end
 
----@param state CallHierarchyState
+---@param state rockyz.CallHierarchyState
 ---@param idx integer 1-based
 ---@return integer 1-based exclusive
 local function subtree_end(state, idx)
@@ -427,11 +445,11 @@ local function subtree_end(state, idx)
     return i
 end
 
----@param state CallHierarchyState
+---@param state rockyz.CallHierarchyState
 ---@param idx integer 1-based view index
----@param parent CallHierarchyEntry
----@param children CallHierarchyNode[]
----@return CallHierarchyEntry[]
+---@param parent rockyz.CallHierarchyEntry
+---@param children rockyz.CallHierarchyNode[]
+---@return rockyz.CallHierarchyEntry[]
 local function insert_children(state, idx, parent, children)
     local entries = {}
 
@@ -452,7 +470,7 @@ local function insert_children(state, idx, parent, children)
     return entries
 end
 
----@param state CallHierarchyState
+---@param state rockyz.CallHierarchyState
 ---@param idx integer 1-based view index
 local function collapse_at(state, idx)
     local entry = state.view[idx]
@@ -477,7 +495,7 @@ local function collapse_at(state, idx)
     update_line(state, idx)
 end
 
----@param state CallHierarchyState
+---@param state rockyz.CallHierarchyState
 ---@param idx integer 1-based view index
 local function expand_at(state, idx)
     local entry = state.view[idx]
@@ -569,7 +587,7 @@ local function is_client_attached_to_buffer(client, buf)
     return client.attached_buffers[buf] ~= nil
 end
 
----@param state CallHierarchyState
+---@param state rockyz.CallHierarchyState
 ---@param buf integer buffer handle
 ---@param callback fun(client: vim.lsp.Client|nil)
 local function ensure_client(state, buf, callback)
@@ -586,7 +604,7 @@ local function ensure_client(state, buf, callback)
     end)
 end
 
----@param state CallHierarchyState
+---@param state rockyz.CallHierarchyState
 local function prepare_root(state)
     state.version = state.version + 1
 
@@ -619,16 +637,7 @@ local function prepare_root(state)
 
         for _, item in ipairs(result or {}) do
             state.view[#state.view + 1] = {
-                node = {
-                    name = item.name,
-                    kind = item.kind,
-                    detail = item.detail,
-                    item = item,
-                    expanded = false,
-                    loading = false,
-                    show_loading = false,
-                    children = nil,
-                },
+                node = create_node(item),
                 depth = 0,
             }
         end
@@ -654,7 +663,7 @@ end
 ---
 ---If the original source window was closed while the call hierarchy window is still open, create
 ---a new source window.
----@param state CallHierarchyState
+---@param state rockyz.CallHierarchyState
 ---@return integer|nil
 local function ensure_source_win(state)
     if state.source_win and vim.api.nvim_win_is_valid(state.source_win) then
@@ -674,7 +683,7 @@ local function ensure_source_win(state)
     return state.source_win
 end
 
----@param state CallHierarchyState
+---@param state rockyz.CallHierarchyState
 ---@return lsp.Location|nil
 local function get_current_location(state)
     local entry = state.view[cursor_index(state)]
@@ -695,7 +704,7 @@ local function get_current_location(state)
     }
 end
 
----@param state CallHierarchyState
+---@param state rockyz.CallHierarchyState
 ---@param opts { focus?: boolean }|nil
 local function open_location_in_source_window(state, opts)
     opts = opts or {}
@@ -736,7 +745,7 @@ end
 ---The selected window is only used as a temporary anchor for the jump and does not become the
 ---hierarchy's source window
 ---
----@param state CallHierarchyState
+---@param state rockyz.CallHierarchyState
 ---@param cb fun(anchor_win: integer|nil)
 local function with_split_anchor_win(state, cb)
     local wins = {}
@@ -788,7 +797,7 @@ end
 ---Unlike normal jumps, split/vsplit jumps do not update state.source_win because they are treated
 ---as temporary views rather than the hierarchy's primary source window.
 ---
----@param state CallHierarchyState
+---@param state rockyz.CallHierarchyState
 ---@param cmd 'split'|'vsplit'
 ---@param opts { focus?: boolean }|nil
 local function open_in_split_like(state, cmd, opts)
@@ -834,31 +843,31 @@ local function open_in_split_like(state, cmd, opts)
     end)
 end
 
----@param state CallHierarchyState|nil
+---@param state rockyz.CallHierarchyState|nil
 function M.expand(state)
     state = state or get_state()
     expand_at(state, cursor_index(state))
 end
 
----@param state CallHierarchyState|nil
+---@param state rockyz.CallHierarchyState|nil
 function M.jump(state)
     state = state or get_state()
     open_location_in_source_window(state, { focus = true })
 end
 
----@param state CallHierarchyState|nil
+---@param state rockyz.CallHierarchyState|nil
 function M.jump_in_split(state)
     state = state or get_state()
     open_in_split_like(state, 'split', { focus = true })
 end
 
----@param state CallHierarchyState|nil
+---@param state rockyz.CallHierarchyState|nil
 function M.jump_in_vsplit(state)
     state = state or get_state()
     open_in_split_like(state, 'vsplit', { focus = true })
 end
 
----@param state CallHierarchyState|nil
+---@param state rockyz.CallHierarchyState|nil
 function M.jump_in_tab(state)
     state = state or get_state()
 
@@ -874,26 +883,26 @@ function M.jump_in_tab(state)
     })
 end
 
----@param state CallHierarchyState|nil
+---@param state rockyz.CallHierarchyState|nil
 function M.peek(state)
     state = state or get_state()
     open_location_in_source_window(state)
 end
 
----@param state CallHierarchyState|nil
+---@param state rockyz.CallHierarchyState|nil
 function M.peek_in_split(state)
     state = state or get_state()
     open_in_split_like(state, 'split', { focus = false })
 end
 
----@param state CallHierarchyState|nil
+---@param state rockyz.CallHierarchyState|nil
 function M.peek_in_vsplit(state)
     state = state or get_state()
     open_in_split_like(state, 'vsplit', { focus = false })
 end
 
 ---Collapse all visible nodes without clearing loaded children
----@param state CallHierarchyState|nil
+---@param state rockyz.CallHierarchyState|nil
 function M.collapse_all(state)
     state = state or get_state()
     local roots = {}
@@ -918,12 +927,12 @@ end
 ---overwhelming the LSP server.
 ---
 ---Already loaded nodes reuse node.children directly and do not issue additional LSP requests.
----@param state CallHierarchyState|nil
+---@param state rockyz.CallHierarchyState|nil
 function M.expand_all(state)
     state = state or get_state()
     local version = state.version
 
-    ---@type CallHierarchyEntry
+    ---@type rockyz.CallHierarchyEntry
     local queue = {}
 
     for _, entry in ipairs(state.view) do
@@ -1015,7 +1024,7 @@ function M.expand_all(state)
 end
 
 -- Refresh the current call hierarchy using the original root position
----@param state CallHierarchyState|nil
+---@param state rockyz.CallHierarchyState|nil
 function M.refresh(state)
     state = state or get_state()
     if not state.source_buf or not vim.api.nvim_buf_is_valid(state.source_buf) then
@@ -1028,7 +1037,7 @@ function M.refresh(state)
     prepare_root(state)
 end
 
----@param state CallHierarchyState|nil
+---@param state rockyz.CallHierarchyState|nil
 function M.switch_mode(state)
     state = state or get_state()
     state.mode = state.mode == 'incoming' and 'outgoing' or 'incoming'
@@ -1036,7 +1045,17 @@ function M.switch_mode(state)
     update_winbar(state)
 end
 
----@param state CallHierarchyState
+---@param state rockyz.CallHierarchyState
+local function reset_closed_hierarchy(state)
+    state.version = state.version + 1
+    state.win = nil
+    state.buf = nil
+    state.view = {}
+    state.inflight = {}
+    state.queue = {}
+end
+
+---@param state rockyz.CallHierarchyState
 local function open(state)
     state.buf = vim.api.nvim_create_buf(false, true)
     vim.bo[state.buf].filetype = 'callhierarchy'
@@ -1046,6 +1065,18 @@ local function open(state)
         win = -1,
         style = 'minimal',
     })
+
+    vim.api.nvim_create_autocmd('WinClosed', {
+        group = call_hierarchy_augroup,
+        pattern = tostring(state.win),
+        once = true,
+        callback = function(event)
+            if state.win == tonumber(event.match) then
+                reset_closed_hierarchy(state)
+            end
+        end,
+    })
+
     vim.bo[state.buf].buftype = 'nofile'
     vim.bo[state.buf].modifiable = false
     vim.bo[state.buf].shiftwidth = 2
@@ -1055,16 +1086,18 @@ local function open(state)
     vim.wo[state.win].list = true
 end
 
----@param state CallHierarchyState
+---@param state rockyz.CallHierarchyState
 local function close(state)
+    -- WinClosed event will handle the window that is closed normally
     if state.win and vim.api.nvim_win_is_valid(state.win) then
         vim.api.nvim_win_close(state.win, true)
+        return
     end
-    state.win = nil
-    state.buf = nil
+
+    reset_closed_hierarchy(state)
 end
 
----@param state CallHierarchyState
+---@param state rockyz.CallHierarchyState
 local function set_buf_keymaps(state)
     for key, action in pairs(config.hierarchy_buf_keymaps) do
         vim.keymap.set('n', key, function()
@@ -1077,7 +1110,7 @@ end
 ---
 ---Unlike source-window reloads, this does not move the cursor or navigate to the item's location
 ---
----@param state CallHierarchyState
+---@param state rockyz.CallHierarchyState
 ---@return boolean
 local function set_root_params_from_hierarchy_cursor(state)
     local entry = state.view[cursor_index(state)]
@@ -1113,7 +1146,7 @@ end
 ---If the hierarchy window already exists, reuse it and replace the tree. Otherwise, open a new
 ---hierarchy window.
 ---
----@param state CallHierarchyState
+---@param state rockyz.CallHierarchyState
 local function show_from_cursor(state)
     local current_win = vim.api.nvim_get_current_win()
     if state.win and vim.api.nvim_win_is_valid(state.win) and current_win == state.win then
@@ -1134,11 +1167,22 @@ local function show_from_cursor(state)
             return
         end
 
+        if not vim.api.nvim_win_is_valid(current_win)
+            or vim.api.nvim_win_get_buf(current_win) ~= current_buf
+        then
+            return
+        end
+
+        if not is_client_attached_to_buffer(client, current_buf) then
+            notify.warn('[Call Hierarchy] Selected client is no longer attached to the source buffer')
+            return
+        end
+
         state.source_win = current_win
         state.source_buf = current_buf
         state.root_params = vim.lsp.util.make_position_params(
             state.source_win,
-            state.client.offset_encoding
+            client.offset_encoding
         )
 
         if not state.win or not vim.api.nvim_win_is_valid(state.win) then
@@ -1151,21 +1195,21 @@ local function show_from_cursor(state)
     end)
 end
 
----@param state CallHierarchyState|nil
+---@param state rockyz.CallHierarchyState|nil
 function M.show_incoming_from_cursor(state)
     state = state or get_state()
     state.mode = 'incoming'
     show_from_cursor(state)
 end
 
----@param state CallHierarchyState|nil
+---@param state rockyz.CallHierarchyState|nil
 function M.show_outgoing_from_cursor(state)
     state = state or get_state()
     state.mode = 'outgoing'
     show_from_cursor(state)
 end
 
----@param state CallHierarchyState|nil
+---@param state rockyz.CallHierarchyState|nil
 function M.toggle(state)
     state = state or get_state()
     if state.win and vim.api.nvim_win_is_valid(state.win) then
@@ -1185,6 +1229,21 @@ local function set_global_keymaps()
         })
     end
 end
+
+vim.api.nvim_create_autocmd('TabClosedPre', {
+    group = call_hierarchy_augroup,
+    callback = function()
+        local tabpage = vim.api.nvim_get_current_tabpage()
+        local state = states[tabpage]
+
+        if not state then
+            return
+        end
+
+        reset_closed_hierarchy(state)
+        states[tabpage] = nil
+    end,
+})
 
 set_global_keymaps()
 

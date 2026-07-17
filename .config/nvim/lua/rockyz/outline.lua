@@ -1,17 +1,46 @@
+---@class rockyz.outline.Jump
+---@field range lsp.Range
+---@field selection_range lsp.Range
+---@field offset_encoding string
+
+---@alias rockyz.outline.Provider 'lsp'|'treesitter'|'ctags'|'man'
+
+---@class rockyz.outline.OutlineSymbol
+---@field name string
+---@field kind string|nil
+---@field detail string|nil
+---@field range lsp.Range|nil
+---@field selectionRange lsp.Range|nil
+---@field children rockyz.outline.OutlineSymbol[]|nil
+
+---@class rockyz.outline.TreeSitterSymbol: rockyz.outline.OutlineSymbol
+---@field scope string|nil
+---@field level integer Tree hierarchy level used by Markdown and help
+---@field parent rockyz.outline.TreeSitterSymbol|nil Parent symbol used during postprocessing
+
+---@alias rockyz.outline.Postprocess fun(bufnr: integer, symbol: rockyz.outline.TreeSitterSymbol, match: table): boolean|nil # Return false to exclude the symbol from the outline
+
+---@alias rockyz.outline.FormattableSymbol lsp.DocumentSymbol|lsp.SymbolInformation|rockyz.outline.OutlineSymbol
+
+---@class rockyz.outline.BufferState
+---@field filetype string
+---@field buftype string
+
 ---Store the state of the outline in the current tabpage
 ---@class rockyz.outline.OutlineStatePerTab
 ---@field bufnr integer|nil The bufnr of the outline buffer
----@field win integer|nil The winid of the outline window
+---@field winid integer|nil The winid of the outline window
 ---@field source_bufnr integer|nil The bufnr of the source buffer
 ---@field kinds table<string, boolean> A set to contain unique kinds
 ---@field contents string[] Contents that will be displayed in outline
 ---@field highlights table Information to highlight the icon and detail by extmarks
----@field jumps table Information for jump operations
+---@field jumps table<integer, rockyz.outline.Jump|false> Jump operations indexed by outline line
 ---@field follow_cursor boolean Whether "follow cursor" is enabled
----@field prev_buf_state table The info of the previous buffer (e.g., its buftype, filetype, etc)
----@field provider string Can be "lsp", "treesitter", "ctags" or "man" (specific for man page)
----@field prev_provider string The provider of the previous normal buffer for later restore
+---@field prev_buf_state rockyz.outline.BufferState|nil The state of the previous buffer (e.g., its buftype, filetype, etc)
+---@field provider rockyz.outline.Provider|nil Current outline provider
+---@field prev_provider rockyz.outline.Provider|nil The provider of the previous normal buffer for restoration
 ---@field timer uv.uv_timer_t|nil
+---@field request_id integer Monotonically increasing ID for outline requests
 
 local icons = require('rockyz.icons')
 local fzf = require('rockyz.fzf')
@@ -23,7 +52,10 @@ local M = {}
 ---@type table<integer, rockyz.outline.OutlineStatePerTab>
 local states = {}
 
+---@type table<string, { query: vim.treesitter.Query|nil, err: string|nil }>
 local query_cache = {}
+
+local highlight_ns = vim.api.nvim_create_namespace('rockyz.outline.highlights')
 
 local config = {
     default_provider = 'lsp',
@@ -58,7 +90,8 @@ local ctags_config = {
     -- a child of tag "revision" that is the child of tag "fzf".
     -- For most languages the delimiter is '.', but for C, C++ it's '::'
     scope_sep = '.',
-    -- Maps from ctags kind to LSP symbol kind (maybe not accurate)
+
+    -- Maps ctags kinds to outline symbol kinds
     kinds = {
         const = 'Constant',
         constructor = 'Constructor',
@@ -67,6 +100,7 @@ local ctags_config = {
         member = 'Field',
         var = 'Variable',
     },
+
     filetypes = {
         cpp = {
             scope_sep = '::',
@@ -117,14 +151,14 @@ local ctags_config = {
                 protocol = 'Interface',
                 record = 'Struct',
                 test = 'Function',
-                type = 'TypeAlies',
+                type = 'TypeParameter',
             },
         },
         erlang = {
             kinds = {
                 macro = 'Function',
                 record = 'Struct',
-                type = 'TypeAlies',
+                type = 'TypeParameter',
             },
         },
         go = {
@@ -133,7 +167,7 @@ local ctags_config = {
                 methodSpec = 'Method',
                 package = 'Namespace',
                 packageName = 'Namespace',
-                talias = 'TypeAlies',
+                talias = 'TypeParameter',
                 type = 'Class',
                 unknown = 'Null',
             },
@@ -291,8 +325,8 @@ local ctags_config = {
     },
 }
 
----@type table<string, string> Map from the filetype of a special buffer (i.e., buftype ~= '') to
----its provider name
+---@type table<string, rockyz.outline.Provider> Map from the filetype of a special buffer (i.e.,
+---buftype ~= '') to its provider name
 local special_filetype_providers = {
     man = 'man',
     help = 'treesitter',
@@ -304,7 +338,7 @@ local function ensure_state(tabpage)
     if not states[tabpage] then
         states[tabpage] = {
             bufnr = nil,
-            win = nil,
+            winid = nil,
             source_bufnr = nil,
             kinds = {},
             contents = {},
@@ -312,6 +346,7 @@ local function ensure_state(tabpage)
             jumps = {},
             follow_cursor = false,
             timer = nil,
+            request_id = 0,
         }
     end
     return states[tabpage]
@@ -320,14 +355,19 @@ end
 ---Ignore results from requests that no longer match the current outline state
 ---@param tabpage integer
 ---@param bufnr integer
----@param provider string
-local function is_stale(tabpage, bufnr, provider)
+---@param provider rockyz.outline.Provider
+---@param request_id integer
+---@param changedtick integer
+local function is_stale(tabpage, bufnr, provider, request_id, changedtick)
     local state = states[tabpage]
     return not state
-        or not state.win
-        or not vim.api.nvim_win_is_valid(state.win)
+        or not state.winid
+        or not vim.api.nvim_win_is_valid(state.winid)
         or bufnr ~= state.source_bufnr
         or state.provider ~= provider
+        or state.request_id ~= request_id
+        or not vim.api.nvim_buf_is_valid(bufnr)
+        or vim.api.nvim_buf_get_changedtick(bufnr) ~= changedtick
 end
 
 ---@param tabpage integer
@@ -340,13 +380,15 @@ local function create_outline_buffer(tabpage)
 end
 
 ---@param tabpage integer
----@param symbols lsp.DocumentSymbol[]
+---@param symbols rockyz.outline.FormattableSymbol[]|nil
 ---@param ctx? table LSP provider should provide this
 local function format_symbols(tabpage, symbols, ctx)
-    if symbols == nil then
+    if symbols == nil or symbols == vim.NIL then
         return
     end
+
     local offset_encoding = 'utf-8'
+
     if ctx then
         local client = vim.lsp.get_client_by_id(ctx.client_id)
         if not client then
@@ -354,10 +396,13 @@ local function format_symbols(tabpage, symbols, ctx)
         end
         offset_encoding = client.offset_encoding
     end
+
     local state = states[tabpage]
     local provider = state.provider
     local filter_kinds = state[provider .. '_filter_kinds']
 
+    ---@param _symbols rockyz.outline.FormattableSymbol[]
+    ---@param prefix string
     local function _format_symbols(_symbols, prefix)
         for _, symbol in ipairs(_symbols) do
             local kind
@@ -403,11 +448,17 @@ local function format_symbols(tabpage, symbols, ctx)
                 -- * jump to the symbol in source buffer by vim.lsp.util.show_document(location, offset_encoding)
                 -- * follow cursor (i.e., auto jump to the symbol in outline)
                 -- * reveal (i.e., jump to the symbol in outline by a keymap)
-                table.insert(state.jumps, {
-                    range = symbol.range,
-                    selection_range = symbol.selectionRange,
-                    offset_encoding = offset_encoding,
-                })
+                local range = symbol.range or (symbol.location and symbol.location.range)
+                local selection_range = symbol.selectionRange or range
+                if range and selection_range then
+                    table.insert(state.jumps, {
+                        range = range,
+                        selection_range = selection_range,
+                        offset_encoding = offset_encoding,
+                    })
+                else
+                    table.insert(state.jumps, false)
+                end
             end
 
             if symbol.children then
@@ -422,11 +473,10 @@ end
 ---@param tabpage integer
 local function apply_highlights(tabpage)
     local state = states[tabpage]
-    local ns = vim.api.nvim_create_namespace('rockyz.outline.highlights')
     for i, hl in ipairs(state.highlights) do
-        vim.api.nvim_buf_set_extmark(state.bufnr, ns, i - 1, hl.icon.col, { end_col = hl.icon.end_col, hl_group = 'SymbolKind' .. hl.icon.kind })
+        vim.api.nvim_buf_set_extmark(state.bufnr, highlight_ns, i - 1, hl.icon.col, { end_col = hl.icon.end_col, hl_group = 'SymbolKind' .. hl.icon.kind })
         if hl.detail then
-            vim.api.nvim_buf_set_extmark(state.bufnr, ns, i - 1, hl.detail.col, { end_col = hl.detail.end_col, hl_group = 'Description' })
+            vim.api.nvim_buf_set_extmark(state.bufnr, highlight_ns, i - 1, hl.detail.col, { end_col = hl.detail.end_col, hl_group = 'Description' })
         end
     end
 end
@@ -437,6 +487,7 @@ end
 local function set_contents(tabpage, contents)
     local state = states[tabpage]
     vim.bo[state.bufnr].modifiable = true
+    vim.api.nvim_buf_clear_namespace(state.bufnr, highlight_ns, 0, -1)
     vim.api.nvim_buf_set_lines(state.bufnr, 0, -1, false, contents)
     vim.bo[state.bufnr].modifiable = false
 end
@@ -445,7 +496,9 @@ end
 
 ---@param tabpage integer
 ---@param bufnr integer
-local function lsp_request(tabpage, bufnr)
+---@param request_id integer
+---@param changedtick integer
+local function lsp_request(tabpage, bufnr, request_id, changedtick)
     local method = 'textDocument/documentSymbol'
     local filename = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(bufnr), ':t')
     filename = filename ~= '' and filename or '[No Name]'
@@ -454,27 +507,53 @@ local function lsp_request(tabpage, bufnr)
     if not next(clients) then
         set_contents(tabpage, { string.format("No LSP symbols found in document '%s'", filename) })
         return
-    else
-        set_contents(tabpage, { string.format("Loading document symbols for '%s'%s", filename, icons.misc.ellipsis) })
     end
-    local params = { textDocument = vim.lsp.util.make_text_document_params(bufnr) }
 
+    set_contents(tabpage, { string.format("Loading document symbols for '%s'%s", filename, icons.misc.ellipsis) })
+
+    local params = { textDocument = vim.lsp.util.make_text_document_params(bufnr) }
     local remaining = #clients
+    local request_failed = false
+
+    local function finish()
+        remaining = remaining - 1
+        if remaining ~= 0 then
+            return
+        end
+
+        local state = states[tabpage]
+        if not state then
+            return
+        end
+
+        if request_failed and #state.contents == 0 then
+            set_contents(tabpage, { string.format("Failed to request document symbols for '%s'", filename) })
+            return
+        end
+
+        set_contents(tabpage, state.contents)
+        apply_highlights(tabpage)
+        vim.t[tabpage].outline_provider = 'LSP' -- used by winbar
+    end
+
     for _, client in ipairs(clients) do
-        client:request(method, params, function(_, result, ctx)
-            local state = states[tabpage]
-            if is_stale(tabpage, ctx.bufnr, 'lsp') then
+        local ok = client:request(method, params, function(err, result, ctx)
+            if is_stale(tabpage, ctx.bufnr, 'lsp', request_id, changedtick) then
                 return
             end
 
-            format_symbols(tabpage, result, ctx)
-            remaining = remaining - 1
-            if remaining == 0 then
-                set_contents(tabpage, state.contents)
-                apply_highlights(tabpage)
-                vim.t[tabpage].outline_provider = 'LSP' -- used by winbar
+            if err then
+                request_failed = true
+            else
+                format_symbols(tabpage, result, ctx)
             end
-        end)
+            finish()
+        end, bufnr)
+
+        if not ok then
+            request_failed = true
+            finish()
+        end
     end
 end
 
@@ -502,7 +581,7 @@ local function node_from_match(match, path)
 end
 
 local get_parent_funcs = {
-    default = function(stack, match, node)
+    default = function(stack, _, node)
         for i = #stack, 1, -1 do
             local last_node = stack[i].node
             if last_node == node or vim.treesitter.is_ancestor(last_node, node) then
@@ -513,7 +592,9 @@ local get_parent_funcs = {
         end
         return nil, nil, 0
     end,
-    help = function(stack, match, node)
+
+    help = function(stack, _, node)
+
         local function get_level(_node)
             local level_str = _node:type():match('^h(%d+)$')
             if level_str then
@@ -522,6 +603,7 @@ local get_parent_funcs = {
                 return 99
             end
         end
+
         -- Fix the symbol nesting
         local level = get_level(node)
         for i = #stack, 1, -1 do
@@ -551,8 +633,8 @@ local get_parent_funcs = {
         local level = tonumber(match.level)
         assert(level, "Missing 'level' metadata in typst query")
         for i = #stack, 1, -1 do
-            if stack[i].item.level < level or stack[i].node == node then
-                return stack[i].item, stack[i].node, level
+            if stack[i].symbol.level < level or stack[i].node == node then
+                return stack[i].symbol, stack[i].node, level
             else
                 table.remove(stack, i)
             end
@@ -563,7 +645,10 @@ local get_parent_funcs = {
 get_parent_funcs.vimdoc = get_parent_funcs.help
 get_parent_funcs.tsx = get_parent_funcs.typescript
 
+---Adjust language specific Treesitter symbols before adding them to the outline
+---@type table<string, rockyz.outline.Postprocess>
 local postprocess_funcs = {
+    -- Resolves nested C declarators to their actual identifier
     c = function(bufnr, symbol, match)
         local root = node_from_match(match, 'root')
         if root then
@@ -586,12 +671,14 @@ local postprocess_funcs = {
                 end
             end
             symbol.name = vim.treesitter.get_node_text(root, bufnr) or '<parse error>'
-            if not symbol.selection_range then
-                symbol.selection_range = range_from_nodes(root, root)
+            if not symbol.selectionRange then
+                symbol.selectionRange = range_from_nodes(root, root)
             end
         end
     end,
-    cpp = function(bufnr, symbol, match)
+
+    -- Extends C++ function ranges to include their declarations
+    cpp = function(_, symbol, match)
         if symbol.kind ~= 'Function' then
             return
         end
@@ -606,6 +693,8 @@ local postprocess_funcs = {
             end
         end
     end,
+
+    -- Maps Elixir constructs to LSP kinds and skips defstruct entries after making their parent
     elixir = function(bufnr, symbol, match)
         local kind_map = {
             callback = 'Function',
@@ -633,6 +722,7 @@ local postprocess_funcs = {
                 symbol.parent.kind = 'Interface'
             elseif name == 'defstruct' and symbol.parent then
                 symbol.parent.kind = 'Struct'
+                -- Keep the parent Struct but omit the defstruct declaration itself
                 return false
             elseif name == 'defimpl' then
                 local protocol = assert(node_from_match(match, 'protocol'))
@@ -648,6 +738,7 @@ local postprocess_funcs = {
         end
     end,
 
+    ---Prefixes Go method names with their receiver
     ---@note Additionally processes the following captures:
     ---      `@receiver` - extends the name to "@receiver @name"
     go = function(bufnr, symbol, match)
@@ -657,6 +748,8 @@ local postprocess_funcs = {
             symbol.name = string.format('%s %s', receiver_text, symbol.name)
         end
     end,
+
+    -- Reconstructs complete Vim help header names and selection ranges
     help = function(bufnr, symbol, match)
         -- The name node of headers only captures the final node.
         -- We need to get _all_ word nodes
@@ -667,16 +760,16 @@ local postprocess_funcs = {
                 local row, col = node:start()
                 table.insert(pieces, 1, vim.treesitter.get_node_text(node, bufnr))
                 node = node:prev_sibling()
-                symbol.lnum = row + 1
-                symbol.col = col
-                if symbol.selection_range then
-                    symbol.selection_range.lnum = row + 1
-                    symbol.selection_range.col = col
+                if symbol.selectionRange then
+                    symbol.selectionRange.start.line = row
+                    symbol.selectionRange.start.character = col
                 end
             end
             symbol.name = table.concat(pieces, ' ')
         end
     end,
+
+    ---Prefixes JavaScript test and describe names with their call method
     ---@note Additionally processes the following captures:
     ---      `@method`, `@string`, and `@modifier` - replaces name with "@method[.@modifier] @string"
     javascript = function(bufnr, symbol, match)
@@ -692,6 +785,8 @@ local postprocess_funcs = {
             symbol.name = fn .. ' ' .. str
         end
     end,
+
+    -- Prefixes Lua Busted test and describe names with their call method
     lua = function(bufnr, symbol, match)
         local method = node_from_match(match, 'method')
         if method then
@@ -701,27 +796,31 @@ local postprocess_funcs = {
             end
         end
     end,
-    markdown = function(bufnr, symbol, match)
+
+    -- Removes leading whitespace from Markdown headings
+    markdown = function(_, symbol, _)
         -- Strip leading whitespace
         local prefix = symbol.name:match('^%s*')
         if prefix ~= '' then
             symbol.name = symbol.name:sub(prefix:len() + 1)
-            if symbol.selection_range then
-                symbol.selection_range.col = symbol.selection_range.col + prefix:len()
+            if symbol.selectionRange then
+                symbol.selectionRange.start.character = symbol.selectionRange.start.character + prefix:len()
             end
         end
     end,
+
+    ---Prefixes Ruby method names with their receiver and call method
     ---@note Additionally processes the following captures:
-    ---      `@method`, `@receiver`, `@separator` - extends the name to "@method @reciever[@separator]@name", with @separator defaulting to "."
+    ---      `@method`, `@receiver`, `@separator` - extends the name to "@method @receiver[@separator]@name", with @separator defaulting to "."
     ruby = function(bufnr, symbol, match)
-        -- Reciever modification comes first, as we intend for it to generate a ruby-like `reciever.name`
+        -- Receiver modification comes first, as we intend for it to generate a ruby-like `receiver.name`
         local receiver = node_from_match(match, 'receiver')
         local separator = node_from_match(match, 'separator')
         if receiver then
-            local reciever_name = vim.treesitter.get_node_text(receiver, bufnr) or '<parse error>'
+            local receiver_name = vim.treesitter.get_node_text(receiver, bufnr) or '<parse error>'
             local separator_string = separator and vim.treesitter.get_node_text(separator, bufnr) or '.'
-            if reciever_name ~= symbol.name then
-                symbol.name = reciever_name .. separator_string .. symbol.name
+            if receiver_name ~= symbol.name then
+                symbol.name = receiver_name .. separator_string .. symbol.name
             end
         end
 
@@ -735,6 +834,8 @@ local postprocess_funcs = {
             end
         end
     end,
+
+    -- Formats Rust trait implementation names
     rust = function(bufnr, symbol, match)
         if symbol.kind == 'Class' then
             local trait_node = node_from_match(match, 'trait')
@@ -747,6 +848,8 @@ local postprocess_funcs = {
             symbol.name = name
         end
     end,
+
+    ---Corrects TypeScript function kinds and prefixes test and describe names
     ---@note Additionally processes the following captures:
     ---      `@method`, `@string`, and `@modifier` - replaces name with "@method[.@modifier] @string"
     typescript = function(bufnr, symbol, match)
@@ -771,7 +874,9 @@ local postprocess_funcs = {
             symbol.name = fn .. ' ' .. str
         end
     end,
-    zig = function(buf, symbol, match)
+
+    -- Prefixes Zig test declarations with test
+    zig = function(_, symbol, match)
         local node = assert(node_from_match(match, 'symbol'))
         if node:type() == 'test_declaration' then
             symbol.name = 'test ' .. symbol.name
@@ -783,9 +888,14 @@ postprocess_funcs.tsx = postprocess_funcs.typescript
 postprocess_funcs.vimdoc = postprocess_funcs.help
 
 ---@param lang string
----@return vim.treesitter.Query|nil err parse error
----@return string|nil
+---@return vim.treesitter.Query|nil query
+---@return string|nil err
 local function get_query(lang)
+    local entry = query_cache[lang]
+    if entry then
+        return entry.query, entry.err
+    end
+
     local ok, query = pcall(vim.treesitter.query.get, lang, 'outline')
     if ok then
         query_cache[lang] = { query = query }
@@ -793,15 +903,14 @@ local function get_query(lang)
         query_cache[lang] = { err = tostring(query) }
     end
 
-    local entry = query_cache[lang]
-    return entry.query, entry.err
+    return query_cache[lang].query, query_cache[lang].err
 end
 
----@param buf integer|nil
+---@param bufnr integer|nil
 ---@return vim.treesitter.LanguageTree|nil
-local function get_parser(buf)
-    buf = buf or vim.api.nvim_get_current_buf()
-    local ok, parser = pcall(vim.treesitter.get_parser, buf)
+local function get_parser(bufnr)
+    bufnr = bufnr or vim.api.nvim_get_current_buf()
+    local ok, parser = pcall(vim.treesitter.get_parser, bufnr)
     return ok and parser or nil
 end
 
@@ -809,6 +918,7 @@ end
 ---@param lang string
 ---@param query vim.treesitter.Query
 ---@param syntax_tree TSTree
+---@return rockyz.outline.TreeSitterSymbol[]
 local function ts_build_symbols(bufnr, lang, query, syntax_tree)
     local get_parent = get_parent_funcs[lang] or get_parent_funcs.default
 
@@ -868,7 +978,9 @@ local function ts_build_symbols(bufnr, lang, query, syntax_tree)
             name = '<Anonymous>'
         end
 
-        -- LSP symbol (lsp.DocumentSymbol)
+        selection_range = selection_range or range
+
+        -- Treesitter symbol with an LSP-like shape
         local symbol = {
             kind = kind,
             name = name,
@@ -884,20 +996,20 @@ local function ts_build_symbols(bufnr, lang, query, syntax_tree)
         }
 
         local postprocess = postprocess_funcs[lang]
-        if postprocess then
-            postprocess(bufnr, symbol, match)
-        end
+        local should_include = not postprocess or postprocess(bufnr, symbol, match) ~= false
 
-        if parent_symbol then
-            table.insert(parent_symbol.children, symbol)
-        else
-            table.insert(symbols, symbol)
-        end
+        if should_include then
+            if parent_symbol then
+                table.insert(parent_symbol.children, symbol)
+            else
+                table.insert(symbols, symbol)
+            end
 
-        table.insert(stack, {
-            node = symbol_node,
-            symbol = symbol,
-        })
+            table.insert(stack, {
+                node = symbol_node,
+                symbol = symbol,
+            })
+        end
 
         ::continue::
     end
@@ -907,8 +1019,10 @@ end
 
 ---@param tabpage integer
 ---@param bufnr integer
----@param cb fun(lang: string, query: vim.treesitter.Query, syntax_tree: TSNode)
-local function ts_parse_tree(tabpage, bufnr, cb)
+---@param cb fun(lang: string, query: vim.treesitter.Query, syntax_tree: TSTree)
+---@param request_id integer
+---@param changedtick integer
+local function ts_parse_tree(tabpage, bufnr, cb, request_id, changedtick)
     local parser = get_parser(bufnr)
     if not parser then
         set_contents(tabpage, { 'No parser for this buffer' })
@@ -924,7 +1038,7 @@ local function ts_parse_tree(tabpage, bufnr, cb)
     end
 
     parser:parse(nil, function(err, syntax_trees)
-        if is_stale(tabpage, bufnr, 'treesitter') then
+        if is_stale(tabpage, bufnr, 'treesitter', request_id, changedtick) then
             return
         end
         if err then
@@ -939,41 +1053,48 @@ end
 
 ---@param tabpage integer
 ---@param bufnr integer
-local function treesitter_request(tabpage, bufnr)
+---@param request_id integer
+---@param changedtick integer
+local function treesitter_request(tabpage, bufnr, request_id, changedtick)
     ts_parse_tree(tabpage, bufnr, function(lang, query, syntax_tree)
         local symbols = ts_build_symbols(bufnr, lang, query, syntax_tree)
         format_symbols(tabpage, symbols)
         set_contents(tabpage, states[tabpage].contents)
         apply_highlights(tabpage)
-    end)
+    end, request_id, changedtick)
 
     vim.t[tabpage].outline_provider = 'Treesitter' -- used by winbar
 end
 
 -- Ctags provider
 
--- Convert the tag (entry in the JSON) to LSP symbol (lsp.DocumentSymbol)
--- symbol = {
---     name,
---     kind,
---     detail,
---     range,
---     selectionRange,
---     children,
--- }
+---Convert ctags JSON entries to outline symbols
+---
+---symbol = {
+---    name,
+---    kind,
+---    detail,
+---    range,
+---    selectionRange,
+---    children,
+---}
+---
 ---@param tabpage integer
----@param text string The output (JSON array) of command `ctags --output-format=json "--fields=*" {file}`
+---@param text string Line-delimited JSON output of `ctags --output-format=json "--fields=*" {file}`
 local function ctags_convert_symbols(tabpage, text)
     local state = states[tabpage]
     local ft = vim.bo[state.source_bufnr].filetype
     local ctags_ft_config = ctags_config.filetypes[ft] or {}
-    ---@type lsp.DocumentSymbol[]
+
+    ---@type rockyz.outline.OutlineSymbol[]
     local symbols = {}
     local tags = {}
+
     for line in vim.gsplit(text, '\n', { plain = true, trimempty = true }) do
         local tag = vim.json.decode(line)
         table.insert(tags, tag)
     end
+
     -- Sort tags by position
     table.sort(tags, function(t1, t2)
         return t1.line < t2.line
@@ -1009,14 +1130,14 @@ local function ctags_convert_symbols(tabpage, text)
         local symbol = ensure_child(children, tag.name)
 
         -- Kind
-        local lsp_kind = 'Unknown' -- default to LSP symbol kind 'Text'
+        local symbol_kind = 'Unknown'
         if tag.kind then
             local kind = tag.kind
-            lsp_kind = ctags_ft_config.kinds and ctags_ft_config.kinds[kind]
+            symbol_kind = ctags_ft_config.kinds and ctags_ft_config.kinds[kind]
                 or ctags_config.kinds[kind]
                 or (kind:sub(1, 1):upper() .. kind:sub(2))
         end
-        symbol.kind = lsp_kind
+        symbol.kind = symbol_kind
 
         -- Range and selectionRange
         local range = {
@@ -1035,8 +1156,8 @@ local function ctags_convert_symbols(tabpage, text)
         -- Detail
         local details = {}
         if tag.typeref then
-            local type = string.gsub(tag.typeref, 'typename:', '', 1)
-            table.insert(details, type)
+            local type_name = string.gsub(tag.typeref, 'typename:', '', 1)
+            table.insert(details, type_name)
         end
         if tag.signature then
             table.insert(details, tag.signature)
@@ -1049,9 +1170,11 @@ end
 
 ---@param tabpage integer
 ---@param bufnr integer
-local function ctags_request(tabpage, bufnr)
+---@param request_id integer
+---@param changedtick integer
+local function ctags_request(tabpage, bufnr, request_id, changedtick)
     local on_exit = vim.schedule_wrap(function(obj)
-        if is_stale(tabpage, bufnr, 'ctags') then
+        if is_stale(tabpage, bufnr, 'ctags', request_id, changedtick) then
             return
         end
         if obj.code ~= 0 then
@@ -1080,7 +1203,7 @@ end
 
 ---@param lines string[] The text lines in the man page
 local function man_convert_symbols(lines)
-    ---@type lsp.DocumentSymbol[]
+    ---@type rockyz.outline.OutlineSymbol[]
     local symbols = {}
 
     local last_header
@@ -1151,52 +1274,71 @@ end
 ---@param bufnr integer
 local function request(tabpage, bufnr)
     local state = states[tabpage]
-    if not state then
+    if not state or not state.winid or not vim.api.nvim_win_is_valid(state.winid) then
         return
     end
 
+    if not vim.api.nvim_buf_is_valid(bufnr) then
+        return
+    end
+
+    state.request_id = state.request_id + 1
+    local request_id = state.request_id
+    local changedtick = vim.api.nvim_buf_get_changedtick(bufnr)
+
     state.kinds, state.contents, state.highlights, state.jumps = {}, {}, {}, {}
     if state.provider == 'lsp' then
-        lsp_request(tabpage, bufnr)
+        lsp_request(tabpage, bufnr, request_id, changedtick)
     elseif state.provider == 'treesitter' then
-        treesitter_request(tabpage, bufnr)
+        treesitter_request(tabpage, bufnr, request_id, changedtick)
     elseif state.provider == 'ctags' then
-        ctags_request(tabpage, bufnr)
+        ctags_request(tabpage, bufnr, request_id, changedtick)
     elseif state.provider == 'man' then
         handle_man(tabpage, bufnr)
     end
 end
 
--- The foldexpr set to the outline window
+-- The foldexpr used by the outline window
 function M.get_fold()
     local tabpage = vim.api.nvim_get_current_tabpage()
     local state = states[tabpage]
+    local shiftwidth = vim.bo[state.bufnr].shiftwidth
+    if shiftwidth == 0 then
+        shiftwidth = vim.bo[state.bufnr].tabstop
+    end
 
     local function indent_level(lnum)
-        return vim.fn.indent(lnum) / vim.bo[state.bufnr].shiftwidth
+        return vim.fn.indent(lnum) / shiftwidth
     end
 
     local this_indent = indent_level(vim.v.lnum)
     local next_indent = indent_level(vim.v.lnum + 1)
-    if next_indent == this_indent then
-        return this_indent
-    elseif next_indent < this_indent then
-        return this_indent
-    elseif next_indent > this_indent then
+
+    if next_indent > this_indent then
         return '>' .. next_indent
     end
+    return this_indent
 end
 
 ---@param tabpage integer
 ---@param opts table
 local function select(tabpage, opts)
     local state = states[tabpage]
+    if not state then
+        return
+    end
+
     local lnum = vim.fn.line('.')
     local jump = state.jumps[lnum]
+    if not jump then
+        return
+    end
+
     local location = { -- lsp.Location
         uri = vim.uri_from_bufnr(state.source_bufnr),
         range = jump.selection_range,
     }
+
     vim.lsp.util.show_document(location, jump.offset_encoding, { reuse_win = true, focus = opts.focus })
 end
 
@@ -1204,7 +1346,7 @@ end
 ---@param tabpage integer
 local function reveal_symbol(tabpage)
     local state = states[tabpage]
-    if not state or not state.win or not vim.api.nvim_win_is_valid(state.win) then
+    if not state or not state.winid or not vim.api.nvim_win_is_valid(state.winid) then
         return
     end
 
@@ -1215,12 +1357,15 @@ local function reveal_symbol(tabpage)
     for i = #state.jumps, 1, -1 do
         local jump = state.jumps[i]
         count = count + 1
-        local range = vim.range.lsp(state.source_bufnr, jump.range, jump.offset_encoding)
-        if range:has(cursor_range) then
-            vim.api.nvim_win_call(state.win, function()
-                vim.api.nvim_win_set_cursor(state.win, { #state.jumps - count + 1, 0 })
-            end)
-            return
+
+        if jump then
+            local range = vim.range.lsp(state.source_bufnr, jump.range, jump.offset_encoding)
+            if range:has(cursor_range) then
+                vim.api.nvim_win_call(state.winid, function()
+                    vim.api.nvim_win_set_cursor(state.winid, { #state.jumps - count + 1, 0 })
+                end)
+                return
+            end
         end
     end
 end
@@ -1313,7 +1458,7 @@ end
 ---@return boolean
 local function has_open_outline()
     for _, state in pairs(states) do
-        if state.win and vim.api.nvim_win_is_valid(state.win) then
+        if state.winid and vim.api.nvim_win_is_valid(state.winid) then
             return true
         end
     end
@@ -1339,7 +1484,7 @@ local function set_autocmd(tabpage)
             end
 
             local state = states[tabpage]
-            if not state or not state.win or not vim.api.nvim_win_is_valid(state.win) then
+            if not state or not state.winid or not vim.api.nvim_win_is_valid(state.winid) then
                 return
             end
 
@@ -1425,14 +1570,14 @@ local function set_autocmd(tabpage)
 
     vim.api.nvim_create_autocmd({ 'WinClosed' }, {
         group = group,
-        pattern = tostring(states[tabpage].win),
+        pattern = tostring(states[tabpage].winid),
         callback = function()
             local state = states[tabpage]
             if not state then
                 return
             end
 
-            state.win = nil
+            state.winid = nil
             close_timer(state)
             disable_follow_cursor(tabpage)
             del_autocmd(tabpage)
@@ -1445,8 +1590,18 @@ local function set_autocmd(tabpage)
 end
 
 ---@param tabpage integer
+---@return rockyz.outline.OutlineStatePerTab|nil
+local function get_open_state(tabpage)
+    local state = states[tabpage]
+    if not state or not state.winid or not vim.api.nvim_win_is_valid(state.winid) then
+        return
+    end
+    return state
+end
+
+---@param tabpage integer
 local function is_opened(tabpage)
-    return states[tabpage] and states[tabpage].win and vim.api.nvim_win_is_valid(states[tabpage].win)
+    return get_open_state(tabpage) ~= nil
 end
 
 ---@param tabpage integer
@@ -1455,13 +1610,16 @@ local function open(tabpage)
     local bufnr = vim.api.nvim_get_current_buf()
     local ft = vim.bo[bufnr].filetype
     state.provider = special_filetype_providers[ft] or config.default_provider
+
     create_outline_buffer(tabpage)
-    local win = vim.api.nvim_open_win(state.bufnr, true, {
+
+    local winid = vim.api.nvim_open_win(state.bufnr, true, {
         width = config.width,
         split = 'right',
         win = -1,
         style = 'minimal',
     })
+
     local win_options = {
         cursorline = true,
         foldcolumn = '1',
@@ -1472,21 +1630,28 @@ local function open(tabpage)
         winfixwidth = true,
         wrap = false,
     }
+
     for option, value in pairs(win_options) do
         vim.wo[option] = value
     end
-    state.win = win
+
+    state.winid = winid
     state.source_bufnr = bufnr
+
     vim.cmd('wincmd p')
     request(tabpage, bufnr)
     set_keymaps(tabpage)
     set_autocmd(tabpage)
+
+    if state.follow_cursor then
+        enable_follow_cursor(tabpage)
+    end
 end
 
 ---@param tabpage integer
 local function close(tabpage)
-    if states[tabpage].win and vim.api.nvim_win_is_valid(states[tabpage].win) then
-        vim.api.nvim_win_close(states[tabpage].win, true)
+    if states[tabpage].winid and vim.api.nvim_win_is_valid(states[tabpage].winid) then
+        vim.api.nvim_win_close(states[tabpage].winid, true)
         -- autocmds will be deleted by the "WinClosed" autocmd
     end
 end
@@ -1495,12 +1660,16 @@ end
 ---@param tabpage integer
 ---@param kinds string[] List of kinds
 local function show_only(tabpage, kinds)
-    local state = states[tabpage]
+    local state = get_open_state(tabpage)
+    if not state then
+        return
+    end
+
     local provider = state.provider
     state[provider .. '_filter_kinds'] = kinds
     debounce_request(tabpage, state.source_bufnr)
     vim.t[tabpage].filter_on = true
-    vim.api.nvim__redraw({ win = state.win, winbar = true })
+    vim.api.nvim__redraw({ win = state.winid, winbar = true })
 end
 
 function M.jump()
@@ -1531,15 +1700,28 @@ end
 
 function M.reveal()
     local tabpage = vim.api.nvim_get_current_tabpage()
-    local source_win = vim.fn.bufwinid(states[tabpage].source_bufnr)
-    vim.api.nvim_win_call(source_win, function()
+    local state = get_open_state(tabpage)
+    if not state then
+        return
+    end
+
+    local source_winid = vim.fn.bufwinid(state.source_bufnr)
+    if source_winid == -1 then
+        return
+    end
+
+    vim.api.nvim_win_call(source_winid, function()
         reveal_symbol(tabpage)
     end)
 end
 
 function M.toggle_follow()
     local tabpage = vim.api.nvim_get_current_tabpage()
-    local state = states[tabpage]
+    local state = get_open_state(tabpage)
+    if not state then
+        return
+    end
+
     if state.follow_cursor then
         disable_follow_cursor(tabpage)
         vim.t[tabpage].is_outline_follow_cursor_enabled = false
@@ -1549,7 +1731,7 @@ function M.toggle_follow()
     end
     state.follow_cursor = not state.follow_cursor
     -- Update the statusline and winbar
-    vim.api.nvim__redraw({ win = state.win, winbar = true })
+    vim.api.nvim__redraw({ win = state.winid, winbar = true })
 end
 
 function M.show_functions_only()
@@ -1559,37 +1741,57 @@ end
 
 function M.refresh()
     local tabpage = vim.api.nvim_get_current_tabpage()
-    debounce_request(tabpage, states[tabpage].source_bufnr)
+    local state = get_open_state(tabpage)
+    if not state then
+        return
+    end
+
+    debounce_request(tabpage, state.source_bufnr)
 end
 
 function M.switch_to_ctags()
     local tabpage = vim.api.nvim_get_current_tabpage()
-    local state = states[tabpage]
+    local state = get_open_state(tabpage)
+    if not state then
+        return
+    end
+
     state.provider = 'ctags'
     debounce_request(tabpage, state.source_bufnr)
 end
 
 function M.switch_to_lsp()
     local tabpage = vim.api.nvim_get_current_tabpage()
-    local state = states[tabpage]
+    local state = get_open_state(tabpage)
+    if not state then
+        return
+    end
+
     state.provider = 'lsp'
     debounce_request(tabpage, state.source_bufnr)
 end
 
 function M.switch_to_treesitter()
     local tabpage = vim.api.nvim_get_current_tabpage()
-    local state = states[tabpage]
+    local state = get_open_state(tabpage)
+    if not state then
+        return
+    end
+
     state.provider = 'treesitter'
     debounce_request(tabpage, state.source_bufnr)
 end
 
 function M.filter_kinds()
     local tabpage = vim.api.nvim_get_current_tabpage()
-    local state = states[tabpage]
+    local state = get_open_state(tabpage)
+    if not state then
+        return
+    end
 
     local kinds = {}
     for kind, _ in pairs(state.kinds) do
-        local icon = icons.symbol_kinds[kind]
+        local icon = icons.symbol_kinds[kind] or icons.symbol_kinds['Unknown']
         table.insert(kinds, fzf.ansi(icon, 'SymbolKind' .. kind) .. ' ' .. kind)
     end
 
@@ -1611,12 +1813,18 @@ end
 
 function M.clear_filter()
     local tabpage = vim.api.nvim_get_current_tabpage()
-    local state = states[tabpage]
+    local state = get_open_state(tabpage)
+    if not state then
+        return
+    end
+
     local provider = state.provider
     state[provider .. '_filter_kinds'] = nil
+
     debounce_request(tabpage, state.source_bufnr)
+
     vim.t[tabpage].filter_on = false
-    vim.api.nvim__redraw({ win = state.win, winbar = true })
+    vim.api.nvim__redraw({ win = state.winid, winbar = true })
 end
 
 function M.toggle_outline_window()
@@ -1647,8 +1855,8 @@ vim.api.nvim_create_autocmd({ 'TabClosedPre' }, {
             return
         end
 
-        local had_outline = state.win and vim.api.nvim_win_is_valid(state.win)
-        state.win = nil
+        local had_outline = state.winid and vim.api.nvim_win_is_valid(state.winid)
+        state.winid = nil
         close_timer(state)
         disable_follow_cursor(tabpage)
         del_autocmd(tabpage)

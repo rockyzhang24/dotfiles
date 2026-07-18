@@ -1,5 +1,5 @@
 -- Get input lines from stdin. Decorate each line, e.g., prepend a devicon to the filename in each
--- line or ANSI color part of texts. And output processed lines to stdout.
+-- line or add ANSI colors to text, then write processed lines to stdout.
 
 local M = {}
 
@@ -8,90 +8,106 @@ vim.cmd.packadd('nvim-web-devicons')
 local devicons = require('nvim-web-devicons')
 local color = require('rockyz.utils.color')
 
----@type table<string, string> A map from highlight group to ANSI color code
-local cached_ansi = {}
+---@type table<string, string> Maps highlight group names to ANSI escape codes
+local ansi_code_by_highlight = {}
 
-local function ansi_string(string, hl)
-    if not cached_ansi[hl] then
-        cached_ansi[hl] = color.hl2ansi(hl)
+---@param text string
+---@param highlight_group string
+---@return string
+local function colorize_with_ansi(text, highlight_group)
+    if not ansi_code_by_highlight[highlight_group] then
+        ansi_code_by_highlight[highlight_group] = color.hl2ansi(highlight_group)
     end
-    return cached_ansi[hl] .. string .. '\x1b[m'
+    return ansi_code_by_highlight[highlight_group] .. text .. '\x1b[m'
 end
 
-local function ansi_icon(filename)
-    local ext = filename:match('^.+%.(.+)$')
-    local icon, hl = devicons.get_icon(filename, ext, { default = true })
-    return ansi_string(icon, hl)
+---@param filename string
+---@return string
+local function get_ansi_icon(filename)
+    local extension = filename:match('^.+%.(.+)$')
+    local icon, highlight_group = devicons.get_icon(filename, extension, { default = true })
+    return colorize_with_ansi(icon, highlight_group)
 end
 
-
+---@param source string Input source name used to select the line format
 function M.dressup(source)
     local cwd = vim.uv.cwd()
-    local dotfile_changed
+    local has_dotfile_changes
 
     for line in io.lines() do
         local output_line
         if source == 'fd' then
             -- line is a filename
             -- output: <icon> <filename>\t<absolute_path>
-            local icon = ansi_icon(line)
-            output_line = icon .. ' ' .. line .. '\t' .. cwd .. '/' .. line
+            local ansi_icon = get_ansi_icon(line)
+            output_line = ansi_icon .. ' ' .. line .. '\t' .. cwd .. '/' .. line
         elseif source == 'ls_gitfiles' then
             -- lines are output of `ls-gitfiles` (~/.config/bin/ls-gitfiles)
             -- (1) Some file changed, i.e., git status has output
-            -- <status_code> <filename>\t<fullpath> --> <status_code> <icon> <filename>\t<filename>\t<fullpath>
+            -- <status_code> <filename>\t<full_path> --> <status_code> <icon> <filename>\t<filename>\t<full_path>
             -- (2) No file changed, i.e., git status has no output
-            -- <filename>\t<fullpath> --> <icon> <filename>\t<filename>\t<fullpath>
+            -- <filename>\t<full_path> --> <icon> <filename>\t<filename>\t<full_path>
             --
             -- In fzf, we set \t as its delimiter, and then we can easily extract the filename and its
-            -- fullpath by the second and the third items.
-            local filename, fullpath = unpack(vim.split(line, '\t'))
+            -- full_path by the second and the third items.
+            local filename, full_path = unpack(vim.split(line, '\t'))
             local status_code = filename:match('^(%[.*%])')
             if status_code then
                 filename = line:match('^%[.*%]%s(.*)\t')
-                dotfile_changed = true
+                has_dotfile_changes = true
             else
                 filename = vim.trim(filename)
             end
-            local icon = ansi_icon(fullpath)
-            if not dotfile_changed then
+            local ansi_icon = get_ansi_icon(full_path)
+            if not has_dotfile_changes then
                 -- For (2)
-                output_line = icon .. ' ' .. filename .. '\t' .. filename .. '\t' .. fullpath
+                output_line = ansi_icon .. ' ' .. filename .. '\t' .. filename .. '\t' .. full_path
             else
                 -- For (1)
                 output_line = string.format(
                     '%s %s %s\t%s\t%s',
-                    status_code and status_code or string.rep(' ', 4),
-                    icon,
+                    status_code or string.rep(' ', 4),
+                    ansi_icon,
                     filename,
                     filename,
-                    fullpath
+                    full_path
                 )
             end
         elseif source == 'git_lsfiles_fullname' then
             -- input line: <relative_path>\t<absolute_path>, where
             --   <relative_path> is the output of `git ls-files --full-name`
-            --   <absolute_path> is <git_root_dir>/<relative_path>
+            --   <absolute_path> is <git_root>/<relative_path>
             -- Output: <icon> <relative_path>\t<relative_path>\t<absolute_path>
-            local relpath, abspath = unpack(vim.split(line, '\t'))
-            local icon = ansi_icon(abspath)
-            output_line = icon .. ' ' .. relpath .. '\t' .. relpath .. '\t' .. abspath
+            local relative_path, absolute_path = unpack(vim.split(line, '\t'))
+            local ansi_icon = get_ansi_icon(absolute_path)
+            output_line = ansi_icon .. ' ' .. relative_path .. '\t' .. relative_path .. '\t' .. absolute_path
         elseif source == 'git_status' then
-            -- lines are the output of `git status --porcelain=v1`. Each lines has one of these formats:
+            -- lines are the output of `git status --porcelain=v1`. Each line has one of these formats:
             -- (1). XY FILENAME
             -- (2). XY OLD_FILENAME -> NEW_FILENAME
             -- output: [<staged><unstaged>] <git status text>\t<filename>
-            local f1, f2 = line:sub(4):gsub([["]], ''), nil
-            if f1:match('%s%->%s') then
-                f1, f2 = f1:match('(.*)%s%->%s(.*)')
+            local file_path = line:sub(4):gsub([["]], '')
+            local old_path, new_path
+
+            if line:sub(1, 2):find('[RC]') then
+                old_path, new_path = file_path:match('(.*)%s%->%s(.*)')
             end
-            local icon_f1 = f1 and (ansi_icon(f1) .. ' ' .. f1)
-            local icon_f2 = f2 and (ansi_icon(f2) .. ' ' .. f2)
-            local staged = ansi_string(line:sub(1, 1), 'GitStatusStaged')
-            local unstaged = ansi_string(line:sub(2, 2), 'GitStatusUnstaged')
+
+            local old_path_with_icon = old_path and (get_ansi_icon(old_path) .. ' ' .. old_path)
+            local new_path_with_icon = new_path and (get_ansi_icon(new_path) .. ' ' .. new_path)
+
+            local staged_indicator = colorize_with_ansi(line:sub(1, 1), 'GitStatusStaged')
+            local unstaged_indicator = colorize_with_ansi(line:sub(2, 2), 'GitStatusUnstaged')
+
+            local display_path = get_ansi_icon(file_path) .. ' ' .. file_path
+            if new_path then
+                display_path = ('%s -> %s'):format(old_path_with_icon, new_path_with_icon)
+            end
+            local selected_path = new_path or file_path
             -- \t as the delimiter for the finder "git status"
-            output_line = string.format('[%s%s]  %s\t%s', staged, unstaged, (f2 and ('%s -> %s'):format(icon_f1, icon_f2) or icon_f1), f2 or f1)
+            output_line = string.format('[%s%s]  %s\t%s', staged_indicator, unstaged_indicator, display_path, selected_path)
         else
+            -- Preserve lines from unrecognized sources unchanged
             output_line = line
         end
 

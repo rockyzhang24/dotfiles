@@ -9,9 +9,9 @@ local opts = {
 vim.keymap.set('i', '<Bar>', "<Bar><Esc>:lua require('rockyz.utils.misc').align_markdown_table()<CR>a", opts)
 
 local function open_preview(file)
-    -- Applescript to open Marked 2 and arrange it side by side with terminal
+    -- Applescript to open Marked and arrange it side by side with terminal
     local pin_and_move_right = [[
-    if not (exists application "Marked 2") then
+    if not (exists application "Marked") then
         return
     end
     -- (1). Save frontmost terminal app
@@ -24,17 +24,17 @@ local function open_preview(file)
             click menu item "Right" of menu 1 of menu item "Move & Resize" of menu "Window" of menu bar 1
         end tell
     end tell
-    -- (3). Open the markdown file in Marked 2
-    tell application "Marked 2"
+    -- (3). Open the markdown file in Marked
+    tell application "Marked"
         open POSIX file "]] .. file .. [["
         activate
     end tell
     delay 0.5
-    -- (4). Move Marked 2 to the left half
+    -- (4). Move Marked to the left half
     tell application "System Events"
-        tell process "Marked 2"
+        tell process "Marked"
             set frontmost to true
-            delay 0.3
+            delay 0.5
             click menu item "Left" of menu 1 of menu item "Move & Resize" of menu "Window" of menu bar 1
         end tell
     end tell
@@ -47,8 +47,8 @@ local function open_preview(file)
         '-e',
         pin_and_move_right,
     }):wait()
-    if obj.stderr:find('Can’t get application "Marked 2"') then
-        notify.warn('Marked 2 is not installed')
+    if obj.stderr:find('Can’t get application "Marked"') then
+        notify.warn('Marked is not installed')
     end
 end
 

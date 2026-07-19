@@ -34,8 +34,16 @@ zstyle ':fzf-tab:*' fzf-command ftb-tmux-popup
 # Ensure add-zsh-hook is available
 autoload -Uz add-zsh-hook
 
-# Remove duplicated commands in history
+# History
+HISTFILE="$ZDOTDIR/.zsh_history"
+HISTSIZE=100000
+SAVEHIST=100000
+
+setopt APPEND_HISTORY
+setopt INC_APPEND_HISTORY_TIME
 setopt HIST_IGNORE_ALL_DUPS
+setopt HIST_SAVE_NO_DUPS
+setopt HIST_EXPIRE_DUPS_FIRST
 
 # Make right prompt aligned to the rightmost
 ZLE_RPROMPT_INDENT=0
@@ -313,5 +321,21 @@ gh-cherry-pick() {
     fi
 
     echo "unsupported GitHub URL: $input" >&2
+    return 1
+}
+
+# Change to the nearest ancestor directory whose name contains the argument (e.g. `bd l` -> `lua`).
+bd() {
+    local dir="${PWD:h}"
+
+    while [[ "$dir" != / ]]; do
+        if [[ "${dir:t}" == *"$1"* ]]; then
+            cd "$dir"
+            return
+        fi
+        dir="${dir:h}"
+    done
+
+    print -u2 "bd: no ancestor directory matching: $1"
     return 1
 }

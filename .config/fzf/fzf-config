@@ -38,7 +38,6 @@ export FZF_DEFAULT_OPTS=" \
 --reverse
 --height 85%
 --multi
---scrollbar ┃
 --info=inline
 --no-separator
 --history /tmp/fzfhistory

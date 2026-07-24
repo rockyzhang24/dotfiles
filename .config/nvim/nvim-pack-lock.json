@@ -26,7 +26,7 @@
       "src": "https://github.com/dhananjaylatkar/cscope_maps.nvim"
     },
     "diffs.nvim": {
-      "rev": "283261cdd0700581a21a8697ac526f9967dfd75a",
+      "rev": "70882fe6364dfe7f46463b712c6e0e0c0712b408",
       "src": "https://github.com/barrettruth/diffs.nvim"
     },
     "eregex.vim": {

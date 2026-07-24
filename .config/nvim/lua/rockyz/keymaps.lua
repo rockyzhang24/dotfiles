@@ -253,19 +253,26 @@ vim.keymap.set('n', 'z/', function()
     end
 end, { expr = true })
 
--- Enhanced Ctrl-G (borrowed from justinmk/config)
+-- Enhanced Ctrl-G (borrowed from justinmk's config, check justinmk/vim-ug)
 local function ctrl_g()
     local chunks = {}
     local is_file = vim.fn.empty(vim.fn.expand('%:p')) == 0
+
     -- Show file info
     local file_info = vim.trim(vim.fn.execute('norm! 2' .. vim.keycode('<C-g>')))
     local modified_time = is_file and vim.fn.strftime('%Y-%m-%d %H:%M', vim.fn.getftime(vim.fn.expand('%:p'))) or ''
-    table.insert(chunks, { ('%s  %s\n'):format(file_info, modified_time) })
+    table.insert(chunks, { ('%s  %s\n'):format(file_info:sub(1), modified_time) })
+
     -- Show git branch
-    local git_ref = vim.fn.exists('*FugitiveHead') and vim.fn['FugitiveHead'](7) or nil
-    if git_ref then
+    local git_ref = vim.fn.exists('*FugitiveHead') == 1 and vim.fn['FugitiveHead'](7) or nil
+    if not git_ref or git_ref == '' then -- Not in a git buffer, try CWD
+        local ok, rv = pcall(vim.system, { 'git', 'rev-parse', '--abbrev-ref', 'HEAD' })
+        git_ref = ok and vim.trim(rv:wait().stdout)
+    end
+    if git_ref and git_ref ~= '' then
         table.insert(chunks, { ('branch: %s\n'):format(git_ref) })
     end
+
     -- Show current directory
     table.insert(chunks, { ('cwd: %s\n'):format(vim.fn.fnamemodify(vim.fn.getcwd(), ':~')) })
     -- Show current session
@@ -277,10 +284,11 @@ local function ctrl_g()
         vim.fn.getline(vim.fn.search('\\v^[[:alpha:]$_]', 'bn', 1, 100)),
         'Identifier',
     })
+
     vim.api.nvim_echo(chunks, false, {})
 end
 
-vim.keymap.set('n', '<Leader><C-g>', ctrl_g)
+vim.keymap.set('n', '<C-g><C-g>', ctrl_g)
 
 -- g?: Web search
 vim.keymap.set('n', 'g??', function()

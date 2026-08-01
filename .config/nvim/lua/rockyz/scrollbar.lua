@@ -121,6 +121,12 @@ local function should_render(winid)
     if win_config.relative ~= '' then
         return false
     end
+
+    -- Do not create scrollbar windows in background tabpages.
+    if vim.api.nvim_win_get_tabpage(winid) ~= vim.api.nvim_get_current_tabpage() then
+        return false
+    end
+
     local target_bufnr = vim.api.nvim_win_get_buf(winid)
 
     if
@@ -627,7 +633,7 @@ end
 
 local scrollbar_augroup = vim.api.nvim_create_augroup('rockyz.scrollbar', { clear = true })
 
-vim.api.nvim_create_autocmd({ 'WinResized', 'BufWinEnter' }, {
+vim.api.nvim_create_autocmd({ 'WinResized', 'BufWinEnter', 'TabEnter' }, {
     group = scrollbar_augroup,
     callback = function()
         for _, winid in ipairs(vim.api.nvim_tabpage_list_wins(0)) do

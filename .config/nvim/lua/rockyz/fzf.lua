@@ -206,20 +206,20 @@ local config = {
             ['<Leader>fd'] = 'document_diagnostics',
             ['<Leader>fD'] = 'workspace_diagnostics',
 
-            ['<C-p>'] = 'git_files',
-            [',fs'] = 'git_status',
-            [',fb'] = 'git_branches',
-            [',fc'] = {
+            ['<Leader>gf'] = 'git_files',
+            ['<Leader>gs'] = 'git_status',
+            ['<Leader>gb'] = 'git_branches',
+            ['<Leader>gc'] = {
                 mode = { 'n', 'x' },
                 action = 'git_buffer_commits',
             },
-            [',fC'] = 'git_commits',
-            [',fh'] = 'git_stash',
-            [',fw'] = 'git_worktrees',
-            [',ft'] = 'git_tags',
-            [',fr'] = 'git_remotes',
-            [',fl'] = 'git_reflogs',
-            [',fe'] = 'git_each_ref',
+            ['<Leader>gC'] = 'git_commits',
+            ['<Leader>gh'] = 'git_stash',
+            ['<Leader>gw'] = 'git_worktrees',
+            ['<Leader>gt'] = 'git_tags',
+            ['<Leader>gr'] = 'git_remotes',
+            ['<Leader>gl'] = 'git_reflogs',
+            ['<Leader>ge'] = 'git_each_ref',
 
             ['<Leader>fg'] = 'buffer_tags',
             ['<Leader>fG'] = 'tags',
@@ -4948,7 +4948,7 @@ local function tree_files(from_resume)
     local cmd = " \
         printf '%s\n' " .. commits_str .. " | \
         while IFS= read -r treeish; do \
-            git -C " .. escaped_git_root .. " diff-tree --no-commit-id --name-only \"$treeish\" -r; \
+            git -C " .. escaped_git_root .. " diff-tree --root --no-commit-id --name-only \"$treeish\" -r; \
         done | sort -u | \
         while IFS= read -r relpath; do \
             printf '%s\t%s\n' \"$relpath\" " .. escaped_git_root .. "/\"$relpath\" \

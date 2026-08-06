@@ -8,6 +8,3 @@ vim.g.flog_enable_dynamic_branch_hl = true
 if vim.env.KITTY_WINDOW_ID then
     vim.g.flog_enable_extended_chars = true
 end
-
-vim.keymap.set('n', ',L', '<Cmd>Flog<CR>')
-vim.keymap.set('n', ',l', '<Cmd>Flog -raw-args=--follow -path=%<CR>') -- git log for current file

@@ -1,5 +1,4 @@
 # Reference: https://github.com/junegunn/fzf-git.sh/blob/main/fzf-git.sh
-# Last sync with upstream: 3/18/2026 (0f0488331a060cf45aaecb6705a2cf394fb20293)
 
 # shellcheck disable=SC2039
 [[ $0 == - ]] && return
@@ -224,7 +223,7 @@ _fzf_git_tree_files() {
 
   local treeish
   for treeish in "$@"; do
-    git diff-tree --no-commit-id --name-only "$treeish" -r
+    git diff-tree --root --no-commit-id --name-only "$treeish" -r
   done | sort -u |
     _fzf_git_fzf -m \
       --prompt "📂 Files in $*> " \

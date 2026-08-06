@@ -54,6 +54,7 @@ local modules = {
     -- 'easymotion',
     'scrollbar',
     'call_hierarchy',
+    'git',
 }
 
 for _, module in ipairs(modules) do

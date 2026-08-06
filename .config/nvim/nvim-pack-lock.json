@@ -5,7 +5,7 @@
       "src": "https://github.com/L3MON4D3/LuaSnip"
     },
     "SchemaStore.nvim": {
-      "rev": "3d2c297f7152208daf4a382ea7123f9e4ebf9da1",
+      "rev": "9f98b46e1dd61aeb666989c344d76517df63af55",
       "src": "https://github.com/b0o/SchemaStore.nvim"
     },
     "blink.cmp": {
@@ -33,17 +33,12 @@
       "rev": "950027d5942c7dc5f4cbcfdea7df360da9360697",
       "src": "https://github.com/othree/eregex.vim"
     },
-    "git-messenger.vim": {
-      "rev": "6f17ec9cad931dee5b98a600a1083c96363bf47f",
-      "src": "https://github.com/rockyzhang24/git-messenger.vim",
-      "version": "'dev'"
-    },
     "gitsigns.nvim": {
       "rev": "31d6fb2d618bca1482b9f274751ead5f03461408",
       "src": "https://github.com/lewis6991/gitsigns.nvim"
     },
     "inc-rename.nvim": {
-      "rev": "0074b551a17338ccdcd299bd86687cc651bcb33d",
+      "rev": "ddff8bd3eccedf043bd73f5bf89cf90d2d6d8105",
       "src": "https://github.com/smjonas/inc-rename.nvim"
     },
     "iswap.nvim": {
@@ -59,11 +54,11 @@
       "src": "https://github.com/danymat/neogen"
     },
     "nvim-treesitter": {
-      "rev": "bd41519ff7901da11ba6e1c8f419f17f2d94305a",
+      "rev": "7b6cc8949f9999c5ed91436cbe24aa5f99c42025",
       "src": "https://github.com/nvim-treesitter/nvim-treesitter"
     },
     "nvim-treesitter-context": {
-      "rev": "b311b30818951d01f7b4bf650521b868b3fece16",
+      "rev": "f3061339b8eaf9fda873600bc425b8d2d8502533",
       "src": "https://github.com/nvim-treesitter/nvim-treesitter-context"
     },
     "nvim-treesitter-textobjects": {
@@ -131,7 +126,7 @@
       "src": "https://github.com/tommcdo/vim-exchange"
     },
     "vim-flog": {
-      "rev": "c8a573b5a829d0a3ed1b72c87dd62d832b665e87",
+      "rev": "676198e8d43b3eef380b01aea2535826574fba28",
       "src": "https://github.com/rbong/vim-flog"
     },
     "vim-fugitive": {

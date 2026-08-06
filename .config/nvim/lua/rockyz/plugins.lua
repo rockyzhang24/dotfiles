@@ -117,8 +117,4 @@ vim.pack.add({
     -- It provides :GBrowse to open the current file, blob, tree, commit, or tag in the browser
 
     'https://github.com/rbong/vim-flog',
-    {
-        src = 'https://github.com/rockyzhang24/git-messenger.vim',
-        version = 'dev',
-    },
 })

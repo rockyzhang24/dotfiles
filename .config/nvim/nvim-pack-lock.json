@@ -57,6 +57,10 @@
       "rev": "23e7e9f883d01289ebd90e98025acc860ea26366",
       "src": "https://github.com/danymat/neogen"
     },
+    "nvim-treehopper": {
+      "rev": "e3861c0231631c6af317d6746bb78fdb428a58f3",
+      "src": "https://github.com/mfussenegger/nvim-treehopper"
+    },
     "nvim-treesitter": {
       "rev": "3d3321b560a63ff92a8692401f303a5123336b86",
       "src": "https://github.com/nvim-treesitter/nvim-treesitter"

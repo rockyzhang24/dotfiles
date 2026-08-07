@@ -111,6 +111,7 @@ vim.pack.add({
     'https://github.com/nvim-treesitter/nvim-treesitter-context',
     'https://github.com/nvim-treesitter/nvim-treesitter-textobjects',
     'https://github.com/mizlan/iswap.nvim',
+    'https://github.com/mfussenegger/nvim-treehopper',
 
     -- Git
     'https://github.com/lewis6991/gitsigns.nvim',

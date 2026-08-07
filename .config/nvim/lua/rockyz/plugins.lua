@@ -57,6 +57,7 @@ vim.pack.add({
     'https://github.com/tpope/vim-obsession',
     'https://github.com/barrettruth/diffs.nvim',
     'https://github.com/justinmk/vim-sneak',
+    'https://github.com/haya14busa/vim-edgemotion',
     'https://github.com/AndrewRadev/switch.vim',
     'https://github.com/MeanderingProgrammer/render-markdown.nvim',
 

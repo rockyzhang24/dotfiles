@@ -57,6 +57,7 @@ vim.pack.add({
     'https://github.com/barrettruth/diffs.nvim',
     'https://github.com/justinmk/vim-sneak',
     'https://github.com/AndrewRadev/switch.vim',
+    'https://github.com/MeanderingProgrammer/render-markdown.nvim',
 
     -- gof/goF: Go to the directory of the current file/working directory in the File manager (Finder on macOS)
     -- got/goT: Go to the directory of the current file/working directory in the Terminal
@@ -112,6 +113,7 @@ vim.pack.add({
     -- Git
     'https://github.com/lewis6991/gitsigns.nvim',
     'https://github.com/tpope/vim-fugitive',
+    'https://github.com/justinmk/guh.nvim',
 
     'https://github.com/tpope/vim-rhubarb',
     -- It provides :GBrowse to open the current file, blob, tree, commit, or tag in the browser

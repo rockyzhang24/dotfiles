@@ -274,7 +274,7 @@ local function setup_terminal()
                 end
                 vim.b[ev.buf].osc7_dir = dir
                 if vim.api.nvim_get_current_buf() == ev.buf then
-                    vim.cmd.lcd(dir)
+                    vim.cmd.bcd(dir)
                 end
             end
         end,

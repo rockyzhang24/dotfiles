@@ -37,6 +37,10 @@
       "rev": "31d6fb2d618bca1482b9f274751ead5f03461408",
       "src": "https://github.com/lewis6991/gitsigns.nvim"
     },
+    "guh.nvim": {
+      "rev": "943779f7cdb0acee203985ad531fb53ff95d9c8e",
+      "src": "https://github.com/justinmk/guh.nvim"
+    },
     "inc-rename.nvim": {
       "rev": "ddff8bd3eccedf043bd73f5bf89cf90d2d6d8105",
       "src": "https://github.com/smjonas/inc-rename.nvim"
@@ -76,6 +80,10 @@
     "quickfix-reflector.vim": {
       "rev": "6a6a9e28e1713b9e9db99eec1e6672e5666c01b9",
       "src": "https://github.com/stefandtw/quickfix-reflector.vim"
+    },
+    "render-markdown.nvim": {
+      "rev": "f422cb5c6855f150e2ddcfaf44e7157b98b34f6a",
+      "src": "https://github.com/MeanderingProgrammer/render-markdown.nvim"
     },
     "switch.vim": {
       "rev": "297346b630943ebd4ea58598dfd30bae5debc739",

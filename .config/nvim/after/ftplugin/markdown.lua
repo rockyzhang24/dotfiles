@@ -59,3 +59,14 @@ vim.keymap.set('n', '<Leader>v', function()
         open_preview(bufname)
     end
 end, opts)
+
+-- Toggle render-markdown
+
+vim.g.render_markdown_config = {
+    enabled = false,
+}
+
+vim.keymap.set('n', 'R', function()
+    vim.cmd('packadd render-markdown.nvim')
+    vim.cmd('RenderMarkdown toggle')
+end, opts)

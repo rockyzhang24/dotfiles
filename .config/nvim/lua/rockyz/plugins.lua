@@ -59,7 +59,6 @@ vim.pack.add({
     'https://github.com/justinmk/vim-sneak',
     'https://github.com/haya14busa/vim-edgemotion',
     'https://github.com/AndrewRadev/switch.vim',
-    'https://github.com/MeanderingProgrammer/render-markdown.nvim',
 
     -- gof/goF: Go to the directory of the current file/working directory in the File manager (Finder on macOS)
     -- got/goT: Go to the directory of the current file/working directory in the Terminal
@@ -122,4 +121,11 @@ vim.pack.add({
     -- It provides :GBrowse to open the current file, blob, tree, commit, or tag in the browser
 
     'https://github.com/rbong/vim-flog',
+})
+
+-- On-demand plugins, not loaded until ":packadd ...".
+vim.pack.add({
+    'https://github.com/MeanderingProgrammer/render-markdown.nvim',
+}, {
+    load = function() end,
 })

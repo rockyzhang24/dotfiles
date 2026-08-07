@@ -44,6 +44,7 @@ vim.pack.add({
     'https://github.com/kyazdani42/nvim-web-devicons',
     'https://github.com/dstein64/vim-startuptime',
     'https://github.com/godlygeek/tabular',
+    'https://github.com/tommcdo/vim-lion',
     'https://github.com/mbbill/undotree',
     'https://github.com/haya14busa/vim-asterisk',
     'https://github.com/unblevable/quick-scope',

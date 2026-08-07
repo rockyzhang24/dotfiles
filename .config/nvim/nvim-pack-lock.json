@@ -149,6 +149,10 @@
       "rev": "443d3d6d8f49a04c666c5b6a5e355fb7ac36111d",
       "src": "https://github.com/inkarkat/vim-ingo-library"
     },
+    "vim-lion": {
+      "rev": "ce46593ecd60e6051fb6e4d3986d2fc9f5a618b1",
+      "src": "https://github.com/tommcdo/vim-lion"
+    },
     "vim-mark": {
       "rev": "a613b0676fce72960c06e26f8f8f6454bcef4564",
       "src": "https://github.com/inkarkat/vim-mark"

@@ -11,7 +11,6 @@
 --         ├── Path         <-- get_path()
 --         ├── FileIcon     <-- get_icon()
 --         ├── Name         <-- get_name()
---         ├── Indicators (diagnostics and modified)
 --         └── Breadcrumbs  <-- vim.w.breadcrumbs
 
 local M = {}
@@ -217,36 +216,9 @@ local function render_normal()
     local icon = get_icon()
     table.insert(components, icon)
 
-    local diagnostic_count = vim.diagnostic.count(0)
-    local error_count = diagnostic_count[vim.diagnostic.severity.ERROR] or 0
-    local warning_count = diagnostic_count[vim.diagnostic.severity.WARN] or 0
-    local file_status_hl = error_count > 0 and 'WinbarError' or (warning_count > 0 and 'WinbarWarn' or 'WinbarFilename')
-
     -- Name
     local name = get_name()
-    table.insert(components, string.format('%%#%s#%s%%*', file_status_hl, name))
-
-    -- Indicators
-    local indicators = {}
-
-    -- (1) Diagnostic count
-    local diagnostic_total = error_count + warning_count
-    if diagnostic_total ~= 0 then
-        table.insert(indicators, string.format('%%#%s#[%s]%%*', file_status_hl, diagnostic_total))
-    end
-
-    -- (2) Modified indicator
-    local current_bufnr = vim.api.nvim_get_current_buf()
-    local is_modified = vim.bo[current_bufnr].modified
-    if is_modified then
-        local modified_hl = diagnostic_total == 0 and 'WinbarModified' or file_status_hl
-        table.insert(indicators, '%#' .. modified_hl .. '#[+]%*')
-    end
-
-    local indicator_text = table.concat(indicators, '')
-    if indicator_text ~= '' then
-        table.insert(components, indicator_text)
-    end
+    table.insert(components, string.format('%%#WinbarFilename#%s%%*', name))
 
     -- Breadcrumbs
     local breadcrumb_text = vim.w.breadcrumbs or ''
@@ -271,7 +243,7 @@ function M.render()
         return header .. ' ' .. render_special(filetype, current_winid)
     end
 
-    -- 2. Normal buffer: header + path + file_icon + name + indicators + breadcrumbs
+    -- 2. Normal buffer: header + path + file_icon + name + breadcrumbs
     return header .. ' ' .. render_normal()
 end
 

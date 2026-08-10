@@ -50,6 +50,7 @@ local modules = {
     'leetcode',
     'yank',
     'terminal',
+    'ctrl_s_shell',
     'outline',
     -- 'easymotion',
     'scrollbar',

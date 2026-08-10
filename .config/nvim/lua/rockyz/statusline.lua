@@ -459,7 +459,7 @@ end
 ---@return string
 function M.location()
     local res = '%3l/%-3L:%-2v [%3p%%]'
-    return string.format('%%#StlLocComponent# %s%%*', res)
+    return string.format('%%#StlLocComponent#%s%%*', res)
 end
 
 ---Render the full statusline

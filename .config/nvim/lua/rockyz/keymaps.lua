@@ -27,7 +27,6 @@ vim.keymap.set({ 'n', 'x', 'o' }, 'H', '^')
 vim.keymap.set({ 'n', 'x', 'o' }, 'L', '$')
 vim.keymap.set('n', '\'', '`')
 
-vim.keymap.set('n', '<TAB>', 'za')
 vim.keymap.set('n', '<C-i>', '<C-i>')
 
 -- Argument list
@@ -50,15 +49,17 @@ vim.keymap.set('n', '<Leader>ad', '<Cmd>argd %<bar>args<CR>')
 -- Clear arglist
 vim.keymap.set('n', '<Leader>ac', '<Cmd>%argd<CR><C-l>')
 
-vim.keymap.set('n', 'zt', function()
-    local count_prefix = vim.v.count > 0 and vim.v.count or ''
-    vim.cmd('normal! ' .. count_prefix .. 'zt')
-end)
+vim.keymap.set("n", "zt", function()
+  return vim.v.count > 0
+      and ("@_zt" .. vim.v.count .. "<C-y>")
+    or "zt"
+end, { expr = true })
 
-vim.keymap.set('n', 'zb', function()
-    local count_prefix = vim.v.count > 0 and vim.v.count or ''
-    vim.cmd('normal! ' .. count_prefix .. 'zb')
-end)
+vim.keymap.set("n", "zb", function()
+  return vim.v.count > 0
+      and ("@_zb" .. vim.v.count .. "<C-e>")
+    or "zb"
+end, { expr = true })
 
 -- Move the current line or selections up and down with corresponding indentation
 
@@ -884,14 +885,14 @@ vim.keymap.set({ 'n', 'i', 't' }, '<M-j>', '<C-\\><C-n><C-w>j')
 vim.keymap.set({ 'n', 'i', 't' }, '<M-k>', '<C-\\><C-n><C-w>k')
 vim.keymap.set({ 'n', 'i', 't' }, '<M-l>', '<C-\\><C-n><C-w>l')
 
--- Move cursor to the window 1 to 9
-for i = 1, 9 do
-    vim.keymap.set('n', '<Leader>' .. i, '<Cmd>' .. i .. 'wincmd w<CR>')
-end
-
--- Go to the previous window
+-- With count, go to Nth window; otherwise go to the previsou window.
 -- (The builtin ctrl-w p has a bug. It considers the window that is currently invalid)
-vim.keymap.set('n', '<M-BS>', function()
+vim.keymap.set('n', '<Tab>', function()
+    local count = vim.v.count
+    if count > 0 then
+        vim.cmd(count .. 'wincmd w')
+        return
+    end
     require('rockyz.mru_win').goto_recent_window()
 end)
 
@@ -941,6 +942,18 @@ end, { expr = true })
 
 -- Maximize and restore the current window
 vim.keymap.set('n', 'yom', require('rockyz.utils.win').win_maximize_toggle)
+
+-- Fit current window vertically to the buffer text.
+-- Force with [count], even if it makes the window bigger.
+vim.keymap.set('n', '<M-=>', function()
+    local line_count = vim.api.nvim_buf_line_count(0)
+    local height = vim.v.count > 0 and line_count or math.min(vim.api.nvim_win_get_height(0), line_count)
+    vim.cmd(height .. 'wincmd _')
+    vim.wo.winfixheight = true
+end)
+
+-- Fit current window (vertically) to the selected text.
+vim.keymap.set('x', '<M-=>', [[<Esc><Cmd>execute (line("'>") - line("'<") + 1) . "wincmd _" <Bar> setlocal winfixheight<CR>]])
 
 --------------------------------------------------------------------------------
 -- Terminal

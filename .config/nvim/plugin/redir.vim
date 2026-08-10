@@ -1,3 +1,7 @@
+" Usage:
+"   - :Redir {command} to show the full output of the command in a scratch buffer
+"   - :Redir! to show the full output of the previous command in a scratch buffer
+"
 " Reference: https://gist.github.com/romainl/eae0a260ab9c135390c30cd370c20cd7
 
 function! Redir(cmd = '', rng = 0, start = 1, end = 1, bang = '')

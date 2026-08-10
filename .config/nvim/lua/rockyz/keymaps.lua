@@ -9,7 +9,6 @@ vim.g.mapleader = ' '
 vim.keymap.set({ 'n', 'x' }, '<Leader>', '<Nop>')
 vim.keymap.set({ 'n', 'x' }, 'q', '<Nop>')
 vim.keymap.set('n', 'q;', 'q:')
-vim.keymap.set({ 'n', 'x' }, '<Leader>q', 'q')
 vim.keymap.set({ 'n', 'x' }, '-', '"_')
 vim.keymap.set({ 'n', 'x', 'o' }, '+', '"+')
 vim.keymap.set('x', '<', '<gv')
@@ -26,6 +25,7 @@ vim.keymap.set('n', 'z.', ':silent lockmarks update ++p<CR>')
 vim.keymap.set('n', 'vK', '<C-\\><C-n><Cmd>help!<CR>')
 vim.keymap.set({ 'n', 'x', 'o' }, 'H', '^')
 vim.keymap.set({ 'n', 'x', 'o' }, 'L', '$')
+vim.keymap.set('n', '\'', '`')
 
 vim.keymap.set('n', '<TAB>', 'za')
 vim.keymap.set('n', '<C-i>', '<C-i>')
@@ -457,6 +457,17 @@ end, { expr = true })
 --     return is_search_cmd() and '\\_s\\+' or '<Space>'
 -- end, { expr = true, remap = true }) -- Without remap, <Space> won't trigger abbreviations
 
+vim.cmd([[
+" Prepare a case-sensitive recursive ripgrep and send results to quickfix
+nnoremap \v mS:<C-u>silent grep! --case-sensitive --color=never -e  <Bar> copen<Left><Left><Left><Left><Left><Left><Left><Left>
+
+" Search all loaded buffers with a case-sensitive Vim regex and open quickfix
+nnoremap \b mS:<C-u>cexpr []<Bar>exe 'bufdo silent! noau vimgrepadd/\C/j %'<Bar>botright copen<S-Left><S-Left><Left><Left><Left>
+
+" Search the current buffer with a Vim regex and open its location list
+nnoremap \c ms:<C-u>lvimgrep // % <Bar>lwindow<S-Left><Left><Left><Left><Left>
+]])
+
 --------------------------------------------------------------------------------
 -- Substitute
 --------------------------------------------------------------------------------
@@ -582,9 +593,16 @@ vim.keymap.set('n', '<Leader>bd', require('rockyz.utils.buf').bufdelete)
 -- Delete all the other unmodified buffers
 vim.keymap.set('n', '<Leader>bo', require('rockyz.utils.buf').bufdelete_other)
 
+vim.cmd([[
+" List buffers and prompt for one, or switch directly to buffer [count]
+nnoremap <expr> <C-b> v:count ? ':<c-u>'.v:count.'buffer<cr>' : ':set nomore<bar>ls<bar>set more<cr>:buffer<space>'
+]])
+
 --------------------------------------------------------------------------------
 -- Copy and paste
 --------------------------------------------------------------------------------
+
+vim.keymap.set('x', 'y', 'zy')
 
 -- Keep cursor position when yanking
 vim.keymap.set('n', 'y', function()
@@ -596,6 +614,7 @@ vim.keymap.set('n', '<Leader>y', function()
     require('rockyz.yank').save_win_view()
     return '"+y'
 end, { expr = true })
+
 vim.keymap.set('x', '<Leader>y', '"+y')
 vim.keymap.set('n', '<Leader>Y', '"+y$')
 
@@ -606,8 +625,8 @@ vim.keymap.set('n', 'yY', function()
 end)
 
 -- Paste and format
-vim.keymap.set('n', 'p', 'p=`]')
-vim.keymap.set('n', 'P', 'P=`]')
+vim.keymap.set('n', 'p', 'zp=`]')
+vim.keymap.set('n', 'P', 'zP=`]')
 
 -- Paste over the selected text
 vim.keymap.set('x', 'p', '"_c<ESC>p')
@@ -635,20 +654,24 @@ local function yank_to_reg(reg, text)
     vim.fn.setreg(reg, text)
     notify.info(string.format('%s is yanked to %s', text, reg))
 end
+
 -- Name
 vim.keymap.set('n', 'yn', function()
     yank_to_reg(vim.v.register, vim.fn.expand('%:p:t'))
 end)
+
 -- Directory
 vim.keymap.set('n', 'y/', function()
     yank_to_reg(vim.v.register, vim.fn.expand('%:.:h'))
 end)
+
 -- Relative path
-vim.keymap.set('n', 'yp', function()
+vim.keymap.set('n', 'y%', function()
     yank_to_reg(vim.v.register, vim.fn.expand('%:.'))
 end)
+
 -- Absolute path
-vim.keymap.set('n', 'yP', function()
+vim.keymap.set('n', 'yp', function()
     yank_to_reg(vim.v.register, vim.api.nvim_buf_get_name(0))
 end)
 
@@ -674,6 +697,7 @@ vim.o.cedit = '<C-o>'
 
 -- Insert current file directory
 vim.keymap.set({ 'c', 'i' }, '<M-/>', '<C-r>=expand("%:.:h", 1)<CR>')
+
 -- Insert filename tail
 vim.keymap.set({ 'c', 'i' }, '<M-n>', '<C-r>=fnamemodify(@%, ":t")<CR>')
 
@@ -934,8 +958,20 @@ end, { expr = true })
 
 vim.cmd([==[
 
+inoremap [[ [[ ]]<Left><Left><Left>
+inoremap [= [=[ ]=]<Left><Left><Left><Left>
+inoremap {<CR> {<CR>}<Esc>O
+inoremap {; {<CR>};<Esc>O
+inoremap {, {<CR>},<Esc>O
+inoremap [<CR> [<CR>]<Esc>O
+inoremap [; [<CR>];<Esc>O
+inoremap [, [<CR>],<Esc>O
+
 " Insert formatted datetime (from @tpope vimrc)
 inoremap <silent> <C-G><C-T> <C-R>=repeat(complete(col('.'),map(["%Y-%m-%d %H:%M:%S","%a, %d %b %Y %H:%M:%S %z","%Y %b %d","%d-%b-%y","%a %b %d %T %Z %Y","%Y%m%d"],'strftime(v:val)')+[localtime()]),0)<CR>
+
+" Print unit time at cursor as human-readable datetime. 1677604904 => '2023-02-28 09:21:45'
+nnoremap gA :echo strftime('%Y-%m-%d %H:%M:%S', '<C-r><C-w>')<CR>
 
 " Change directory (from @justinmk)
 nnoremap cd%  <cmd>lcd %:h<bar>pwd<cr>
@@ -946,7 +982,24 @@ nnoremap cd-   <cmd>lcd -<bar>pwd<cr>
 " Show the last 40 :messages
 nnoremap g> :set nomore<bar>echo repeat("\n",&cmdheight)<bar>40messages<bar>set more<CR>
 
-" Toggle between ignoring and showing all whitespace changes in diff (e.g., it's very useful in :DiffOrig if we want to check all changes without whitespace)
-nnoremap \<space> :set <C-R>=(&diffopt =~# 'iwhiteall') ? 'diffopt-=iwhiteall' : 'diffopt+=iwhiteall'<CR><CR>
+" Confirm completion, or copy the keyword/character above the cursor.
+inoremap <expr> <c-y> pumvisible() ? "\<c-y>" : matchstr(getline(line('.')-1), '\%' . virtcol('.') . 'v\%(\k\+\\|.\)')
+
+" Toggle ignoring all whitespace changes in diff mode
+nnoremap yo<space> :set <C-R>=(&diffopt =~# 'iwhiteall') ? 'diffopt-=iwhiteall' : 'diffopt+=iwhiteall'<CR><CR>
+
+" Use <Leader>q for macro recording; use "{register}<Leader>q to edit the last recorded macro (example: "a<Leader>q).
+nnoremap <expr> <Leader>q (v:register==#'"')?'q':(':let @'.(empty(reg_recorded())?'q':reg_recorded())." = '<C-R>=substitute(@".v:register.",\"'\",\"''\",\"g\")<CR>'<C-F>010l")
+
+" Save the current file, restart Nvim, and reopen it
+nnoremap <expr> <leader>R '<cmd>update<bar>confirm restart edit '..fnameescape(fnamemodify(expand('%'),':p'))..'<cr>'
+
+" Toggle local text width between 0 and 100, or set it from [count]
+nnoremap yoT :<C-u>setlocal textwidth=<C-R>=(!v:count && &textwidth != 0) ? 0 : (v:count ? v:count : 100)<CR><CR>
+
+" Recursively find a file and immediately show completion
+nmap <C-f> :edit **/<Tab>
+
+nnoremap \t :tselect<Space>
 
 ]==])

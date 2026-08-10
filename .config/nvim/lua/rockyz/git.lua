@@ -397,6 +397,15 @@ vim.keymap.set('x', '<C-p>', ':diffput<CR>')
 vim.keymap.set('n', 'U2', '<Cmd>diffget //2<CR>')
 vim.keymap.set('n', 'U3', '<Cmd>diffget //3<CR>')
 
+vim.cmd([[
+" Prepare a Git grep for the word under the cursor; use ':/!*.foo' for exclusions; send results to quickfix. (vim-fugitive)
+nnoremap \g  mS:Ggrep! -q <C-R>=(system(['git','grep','-P'])=~#'no pattern')?'-P':'-E'<CR> <C-R>=shellescape(fnameescape(expand('<cword>')))<CR> -- ':/' ':/!*.pdf'
+    \<Home><C-Right><C-Right><C-Right><C-Right><Left>
+
+" Recall the last Git grep and position the cursor on its search pattern (vim-fugitive)
+nnoremap 9\g  :Ggrep<Up><Home><C-Right><C-Right><C-Right><C-Right><Left>
+]])
+
 --------------------------------------------------------------------------------
 -- Autocmds
 --------------------------------------------------------------------------------

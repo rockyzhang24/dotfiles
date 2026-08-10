@@ -83,7 +83,7 @@ vim.pack.add({
     -- 2. Shebang line auto detection
 
     'https://github.com/AndrewRadev/linediff.vim',
-    -- Run command :Linediff on two separate selections to diff them
+    -- Run command :Linediff on two separate selections to diff them (mapped to D)
 
     'https://github.com/inkarkat/vim-ingo-library',
     'https://github.com/inkarkat/vim-mark',

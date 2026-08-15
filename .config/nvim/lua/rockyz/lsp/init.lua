@@ -474,7 +474,7 @@ vim.lsp.enable({
     'luals',
     'taplo',
     'ts_query_ls',
-    'tsgo',
+    'tsc',
     'vimls',
     'yamlls',
 })

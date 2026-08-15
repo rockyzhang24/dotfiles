@@ -7,9 +7,11 @@ conform.setup({
     formatters_by_ft = {
         c = { 'clang-format' },
         cpp = { 'clang-format' },
+        javascript = { 'prettier' },
         json = { 'prettier' },
         lua = { 'stylua' },
         sh = { 'shfmt' },
+        typescript = { 'prettier' },
         -- For filetypes without a formatter
         ['_'] = { 'trim_whitespace', 'trim_newlines' },
     },

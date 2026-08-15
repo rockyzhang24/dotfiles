@@ -297,3 +297,15 @@ vim.api.nvim_create_autocmd('BufNewFile', {
         end
     end,
 })
+
+vim.api.nvim_create_autocmd('CmdAtom', {
+    group = vim.api.nvim_create_augroup('rockyz.cmdatom', { clear = true }),
+    callback = function(event)
+        if event.data.lhs and event.data.lhs ~= ','
+            and (event.data.type == 'motion' or event.data.type == 'mapping')
+            and (#event.data.lhs > 1 or (event.data.lhs == '' and #event.data.keys > 1))
+        then
+            vim.g.my_last = event.data
+        end
+    end,
+})

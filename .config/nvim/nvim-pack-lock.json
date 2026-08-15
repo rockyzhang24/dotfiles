@@ -5,7 +5,7 @@
       "src": "https://github.com/L3MON4D3/LuaSnip"
     },
     "SchemaStore.nvim": {
-      "rev": "427b0ff24377a6cdd18aa822a984a5adf156c3fa",
+      "rev": "6bcdcb22f02b43b990b650b3ab40c65aa193c3f8",
       "src": "https://github.com/b0o/SchemaStore.nvim"
     },
     "blink.cmp": {
@@ -18,7 +18,7 @@
       "src": "https://github.com/uga-rosa/ccc.nvim"
     },
     "conform.nvim": {
-      "rev": "619363c30309d29ffa631e67c8183f2a72caa373",
+      "rev": "016802de402556da54c36bd7359b441266b01cdd",
       "src": "https://github.com/stevearc/conform.nvim"
     },
     "cscope_maps.nvim": {
@@ -26,7 +26,7 @@
       "src": "https://github.com/dhananjaylatkar/cscope_maps.nvim"
     },
     "diffs.nvim": {
-      "rev": "e6d3aa4bb400287ba1a612e28b5cd55e0ba15726",
+      "rev": "1bfda486a689b78a01f636e01c0f8d5be419d3a4",
       "src": "https://github.com/barrettruth/diffs.nvim"
     },
     "eregex.vim": {
@@ -34,7 +34,7 @@
       "src": "https://github.com/othree/eregex.vim"
     },
     "gitsigns.nvim": {
-      "rev": "31d6fb2d618bca1482b9f274751ead5f03461408",
+      "rev": "5be654f2232c10ddcad19c1607a67b6b4b78fc29",
       "src": "https://github.com/lewis6991/gitsigns.nvim"
     },
     "guh.nvim": {
@@ -86,7 +86,7 @@
       "src": "https://github.com/stefandtw/quickfix-reflector.vim"
     },
     "render-markdown.nvim": {
-      "rev": "f422cb5c6855f150e2ddcfaf44e7157b98b34f6a",
+      "rev": "4663eb3ecd538bd5062628fb6d95bbe6bdca78f6",
       "src": "https://github.com/MeanderingProgrammer/render-markdown.nvim"
     },
     "switch.vim": {
@@ -134,7 +134,7 @@
       "src": "https://github.com/haya14busa/vim-edgemotion"
     },
     "vim-eunuch": {
-      "rev": "e86bb794a1c10a2edac130feb0ea590a00d03f1e",
+      "rev": "929490937745cd96130d3e7948f762f0aa403314",
       "src": "https://github.com/tpope/vim-eunuch"
     },
     "vim-exchange": {

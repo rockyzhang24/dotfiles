@@ -27,6 +27,16 @@ vim.keymap.set({ 'n', 'x', 'o' }, 'H', '^')
 vim.keymap.set({ 'n', 'x', 'o' }, 'L', '$')
 vim.keymap.set('n', '\'', '`')
 
+vim.keymap.set('n', '<Leader>;', ',')
+-- Repeat the last significant motion or mapping captured by CmdAtom event.
+vim.keymap.set('n', ',', function()
+    local last = vim.g.my_last
+    if last then
+        local keys = tostring(last.count or '') .. (last.lhs and last.lhs or last.keys)
+        vim.api.nvim_feedkeys(keys, '', true)
+    end
+end)
+
 vim.keymap.set('n', '<C-i>', '<C-i>')
 
 -- Argument list

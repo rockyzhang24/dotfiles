@@ -193,7 +193,7 @@ local config = {
                 mode = { 'n', 'x' },
                 action = 'grep_current_word',
             },
-            ['<C-g>/'] = 'live_grep_current_buffer',
+            ['<C-g>b'] = 'live_grep_current_buffer',
 
             ['<Leader>ls'] = 'lsp_document_symbol',
             ['<Leader>lS'] = 'lsp_workspace_symbol',

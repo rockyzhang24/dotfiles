@@ -997,10 +997,10 @@ inoremap <silent> <C-G><C-T> <C-R>=repeat(complete(col('.'),map(["%Y-%m-%d %H:%M
 nnoremap gA :echo strftime('%Y-%m-%d %H:%M:%S', '<C-r><C-w>')<CR>
 
 " Change directory (from @justinmk)
-nnoremap cd%  <cmd>lcd %:h<bar>pwd<cr>
-nnoremap cdd  :lcd <c-r>=luaeval('vim.fs.root(vim.fn.expand("%"), ".git")')<cr><bar>pwd<cr>
-nnoremap cdu   <cmd>lcd ..<bar>pwd<cr>
-nnoremap cd-   <cmd>lcd -<bar>pwd<cr>
+nnoremap cd%  <Cmd>lcd %:h<bar>verbose pwd<CR>
+nnoremap cdd  <Cmd>exe 'lcd' luaeval('vim.fs.root(vim.fn.expand("%"), ".git")')<bar>verbose pwd<CR>
+nnoremap cdu  <Cmd>lcd ..<bar>verbose pwd<CR>
+nnoremap cd-  <Cmd>lcd -<bar>verbose pwd<CR>
 
 " Show the last 40 :messages
 nnoremap g> :set nomore<bar>echo repeat("\n",&cmdheight)<bar>40messages<bar>set more<CR>
@@ -1015,7 +1015,7 @@ nnoremap yo<space> :set <C-R>=(&diffopt =~# 'iwhiteall') ? 'diffopt-=iwhiteall' 
 nnoremap <expr> <Leader>q (v:register==#'"')?'q':(':let @'.(empty(reg_recorded())?'q':reg_recorded())." = '<C-R>=substitute(@".v:register.",\"'\",\"''\",\"g\")<CR>'<C-F>010l")
 
 " Save the current file, restart Nvim, and reopen it
-nnoremap <expr> <leader>R '<cmd>update<bar>confirm restart edit '..fnameescape(fnamemodify(expand('%'),':p'))..'<cr>'
+nnoremap <expr> <leader>R '<Cmd>update<bar>confirm restart edit '..fnameescape(fnamemodify(expand('%'),':p'))..'<CR>'
 
 " Toggle local text width between 0 and 100, or set it from [count]
 nnoremap yoT :<C-u>setlocal textwidth=<C-R>=(!v:count && &textwidth != 0) ? 0 : (v:count ? v:count : 100)<CR><CR>

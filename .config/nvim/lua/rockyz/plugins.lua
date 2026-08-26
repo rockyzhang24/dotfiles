@@ -50,7 +50,6 @@ vim.pack.add({
     'https://github.com/unblevable/quick-scope',
     'https://github.com/tpope/vim-surround',
     'https://github.com/tpope/vim-sleuth',
-    'https://github.com/tpope/vim-repeat',
     'https://github.com/tpope/vim-apathy',
     'https://github.com/tpope/vim-dispatch', -- async build and test
     'https://github.com/tpope/vim-projectionist',

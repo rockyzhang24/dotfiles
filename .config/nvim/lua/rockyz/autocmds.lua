@@ -298,14 +298,92 @@ vim.api.nvim_create_autocmd('BufNewFile', {
     end,
 })
 
+-- CmdAtom
+
+local last_atom ---@type vim.event.cmdatom.data?
+local last_edit ---@type vim.event.cmdatom.data?
+local maxseq = {} ---@type table<integer, integer>
+
+local cmdatom_augroup = vim.api.nvim_create_augroup('rockyz.cmdatom', { clear = true })
+
 vim.api.nvim_create_autocmd('CmdAtom', {
-    group = vim.api.nvim_create_augroup('rockyz.cmdatom', { clear = true }),
+    desc = 'Remembers the most-recent user action',
+    group = cmdatom_augroup,
     callback = function(event)
-        if event.data.lhs and event.data.lhs ~= ','
-            and (event.data.type == 'motion' or event.data.type == 'mapping')
-            and (#event.data.lhs > 1 or (event.data.lhs == '' and #event.data.keys > 1))
-        then
-            vim.g.my_last = event.data
+        local atom = event.data
+        local is_redo_or_undo = atom.changed and (atom.undoseq or 0) <= (maxseq[event.buf] or 0)
+        maxseq[event.buf] = vim.fn.undotree(event.buf).seq_last
+        if atom.keys == '' then
+            -- Unreplayable Visual op
+        elseif atom.changed and not is_redo_or_undo and atom.lhs ~= '.' then
+            last_edit = atom
+        elseif not atom.changed and not is_redo_or_undo and not atom.lhs:match('^[,hjkl]$') then
+            last_atom = atom
         end
     end,
 })
+
+---@param atom? vim.event.cmdatom.data
+local function replay(atom)
+    if not atom then
+        vim.print('no `atom`')
+        return
+    end
+    local keys = atom.keys or atom.lhs
+    vim.schedule(function()
+        vim.api.nvim_feedkeys(keys, atom.keys and 'n' or 'm', false)
+    end)
+end
+
+vim.keymap.set('n', ',', function()
+    replay(last_atom)
+end)
+
+vim.keymap.set('n', '.', function()
+    replay(last_edit)
+end)
+
+-- Track the last 20 atoms
+local atom_ring = {} ---@type vim.event.cmdatom.data[]
+vim.api.nvim_create_autocmd('CmdAtom', {
+    desc = 'Remembers the 20 most-recent user actions',
+    group = cmdatom_augroup,
+    callback = function(event)
+        if event.data.lhs ~= ' m'
+            and not event.data.lhs:match('^[,.u]$')
+            and vim.fn.getcmdwintype() == ''
+        then
+            atom_ring[#atom_ring + 1] = event.data
+            if #atom_ring > 20 then
+                table.remove(atom_ring, 1)
+            end
+        end
+    end,
+})
+
+-- [count]<Leader>m shows cmdwin where the user can edit the last [count] atoms as a macro by
+-- setting vim.g.atom_macro, and save it by <Enter>.
+-- <Leader>m (no count) replay it.
+vim.keymap.set('n', '<Leader>m', function()
+    local count = vim.v.count
+    -- CmdAtom is deferred; schedule it so pending events land in the ring first.
+    vim.schedule(function()
+        count = math.min(count, #atom_ring)
+        if count == 0 then -- Replay the saved macro
+            for _, step in ipairs(vim.g.atom_macro or {}) do
+                vim.api.nvim_feedkeys(vim.keycode(step.keys or step.lhs), step.keys and 'n' or 'm', false)
+            end
+            return
+        end
+        local parts = {}
+        for i = #atom_ring - count + 1, #atom_ring do
+            local a = atom_ring[i]
+            local keys = a.keys or ('%s%s'):format(a.count or '', a.lhs)
+            local field = a.keys and 'keys' or 'lhs'
+            parts[#parts + 1] = ('{%s=%q},'):format(field, vim.fn.keytrans(keys))
+        end
+        local cmd = ('lua vim.g.atom_macro = { %s }'):format(table.concat(parts, ' '))
+        -- Draft it on the cmdline; CTRL-O opens cmdwin to edit it.
+        vim.api.nvim_feedkeys((':%s%s'):format(cmd, vim.keycode('<C-o>')), 'n', false)
+    end)
+end)

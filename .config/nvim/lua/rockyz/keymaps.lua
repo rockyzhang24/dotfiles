@@ -26,17 +26,7 @@ vim.keymap.set('n', 'vK', '<C-\\><C-n><Cmd>help!<CR>')
 vim.keymap.set({ 'n', 'x', 'o' }, 'H', '^')
 vim.keymap.set({ 'n', 'x', 'o' }, 'L', '$')
 vim.keymap.set('n', '\'', '`')
-
 vim.keymap.set('n', '<Leader>;', ',')
--- Repeat the last significant motion or mapping captured by CmdAtom event.
-vim.keymap.set('n', ',', function()
-    local last = vim.g.my_last
-    if last then
-        local keys = tostring(last.count or '') .. (last.lhs and last.lhs or last.keys)
-        vim.api.nvim_feedkeys(keys, '', true)
-    end
-end)
-
 vim.keymap.set('n', '<C-i>', '<C-i>')
 
 -- Argument list
@@ -284,7 +274,8 @@ local function ctrl_g()
     end
 
     -- Show current directory
-    table.insert(chunks, { ('cwd: %s\n'):format(vim.fn.fnamemodify(vim.fn.getcwd(), ':~')) })
+    local dirscope, dir = vim.trim(vim.fn.execute('verbose pwd')):match('([^ ]+) ([^ ]+)')
+    table.insert(chunks, { ('cwd: %s %s\n'):format(dirscope, vim.fn.fnamemodify(dir, ':~')) })
     -- Show current session
     table.insert(chunks, { ('session: %s\n'):format(#vim.v.this_session > 0 and vim.fn.fnamemodify(vim.v.this_session, ':~') or '?') })
     -- Show process id

@@ -5,7 +5,7 @@
       "src": "https://github.com/L3MON4D3/LuaSnip"
     },
     "SchemaStore.nvim": {
-      "rev": "cef8d093b63c9be7e8b49f7dc341e8447fc4c300",
+      "rev": "73e89eb3e536a4dd8f991c963bd37189520c9919",
       "src": "https://github.com/b0o/SchemaStore.nvim"
     },
     "blink.cmp": {
@@ -26,7 +26,7 @@
       "src": "https://github.com/dhananjaylatkar/cscope_maps.nvim"
     },
     "diffs.nvim": {
-      "rev": "9b3499dbe6c958956a65f948736b0912bec2579e",
+      "rev": "f6567df7aee5ff3ec7e53a59e7f892ae3f9dcd02",
       "src": "https://github.com/barrettruth/diffs.nvim"
     },
     "eregex.vim": {
@@ -62,7 +62,7 @@
       "src": "https://github.com/mfussenegger/nvim-treehopper"
     },
     "nvim-treesitter": {
-      "rev": "074aa4422bf029908338e855d0c0f71470a971bb",
+      "rev": "8b98b4470eb326f1c7b50dae79f8c963568e5720",
       "src": "https://github.com/nvim-treesitter/nvim-treesitter"
     },
     "nvim-treesitter-context": {
@@ -154,7 +154,7 @@
       "src": "https://github.com/justinmk/vim-gtfo"
     },
     "vim-ingo-library": {
-      "rev": "24a0f55ca25663fb53df61a09fee256c96fdd94a",
+      "rev": "18adf54012ce8e015df01e379752d5c4d15c9bb5",
       "src": "https://github.com/inkarkat/vim-ingo-library"
     },
     "vim-lion": {
@@ -162,7 +162,7 @@
       "src": "https://github.com/tommcdo/vim-lion"
     },
     "vim-mark": {
-      "rev": "a613b0676fce72960c06e26f8f8f6454bcef4564",
+      "rev": "613615cd34b3eab30e67047fce1c9f79cfc34433",
       "src": "https://github.com/inkarkat/vim-mark"
     },
     "vim-obsession": {

@@ -120,6 +120,9 @@ vim.pack.add({
     -- It provides :GBrowse to open the current file, blob, tree, commit, or tag in the browser
 
     'https://github.com/rbong/vim-flog',
+
+    -- HTML
+    'https://github.com/windwp/nvim-ts-autotag', -- Auto-closing tags for HTML and JSX
 })
 
 -- On-demand plugins, not loaded until ":packadd ...".

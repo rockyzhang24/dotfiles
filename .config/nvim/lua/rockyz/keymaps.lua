@@ -164,7 +164,7 @@ vim.keymap.set('n', '<M-r>', function()
 end)
 
 -- Format the whole buffer and preserve the cursor position
-vim.keymap.set('n', 'gQ', 'mzgggqG`z<Cmd>delmarks z<CR>')
+vim.keymap.set('n', 'gqa', 'mzgggqG`z<Cmd>delmarks z<CR>')
 
 -- Toggle spell
 vim.keymap.set('n', 'yoS', function()
@@ -422,6 +422,7 @@ vim.keymap.set('n', '?', 'ms?')
 --   - clearmatches()
 --   - :diffupdate
 --   - :syncbind
+--   - clear multicursors
 -- Use {count}<C-l> to also:
 --   - clear all extmark namespaces
 vim.keymap.set('n', '<C-l>', function()
@@ -432,6 +433,7 @@ vim.keymap.set('n', '<C-l>', function()
     vim.cmd('nohlsearch')
     vim.cmd('diffupdate')
     vim.cmd('syncbind')
+    vim.api.nvim_buf_clear_namespace(0, vim.api.nvim_create_namespace('nvim.multicursor'), 0, -1)
     require('rockyz.scrollbar').clear_search()
     vim.cmd('normal! <C-l>')
 end, { silent = true })
@@ -971,15 +973,6 @@ end, { expr = true })
 --------------------------------------------------------------------------------
 
 vim.cmd([==[
-
-inoremap [[ [[ ]]<Left><Left><Left>
-inoremap [= [=[ ]=]<Left><Left><Left><Left>
-inoremap {<CR> {<CR>}<Esc>O
-inoremap {; {<CR>};<Esc>O
-inoremap {, {<CR>},<Esc>O
-inoremap [<CR> [<CR>]<Esc>O
-inoremap [; [<CR>];<Esc>O
-inoremap [, [<CR>],<Esc>O
 
 " Insert formatted datetime (from @tpope vimrc)
 inoremap <silent> <C-G><C-T> <C-R>=repeat(complete(col('.'),map(["%Y-%m-%d %H:%M:%S","%a, %d %b %Y %H:%M:%S %z","%Y %b %d","%d-%b-%y","%a %b %d %T %Z %Y","%Y%m%d"],'strftime(v:val)')+[localtime()]),0)<CR>

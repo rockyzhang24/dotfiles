@@ -113,6 +113,6 @@ augroup rockyz.ctrl_s_shell
     autocmd VimLeavePre * silent! bwipeout! ^:shell$
 augroup END
 
-nnoremap <silent> <C-s> :<C-u>call <SID>ctrl_s(v:count, v:false)<CR>
-nnoremap <silent> '<C-s> :<C-u>call <SID>ctrl_s(v:count, v:true)<CR>
+nnoremap <silent> <C-s> <Cmd>call <SID>ctrl_s(v:count, v:false)<CR>
+nnoremap <silent> '<C-s> <Cmd>call <SID>ctrl_s(v:count, v:true)<CR>
 ]]

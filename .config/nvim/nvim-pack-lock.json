@@ -5,7 +5,7 @@
       "src": "https://github.com/L3MON4D3/LuaSnip"
     },
     "SchemaStore.nvim": {
-      "rev": "5f2a3b5dc13f3622000cb488c9af505b933152e3",
+      "rev": "e37abcf2f337dc2587aae9118f866b0cf8ed96b7",
       "src": "https://github.com/b0o/SchemaStore.nvim"
     },
     "blink.cmp": {
@@ -26,7 +26,7 @@
       "src": "https://github.com/dhananjaylatkar/cscope_maps.nvim"
     },
     "diffs.nvim": {
-      "rev": "f6567df7aee5ff3ec7e53a59e7f892ae3f9dcd02",
+      "rev": "fed0ebb08ada8ba069e23990f87582ce47007407",
       "src": "https://github.com/barrettruth/diffs.nvim"
     },
     "eregex.vim": {
@@ -34,7 +34,7 @@
       "src": "https://github.com/othree/eregex.vim"
     },
     "gitsigns.nvim": {
-      "rev": "5be654f2232c10ddcad19c1607a67b6b4b78fc29",
+      "rev": "f2421c550618d257048afa650413d9e542ddbe67",
       "src": "https://github.com/lewis6991/gitsigns.nvim"
     },
     "guh.nvim": {
@@ -62,7 +62,7 @@
       "src": "https://github.com/mfussenegger/nvim-treehopper"
     },
     "nvim-treesitter": {
-      "rev": "8b98b4470eb326f1c7b50dae79f8c963568e5720",
+      "rev": "d4d59cb369da46b95699bd2200efbcffc6dadb3b",
       "src": "https://github.com/nvim-treesitter/nvim-treesitter"
     },
     "nvim-treesitter-context": {
@@ -70,11 +70,15 @@
       "src": "https://github.com/nvim-treesitter/nvim-treesitter-context"
     },
     "nvim-treesitter-textobjects": {
-      "rev": "898ee307df58f854d11cd7edd06472574d48014e",
+      "rev": "5c7b0263797dfd1bd6202f2b219f3b53a80b2187",
       "src": "https://github.com/nvim-treesitter/nvim-treesitter-textobjects"
     },
+    "nvim-ts-autotag": {
+      "rev": "88c1453db4ba7dd24131086fe51fdf74e587d275",
+      "src": "https://github.com/windwp/nvim-ts-autotag"
+    },
     "nvim-web-devicons": {
-      "rev": "2ae6958df7ced50baac5035cec0c15799eedfbf7",
+      "rev": "5f032a85be210cd1c6ac98861eb3b187ff3bd5eb",
       "src": "https://github.com/kyazdani42/nvim-web-devicons"
     },
     "quick-scope": {
@@ -162,11 +166,11 @@
       "src": "https://github.com/tommcdo/vim-lion"
     },
     "vim-mark": {
-      "rev": "613615cd34b3eab30e67047fce1c9f79cfc34433",
+      "rev": "dd271f3201daf93174c7e7fe13e2d4a826af6478",
       "src": "https://github.com/inkarkat/vim-mark"
     },
     "vim-obsession": {
-      "rev": "ed9dfc7c2cc917ace8b24f4f9f80a91e05614b63",
+      "rev": "5d63e5b50ebf554d378528e357157c89e91313c9",
       "src": "https://github.com/tpope/vim-obsession"
     },
     "vim-projectionist": {

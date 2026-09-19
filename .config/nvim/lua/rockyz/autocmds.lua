@@ -302,7 +302,6 @@ vim.api.nvim_create_autocmd('BufNewFile', {
 
 local last_atom ---@type vim.event.cmdatom.data?
 local last_edit ---@type vim.event.cmdatom.data?
-local maxseq = {} ---@type table<integer, integer>
 
 local cmdatom_augroup = vim.api.nvim_create_augroup('rockyz.cmdatom', { clear = true })
 
@@ -311,8 +310,8 @@ vim.api.nvim_create_autocmd('CmdAtom', {
     group = cmdatom_augroup,
     callback = function(event)
         local atom = event.data
-        local is_redo_or_undo = atom.changed and (atom.undoseq or 0) <= (maxseq[event.buf] or 0)
-        maxseq[event.buf] = vim.fn.undotree(event.buf).seq_last
+        local is_redo_or_undo = atom.changed and (atom.undoseq or 0) <= (vim.b[event.buf].maxseq or 0)
+        vim.b[event.buf].maxseq = vim.fn.undotree(event.buf).seq_last
         if atom.keys == '' then
             -- Unreplayable Visual op
         elseif atom.changed and not is_redo_or_undo and atom.lhs ~= '.' then
@@ -340,6 +339,12 @@ vim.keymap.set('n', ',', function()
 end)
 
 vim.keymap.set('n', '.', function()
+    -- Multicursors: degrade to builtin "." (cascades).
+    local mc = vim.api.nvim_create_namespace('nvim.multicursor')
+    if #vim.api.nvim_buf_get_extmarks(0, mc, 0, -1, { limit = 1 }) > 0 then
+        vim.api.nvim_feedkeys('.', 'n', false)
+        return
+    end
     replay(last_edit)
 end)
 

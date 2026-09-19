@@ -191,21 +191,45 @@ vim.keymap.set('n', '<C-c>', 'ciw')
 -- vim.keymap.set('n', '<Leader>x', ':.lua<CR>') -- execute the current line
 -- vim.keymap.set('v', '<Leader>x', ':lua<CR>') -- execute the selected lines
 
--- Make I and A in character-wise and linewise VISUAL be v_b_I
-local function visual_block_insert(lhs, rhs)
+-- Make Visual I/A insert at the start/end of every selected line.
+-- * Characterwise and linewise selections use Q to create one multicursor per line, then clear
+-- those temporary cursors after leaving Insert mode.
+-- * Blockwise Visual mode already supports I/A natively, so its behavior is left unchanged.
+local function visual_multicursor_insert(key)
     local mode = vim.fn.mode()
-    if mode == 'v' or mode == 'V' then
-        return rhs
+
+    if mode ~= 'v' and mode ~= 'V' then
+        return key
     end
-    return lhs
+
+    local bufnr = vim.api.nvim_get_current_buf()
+
+    vim.api.nvim_create_autocmd('InsertLeave', {
+        buffer = bufnr,
+        once = true,
+        callback = function()
+            vim.schedule(function()
+                if vim.api.nvim_buf_is_valid(bufnr) then
+                    vim.api.nvim_buf_clear_namespace(
+                        bufnr,
+                        vim.api.nvim_create_namespace('nvim.multicursor'),
+                        0,
+                        -1
+                    )
+                end
+            end)
+        end,
+    })
+
+    return 'Q' .. key
 end
 
 vim.keymap.set('x', 'I', function()
-    return visual_block_insert('I', '<C-v>^o^I')
+    return visual_multicursor_insert('I')
 end, { expr = true })
 
 vim.keymap.set('x', 'A', function()
-    return visual_block_insert('A', '<C-v>0o$A')
+    return visual_multicursor_insert('A')
 end, { expr = true })
 
 -- Toggle a shallow fold view for quick code overview

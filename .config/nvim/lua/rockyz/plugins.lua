@@ -54,7 +54,6 @@ vim.pack.add({
     'https://github.com/tpope/vim-dispatch', -- async build and test
     'https://github.com/tpope/vim-projectionist',
     'https://github.com/tpope/vim-obsession',
-    'https://github.com/barrettruth/diffs.nvim',
     'https://github.com/justinmk/vim-sneak',
     'https://github.com/haya14busa/vim-edgemotion',
     'https://github.com/AndrewRadev/switch.vim',
@@ -115,6 +114,7 @@ vim.pack.add({
     'https://github.com/lewis6991/gitsigns.nvim',
     'https://github.com/tpope/vim-fugitive',
     'https://github.com/justinmk/guh.nvim',
+    'https://forge.barrettruth.com/barrettruth/diffs.nvim',
 
     'https://github.com/tpope/vim-rhubarb',
     -- It provides :GBrowse to open the current file, blob, tree, commit, or tag in the browser

@@ -5,7 +5,7 @@
       "src": "https://github.com/L3MON4D3/LuaSnip"
     },
     "SchemaStore.nvim": {
-      "rev": "ab094b7f788231fe9b68deac78c3d512302c58a6",
+      "rev": "fae5c76c00dec18485f264396ce24368e9c4e9fb",
       "src": "https://github.com/b0o/SchemaStore.nvim"
     },
     "blink.cmp": {
@@ -26,15 +26,15 @@
       "src": "https://github.com/dhananjaylatkar/cscope_maps.nvim"
     },
     "diffs.nvim": {
-      "rev": "0de2d75a6d92107aac21b84cd51cca4058e561f5",
-      "src": "https://github.com/barrettruth/diffs.nvim"
+      "rev": "ae999b3602c451d74755b0ca248714400b8c249a",
+      "src": "https://forge.barrettruth.com/barrettruth/diffs.nvim"
     },
     "eregex.vim": {
       "rev": "950027d5942c7dc5f4cbcfdea7df360da9360697",
       "src": "https://github.com/othree/eregex.vim"
     },
     "gitsigns.nvim": {
-      "rev": "8d79f2410c76e62b92e51c28c82e28c1c5a3daeb",
+      "rev": "070a5d7b985546cc57e1fc61e5bc507fecac6045",
       "src": "https://github.com/lewis6991/gitsigns.nvim"
     },
     "guh.nvim": {
@@ -62,7 +62,7 @@
       "src": "https://github.com/mfussenegger/nvim-treehopper"
     },
     "nvim-treesitter": {
-      "rev": "9a168f6357ed21c3a636e1727bc7d382abc451b8",
+      "rev": "910fdf6f49e9dee7e7257c7d11a76b040fdfb9de",
       "src": "https://github.com/nvim-treesitter/nvim-treesitter"
     },
     "nvim-treesitter-context": {
@@ -78,7 +78,7 @@
       "src": "https://github.com/windwp/nvim-ts-autotag"
     },
     "nvim-web-devicons": {
-      "rev": "5f032a85be210cd1c6ac98861eb3b187ff3bd5eb",
+      "rev": "58447c1fca354bbf184425e4a8d01deecbd6f3c4",
       "src": "https://github.com/kyazdani42/nvim-web-devicons"
     },
     "quick-scope": {
@@ -106,7 +106,7 @@
       "src": "https://github.com/preservim/tagbar"
     },
     "treesj": {
-      "rev": "79aedb401bbdc7e4202f7881eab5f6feb2105b0a",
+      "rev": "9f349ba62c524f065d6f43254d731ddf8319b9bf",
       "src": "https://github.com/Wansmer/treesj"
     },
     "undotree": {
@@ -158,7 +158,7 @@
       "src": "https://github.com/justinmk/vim-gtfo"
     },
     "vim-ingo-library": {
-      "rev": "18adf54012ce8e015df01e379752d5c4d15c9bb5",
+      "rev": "2a533b740863530a7052d7203fdac253891501fc",
       "src": "https://github.com/inkarkat/vim-ingo-library"
     },
     "vim-lion": {
@@ -170,7 +170,7 @@
       "src": "https://github.com/inkarkat/vim-mark"
     },
     "vim-obsession": {
-      "rev": "5d63e5b50ebf554d378528e357157c89e91313c9",
+      "rev": "dad3b5a1f9b661e27cb77fc69308287349d3cf30",
       "src": "https://github.com/tpope/vim-obsession"
     },
     "vim-projectionist": {

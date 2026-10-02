@@ -158,14 +158,14 @@ else
       --preview-window='nohidden,right,60%' \
       --bind='ctrl-/:change-preview-window(down,45%|hidden|)' "$@"
 
-      # fzf --height 50% --tmux 90%,70% \
-      #   --layout reverse --multi --min-height 20+ --border \
-      #   --no-separator --header-border horizontal \
-      #   --border-label-pos 2 \
-      #   --color 'label:blue' \
-      #   --preview-window 'right,50%' --preview-border line \
-      #   --bind 'ctrl-/:change-preview-window(down,50%|hidden|)' "$@"
-    }
+    # fzf --height 50% --tmux 90%,70% \
+    #   --layout reverse --multi --min-height 20+ --border \
+    #   --no-separator --header-border horizontal \
+    #   --border-label-pos 2 \
+    #   --color 'label:blue' \
+    #   --preview-window 'right,50%' --preview-border line \
+    #   --bind 'ctrl-/:change-preview-window(down,50%|hidden|)' "$@"
+  }
 fi
 
 # Check git repository
@@ -188,8 +188,26 @@ __fzf_git=$(readlink -f "$__fzf_git" 2> /dev/null || /usr/bin/ruby --disable-gem
 
 # Files
 _fzf_git_files() {
-  _fzf_git_check || return
-  local root query
+  local root query extract_file_name
+
+  # Outside a git repository, fall back to the file search of fzf.
+  if ! git rev-parse > /dev/null 2>&1; then
+    root=$PWD
+    if [[ -n $HOME ]] && [[ $root == "$HOME" || $root == "$HOME"/* ]]; then
+      root="~${root#"$HOME"}"
+    fi
+
+    # The ZLE widget invokes this function on the left-hand side of a pipe, so
+    # fzf sees a non-TTY (and empty) stdin and will not run its default command.
+    # Feed it explicitly instead.
+    eval "$FZF_DEFAULT_COMMAND" | _fzf_git_fzf -m --force-tty-in \
+      --prompt "📁 Files in $root " \
+      --header 'ALT-E (open in editor)' \
+      --bind "alt-e:execute:${EDITOR:-vim} {}" \
+      --preview "$(__fzf_git_cat) {}" "$@"
+    return
+  fi
+
   root=$(git rev-parse --show-toplevel)
   [[ -n "$(git rev-parse --show-prefix)" ]] && query='!../ '
 
@@ -218,19 +236,18 @@ EOF
 _fzf_git_tree_files() {
   _fzf_git_check || return
 
-  local root
-  root=$(git rev-parse --show-toplevel)
-
-  local treeish
+  local treeish cdup prefix
+  cdup="$(git rev-parse --show-cdup)"
+  prefix="$(git rev-parse --show-prefix)"
   for treeish in "$@"; do
-    git diff-tree --root --no-commit-id --name-only "$treeish" -r
-  done | sort -u |
+    git diff-tree --root --no-commit-id --name-only --line-prefix="$cdup" "$treeish" -r
+  done | sort -u | sed "s|^$cdup$prefix||" |
     _fzf_git_fzf -m \
       --prompt "📂 Files in $*> " \
       --header ':: CTRL-O (open in browser), ALT-E (open in editor)' \
       --bind "ctrl-o:execute-silent:bash \"$__fzf_git\" --list file {}" \
       --bind "alt-e:execute:${EDITOR:-vim} {}" \
-      --preview "git -C $root -c core.quotePath=false diff --no-ext-diff --color=$(__fzf_git_color .) -- {} | $(__fzf_git_pager); $(__fzf_git_cat) $root/{}"
+      --preview "git -c core.quotePath=false diff --no-ext-diff --color=$(__fzf_git_color .) -- {} | $(__fzf_git_pager); $(__fzf_git_cat) {}"
 }
 
 # Branches

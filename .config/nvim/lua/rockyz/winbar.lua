@@ -352,7 +352,7 @@ end
 ---@param breadcrumb_text string
 local function set_breadcrumbs(winid, breadcrumb_text)
     vim.w[winid].breadcrumbs = breadcrumb_text
-    vim.cmd('redrawstatus')
+    -- vim.api.nvim__redraw({ win = winid, winbar = true })
 end
 
 ---Refresh breadcrumbs for the current window

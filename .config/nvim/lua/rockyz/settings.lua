@@ -38,7 +38,7 @@ vim.o.ignorecase = true
 vim.o.inccommand = 'split'
 vim.opt.isfname:remove('=')
 vim.opt.jumpoptions:append('view')
-vim.o.laststatus = 3
+vim.o.laststatus = 2
 vim.o.linebreak = true
 vim.o.list = true
 vim.opt.listchars = {
@@ -65,7 +65,8 @@ vim.o.shiftwidth = 4
 vim.o.shiftround = true
 vim.o.showbreak = '↳ '
 vim.o.showmode = false
-vim.opt.shortmess:append('acS')
+vim.opt.shortmess:append('ac')
+vim.o.sidescrolloff = 5
 vim.o.signcolumn = 'yes'
 vim.o.smartcase = true
 vim.o.softtabstop = -1 -- Fall back to shiftwidth
@@ -85,6 +86,7 @@ vim.cmd([[let &titlestring = (exists('$SSH_TTY') ? 'SSH ' : '') .. '%{fnamemodif
 vim.o.undofile = true
 vim.o.updatetime = 250
 vim.o.wildmode = 'longest:full,full'
+vim.o.wrap = false
 
 -- Avoid highlighting the last search when sourcing vimrc
 vim.cmd('nohlsearch')

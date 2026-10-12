@@ -5,7 +5,7 @@
       "src": "https://github.com/L3MON4D3/LuaSnip"
     },
     "SchemaStore.nvim": {
-      "rev": "fae5c76c00dec18485f264396ce24368e9c4e9fb",
+      "rev": "b463a5e79f84fd9ca22dd47f41754387d8fe7af4",
       "src": "https://github.com/b0o/SchemaStore.nvim"
     },
     "blink.cmp": {
@@ -26,7 +26,7 @@
       "src": "https://github.com/dhananjaylatkar/cscope_maps.nvim"
     },
     "diffs.nvim": {
-      "rev": "ae999b3602c451d74755b0ca248714400b8c249a",
+      "rev": "8ec45f4e1dd36567cf27d90e8fa6bc53128c54e6",
       "src": "https://forge.barrettruth.com/barrettruth/diffs.nvim"
     },
     "eregex.vim": {
@@ -34,7 +34,7 @@
       "src": "https://github.com/othree/eregex.vim"
     },
     "gitsigns.nvim": {
-      "rev": "070a5d7b985546cc57e1fc61e5bc507fecac6045",
+      "rev": "851a051e2bd2caba97e23314c68d69f1b1cf5d19",
       "src": "https://github.com/lewis6991/gitsigns.nvim"
     },
     "guh.nvim": {
@@ -50,7 +50,7 @@
       "src": "https://github.com/mizlan/iswap.nvim"
     },
     "linediff.vim": {
-      "rev": "c3780609769a93f4f59421b6324355f37e0ee6c5",
+      "rev": "5ed585de3af720f86e895590ad30694145879e2b",
       "src": "https://github.com/AndrewRadev/linediff.vim"
     },
     "neogen": {
@@ -62,11 +62,11 @@
       "src": "https://github.com/mfussenegger/nvim-treehopper"
     },
     "nvim-treesitter": {
-      "rev": "910fdf6f49e9dee7e7257c7d11a76b040fdfb9de",
+      "rev": "1a4f47b03dfe92d28de7d5654c67327ef008c9e6",
       "src": "https://github.com/nvim-treesitter/nvim-treesitter"
     },
     "nvim-treesitter-context": {
-      "rev": "f3061339b8eaf9fda873600bc425b8d2d8502533",
+      "rev": "8decd73460d26ef0a0befb745d022dd1fc2c38b8",
       "src": "https://github.com/nvim-treesitter/nvim-treesitter-context"
     },
     "nvim-treesitter-textobjects": {
@@ -74,7 +74,7 @@
       "src": "https://github.com/nvim-treesitter/nvim-treesitter-textobjects"
     },
     "nvim-ts-autotag": {
-      "rev": "88c1453db4ba7dd24131086fe51fdf74e587d275",
+      "rev": "d7220b55e16ed3c04e88086256def5d282429493",
       "src": "https://github.com/windwp/nvim-ts-autotag"
     },
     "nvim-web-devicons": {
@@ -90,11 +90,11 @@
       "src": "https://github.com/stefandtw/quickfix-reflector.vim"
     },
     "render-markdown.nvim": {
-      "rev": "640a3ec6d538bad17c328be373c7cad0293d9589",
+      "rev": "8e8795368391036643b622875a6da6a51bcd33f4",
       "src": "https://github.com/MeanderingProgrammer/render-markdown.nvim"
     },
     "switch.vim": {
-      "rev": "297346b630943ebd4ea58598dfd30bae5debc739",
+      "rev": "a824d660dc97db9798be1b7103b1114b6c3da13d",
       "src": "https://github.com/AndrewRadev/switch.vim"
     },
     "tabular": {

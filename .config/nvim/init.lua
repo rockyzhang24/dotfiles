@@ -40,7 +40,7 @@ local modules = {
     'indentscope',
     'tabline',
     'winbar',
-    'statusline',
+    'statusline_local',
     'quickfix',
     'lsp',
     'fzf',

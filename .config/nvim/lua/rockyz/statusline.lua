@@ -182,17 +182,18 @@ function M.git_diff(min_width)
     local items = {}
 
     for _, kind in ipairs({ 'added', 'deleted', 'modified' }) do
-        if counts[kind] and counts[kind] > 0 then
-            local format = '%%#StlGit' .. kind .. '#%s%s%%*'
-            table.insert(items, string.format(format, icons.minimal.git[kind], counts[kind]))
+        local count = counts[kind] or 0
+        if count > 0 then
+            items[#items + 1] = string.format(
+                '%%#StlGit%s#%s%s%%*',
+                kind,
+                icons.minimal.git[kind],
+                count
+            )
         end
     end
 
-    if #items > 0 then
-        return '[' .. table.concat(items, ' ') .. ']'
-    else
-        return ''
-    end
+    return #items > 0 and '[' .. table.concat(items, ' ') .. ']' or ''
 end
 
 ---Render active LSP clients attached to the current buffer
@@ -324,20 +325,20 @@ end
 ---@return string
 function M.diagnostics()
     local counts = vim.diagnostic.count(0)
-    local diagnostic_enabled = vim.diagnostic.is_enabled({ bufnr = 0 })
+    local enabled = vim.diagnostic.is_enabled({ bufnr = 0 })
 
     local items = {}
 
     for _, level in ipairs(diagnostic_levels) do
         local count = counts[vim.diagnostic.severity[level]] or 0
         if count > 0 then
-            local icon = icons.diagnostics[level]
-            if diagnostic_enabled then
-                table.insert(items, string.format('%%#StlDiagnostic%s#%s %s%%*', level, icon, count))
-            else
-                -- Use gray color if diagnostic is disabled
-                table.insert(items, string.format('%%#StlComponentInactive#%s %s%%*', icon, count))
-            end
+            local hl = enabled and 'StlDiagnostic' .. level or 'StlComponentInactive'
+            items[#items + 1] = string.format(
+                '%%#%s#%s %s%%*',
+                hl,
+                icons.diagnostics[level],
+                count
+            )
         end
     end
     return table.concat(items, ' ')
@@ -511,8 +512,8 @@ local group = vim.api.nvim_create_augroup('rockyz.statusline.redraw', {})
 vim.api.nvim_create_autocmd('User', {
     group = group,
     pattern = 'GitSignsUpdate',
-    callback = function()
-        vim.cmd.redrawstatus()
+    callback = function(event)
+        vim.api.nvim__redraw({ win = event.win, statusline = true })
     end,
 })
 

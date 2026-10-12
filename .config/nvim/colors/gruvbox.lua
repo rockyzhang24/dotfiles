@@ -125,8 +125,8 @@ end
 local norm_fg = fg1
 local norm_bg = bg0
 
-local statusline_fg = fg1
-local statusline_bg = bg2
+local stl_fg = fg1 -- statusline foreground
+local stl_bg = bg2 -- statusline background
 
 local winbar_fg = fg4
 local winbar_bg = bg0
@@ -199,7 +199,7 @@ local groups = {
     CurSearch = 'IncSearch',
     -- Substitute = 'Search',
     QuickFixLine = { bg = bg1, bold = true },
-    StatusLine = { fg = statusline_fg, bg = statusline_bg },
+    StatusLine = { fg = stl_fg, bg = stl_bg },
     StatusLineNC = { fg = fg4, bg = bg1 },
     -- StatusLineTerm = 'StatusLine',
     -- StatusLineTermNC = 'StatusLineNC',
@@ -554,18 +554,18 @@ local groups = {
 
     StlIcon = 'StatusLine',
 
-    StlComponentInactive = { fg = fg4, bg = statusline_bg },
-    StlComponentOn = { fg = green, bg = statusline_bg },
-    StlComponentOff = { fg = red, bg = statusline_bg },
+    StlComponentInactive = { fg = fg4, bg = stl_bg },
+    StlComponentOn = { fg = green, bg = stl_bg },
+    StlComponentOff = { fg = red, bg = stl_bg },
 
     StlGitadded = 'StatusLine',
     StlGitdeleted = 'StatusLine',
     StlGitmodified = 'StatusLine',
 
-    StlDiagnosticERROR = 'StatusLine',
-    StlDiagnosticWARN = 'StatusLine',
-    StlDiagnosticINFO = 'StatusLine',
-    StlDiagnosticHINT = 'StatusLine',
+    StlDiagnosticERROR = { fg = red },
+    StlDiagnosticWARN = { fg = yellow },
+    StlDiagnosticINFO = { fg = blue },
+    StlDiagnosticHINT = { fg = blue },
 
     -- StlMacroRecording = 'StlComponentOff',
     -- StlMacroRecorded = 'StlComponentOn',

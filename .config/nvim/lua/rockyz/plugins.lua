@@ -114,7 +114,7 @@ vim.pack.add({
     'https://github.com/lewis6991/gitsigns.nvim',
     'https://github.com/tpope/vim-fugitive',
     'https://github.com/justinmk/guh.nvim',
-    'https://forge.barrettruth.com/barrettruth/diffs.nvim',
+    'https://github.com/barrettruth/diffs.nvim',
 
     'https://github.com/tpope/vim-rhubarb',
     -- It provides :GBrowse to open the current file, blob, tree, commit, or tag in the browser

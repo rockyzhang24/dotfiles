@@ -5,7 +5,7 @@
       "src": "https://github.com/L3MON4D3/LuaSnip"
     },
     "SchemaStore.nvim": {
-      "rev": "b463a5e79f84fd9ca22dd47f41754387d8fe7af4",
+      "rev": "e8c3d2225d6bf5e2cbe414952c247d7a3411849b",
       "src": "https://github.com/b0o/SchemaStore.nvim"
     },
     "blink.cmp": {
@@ -22,23 +22,23 @@
       "src": "https://github.com/stevearc/conform.nvim"
     },
     "cscope_maps.nvim": {
-      "rev": "2304cc91fc226b8dd0f7074a7c14873061e2ccb9",
+      "rev": "bf0b380015e5bf5db4ad7184b9862cda36c6c674",
       "src": "https://github.com/dhananjaylatkar/cscope_maps.nvim"
     },
     "diffs.nvim": {
-      "rev": "8ec45f4e1dd36567cf27d90e8fa6bc53128c54e6",
-      "src": "https://forge.barrettruth.com/barrettruth/diffs.nvim"
+      "rev": "e313128621848cb6a244beb687272c1d542fb580",
+      "src": "https://github.com/barrettruth/diffs.nvim"
     },
     "eregex.vim": {
       "rev": "950027d5942c7dc5f4cbcfdea7df360da9360697",
       "src": "https://github.com/othree/eregex.vim"
     },
     "gitsigns.nvim": {
-      "rev": "851a051e2bd2caba97e23314c68d69f1b1cf5d19",
+      "rev": "dc7698f932792a764d3db95fedee26c38e728355",
       "src": "https://github.com/lewis6991/gitsigns.nvim"
     },
     "guh.nvim": {
-      "rev": "943779f7cdb0acee203985ad531fb53ff95d9c8e",
+      "rev": "39df7dc86785539231a04dd61e2b79f280a08ba4",
       "src": "https://github.com/justinmk/guh.nvim"
     },
     "inc-rename.nvim": {
@@ -62,7 +62,7 @@
       "src": "https://github.com/mfussenegger/nvim-treehopper"
     },
     "nvim-treesitter": {
-      "rev": "1a4f47b03dfe92d28de7d5654c67327ef008c9e6",
+      "rev": "04f17886f75416dfdc25374c950a52c63f0e98fe",
       "src": "https://github.com/nvim-treesitter/nvim-treesitter"
     },
     "nvim-treesitter-context": {
@@ -78,7 +78,7 @@
       "src": "https://github.com/windwp/nvim-ts-autotag"
     },
     "nvim-web-devicons": {
-      "rev": "58447c1fca354bbf184425e4a8d01deecbd6f3c4",
+      "rev": "0dc0cfb0c6858041174a53c7aa4adaf65e994b3c",
       "src": "https://github.com/kyazdani42/nvim-web-devicons"
     },
     "quick-scope": {
@@ -90,11 +90,11 @@
       "src": "https://github.com/stefandtw/quickfix-reflector.vim"
     },
     "render-markdown.nvim": {
-      "rev": "8e8795368391036643b622875a6da6a51bcd33f4",
+      "rev": "8801162e041e34c64d0d1397cd1f353a14b01950",
       "src": "https://github.com/MeanderingProgrammer/render-markdown.nvim"
     },
     "switch.vim": {
-      "rev": "a824d660dc97db9798be1b7103b1114b6c3da13d",
+      "rev": "70ad8c66c694c60e9d13342493f51d5b7dddc42d",
       "src": "https://github.com/AndrewRadev/switch.vim"
     },
     "tabular": {
@@ -158,7 +158,7 @@
       "src": "https://github.com/justinmk/vim-gtfo"
     },
     "vim-ingo-library": {
-      "rev": "2a533b740863530a7052d7203fdac253891501fc",
+      "rev": "244dc3652747300fe83084d94266d180ed21c15a",
       "src": "https://github.com/inkarkat/vim-ingo-library"
     },
     "vim-lion": {
@@ -166,7 +166,7 @@
       "src": "https://github.com/tommcdo/vim-lion"
     },
     "vim-mark": {
-      "rev": "dd271f3201daf93174c7e7fe13e2d4a826af6478",
+      "rev": "a7df60196368cb6a6f510e003046bcb8483dec57",
       "src": "https://github.com/inkarkat/vim-mark"
     },
     "vim-obsession": {
@@ -190,7 +190,7 @@
       "src": "https://github.com/justinmk/vim-sneak"
     },
     "vim-startuptime": {
-      "rev": "5f33e50f1e2e2a80370c9094e4c303ea54cd2aea",
+      "rev": "b2de50f190c8139d70d36d82157dd9c1a8212579",
       "src": "https://github.com/dstein64/vim-startuptime"
     },
     "vim-surround": {

@@ -29,6 +29,7 @@ vim.opt.fillchars = {
     foldsep = ' ',
     foldinner = ' ',
     msgsep = '‾',
+    -- vert = '║',
 }
 vim.o.foldcolumn = '1'
 vim.o.foldlevel = 99

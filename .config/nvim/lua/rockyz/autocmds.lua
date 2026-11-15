@@ -128,6 +128,13 @@ vim.api.nvim_create_autocmd({ 'TextYankPost', 'TextPutPost' }, {
     group = vim.api.nvim_create_augroup('rockyz.highlight_yank', {}),
     callback = function()
         vim.hl.hl_op({ timeout = 300, priority = 65535 })
+
+        -- Yank-ring
+        if vim.v.event.operator == 'y' then
+            for i = 9, 1, -1 do -- Shift all numbered registers
+                vim.fn.setreg(tostring(i), vim.fn.getreg(tostring(i - 1)))
+            end
+        end
     end,
 })
 
@@ -300,9 +307,6 @@ vim.api.nvim_create_autocmd('BufNewFile', {
 
 -- CmdAtom
 
-local last_atom ---@type vim.event.cmdatom.data?
-local last_edit ---@type vim.event.cmdatom.data?
-
 local cmdatom_augroup = vim.api.nvim_create_augroup('rockyz.cmdatom', { clear = true })
 
 vim.api.nvim_create_autocmd('CmdAtom', {
@@ -310,14 +314,22 @@ vim.api.nvim_create_autocmd('CmdAtom', {
     group = cmdatom_augroup,
     callback = function(event)
         local atom = event.data
-        local is_redo_or_undo = atom.changed and (atom.undoseq or 0) <= (vim.b[event.buf].maxseq or 0)
+        local is_redo_or_undo = atom.changed
+            and (atom.undoseq or 0) <= (vim.b[event.buf].maxseq or 0)
         vim.b[event.buf].maxseq = vim.fn.undotree(event.buf).seq_last
         if atom.keys == '' then
             -- Unreplayable Visual op
         elseif atom.changed and not is_redo_or_undo and atom.lhs ~= '.' then
-            last_edit = atom
-        elseif not atom.changed and not is_redo_or_undo and not atom.lhs:match('^[,hjkl]$') then
-            last_atom = atom
+            vim.g.last_edit = atom
+        elseif not atom.changed
+            and not is_redo_or_undo
+            and not atom.lhs:match('^[,hjkl]$')
+            and not (atom.keys and atom.keys:match('^[,hjkl]$'))
+            and vim.trim(atom.keys or '') ~= ':'
+            and ( atom.type ~= 'excmd' or vim.trim(atom.keys) ~= ':' .. vim.trim(vim.fn.histget(':', -1))) -- Use @: instead.
+            and atom.type ~= 'insert'
+        then
+            vim.g.last_atom = atom
         end
     end,
 })
@@ -335,7 +347,7 @@ local function replay(atom)
 end
 
 vim.keymap.set('n', ',', function()
-    replay(last_atom)
+    replay(vim.g.last_atom)
 end)
 
 vim.keymap.set('n', '.', function()
@@ -345,7 +357,7 @@ vim.keymap.set('n', '.', function()
         vim.api.nvim_feedkeys('.', 'n', false)
         return
     end
-    replay(last_edit)
+    replay(vim.g.last_edit)
 end)
 
 -- Track the last 20 atoms

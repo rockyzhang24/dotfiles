@@ -205,7 +205,7 @@ local groups = {
     -- StatusLineTermNC = 'StatusLineNC',
     WinBar = { fg = winbar_fg, bg = winbar_bg },
     WinBarNC = { fg = winbar_fg, bg = winbar_bg },
-    WinSeparator = 'Border',
+    WinSeparator = 'Normal',
     MsgSeparator = 'StatueLine',
     -- MsgArea = 'NONE',
     WildMenu = { fg = blue, bg = bg2, bold = true },

@@ -7,13 +7,18 @@ conform.setup({
     formatters_by_ft = {
         c = { 'clang-format' },
         cpp = { 'clang-format' },
-        javascript = { 'prettier' },
-        javascriptreact = { 'prettier' },
-        json = { 'prettier' },
+        javascript = { 'oxfmt', 'prettier', stop_after_first = true, lsp_format = 'fallback' },
+        javascriptreact = { 'oxfmt', 'prettier', stop_after_first = true, lsp_format = 'fallback' },
+        json = { 'oxfmt', 'prettier', stop_after_first = true, lsp_format = 'fallback' },
+        jsonc = { 'oxfmt', 'prettier', stop_after_first = true, lsp_format = 'fallback' },
+        less = { 'oxfmt', 'prettier', stop_after_first = true },
         lua = { 'stylua' },
+        markdown = { 'oxfmt', 'prettier', stop_after_first = true, lsp_format = 'fallback' },
+        scss = { 'oxfmt', 'prettier', stop_after_first = true },
         sh = { 'shfmt' },
-        typescript = { 'prettier' },
-        typescriptreact = { 'prettier' },
+        typescript = { 'oxfmt', 'prettier', stop_after_first = true, lsp_format = 'fallback' },
+        typescriptreact = { 'oxfmt', 'prettier', stop_after_first = true, lsp_format = 'fallback' },
+        yaml = { 'oxfmt', 'prettier', stop_after_first = true },
         -- For filetypes without a formatter
         ['_'] = { 'trim_whitespace', 'trim_newlines' },
     },
@@ -24,6 +29,9 @@ conform.setup({
         },
         -- prettier = {
         --     -- Require a Prettier configuration file to format
+        --     require_cwd = true,
+        -- },
+        -- oxfmt = {
         --     require_cwd = true,
         -- },
     },

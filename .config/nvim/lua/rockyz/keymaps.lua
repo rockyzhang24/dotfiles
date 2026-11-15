@@ -462,6 +462,8 @@ vim.keymap.set('n', '<C-l>', function()
     vim.cmd('normal! <C-l>')
 end, { silent = true })
 
+vim.keymap.set('n', '<Esc>', '<C-l>', { remap = true })
+
 -- //: Search within VISUAL selection
 vim.keymap.set('c', '/', function()
     if is_search_cmd() and vim.fn.getcmdline() == '' then

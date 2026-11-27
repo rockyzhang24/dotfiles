@@ -473,7 +473,7 @@
 			<key>Text</key>
 			<string></string>
 		</dict>
-		<key>0xd-0x20000-0x24</key>
+		<key>0xd-0x20000-0x24-0x1</key>
 		<dict>
 			<key>Action</key>
 			<integer>10</integer>
@@ -484,7 +484,7 @@
 			<key>Version</key>
 			<integer>1</integer>
 		</dict>
-		<key>0xd-0x40000-0x24</key>
+		<key>0xd-0x40000-0x24-0x1</key>
 		<dict>
 			<key>Action</key>
 			<integer>10</integer>

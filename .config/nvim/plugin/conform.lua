@@ -1,9 +1,4 @@
--- Make gq use conform to format lines
-vim.o.formatexpr = "v:lua.require('conform').formatexpr()"
-
-local conform = require('conform')
-
-conform.setup({
+require('conform').setup({
     formatters_by_ft = {
         c = { 'clang-format' },
         cpp = { 'clang-format' },
@@ -44,6 +39,9 @@ conform.setup({
         return {}
     end,
 })
+
+-- Make gq use conform to format lines
+vim.o.formatexpr = "v:lua.require'conform'.formatexpr()"
 
 -- NOTE:
 -- For the difference between formatters_by_ft and the table returned by format_on_save, see

@@ -5,7 +5,7 @@
       "src": "https://github.com/L3MON4D3/LuaSnip"
     },
     "SchemaStore.nvim": {
-      "rev": "e8c3d2225d6bf5e2cbe414952c247d7a3411849b",
+      "rev": "56b010e943cce0ddd13fa062f447e66e072a6b16",
       "src": "https://github.com/b0o/SchemaStore.nvim"
     },
     "blink.cmp": {
@@ -34,11 +34,11 @@
       "src": "https://github.com/othree/eregex.vim"
     },
     "gitsigns.nvim": {
-      "rev": "dc7698f932792a764d3db95fedee26c38e728355",
+      "rev": "166c03131e6a3528f692dd89f37668d991f17baa",
       "src": "https://github.com/lewis6991/gitsigns.nvim"
     },
     "guh.nvim": {
-      "rev": "39df7dc86785539231a04dd61e2b79f280a08ba4",
+      "rev": "bb67084d8a22ecfe12406c7e9e29b99db382cd6d",
       "src": "https://github.com/justinmk/guh.nvim"
     },
     "inc-rename.nvim": {
@@ -62,7 +62,7 @@
       "src": "https://github.com/mfussenegger/nvim-treehopper"
     },
     "nvim-treesitter": {
-      "rev": "04f17886f75416dfdc25374c950a52c63f0e98fe",
+      "rev": "52773f0d13a0c11d0c3ef33c14ab6ecc1c17148b",
       "src": "https://github.com/nvim-treesitter/nvim-treesitter"
     },
     "nvim-treesitter-context": {
@@ -90,7 +90,7 @@
       "src": "https://github.com/stefandtw/quickfix-reflector.vim"
     },
     "render-markdown.nvim": {
-      "rev": "8801162e041e34c64d0d1397cd1f353a14b01950",
+      "rev": "a67f826164c38c836fc6060f32b275c4c43317a7",
       "src": "https://github.com/MeanderingProgrammer/render-markdown.nvim"
     },
     "switch.vim": {

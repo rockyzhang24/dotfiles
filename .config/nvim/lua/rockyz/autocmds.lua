@@ -34,7 +34,7 @@ vim.api.nvim_create_autocmd('VimEnter', {
 
 -- Karabiner-Elements maps CTRL-[ to ESC system wide except in Neovim
 
-local karabiner_cli = '/Library/Application Support/org.pqrs/Karabiner-Elements/bin/karabiner_cli'
+local karabiner_cli = '/Applications/Karabiner-Elements.app/Contents/Helpers/karabiner_cli'
 
 local function set_karabiner_in_nvim(enabled)
     local value = enabled and '{"in_nvim":1}' or '{"in_nvim":0}'

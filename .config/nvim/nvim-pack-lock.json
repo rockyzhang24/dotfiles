@@ -5,7 +5,7 @@
       "src": "https://github.com/L3MON4D3/LuaSnip"
     },
     "SchemaStore.nvim": {
-      "rev": "56b010e943cce0ddd13fa062f447e66e072a6b16",
+      "rev": "6ad680dc81c58ae141c4e7533164ca54d65db2a0",
       "src": "https://github.com/b0o/SchemaStore.nvim"
     },
     "blink.cmp": {
